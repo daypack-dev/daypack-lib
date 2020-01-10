@@ -1,6 +1,6 @@
 # Daypack
 
-Daypack is a lazy bruteforcing automatic personal task scheduler
+Daypack is a lazily bruteforcing automatic personal task scheduler
 
 This repo contains the core scheduling engine of Daypack `daypack_lib`, and the cli frontend `daypc`.
 Other frontends (e.g. Electron, web) are underway.
