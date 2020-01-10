@@ -14,11 +14,11 @@ let sched_req_template_matches_sched_req_data
     Sched_req_data_skeleton.Time_share (task_segs, time_slots2) ->
     let sizes2 = List.map (fun (_, size) -> size) task_segs in
     List.sort_uniq compare sizes1 = List.sort_uniq compare sizes2 &&
-    List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
+    Time_slot.equal time_slots1 time_slots2
   | Sched_req_data_skeleton.Split_and_shift (size1, time_slots1),
     Sched_req_data_skeleton.Split_and_shift ((_id, size2), time_slots2) ->
     size1 = size2 &&
-    List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
+    Time_slot.equal time_slots1 time_slots2
   | Sched_req_data_skeleton.Split_even { task_seg_related_data = size1;
                                          time_slots = time_slots1;
                                          buckets = buckets1 },
@@ -26,10 +26,10 @@ let sched_req_template_matches_sched_req_data
                                          time_slots = time_slots2;
                                          buckets = buckets2 } ->
     size1 = size2 &&
-    List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2 &&
-    List.sort_uniq compare buckets1 = List.sort_uniq compare buckets2
+    Time_slot.equal time_slots1 time_slots2 &&
+    Time_slot.equal buckets1 buckets2
   | Push_to (dir1, size1, time_slots1), Push_to (dir2, (_id, size2), time_slots2) ->
-    dir1 = dir2 && size1 = size2 && List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
+    dir1 = dir2 && size1 = size2 && Time_slot.equal time_slots1 time_slots2
   | _ -> false
 
 let sched_req_template_matches_sched_req
@@ -54,11 +54,11 @@ let sched_req_template_matches_sched_req_record_data
     Sched_req_data_skeleton.Time_share (task_segs, time_slots2) ->
     let sizes2 = List.map (fun (_, size) -> size) task_segs in
     List.sort_uniq compare sizes1 = List.sort_uniq compare sizes2 &&
-    List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
+    Time_slot.equal time_slots1 time_slots2
   | Sched_req_data_skeleton.Split_and_shift (size1, time_slots1),
     Sched_req_data_skeleton.Split_and_shift ((_id, size2), time_slots2) ->
     size1 = size2 &&
-    List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
+    Time_slot.equal time_slots1 time_slots2
   | Sched_req_data_skeleton.Split_even { task_seg_related_data = size1;
                                          time_slots = time_slots1;
                                          buckets = buckets1 },
@@ -66,10 +66,10 @@ let sched_req_template_matches_sched_req_record_data
                                          time_slots = time_slots2;
                                          buckets = buckets2 } ->
     size1 = size2 &&
-    List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2 &&
-    List.sort_uniq compare buckets1 = List.sort_uniq compare buckets2
+    Time_slot.equal time_slots1 time_slots2 &&
+    Time_slot.equal buckets1 buckets2
   | Push_to (dir1, size1, time_slots1), Push_to (dir2, (_id, size2), time_slots2) ->
-    dir1 = dir2 && size1 = size2 && List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
+    dir1 = dir2 && size1 = size2 && Time_slot.equal time_slots1 time_slots2
   | _ -> false
 
 let sched_req_template_matches_sched_req_record
