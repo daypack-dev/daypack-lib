@@ -649,7 +649,7 @@ module Recur = struct
              Task_inst_id_map.find task_inst_id sd.store.task_inst_store
            in
            task_inst_data = stored_task_inst_data
-           && List.exists
+           && (List.exists
              (fun sched_req_template ->
                 Sched_req_id_map.exists
                   (fun _sched_req_id sched_req_record_data ->
@@ -658,7 +658,7 @@ module Recur = struct
                        sched_req_template sched_req_record_data)
                   sd.store.sched_req_record_store)
              sched_req_template_list
-           && List.exists
+               || List.exists
              (fun sched_req_template ->
                 Sched_req_id_map.exists
                   (fun _sched_req_id sched_req_data ->
@@ -666,6 +666,7 @@ module Recur = struct
                   )
                   sd.store.sched_req_pending_store
              ) sched_req_template_list
+              )
         )
         task_inst_ids
 
@@ -674,10 +675,10 @@ module Recur = struct
       (fun task_id task_data sched ->
          let raw_seq = instantiate_raw_seq ~start ~end_exc task_data in
          raw_seq
-         |> Seq.filter (fun (task_inst_data, sched_req_data_list) ->
+         |> Seq.filter (fun (task_inst_data, sched_req_template_list) ->
              not
                (instance_recorded_already task_id task_inst_data
-                  sched_req_data_list sched))
+                  sched_req_template_list sched))
          |> Seq.fold_left
            (fun sched (task_inst_data, sched_req_templates) ->
               let (task_inst_id, _), sched =
