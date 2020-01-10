@@ -78,11 +78,10 @@ a user of the library
     - Still carry the same time complexity for generation of a single schedule,
       though generating first schedule is a lot faster than generating all schedules in practice/most cases
  
-  - Final remark would be that it's also not just completely random bruteforcing,
-    Daypack lib does have a heavy set of utilities for dealing with time, and
-    can for example extract free time slots
-    
-    - In other words, a lot of pruning is done during the computation of the tree
+  - Finally, it's not just completely random bruteforcing,
+    `daypack_lib` has a (heavy) set of utilities for dealing with time, and
+    can for example extract free time slots.
+    A lot of pruning of computation is done as a result.
 
 - More detailed docs on the way
 
