@@ -657,7 +657,16 @@ module Recur = struct
                      .sched_req_template_matches_sched_req_record_data
                        sched_req_template sched_req_record_data)
                   sd.store.sched_req_record_store)
-             sched_req_template_list)
+             sched_req_template_list
+           && List.exists
+             (fun sched_req_template ->
+                Sched_req_id_map.exists
+                  (fun _sched_req_id sched_req_data ->
+                     Sched_req_utils.sched_req_template_matches_sched_req_data sched_req_template sched_req_data
+                  )
+                  sd.store.sched_req_pending_store
+             ) sched_req_template_list
+        )
         task_inst_ids
 
   let instantiate ~start ~end_exc ((sid, sd) : sched) : sched =
