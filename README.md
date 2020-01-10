@@ -2,7 +2,7 @@
 
 Daypack is a lazily bruteforcing automatic personal task scheduler
 
-This repo contains the core scheduling engine of Daypack `daypack_lib`, and the cli frontend `daypc`.
+This repo contains the core library of Daypack `daypack_lib`, and the cli frontend `daypc`.
 Other frontends (e.g. Electron, web) are underway.
 
 `daypack_lib` was primarily developed for personal task scheduling (or day planning),
