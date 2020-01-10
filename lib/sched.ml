@@ -646,7 +646,6 @@ module Recur = struct
       Int64_set.exists
         (fun task_inst_part ->
            let task_inst_id = (user_id, task_part, task_inst_part) in
-           Printf.printf "Checking for task inst : %s\n" (Task.task_inst_id_to_string task_inst_id);
            let stored_task_inst_data =
              Task_inst_id_map.find task_inst_id sd.store.task_inst_store
            in
