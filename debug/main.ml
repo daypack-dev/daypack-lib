@@ -390,9 +390,9 @@ let debug_sched_usage_simulation () =
     sched
   in
   Sched.empty
-  |> add_task ~parent_user_id:0L
-    Task.{ splittable = false; parallelizable = false; task_type = One_off }
-    Task.[ { task_inst_type = Reminder } ]
+  (* |> add_task ~parent_user_id:0L
+   *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
+   *   Task.[ { task_inst_type = Reminder } ] *)
   |> add_task ~parent_user_id:0L
     Task.
       {
@@ -409,8 +409,8 @@ let debug_sched_usage_simulation () =
                  } ));
       }
     []
-  |> Sched.Recur.instantiate ~start:0L ~end_exc:100L
-  |> Sched.Recur.instantiate ~start:0L ~end_exc:100L
+  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
+  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
   |> Sched.Print.debug_print_sched
 
 (* let () = debug_single_task_seg_shift (); print_newline () *)
