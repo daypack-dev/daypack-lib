@@ -32,9 +32,11 @@ and recur =
   | Arithemtic_seq of arith_seq * recur_data
   | Time_pattern_match of time_pattern * recur_data
 
+and sched_req_template =task_seg_size Sched_req_data_skeleton.t
+
 and recur_data = {
   task_inst_data : task_inst_data;
-  sched_req_templates : task_seg_size Sched_req_data_skeleton.t list;
+  sched_req_templates : sched_req_template list;
 }
 
 and task_inst = task_inst_id * task_inst_data
