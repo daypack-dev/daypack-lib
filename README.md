@@ -9,6 +9,12 @@ Other frontends (e.g. Electron, web) are underway.
 but we are exploring its use in more general scheduling scenarios as well,
 e.g. computational tasks scheduling
 
+## Note: Daypack is still WIP
+
+The core scheduling functionalities are largely finished,
+but facilities for usage of library in frontend, and the frontend itself
+are still underway
+
 ## Goal
 
 Daypack as a user-facing personal task scheduler program aims to be ergonomic to use, and relatively featureful
