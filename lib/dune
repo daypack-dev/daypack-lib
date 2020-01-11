@@ -30,3 +30,51 @@
           map_utils_t.mli)
  (deps    map_utils.atd)
  (action  (run atdgen -t %{deps})))
+
+(rule
+ (targets int64_j.ml
+          int64_j.mli)
+ (deps    int64.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets int64_t.ml
+          int64_t.mli)
+ (deps    int64.atd)
+ (action  (run atdgen -t %{deps})))
+
+(rule
+ (targets time_slot_j.ml
+          time_slot_j.mli)
+ (deps    time_slot.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets time_slot_t.ml
+          time_slot_t.mli)
+ (deps    time_slot.atd)
+ (action  (run atdgen -t %{deps})))
+
+(rule
+ (targets sched_req_data_skeleton_j.ml
+          sched_req_data_skeleton_j.mli)
+ (deps    sched_req_data_skeleton.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets sched_req_data_skeleton_t.ml
+          sched_req_data_skeleton_t.mli)
+ (deps    sched_req_data_skeleton.atd)
+ (action  (run atdgen -t %{deps})))
+
+(rule
+ (targets task_j.ml
+          task_j.mli)
+ (deps    task.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets task_t.ml
+          task_t.mli)
+ (deps    task.atd)
+ (action  (run atdgen -t %{deps})))
