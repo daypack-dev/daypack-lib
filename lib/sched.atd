@@ -2,18 +2,9 @@ type int64 = int <ocaml repr="int64">
 
 (* corresponds to Map_utils
 *)
-type ('k, 'v) diff = {
-  common : ('k * 'v) list;
-  updated : ('k * ('v * 'v)) list;
-  added : ('k * 'v) list;
-  removed : ('k * 'v) list;
-}
+type ('k, 'v) diff <ocaml from="Map_utils"> = abstract
 
-type ('k, 'v) diff_bucketed = {
-  common : ('k * 'v list) list;
-  added : ('k * 'v list) list;
-  removed : ('k * 'v list) list;
-}
+type ('k, 'v) diff_bucketed <ocaml from="Map_utils"> = abstract
 
 (* corresponds to Time_slot
 *)
