@@ -58,15 +58,15 @@ type task_seg_place <ocaml from="Task"> = abstract
 
 (* corresponds to Sched_req
 *)
-type sched_req_id = int64
+type sched_req_id <ocaml from="Sched_req"> = abstract
 
-type sched_req = (sched_req_id * sched_req_data)
+type sched_req <ocaml from="Sched_req"> = abstract
 
-type sched_req_data = task_seg_alloc_req sched_req_data_skeleton
+type sched_req_data <ocaml from="Sched_req"> = abstract
 
-type sched_req_record = (sched_req_id * sched_req_record_data)
+type sched_req_record <ocaml from="Sched_req"> = abstract
 
-type sched_req_record_data = task_seg sched_req_data_skeleton
+type sched_req_record_data <ocaml from="Sched_req"> = abstract
 
 (* corresponds to Sched
 *)
