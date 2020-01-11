@@ -15,4 +15,3 @@ type sched_req_data = task_seg_alloc_req sched_req_data_skeleton
 type sched_req_record = (sched_req_id * sched_req_record_data)
 
 type sched_req_record_data = task_seg sched_req_data_skeleton
-
