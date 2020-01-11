@@ -282,3 +282,6 @@ let shift_list ~offset (time_slots : t list) : t list =
   List.map
     (fun (start, end_exc) -> (start +^ offset, end_exc +^ offset))
     time_slots
+
+let equal (time_slots1 : t list) (time_slots2 : t list) : bool =
+  List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2

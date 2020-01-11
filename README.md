@@ -1,9 +1,19 @@
 # Daypack
 
-Lazy bruteforcing automatic task scheduling library and frontend
+Daypack is a lazily bruteforcing automatic personal task scheduler
 
-This repo contains the core scheduling engine of Daypack `daypack_lib`, and the cli frontend `daypc`.
+This repo contains the core library of Daypack `daypack_lib`, and the cli frontend `daypc`.
 Other frontends (e.g. Electron, web) are underway.
+
+`daypack_lib` was primarily developed for personal task scheduling (or day planning),
+but we are exploring its use in more general scheduling scenarios as well,
+e.g. computational tasks scheduling
+
+## Note: Daypack is still WIP
+
+The core scheduling functionalities are largely finished,
+but facilities for usage of library in frontend, and the frontend itself
+are still underway
 
 ## Goal
 
@@ -68,11 +78,10 @@ a user of the library
     - Still carry the same time complexity for generation of a single schedule,
       though generating first schedule is a lot faster than generating all schedules in practice/most cases
  
-  - Final remark would be that it's also not just completely random bruteforcing,
-    Daypack lib does have a heavy set of utilities for dealing with time, and
-    can for example extract free time slots
-    
-    - In other words, a lot of pruning is done during the computation of the tree
+  - Finally, it's not just completely random bruteforcing,
+    `daypack_lib` has a (heavy) set of utilities for dealing with time, and
+    can for example extract free time slots.
+    A lot of pruning of computation is done as a result.
 
 - More detailed docs on the way
 

@@ -603,13 +603,9 @@ module Sched_req_store = struct
     allocate_task_segs_for_sched_req_list to_be_scheduled_sched_reqs (sid, sd)
 end
 
-module Sched_req_utils = struct
-end
-
 module Recur = struct
   let instantiate_raw_seq ~start ~end_exc (task_data : Task.task_data) :
-    (Task.task_inst_data * Task.task_seg_size Sched_req_data_skeleton.t list)
-      Seq.t =
+    (Task.task_inst_data * Task.sched_req_template list) Seq.t =
     match task_data.task_type with
     | Task.One_off -> Seq.empty
     | Task.Recurring recur -> (
@@ -640,7 +636,7 @@ module Recur = struct
 
   let instance_recorded_already (task_id : Task.task_id)
       (task_inst_data : Task.task_inst_data)
-      (sched_req_data_list : Task.task_seg_size Sched_req_data_skeleton.t list)
+      (sched_req_template_list : Task.sched_req_template list)
       ((_sid, sd) : sched) : bool =
     let user_id, task_part = task_id in
     match Task_id_map.find_opt task_id sd.store.task_id_to_task_inst_ids with
@@ -649,47 +645,28 @@ module Recur = struct
       Int64_set.exists
         (fun task_inst_part ->
            let task_inst_id = (user_id, task_part, task_inst_part) in
-           Printf.printf "Checking for task inst : %s\n" (Task.task_inst_id_to_string task_inst_id);
            let stored_task_inst_data =
              Task_inst_id_map.find task_inst_id sd.store.task_inst_store
            in
            task_inst_data = stored_task_inst_data
-           && List.exists
-             (fun sched_req_data ->
-                Sched_req_id_map.exists
-                  (fun _sched_req_id sched_req_record_data ->
-                     match (sched_req_data, sched_req_record_data) with
-                     | ( Sched_req_data_skeleton.Fixed
-                           { task_seg_related_data = size1; start = start1 },
-                         Sched_req_data_skeleton.Fixed
-                           { task_seg_related_data = _id, size2; start = start2 }
-                       ) ->
-                       size1 = size2 && start1 = start2
-                     | Sched_req_data_skeleton.Shift (sizes1, time_slots1),
-                       Sched_req_data_skeleton.Shift (task_segs, time_slots2)
-                     | Sched_req_data_skeleton.Time_share (sizes1, time_slots1),
-                       Sched_req_data_skeleton.Time_share (task_segs, time_slots2) ->
-                       let sizes2 = List.map (fun (_, size) -> size) task_segs in
-                       List.sort_uniq compare sizes1 = List.sort_uniq compare sizes2 &&
-                       List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
-                     | Sched_req_data_skeleton.Split_and_shift (size1, time_slots1),
-                       Sched_req_data_skeleton.Split_and_shift ((_id, size2), time_slots2) ->
-                       size1 = size2 &&
-                       List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
-                     | Sched_req_data_skeleton.Split_even { task_seg_related_data = size1;
-                                                            time_slots = time_slots1;
-                                                            buckets = buckets1 },
-                       Sched_req_data_skeleton.Split_even { task_seg_related_data = (_id, size2);
-                                                            time_slots = time_slots2;
-                                                            buckets = buckets2 } ->
-                       size1 = size2 &&
-                       List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2 &&
-                       List.sort_uniq compare buckets1 = List.sort_uniq compare buckets2
-                     | Push_to (dir1, size1, time_slots1), Push_to (dir2, (_id, size2), time_slots2) ->
-                       dir1 = dir2 && size1 = size2 && List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
-                     | _ -> false)
-                  sd.store.sched_req_record_store)
-             sched_req_data_list)
+           && ( List.exists
+                  (fun sched_req_template ->
+                     Sched_req_id_map.exists
+                       (fun _sched_req_id sched_req_record_data ->
+                          Sched_req_utils
+                          .sched_req_template_matches_sched_req_record_data
+                            sched_req_template sched_req_record_data)
+                       sd.store.sched_req_record_store)
+                  sched_req_template_list
+                || List.exists
+                  (fun sched_req_template ->
+                     Sched_req_id_map.exists
+                       (fun _sched_req_id sched_req_data ->
+                          Sched_req_utils
+                          .sched_req_template_matches_sched_req_data
+                            sched_req_template sched_req_data)
+                       sd.store.sched_req_pending_store)
+                  sched_req_template_list ))
         task_inst_ids
 
   let instantiate ~start ~end_exc ((sid, sd) : sched) : sched =
@@ -697,9 +674,10 @@ module Recur = struct
       (fun task_id task_data sched ->
          let raw_seq = instantiate_raw_seq ~start ~end_exc task_data in
          raw_seq
-         |> Seq.filter (fun (task_inst_data, sched_req_data_list) ->
-             not (instance_recorded_already task_id task_inst_data sched_req_data_list sched)
-           )
+         |> Seq.filter (fun (task_inst_data, sched_req_template_list) ->
+             not
+               (instance_recorded_already task_id task_inst_data
+                  sched_req_template_list sched))
          |> Seq.fold_left
            (fun sched (task_inst_data, sched_req_templates) ->
               let (task_inst_id, _), sched =
