@@ -2,8 +2,17 @@ type int64 = int <ocaml repr="int64">
 
 (* corresponds to Map_utils
 *)
-type ('a, 'b) diff = {
-  common : ('a * 'b) list;
+type ('k, 'v) diff = {
+  common : ('k * 'v) list;
+  updated : ('k * ('v * 'v)) list;
+  added : ('k * 'v) list;
+  removed : ('k * 'v) list;
+}
+
+type ('k, 'v) diff_bucketed = {
+  common : ('k * 'v list) list;
+  added : ('k * 'v list) list;
+  removed : ('k * 'v list) list;
 }
 
 (* corresponds to Time_slot
@@ -115,5 +124,14 @@ type store = {
   user_id_to_task_ids : (user_id * int64 list) list;
   task_id_to_task_inst_ids : (task_id * int64 list) list;
   task_inst_id_to_task_seg_ids : (task_inst_id * int64 list) list;
-  sched_req_ids : int64 list;
+  sched_req_ids : sched_req_id list;
+  sched_req_pending_list : sched_req list;
+  sched_req_record_list : sched_req_record list;
+  quota : (task_inst_id * int64) list;
+}
+
+type store_diff = {
+  task_list_diff : (task_id, task_data) diff;
+  task_inst_list_diff : (task_inst_id, task_inst_data) diff;
+  task_seg_list_diff : (task_seg_id, task_seg_size) diff;
 }
