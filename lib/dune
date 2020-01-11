@@ -1,5 +1,20 @@
 (library
  (flags     (-w "+a-4-9-29-37-40-42-44-48-50-32"))
  (name daypack_lib)
- (libraries oseq)
+ (libraries oseq
+            biniou
+            yojson
+            atdgen-runtime)
  )
+
+(rule
+ (targets sched_j.ml
+          sched_j.mli)
+ (deps    sched.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets sched_t.ml
+          sched_t.mli)
+ (deps    sched.atd)
+ (action  (run atdgen -t %{deps})))

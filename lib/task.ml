@@ -12,9 +12,9 @@ type user_id = int64
 
 and task_id = user_id * int64
 
-and task_inst_id = int64 * int64 * int64
+and task_inst_id = user_id * int64 * int64
 
-and task_seg_id = int64 * int64 * int64 * int64 * int64 option
+and task_seg_id = user_id * int64 * int64 * int64 * int64 option
 
 type task = task_id * task_data
 
