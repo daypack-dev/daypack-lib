@@ -727,12 +727,12 @@ module Serialize = struct
   let pack_task_store_diff (diff : task_store_diff) :
     (Task_t.task_id, Task_t.task_data) Map_utils_t.diff =
     {
-      common = pack_task_store diff.common ;
-      updated = diff.updated |> Task_id_map.to_seq
-                |> Seq.map (fun (id, (data1, data2)) ->
-                    (id, Task.Serialize.(pack_task_data data1, pack_task_data data2))
-                  )
-                |> List.of_seq;
+      common = pack_task_store diff.common;
+      updated =
+        diff.updated |> Task_id_map.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            (id, Task.Serialize.(pack_task_data data1, pack_task_data data2)))
+        |> List.of_seq;
       added = pack_task_store diff.added;
       removed = pack_task_store diff.removed;
     }
@@ -747,13 +747,13 @@ module Serialize = struct
     (Task_t.task_inst_id, Task_t.task_inst_data) Map_utils_t.diff =
     {
       common = pack_task_inst_store diff.common;
-      updated = diff.updated
-                |> Task_inst_id_map.to_seq
-                |> Seq.map (fun (id, (data1, data2)) ->
-                    (id, Task.Serialize.(pack_task_inst_data data1, pack_task_inst_data data2))
-                  )
-              |> List.of_seq
-      ;
+      updated =
+        diff.updated |> Task_inst_id_map.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            ( id,
+              let open Task.Serialize in
+              (pack_task_inst_data data1, pack_task_inst_data data2) ))
+        |> List.of_seq;
       added = pack_task_inst_store diff.added;
       removed = pack_task_inst_store diff.removed;
     }
@@ -766,10 +766,7 @@ module Serialize = struct
     (Task_t.task_seg_id, Task_t.task_seg_size) Map_utils_t.diff =
     {
       common = pack_task_seg_store diff.common;
-      updated = diff.updated
-                |> Task_seg_id_map.to_seq
-                |> List.of_seq
-      ;
+      updated = diff.updated |> Task_seg_id_map.to_seq |> List.of_seq;
       added = pack_task_seg_store diff.added;
       removed = pack_task_seg_store diff.removed;
     }
@@ -784,13 +781,9 @@ module Serialize = struct
       (diff : User_id_map_utils.Int64_bucketed.diff_bucketed) :
     (Task_t.user_id, int64) Map_utils_t.diff_bucketed =
     {
-      common =
-        pack_user_id_to_task_ids
-        diff.common;
-      added =
-        pack_user_id_to_task_ids diff.added;
-      removed =
-        pack_user_id_to_task_ids diff.removed;
+      common = pack_user_id_to_task_ids diff.common;
+      added = pack_user_id_to_task_ids diff.added;
+      removed = pack_user_id_to_task_ids diff.removed;
     }
 
   let pack_task_id_to_task_inst_ids
@@ -804,15 +797,9 @@ module Serialize = struct
       (diff : Task_id_map_utils.Int64_bucketed.diff_bucketed) :
     (Task.task_id, int64) Map_utils_t.diff_bucketed =
     {
-      common =
-        pack_task_id_to_task_inst_ids
-        diff.common;
-      added =
-        pack_task_id_to_task_inst_ids
-        diff.added;
-      removed =
-        pack_task_id_to_task_inst_ids
-        diff.removed;
+      common = pack_task_id_to_task_inst_ids diff.common;
+      added = pack_task_id_to_task_inst_ids diff.added;
+      removed = pack_task_id_to_task_inst_ids diff.removed;
     }
 
   let pack_task_inst_id_to_task_seg_ids
@@ -826,15 +813,9 @@ module Serialize = struct
       (diff : Task_inst_id_map_utils.Int64_bucketed.diff_bucketed) :
     (Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed =
     {
-      common =
-        pack_task_inst_id_to_task_seg_ids
-        diff.common;
-      added =
-        pack_task_inst_id_to_task_seg_ids
-        diff.added;
-      removed =
-        pack_task_inst_id_to_task_seg_ids
-        diff.removed;
+      common = pack_task_inst_id_to_task_seg_ids diff.common;
+      added = pack_task_inst_id_to_task_seg_ids diff.added;
+      removed = pack_task_inst_id_to_task_seg_ids diff.removed;
     }
 
   let pack_sched_req_ids = Int64_set.Serialize.pack
@@ -915,9 +896,13 @@ module Serialize = struct
       task_list_diff = pack_task_store_diff diff.task_store_diff;
       task_inst_list_diff = pack_task_inst_store_diff diff.task_inst_store_diff;
       task_seg_list_diff = pack_task_seg_store_diff diff.task_seg_store_diff;
-      user_id_to_task_ids_diff = pack_user_id_to_task_ids_diff diff.user_id_to_task_ids_diff;
-      task_id_to_task_inst_ids_diff = pack_task_id_to_task_inst_ids_diff diff.task_id_to_task_inst_ids_diff;
-      task_inst_id_to_task_seg_ids_diff = pack_task_inst_id_to_task_seg_ids_diff diff.task_inst_id_to_task_seg_ids_diff;
+      user_id_to_task_ids_diff =
+        pack_user_id_to_task_ids_diff diff.user_id_to_task_ids_diff;
+      task_id_to_task_inst_ids_diff =
+        pack_task_id_to_task_inst_ids_diff diff.task_id_to_task_inst_ids_diff;
+      task_inst_id_to_task_seg_ids_diff =
+        pack_task_inst_id_to_task_seg_ids_diff
+          diff.task_inst_id_to_task_seg_ids_diff;
       sched_req_ids_diff = pack_sched_req_ids_diff diff.sched_req_ids_diff;
     }
 
