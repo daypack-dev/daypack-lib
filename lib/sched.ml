@@ -1107,29 +1107,69 @@ module Deserialize = struct
     }
 
   (*$*)
-  let unpack_user_id_to_task_ids
-      (user_id_to_task_ids : (Task.user_id * int64 list) list) :
-    Int64_set.t User_id_map.t =
-    user_id_to_task_ids |> List.to_seq
-    |> Seq.map (fun (id, l) -> (id, Int64_set.Deserialize.unpack l))
-    |> User_id_map.of_seq
-
-  let unpack_task_id_to_task_inst_ids
-      (task_id_to_task_inst_ids : (Task.task_id * int64 list) list) :
-    Int64_set.t Task_id_map.t =
-    task_id_to_task_inst_ids |> List.to_seq
-    |> Seq.map (fun (id, l) -> (id, Int64_set.Deserialize.unpack l))
-    |> Task_id_map.of_seq
-
-  let unpack_task_inst_id_to_task_seg_ids
-      (task_inst_id_to_task_seg_ids : (Task.task_inst_id * int64 list) list) :
-    Int64_set.t Task_inst_id_map.t =
-    task_inst_id_to_task_seg_ids |> List.to_seq
-    |> Seq.map (fun (id, l) -> (id, Int64_set.Deserialize.unpack l))
-    |> Task_inst_id_map.of_seq
 
   let unpack_sched_req_ids = Int64_set.Deserialize.unpack
 
+  let unpack_sched_req_ids_diff (diff : int64 Set_utils_t.diff) :
+     Int64_set_utils.diff=
+    {
+      common = diff.common |> List.to_seq |> Int64_set.of_seq;
+      added = diff.added |> List.to_seq |> Int64_set.of_seq;
+      removed = diff.removed |> List.to_seq |> Int64_set.of_seq;
+    }
+
+  (*$ #use "lib/sched.cinaps";;
+
+    Bucket_store.print_unpack_related_functions ()
+  *)
+
+  let unpack_user_id_to_task_ids (x : (Task_t.user_id * int64 list) list) :
+    Int64_set.t User_id_map.t =
+    x |> List.to_seq
+    |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
+    |> User_id_map.of_seq
+
+  let unpack_user_id_to_task_ids_diff
+      (x : (Task_t.user_id, int64) Map_utils_t.diff_bucketed) :
+    User_id_map_utils.Int64_bucketed.diff_bucketed =
+    {
+      common = unpack_user_id_to_task_ids x.common;
+      added = unpack_user_id_to_task_ids x.added;
+      removed = unpack_user_id_to_task_ids x.removed;
+    }
+
+  let unpack_task_id_to_task_inst_ids (x : (Task_t.task_id * int64 list) list) :
+    Int64_set.t Task_id_map.t =
+    x |> List.to_seq
+    |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
+    |> Task_id_map.of_seq
+
+  let unpack_task_id_to_task_inst_ids_diff
+      (x : (Task_t.task_id, int64) Map_utils_t.diff_bucketed) :
+    Task_id_map_utils.Int64_bucketed.diff_bucketed =
+    {
+      common = unpack_task_id_to_task_inst_ids x.common;
+      added = unpack_task_id_to_task_inst_ids x.added;
+      removed = unpack_task_id_to_task_inst_ids x.removed;
+    }
+
+  let unpack_task_inst_id_to_task_seg_ids
+      (x : (Task_t.task_inst_id * int64 list) list) :
+    Int64_set.t Task_inst_id_map.t =
+    x |> List.to_seq
+    |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
+    |> Task_inst_id_map.of_seq
+
+  let unpack_task_inst_id_to_task_seg_ids_diff
+      (x : (Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed) :
+    Task_inst_id_map_utils.Int64_bucketed.diff_bucketed =
+    {
+      common = unpack_task_inst_id_to_task_seg_ids x.common;
+      added = unpack_task_inst_id_to_task_seg_ids x.added;
+      removed = unpack_task_inst_id_to_task_seg_ids x.removed;
+    }
+
+  (*$*)
   let unpack_store (store : Sched_t.store) : store =
     {
       task_store = unpack_task_list store.task_list;
