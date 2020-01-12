@@ -127,6 +127,54 @@ module Serialize = struct
     | Passing -> `Passing
 end
 
+module Deserialize = struct
+  let unpack_arith_seq (arith_seq : Task_t.arith_seq) : arith_seq =
+    {
+      start = arith_seq.start;
+      end_exc = arith_seq.end_exc;
+      diff = arith_seq.diff;
+    }
+
+  let rec unpack_task_data (task_data : Task_t.task_data) : task_data =
+    {
+      splittable = task_data.splittable;
+      parallelizable = task_data.parallelizable;
+      task_type = unpack_task_type task_data.task_type;
+    }
+
+  and unpack_task_type (task_type : Task_t.task_type) : task_type =
+    match task_type with
+    | `One_off -> One_off
+    | `Recurring recur -> Recurring (unpack_recur recur)
+
+  and unpack_recur (recur : Task_t.recur) : recur =
+    match recur with
+    | `Arithmetic_seq (arith_seq, recur_data) ->
+      Arithemtic_seq (unpack_arith_seq arith_seq, unpack_recur_data recur_data)
+
+  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template) :
+    sched_req_template =
+    Sched_req_data_skeleton.Deserialize.unpack sched_req_template
+
+  and unpack_recur_data (recur_data : Task_t.recur_data) : recur_data =
+    {
+      task_inst_data = unpack_task_inst_data recur_data.task_inst_data;
+      sched_req_templates =
+        List.map unpack_sched_req_template recur_data.sched_req_templates;
+    }
+
+  and unpack_task_inst_data (task_inst_data : Task_t.task_inst_data) : task_inst_data =
+    {
+      task_inst_type = unpack_task_inst_type task_inst_data.task_inst_type
+    }
+
+  and unpack_task_inst_type (task_inst_type : Task_t.task_inst_type) : task_inst_type =
+    match task_inst_type with
+    | `Reminder -> Reminder
+    | `Reminder_quota_counting quota -> Reminder_quota_counting { quota }
+    | `Passing -> Passing
+end
+
 module Print = struct
   let debug_print_task ?(indent_level = 0) (id, data) =
     Debug_print.printf ~indent_level "task id : %s\n" (task_id_to_string id);
