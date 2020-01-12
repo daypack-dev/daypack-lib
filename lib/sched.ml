@@ -831,11 +831,27 @@ module Serialize = struct
 
   let pack_sched_req_ids = Int64_set.Serialize.pack
 
+  let pack_sched_req_ids_diff (diff : Int64_set_utils.diff) : int64 Set_utils_t.diff =
+    {
+      common = diff.common |> Int64_set.to_seq |> List.of_seq;
+      added = diff.added |> Int64_set.to_seq |> List.of_seq;
+      removed = diff.removed |> Int64_set.to_seq |> List.of_seq;
+    }
+
   let pack_sched_req_pending_store (sched_req_pending_store : sched_req_store) :
     Sched_req_t.sched_req list =
     sched_req_pending_store |> Sched_req_id_map.to_seq
     |> Seq.map Sched_req.Serialize.pack_sched_req
     |> List.of_seq
+
+  let pack_sched_req_pending_store_diff (diff : sched_req_store_diff) :
+    (Sched_req.sched_req_id, Sched_req.sched_req_data) Map_utils_t.diff =
+    {
+      common = diff.common |> Sched_req_id_map.to_seq |> List.of_seq;
+      updated = diff.updated |> Sched_req_id_map.to_seq |> List.of_seq;
+      added = diff.added |> Sched_req_id_map.to_seq |> List.of_seq;
+      removed = diff.removed |> Sched_req_id_map.to_seq |> List.of_seq;
+    }
 
   let pack_sched_req_record_store
       (sched_req_record_store : sched_req_record_store) :
@@ -843,6 +859,15 @@ module Serialize = struct
     sched_req_record_store |> Sched_req_id_map.to_seq
     |> Seq.map Sched_req.Serialize.pack_sched_req_record
     |> List.of_seq
+
+  let pack_sched_req_record_store_diff (diff : sched_req_record_store_diff) :
+    (Sched_req.sched_req_id, Sched_req.sched_req_record_data) Map_utils_t.diff =
+    {
+      common = diff.common |> Sched_req_id_map.to_seq |> List.of_seq;
+      updated = diff.updated |> Sched_req_id_map.to_seq |> List.of_seq;
+      added = diff.added |> Sched_req_id_map.to_seq |> List.of_seq;
+      removed = diff.removed |> Sched_req_id_map.to_seq |> List.of_seq;
+    }
 
   let pack_quota (quota : int64 Task_inst_id_map.t) :
     (Task.task_inst_id * int64) list =
