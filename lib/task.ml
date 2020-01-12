@@ -86,7 +86,10 @@ module Serialize = struct
       diff = arith_seq.diff;
     }
 
-  let rec pack_task_data (task_data : task_data) : Task_t.task_data =
+  let rec pack_task ((id, data) : task) : Task_t.task =
+    (id, pack_task_data data)
+
+  and pack_task_data (task_data : task_data) : Task_t.task_data =
     {
       splittable = task_data.splittable;
       parallelizable = task_data.parallelizable;
@@ -115,6 +118,9 @@ module Serialize = struct
         List.map pack_sched_req_template recur_data.sched_req_templates;
     }
 
+  and pack_task_inst ((id, data) : task_inst) : Task_t.task_inst =
+    (id, pack_task_inst_data data)
+
   and pack_task_inst_data (task_inst_data : task_inst_data) :
     Task_t.task_inst_data =
     { task_inst_type = pack_task_inst_type task_inst_data.task_inst_type }
@@ -135,7 +141,10 @@ module Deserialize = struct
       diff = arith_seq.diff;
     }
 
-  let rec unpack_task_data (task_data : Task_t.task_data) : task_data =
+  let rec unpack_task ((id, data) : Task_t.task) : task =
+    (id, unpack_task_data data)
+
+  and unpack_task_data (task_data : Task_t.task_data) : task_data =
     {
       splittable = task_data.splittable;
       parallelizable = task_data.parallelizable;
@@ -162,6 +171,9 @@ module Deserialize = struct
       sched_req_templates =
         List.map unpack_sched_req_template recur_data.sched_req_templates;
     }
+
+  and unpack_task_inst ((id, data) : Task_t.task_inst) : task_inst =
+    (id, unpack_task_inst_data data)
 
   and unpack_task_inst_data (task_inst_data : Task_t.task_inst_data) : task_inst_data =
     {

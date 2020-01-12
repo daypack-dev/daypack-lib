@@ -89,6 +89,29 @@ module Serialize = struct
   and pack_sched_req_data (sched_req_data : sched_req_data) :
     Sched_req_t.sched_req_data =
     Sched_req_data_skeleton.Serialize.pack sched_req_data
+
+  let rec pack_sched_req_record (id, data) : Sched_req_t.sched_req_record =
+    (id, pack_sched_req_record_data data)
+
+  and pack_sched_req_record_data (sched_req_record_data : sched_req_record_data) :
+    Sched_req_t.sched_req_record_data =
+    Sched_req_data_skeleton.Serialize.pack sched_req_record_data
+end
+
+module Deserialize = struct
+  let rec unpack_sched_req (id, data) : sched_req =
+    (id, unpack_sched_req_data data)
+
+  and unpack_sched_req_data (sched_req_data : Sched_req_t.sched_req_data) :
+    sched_req_data =
+    Sched_req_data_skeleton.Deserialize.unpack sched_req_data
+
+  let rec unpack_sched_req_record (id, data) : sched_req_record =
+    (id, unpack_sched_req_record_data data)
+
+  and unpack_sched_req_record_data (sched_req_record_data : Sched_req_t.sched_req_record_data) :
+    sched_req_record_data =
+    Sched_req_data_skeleton.Deserialize.unpack sched_req_record_data
 end
 
 module Print = struct
