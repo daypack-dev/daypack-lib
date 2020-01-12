@@ -721,26 +721,28 @@ module Serialize = struct
 
   (*$ #use "lib/sched.cinaps";;
 
-    print_pack_functions ()
+    print_pack_related_functions ()
   *)
 
-  let pack_task_store (x : task_store) : Sched_t.task list list =
-    x |> Task_id_map.to_seq |> Seq.map Task_id_map.to_seq |> List.of_seq
+  let pack_task_store (x : task_store) : Sched_t.task list =
+    x |> Task_id_map.to_seq |> Seq.map Task.Serialize.pack_task |> List.of_seq
 
-  (*$*)
-
-  let pack_task_store_diff (diff : task_store_diff) :
+  let pack_task_store_diff (x : task_store_diff) :
     (Task_t.task_id, Task_t.task_data) Map_utils_t.diff =
     {
-      common = pack_task_store diff.common;
+      common = pack_task_store x.common;
       updated =
-        diff.updated |> Task_id_map.to_seq
+        x.updated |> Task_id_map.to_seq
         |> Seq.map (fun (id, (data1, data2)) ->
-            (id, Task.Serialize.(pack_task_data data1, pack_task_data data2)))
+            ( id,
+              ( Task.Serialize.pack_task_data data1,
+                Task.Serialize.pack_task_data data2 ) ))
         |> List.of_seq;
-      added = pack_task_store diff.added;
-      removed = pack_task_store diff.removed;
+      added = pack_task_store x.added;
+      removed = pack_task_store x.removed;
     }
+
+  (*$*)
 
   let pack_task_inst_store (task_inst_store : task_inst_store) :
     Sched_t.task_inst list =

@@ -1,9 +1,12 @@
 type pack_store_entry = {
   f_suffix : string;
   store_typ : string;
+  diff_typ : string;
   ret_typ : string;
+  diff_ret_typ : string;
   f_to_seq : string;
-  f_pack : string;
+  f_inner_pack : string;
+  f_inner_pack_data : string;
 }
 
 let pack_store_list =
@@ -11,18 +14,44 @@ let pack_store_list =
     {
       f_suffix = "task_store";
       store_typ = "task_store";
+      diff_typ = "task_store_diff";
       ret_typ = "Sched_t.task list";
+      diff_ret_typ = "(Task_t.task_id, Task_t.task_data) Map_utils_t.diff";
       f_to_seq = "Task_id_map.to_seq";
-      f_pack = "Task.Serialize.pack_task";
+      f_inner_pack = "Task.Serialize.pack_task";
+      f_inner_pack_data = "Task.Serialize.pack_task_data";
     };
   ]
 
-let print_pack_functions () =
+let get_pack_f_name e = Printf.sprintf "pack_%s" e.f_suffix
+
+let print_pack_function e =
+  Printf.printf "let %s (x : %s) : %s =\n" (get_pack_f_name e) e.store_typ
+    e.ret_typ;
+  Printf.printf "x |> %s\n" e.f_to_seq;
+  Printf.printf "|> Seq.map %s\n" e.f_inner_pack;
+  Printf.printf "|> List.of_seq\n"
+
+let print_pack_diff_function e =
+  let pack_f_name = get_pack_f_name e in
+  Printf.printf "let pack_%s_diff (x : %s) : %s =\n" e.f_suffix e.diff_typ
+    e.diff_ret_typ;
+  Printf.printf "{\n";
+  Printf.printf "common = %s x.common;\n" pack_f_name;
+  Printf.printf "updated = x.updated\n";
+  Printf.printf "|> %s\n" e.f_to_seq;
+  Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
+  Printf.printf "(id, (%s data1, %s data2))\n" e.f_inner_pack_data
+    e.f_inner_pack_data;
+  Printf.printf ")\n";
+  Printf.printf "|> List.of_seq;\n";
+  Printf.printf "added = %s x.added;\n" pack_f_name;
+  Printf.printf "removed = %s x.removed;\n" pack_f_name;
+  Printf.printf "}\n"
+
+let print_pack_related_functions () =
   List.iter
     (fun e ->
-       Printf.printf "let pack_%s (x : %s) : %s list =\n" e.f_suffix e.store_typ
-         e.ret_typ;
-       Printf.printf "x |> %s\n" e.f_to_seq;
-       Printf.printf "|> Seq.map %s\n" e.f_to_seq;
-       Printf.printf "|> List.of_seq\n")
+       print_pack_function e;
+       print_pack_diff_function e)
     pack_store_list
