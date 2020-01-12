@@ -86,7 +86,8 @@ module Serialize = struct
   let rec pack_sched_req (id, data) : Sched_req_t.sched_req =
     (id, pack_sched_req_data data)
 
-  and pack_sched_req_data (sched_req_data : sched_req_data) : Sched_req_t.sched_req_data =
+  and pack_sched_req_data (sched_req_data : sched_req_data) :
+    Sched_req_t.sched_req_data =
     Sched_req_data_skeleton.Serialize.pack sched_req_data
 end
 

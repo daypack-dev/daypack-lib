@@ -80,13 +80,15 @@ let task_seg_alloc_req_sum_length reqs =
 
 module Serialize = struct
   let pack_arith_seq (arith_seq : arith_seq) : Task_t.arith_seq =
-    { start = arith_seq.start;
+    {
+      start = arith_seq.start;
       end_exc = arith_seq.end_exc;
       diff = arith_seq.diff;
     }
 
-  let rec pack_task_data (task_data :task_data) : Task_t.task_data =
-    { splittable = task_data.splittable;
+  let rec pack_task_data (task_data : task_data) : Task_t.task_data =
+    {
+      splittable = task_data.splittable;
       parallelizable = task_data.parallelizable;
       task_type = pack_task_type task_data.task_type;
     }
@@ -94,29 +96,31 @@ module Serialize = struct
   and pack_task_type (task_type : task_type) : Task_t.task_type =
     match task_type with
     | One_off -> `One_off
-    | Recurring recur ->
-      `Recurring (pack_recur recur)
+    | Recurring recur -> `Recurring (pack_recur recur)
 
   and pack_recur (recur : recur) : Task_t.recur =
     match recur with
     | Arithemtic_seq (arith_seq, recur_data) ->
-      `Arithmetic_seq (pack_arith_seq arith_seq,
-                       pack_recur_data recur_data)
+      `Arithmetic_seq (pack_arith_seq arith_seq, pack_recur_data recur_data)
     | Time_pattern_match _ -> failwith "Unimplemented"
 
-  and pack_sched_req_template (sched_req_template : sched_req_template) : Task_t.sched_req_template =
+  and pack_sched_req_template (sched_req_template : sched_req_template) :
+    Task_t.sched_req_template =
     Sched_req_data_skeleton.Serialize.pack sched_req_template
 
   and pack_recur_data (recur_data : recur_data) : Task_t.recur_data =
     {
       task_inst_data = pack_task_inst_data recur_data.task_inst_data;
-      sched_req_templates = List.map pack_sched_req_template recur_data.sched_req_templates;
+      sched_req_templates =
+        List.map pack_sched_req_template recur_data.sched_req_templates;
     }
 
-  and pack_task_inst_data (task_inst_data : task_inst_data) : Task_t.task_inst_data =
+  and pack_task_inst_data (task_inst_data : task_inst_data) :
+    Task_t.task_inst_data =
     { task_inst_type = pack_task_inst_type task_inst_data.task_inst_type }
 
-  and pack_task_inst_type (task_inst_type : task_inst_type) : Task_t.task_inst_type =
+  and pack_task_inst_type (task_inst_type : task_inst_type) :
+    Task_t.task_inst_type =
     match task_inst_type with
     | Reminder -> `Reminder
     | Reminder_quota_counting { quota } -> `Reminder_quota_counting quota
