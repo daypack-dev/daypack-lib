@@ -1,5 +1,7 @@
 SRCFILES = debug/*.ml* tests/*.ml* lib/*.ml*
 
+CINAPSFILES = lib/*.cinaps
+
 OCAMLFORMAT = ocamlformat \
 	--inplace \
 	--field-space loose \
@@ -7,11 +9,13 @@ OCAMLFORMAT = ocamlformat \
 	--let-open auto \
 	--type-decl sparse \
 	--sequence-style terminator \
-	$(SRCFILES)
+	$(SRCFILES) \
+	$(CINAPSFILES)
 
 OCPINDENT = ocp-indent \
 	--inplace \
-	$(SRCFILES)
+	$(SRCFILES) \
+	$(CINAPSFILES)
 
 .PHONY: all
 all :

@@ -54,3 +54,29 @@ let map (f : 'a -> 'b) (t : 'a t) : 'b t =
   | Push_to (dir, x, time_slots) -> Push_to (dir, f x, time_slots)
 
 let map_list f ts = List.map (map f) ts
+
+module Serialize = struct
+  let pack (t : 'a t) : 'a Sched_req_data_skeleton_t.sched_req_data_skeleton =
+    match t with
+    | Fixed { task_seg_related_data; start } ->
+      `Fixed { task_seg_related_data; start }
+    | Shift (l, time_slots) -> `Shift (l, time_slots)
+    | Split_and_shift (x, time_slots) -> `Split_and_shift (x, time_slots)
+    | Split_even { task_seg_related_data; time_slots; buckets } ->
+      `Split_even { task_seg_related_data; time_slots; buckets }
+    | Time_share (l, time_slots) -> `Time_share (l, time_slots)
+    | Push_to (dir, x, time_slots) -> `Push_to (dir, x, time_slots)
+end
+
+module Deserialize = struct
+  let unpack (x : 'a Sched_req_data_skeleton_t.sched_req_data_skeleton) : 'a t =
+    match x with
+    | `Fixed { task_seg_related_data; start } ->
+      Fixed { task_seg_related_data; start }
+    | `Shift (l, time_slots) -> Shift (l, time_slots)
+    | `Split_and_shift (x, time_slots) -> Split_and_shift (x, time_slots)
+    | `Split_even { task_seg_related_data; time_slots; buckets } ->
+      Split_even { task_seg_related_data; time_slots; buckets }
+    | `Time_share (l, time_slots) -> Time_share (l, time_slots)
+    | `Push_to (dir, x, time_slots) -> Push_to (dir, x, time_slots)
+end

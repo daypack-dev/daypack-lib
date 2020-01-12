@@ -33,6 +33,18 @@
  (action  (run atdgen -t %{deps})))
 
 (rule
+ (targets set_utils_j.ml
+          set_utils_j.mli)
+ (deps    set_utils.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets set_utils_t.ml
+          set_utils_t.mli)
+ (deps    set_utils.atd)
+ (action  (run atdgen -t %{deps})))
+
+(rule
  (targets int64_j.ml
           int64_j.mli)
  (deps    int64.atd)

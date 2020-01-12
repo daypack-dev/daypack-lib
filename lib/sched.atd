@@ -6,6 +6,10 @@ type ('k, 'v) diff <ocaml from="Map_utils"> = abstract
 
 type ('k, 'v) diff_bucketed <ocaml from="Map_utils"> = abstract
 
+(* corresponds to Set_utils
+*)
+type 'a set_diff <ocaml from="Set_utils" t="diff"> = abstract
+
 (* corresponds to Time_slot
 *)
 type time_slot <ocaml from="Time_slot"> = abstract
@@ -89,4 +93,22 @@ type store_diff = {
   task_list_diff : (task_id, task_data) diff;
   task_inst_list_diff : (task_inst_id, task_inst_data) diff;
   task_seg_list_diff : (task_seg_id, task_seg_size) diff;
+  user_id_to_task_ids_diff : (user_id, int64) diff_bucketed;
+  task_id_to_task_inst_ids_diff : (task_id, int64) diff_bucketed;
+  task_inst_id_to_task_seg_ids_diff : (task_inst_id, int64) diff_bucketed;
+  sched_req_ids_diff : int64 set_diff;
+  sched_req_pending_list_diff : (sched_req_id, sched_req_data) diff;
+  sched_req_record_list_diff : (sched_req_id, sched_req_record_data) diff;
+  quota_diff : (task_inst_id, int64) diff;
 }
+
+type agenda = {
+  indexed_by_start : (int64 * task_seg_place list) list;
+}
+
+type sched_data = {
+  store : store;
+  agenda : agenda;
+}
+
+type sched = (sched_id * sched_data)

@@ -78,6 +78,130 @@ let task_seg_id_to_string ((id1, id2, id3, id4, id5) : task_seg_id) =
 let task_seg_alloc_req_sum_length reqs =
   List.fold_left (fun acc (_, size) -> acc +^ size) 0L reqs
 
+module Serialize = struct
+  let pack_arith_seq (arith_seq : arith_seq) : Task_t.arith_seq =
+    {
+      start = arith_seq.start;
+      end_exc = arith_seq.end_exc;
+      diff = arith_seq.diff;
+    }
+
+  let rec pack_task ((id, data) : task) : Task_t.task = (id, pack_task_data data)
+
+  and pack_task_data (task_data : task_data) : Task_t.task_data =
+    {
+      splittable = task_data.splittable;
+      parallelizable = task_data.parallelizable;
+      task_type = pack_task_type task_data.task_type;
+    }
+
+  and pack_task_type (task_type : task_type) : Task_t.task_type =
+    match task_type with
+    | One_off -> `One_off
+    | Recurring recur -> `Recurring (pack_recur recur)
+
+  and pack_recur (recur : recur) : Task_t.recur =
+    match recur with
+    | Arithemtic_seq (arith_seq, recur_data) ->
+      `Arithmetic_seq (pack_arith_seq arith_seq, pack_recur_data recur_data)
+    | Time_pattern_match _ -> failwith "Unimplemented"
+
+  and pack_sched_req_template (sched_req_template : sched_req_template) :
+    Task_t.sched_req_template =
+    Sched_req_data_skeleton.Serialize.pack sched_req_template
+
+  and pack_recur_data (recur_data : recur_data) : Task_t.recur_data =
+    {
+      task_inst_data = pack_task_inst_data recur_data.task_inst_data;
+      sched_req_templates =
+        List.map pack_sched_req_template recur_data.sched_req_templates;
+    }
+
+  and pack_task_inst ((id, data) : task_inst) : Task_t.task_inst =
+    (id, pack_task_inst_data data)
+
+  and pack_task_inst_data (task_inst_data : task_inst_data) :
+    Task_t.task_inst_data =
+    { task_inst_type = pack_task_inst_type task_inst_data.task_inst_type }
+
+  and pack_task_inst_type (task_inst_type : task_inst_type) :
+    Task_t.task_inst_type =
+    match task_inst_type with
+    | Reminder -> `Reminder
+    | Reminder_quota_counting { quota } -> `Reminder_quota_counting quota
+    | Passing -> `Passing
+
+  and pack_task_seg x = x
+
+  and pack_task_seg_alloc_req x = x
+
+  and pack_task_seg_size x = x
+
+  and pack_task_seg_place x = x
+end
+
+module Deserialize = struct
+  let unpack_arith_seq (arith_seq : Task_t.arith_seq) : arith_seq =
+    {
+      start = arith_seq.start;
+      end_exc = arith_seq.end_exc;
+      diff = arith_seq.diff;
+    }
+
+  let rec unpack_task ((id, data) : Task_t.task) : task =
+    (id, unpack_task_data data)
+
+  and unpack_task_data (task_data : Task_t.task_data) : task_data =
+    {
+      splittable = task_data.splittable;
+      parallelizable = task_data.parallelizable;
+      task_type = unpack_task_type task_data.task_type;
+    }
+
+  and unpack_task_type (task_type : Task_t.task_type) : task_type =
+    match task_type with
+    | `One_off -> One_off
+    | `Recurring recur -> Recurring (unpack_recur recur)
+
+  and unpack_recur (recur : Task_t.recur) : recur =
+    match recur with
+    | `Arithmetic_seq (arith_seq, recur_data) ->
+      Arithemtic_seq (unpack_arith_seq arith_seq, unpack_recur_data recur_data)
+
+  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
+    : sched_req_template =
+    Sched_req_data_skeleton.Deserialize.unpack sched_req_template
+
+  and unpack_recur_data (recur_data : Task_t.recur_data) : recur_data =
+    {
+      task_inst_data = unpack_task_inst_data recur_data.task_inst_data;
+      sched_req_templates =
+        List.map unpack_sched_req_template recur_data.sched_req_templates;
+    }
+
+  and unpack_task_inst ((id, data) : Task_t.task_inst) : task_inst =
+    (id, unpack_task_inst_data data)
+
+  and unpack_task_inst_data (task_inst_data : Task_t.task_inst_data) :
+    task_inst_data =
+    { task_inst_type = unpack_task_inst_type task_inst_data.task_inst_type }
+
+  and unpack_task_inst_type (task_inst_type : Task_t.task_inst_type) :
+    task_inst_type =
+    match task_inst_type with
+    | `Reminder -> Reminder
+    | `Reminder_quota_counting quota -> Reminder_quota_counting { quota }
+    | `Passing -> Passing
+
+  and unpack_task_seg x = x
+
+  and unpack_task_seg_alloc_req x = x
+
+  and unpack_task_seg_size x = x
+
+  and unpack_task_seg_place x = x
+end
+
 module Print = struct
   let debug_print_task ?(indent_level = 0) (id, data) =
     Debug_print.printf ~indent_level "task id : %s\n" (task_id_to_string id);

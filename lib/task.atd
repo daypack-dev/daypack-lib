@@ -12,7 +12,7 @@ type task_id = (user_id * int64)
 
 type task_inst_id = (user_id * int64 * int64)
 
-type task_seg_id = (user_id * int64 * int64 * int64)
+type task_seg_id = (user_id * int64 * int64 * int64 * int64 option)
 
 type task = (task_id * task_data)
 

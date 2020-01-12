@@ -82,6 +82,39 @@ let sched_req_partially_within_time_period ~start ~end_exc
     (start' < start && start < end_exc')
     || (start' < end_exc && end_exc < end_exc')
 
+module Serialize = struct
+  let rec pack_sched_req (id, data) : Sched_req_t.sched_req =
+    (id, pack_sched_req_data data)
+
+  and pack_sched_req_data (sched_req_data : sched_req_data) :
+    Sched_req_t.sched_req_data =
+    Sched_req_data_skeleton.Serialize.pack sched_req_data
+
+  let rec pack_sched_req_record (id, data) : Sched_req_t.sched_req_record =
+    (id, pack_sched_req_record_data data)
+
+  and pack_sched_req_record_data (sched_req_record_data : sched_req_record_data)
+    : Sched_req_t.sched_req_record_data =
+    Sched_req_data_skeleton.Serialize.pack sched_req_record_data
+end
+
+module Deserialize = struct
+  let rec unpack_sched_req (id, data) : sched_req =
+    (id, unpack_sched_req_data data)
+
+  and unpack_sched_req_data (sched_req_data : Sched_req_t.sched_req_data) :
+    sched_req_data =
+    Sched_req_data_skeleton.Deserialize.unpack sched_req_data
+
+  let rec unpack_sched_req_record (id, data) : sched_req_record =
+    (id, unpack_sched_req_record_data data)
+
+  and unpack_sched_req_record_data
+      (sched_req_record_data : Sched_req_t.sched_req_record_data) :
+    sched_req_record_data =
+    Sched_req_data_skeleton.Deserialize.unpack sched_req_record_data
+end
+
 module Print = struct
   let debug_print_sched_req_data ?(indent_level = 0) req_data =
     match req_data with

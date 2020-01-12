@@ -35,42 +35,6 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
     removed : 'a t;
   }
 
-  (* let add_to_common (key : M.key) (x : 'a) (diff : 'a diff) : 'a diff =
-   *   {
-   *     diff with
-   *     common = M.add key x diff.common
-   *   }
-   * let add_to_updated (key : M.key) (a : 'a) (b : 'a) (diff : 'a diff) : 'a diff =
-   *   {
-   *     diff with
-   *     updated = M.add key (a, b) diff.updated
-   *   }
-   * 
-   * let add_to_added (key : M.key) (x : 'a) (diff : 'a diff) : 'a diff =
-   *   {
-   *     diff with
-   *     added = M.add key x diff.removed
-   *   }
-   * 
-   * let add_to_removed (key : M.key) (x : 'a) (diff : 'a diff) : 'a diff =
-   *   {
-   *     diff with
-   *     removed = M.add key x diff.removed
-   *   }
-   * 
-   * let diff (a : 'a t) (b : 'a t) : 'a t =
-   *   M.merge (fun key x_a x_b ->
-   *       match x_a, x_b with
-   *       | None, None -> None
-   *       | Some x_a, None ->
-   *         add_to_removed key x_a 
-   *       | None, Some _ -> None
-   *       | Some x_a, Some x_b ->
-   *         if x_a = x_b then Some x_a else None
-   *     )
-   *     a
-   *     b *)
-
   let get_common (m1 : 'a t) (m2 : 'a t) : 'a t =
     M.merge
       (fun _key x1 x2 ->
