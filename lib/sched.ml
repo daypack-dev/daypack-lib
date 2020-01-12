@@ -812,6 +812,23 @@ module Serialize = struct
     |> Seq.map (fun (id, set) -> (id, Int64_set.Serialize.pack set))
     |> List.of_seq
 
+  let pack_task_inst_id_to_task_inst_ids_diff (diff : Task_id_map_utils.Int64_bucketed.diff_bucketed)
+    : (Task.task_id, int64) Map_utils_t.diff_bucketed =
+    {
+      common = diff.common
+               |> Task_id_map.to_seq
+               |> Seq.map pack_int64_bucket_w_id
+               |> List.of_seq;
+      added = diff.added
+               |> Task_id_map.to_seq
+               |> Seq.map pack_int64_bucket_w_id
+               |> List.of_seq;
+      removed = diff.removed
+               |> Task_id_map.to_seq
+               |> Seq.map pack_int64_bucket_w_id
+               |> List.of_seq;
+    }
+
   let pack_sched_req_ids = Int64_set.Serialize.pack
 
   let pack_sched_req_pending_store (sched_req_pending_store : sched_req_store) :
