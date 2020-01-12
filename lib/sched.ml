@@ -719,10 +719,15 @@ module Serialize = struct
     =
     (id, bucket |> Int64_set.to_seq |> List.of_seq)
 
-  let pack_task_store (task_store : task_store) : Sched_t.task list =
-    task_store |> Task_id_map.to_seq
-    |> Seq.map Task.Serialize.pack_task
-    |> List.of_seq
+  (*$ #use "lib/sched.cinaps";;
+
+    print_pack_functions ()
+  *)
+
+  let pack_task_store (x : task_store) : Sched_t.task list list =
+    x |> Task_id_map.to_seq |> Seq.map Task_id_map.to_seq |> List.of_seq
+
+  (*$*)
 
   let pack_task_store_diff (diff : task_store_diff) :
     (Task_t.task_id, Task_t.task_data) Map_utils_t.diff =

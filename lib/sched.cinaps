@@ -1,0 +1,28 @@
+type pack_store_entry = {
+  f_suffix : string;
+  store_typ : string;
+  ret_typ : string;
+  f_to_seq : string;
+  f_pack : string;
+}
+
+let pack_store_list =
+  [
+    {
+      f_suffix = "task_store";
+      store_typ = "task_store";
+      ret_typ = "Sched_t.task list";
+      f_to_seq = "Task_id_map.to_seq";
+      f_pack = "Task.Serialize.pack_task";
+    };
+  ]
+
+let print_pack_functions () =
+  List.iter
+    (fun e ->
+       Printf.printf "let pack_%s (x : %s) : %s list =\n" e.f_suffix e.store_typ
+         e.ret_typ;
+       Printf.printf "x |> %s\n" e.f_to_seq;
+       Printf.printf "|> Seq.map %s\n" e.f_to_seq;
+       Printf.printf "|> List.of_seq\n")
+    pack_store_list
