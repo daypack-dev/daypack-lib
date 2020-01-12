@@ -739,13 +739,15 @@ module Serialize = struct
     |> Seq.map Sched_req.Serialize.pack_sched_req
     |> List.of_seq
 
-  let pack_sched_req_record_store (sched_req_record_store : sched_req_record_store) :
+  let pack_sched_req_record_store
+      (sched_req_record_store : sched_req_record_store) :
     Sched_req_t.sched_req_record list =
     sched_req_record_store |> Sched_req_id_map.to_seq
     |> Seq.map Sched_req.Serialize.pack_sched_req_record
     |> List.of_seq
 
-  let pack_quota (quota : int64 Task_inst_id_map.t) : (Task.task_inst_id * int64) list =
+  let pack_quota (quota : int64 Task_inst_id_map.t) :
+    (Task.task_inst_id * int64) list =
     quota |> Task_inst_id_map.to_seq |> List.of_seq
 
   let pack_store (store : store) : Sched_t.store =
@@ -761,7 +763,8 @@ module Serialize = struct
       sched_req_ids = pack_sched_req_ids store.sched_req_ids;
       sched_req_pending_list =
         pack_sched_req_pending_store store.sched_req_pending_store;
-      sched_req_record_list = pack_sched_req_record_store store.sched_req_record_store;
+      sched_req_record_list =
+        pack_sched_req_record_store store.sched_req_record_store;
       quota = pack_quota store.quota;
     }
 
@@ -783,46 +786,58 @@ end
 
 module Deserialize = struct
   let unpack_task_list (task_list : Sched_t.task list) : task_store =
-    task_list |> List.to_seq |> Seq.map Task.Deserialize.unpack_task
+    task_list |> List.to_seq
+    |> Seq.map Task.Deserialize.unpack_task
     |> Task_id_map.of_seq
 
-  let unpack_task_inst_list (task_inst_list : Sched_t.task_inst list) : task_inst_store =
-    task_inst_list |> List.to_seq |> Seq.map Task.Deserialize.unpack_task_inst |>
-    Task_inst_id_map.of_seq
+  let unpack_task_inst_list (task_inst_list : Sched_t.task_inst list) :
+    task_inst_store =
+    task_inst_list |> List.to_seq
+    |> Seq.map Task.Deserialize.unpack_task_inst
+    |> Task_inst_id_map.of_seq
 
-  let unpack_task_seg_list (task_seg_list : Sched_t.task_seg list) : task_seg_store =
+  let unpack_task_seg_list (task_seg_list : Sched_t.task_seg list) :
+    task_seg_store =
     task_seg_list |> List.to_seq |> Task_seg_id_map.of_seq
 
-  let unpack_user_id_to_task_ids (user_id_to_task_ids : (Task.user_id * int64 list) list) :
+  let unpack_user_id_to_task_ids
+      (user_id_to_task_ids : (Task.user_id * int64 list) list) :
     Int64_set.t User_id_map.t =
     user_id_to_task_ids |> List.to_seq
     |> Seq.map (fun (id, l) -> (id, Int64_set.Deserialize.unpack l))
     |> User_id_map.of_seq
 
-  let unpack_task_id_to_task_inst_ids (task_id_to_task_inst_ids : (Task.task_id * int64 list) list) :
+  let unpack_task_id_to_task_inst_ids
+      (task_id_to_task_inst_ids : (Task.task_id * int64 list) list) :
     Int64_set.t Task_id_map.t =
     task_id_to_task_inst_ids |> List.to_seq
     |> Seq.map (fun (id, l) -> (id, Int64_set.Deserialize.unpack l))
     |> Task_id_map.of_seq
 
-  let unpack_task_inst_id_to_task_seg_ids (task_inst_id_to_task_seg_ids : (Task.task_inst_id * int64 list) list) :
+  let unpack_task_inst_id_to_task_seg_ids
+      (task_inst_id_to_task_seg_ids : (Task.task_inst_id * int64 list) list) :
     Int64_set.t Task_inst_id_map.t =
-    task_inst_id_to_task_seg_ids |> List.to_seq |>
-    Seq.map (fun (id, l) -> (id, Int64_set.Deserialize.unpack l))
+    task_inst_id_to_task_seg_ids |> List.to_seq
+    |> Seq.map (fun (id, l) -> (id, Int64_set.Deserialize.unpack l))
     |> Task_inst_id_map.of_seq
 
   let unpack_sched_req_ids = Int64_set.Deserialize.unpack
 
-  let unpack_sched_req_pending_list (sched_req_pending_list : Sched_req_t.sched_req list) : sched_req_store =
-    sched_req_pending_list |> List.to_seq |> Seq.map Sched_req.Deserialize.unpack_sched_req |>
-    Sched_req_id_map.of_seq
+  let unpack_sched_req_pending_list
+      (sched_req_pending_list : Sched_req_t.sched_req list) : sched_req_store =
+    sched_req_pending_list |> List.to_seq
+    |> Seq.map Sched_req.Deserialize.unpack_sched_req
+    |> Sched_req_id_map.of_seq
 
-  let unpack_sched_req_record_list (sched_req_record_list : Sched_req_t.sched_req_record list) :
+  let unpack_sched_req_record_list
+      (sched_req_record_list : Sched_req_t.sched_req_record list) :
     sched_req_record_store =
-    sched_req_record_list |> List.to_seq |> Seq.map Sched_req.Deserialize.unpack_sched_req_record |>
-    Sched_req_id_map.of_seq
+    sched_req_record_list |> List.to_seq
+    |> Seq.map Sched_req.Deserialize.unpack_sched_req_record
+    |> Sched_req_id_map.of_seq
 
-  let unpack_quota (quota : (Task.task_inst_id * int64) list) : int64 Task_inst_id_map.t =
+  let unpack_quota (quota : (Task.task_inst_id * int64) list) :
+    int64 Task_inst_id_map.t =
     quota |> List.to_seq |> Task_inst_id_map.of_seq
 
   let unpack_store (store : Sched_t.store) : store =
@@ -839,25 +854,29 @@ module Deserialize = struct
       sched_req_ids = unpack_sched_req_ids store.sched_req_ids;
       sched_req_pending_store =
         unpack_sched_req_pending_list store.sched_req_pending_list;
-      sched_req_record_store = unpack_sched_req_record_list store.sched_req_record_list;
+      sched_req_record_store =
+        unpack_sched_req_record_list store.sched_req_record_list;
       quota = unpack_quota store.quota;
     }
 
-  let unpack_indexed_by_start (indexed_by_start : (int64 * Task_t.task_seg_place list) list) :
+  let unpack_indexed_by_start
+      (indexed_by_start : (int64 * Task_t.task_seg_place list) list) :
     task_seg_place_map =
-    indexed_by_start |> List.to_seq |> 
-    Seq.map (fun (id, set) -> (id, Task_seg_place_set.Deserialize.unpack set))
+    indexed_by_start |> List.to_seq
+    |> Seq.map (fun (id, set) ->
+        (id, Task_seg_place_set.Deserialize.unpack set))
     |> Int64_map.of_seq
 
   let unpack_agenda (agenda : Sched_t.agenda) : agenda =
-    { start_and_end_exc = None;
-      indexed_by_start = unpack_indexed_by_start agenda.indexed_by_start }
+    {
+      start_and_end_exc = None;
+      indexed_by_start = unpack_indexed_by_start agenda.indexed_by_start;
+    }
 
   let unpack_sched ((sid, sd) : Sched_t.sched) : sched =
-    (sid, { store = unpack_store sd.store; agenda = unpack_agenda sd.agenda})
+    (sid, { store = unpack_store sd.store; agenda = unpack_agenda sd.agenda })
 
-  let of_json string : sched =
-    string |> Sched_j.sched_of_string |> unpack_sched
+  let of_json string : sched = string |> Sched_j.sched_of_string |> unpack_sched
 end
 
 module Print = struct

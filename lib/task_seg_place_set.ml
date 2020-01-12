@@ -9,6 +9,5 @@ module Serialize = struct
 end
 
 module Deserialize = struct
-  let unpack (l : Task.task_seg_place list) : t =
-    l |> List.to_seq |> of_seq
+  let unpack (l : Task.task_seg_place list) : t = l |> List.to_seq |> of_seq
 end

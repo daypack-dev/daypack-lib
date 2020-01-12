@@ -86,8 +86,7 @@ module Serialize = struct
       diff = arith_seq.diff;
     }
 
-  let rec pack_task ((id, data) : task) : Task_t.task =
-    (id, pack_task_data data)
+  let rec pack_task ((id, data) : task) : Task_t.task = (id, pack_task_data data)
 
   and pack_task_data (task_data : task_data) : Task_t.task_data =
     {
@@ -161,8 +160,8 @@ module Deserialize = struct
     | `Arithmetic_seq (arith_seq, recur_data) ->
       Arithemtic_seq (unpack_arith_seq arith_seq, unpack_recur_data recur_data)
 
-  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template) :
-    sched_req_template =
+  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
+    : sched_req_template =
     Sched_req_data_skeleton.Deserialize.unpack sched_req_template
 
   and unpack_recur_data (recur_data : Task_t.recur_data) : recur_data =
@@ -175,12 +174,12 @@ module Deserialize = struct
   and unpack_task_inst ((id, data) : Task_t.task_inst) : task_inst =
     (id, unpack_task_inst_data data)
 
-  and unpack_task_inst_data (task_inst_data : Task_t.task_inst_data) : task_inst_data =
-    {
-      task_inst_type = unpack_task_inst_type task_inst_data.task_inst_type
-    }
+  and unpack_task_inst_data (task_inst_data : Task_t.task_inst_data) :
+    task_inst_data =
+    { task_inst_type = unpack_task_inst_type task_inst_data.task_inst_type }
 
-  and unpack_task_inst_type (task_inst_type : Task_t.task_inst_type) : task_inst_type =
+  and unpack_task_inst_type (task_inst_type : Task_t.task_inst_type) :
+    task_inst_type =
     match task_inst_type with
     | `Reminder -> Reminder
     | `Reminder_quota_counting quota -> Reminder_quota_counting { quota }

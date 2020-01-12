@@ -5,6 +5,5 @@ module Serialize = struct
 end
 
 module Deserialize = struct
-  let unpack (l : int64 list) : t =
-    l |> List.to_seq |> of_seq
+  let unpack (l : int64 list) : t = l |> List.to_seq |> of_seq
 end
