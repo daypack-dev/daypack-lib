@@ -313,3 +313,21 @@ let print_pack_store_diff () =
     (fun (l, r) -> Printf.printf "%s_diff = pack_%s_diff diff.%s_diff;\n" l r r)
     fields;
   print_endline "}"
+
+let print_unpack_store () =
+  Printf.printf "let unpack_store (store : Sched_t.store) : store =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r) -> Printf.printf "%s = unpack_%s store.%s;\n" r l l)
+    fields;
+  print_endline "}"
+
+let print_unpack_store_diff () =
+  Printf.printf
+    "let unpack_store_diff (diff : Sched_t.store_diff) : store_diff =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r) ->
+       Printf.printf "%s_diff = unpack_%s_diff diff.%s_diff;\n" r l l)
+    fields;
+  print_endline "}"

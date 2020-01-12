@@ -974,7 +974,7 @@ module Serialize = struct
 end
 
 module Deserialize = struct
-  (*$ #use "sched.cinaps";;
+  (*$ #use "lib/sched.cinaps";;
 
     Store.print_unpack_related_functions ()
   *)
@@ -1111,7 +1111,7 @@ module Deserialize = struct
   let unpack_sched_req_ids = Int64_set.Deserialize.unpack
 
   let unpack_sched_req_ids_diff (diff : int64 Set_utils_t.diff) :
-     Int64_set_utils.diff=
+    Int64_set_utils.diff =
     {
       common = diff.common |> List.to_seq |> Int64_set.of_seq;
       added = diff.added |> List.to_seq |> Int64_set.of_seq;
@@ -1170,12 +1170,18 @@ module Deserialize = struct
     }
 
   (*$*)
+
+  (*$ #use "lib/sched.cinaps";;
+
+    print_unpack_store ();
+    print_unpack_store_diff ();
+  *)
+
   let unpack_store (store : Sched_t.store) : store =
     {
       task_store = unpack_task_list store.task_list;
       task_inst_store = unpack_task_inst_list store.task_inst_list;
       task_seg_store = unpack_task_seg_list store.task_seg_list;
-      (* transit_time_store = Transit_time_map.empty; *)
       user_id_to_task_ids = unpack_user_id_to_task_ids store.user_id_to_task_ids;
       task_id_to_task_inst_ids =
         unpack_task_id_to_task_inst_ids store.task_id_to_task_inst_ids;
@@ -1188,6 +1194,28 @@ module Deserialize = struct
         unpack_sched_req_record_list store.sched_req_record_list;
       quota = unpack_quota store.quota;
     }
+
+  let unpack_store_diff (diff : Sched_t.store_diff) : store_diff =
+    {
+      task_store_diff = unpack_task_list_diff diff.task_list_diff;
+      task_inst_store_diff = unpack_task_inst_list_diff diff.task_inst_list_diff;
+      task_seg_store_diff = unpack_task_seg_list_diff diff.task_seg_list_diff;
+      user_id_to_task_ids_diff =
+        unpack_user_id_to_task_ids_diff diff.user_id_to_task_ids_diff;
+      task_id_to_task_inst_ids_diff =
+        unpack_task_id_to_task_inst_ids_diff diff.task_id_to_task_inst_ids_diff;
+      task_inst_id_to_task_seg_ids_diff =
+        unpack_task_inst_id_to_task_seg_ids_diff
+          diff.task_inst_id_to_task_seg_ids_diff;
+      sched_req_ids_diff = unpack_sched_req_ids_diff diff.sched_req_ids_diff;
+      sched_req_pending_store_diff =
+        unpack_sched_req_pending_list_diff diff.sched_req_pending_list_diff;
+      sched_req_record_store_diff =
+        unpack_sched_req_record_list_diff diff.sched_req_record_list_diff;
+      quota_diff = unpack_quota_diff diff.quota_diff;
+    }
+
+  (*$*)
 
   let unpack_indexed_by_start
       (indexed_by_start : (int64 * Task_t.task_seg_place list) list) :
