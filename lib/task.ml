@@ -105,13 +105,7 @@ module Serialize = struct
     | Time_pattern_match _ -> failwith "Unimplemented"
 
   and pack_sched_req_template (sched_req_template : sched_req_template) : Task_t.sched_req_template =
-    match sched_req_template with
-    | Fixed { task_seg_related_data; start } -> `Fixed { task_seg_related_data; start}
-    | Shift (l, time_slots) -> `Shift (l, time_slots)
-    | Split_and_shift (x, time_slots) -> `Split_and_shift (x, time_slots)
-    | Split_even { task_seg_related_data; time_slots; buckets } -> `Split_even { task_seg_related_data; time_slots; buckets }
-    | Time_share (l, time_slots) -> `Time_share (l, time_slots)
-    | Push_to (dir, x, time_slots) -> `Push_to (dir, x, time_slots)
+    Sched_req_data_skeleton.Serialize.pack sched_req_template
 
   and pack_recur_data (recur_data : recur_data) : Task_t.recur_data =
     {

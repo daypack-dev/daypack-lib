@@ -696,30 +696,76 @@ module Recur = struct
 end
 
 module Serialize = struct
-  let pack ((sid, sd) : sched) : Sched_t.sched =
-    let store : Sched_t.store =
+  let pack_task_store (task_store : task_store) : Sched_t.task list =
+    task_store |> Task_id_map.to_seq
+    |> Seq.map (fun (id, data) -> (id, Task.Serialize.pack_task_data data))
+    |> List.of_seq
+
+  let pack_task_inst_store (task_inst_store : task_inst_store) : Sched_t.task_inst list =
+    task_inst_store |> Task_inst_id_map.to_seq
+    |> Seq.map (fun (id, data) -> (id, Task.Serialize.pack_task_inst_data data))
+    |> List.of_seq
+
+  let pack_task_seg_store (task_seg_store : task_seg_store) : Sched_t.task_seg list =
+    task_seg_store |> Task_seg_id_map.to_seq
+    |> List.of_seq
+
+  let pack_user_id_to_task_ids (user_id_to_task_ids : Int64_set.t User_id_map.t) :
+    (Task.user_id * int64 list) list =
+    user_id_to_task_ids |> User_id_map.to_seq
+    |> Seq.map (fun (id, set) -> id, Int64_set.Serialize.pack set)
+    |> List.of_seq
+
+  let pack_task_id_to_task_inst_ids (task_id_to_task_inst_ids : Int64_set.t Task_id_map.t) :
+    (Task.task_id * int64 list) list =
+    task_id_to_task_inst_ids
+  |> Task_id_map.to_seq|>Seq.map (fun (id, set) -> id, Int64_set.Serialize.pack set)
+  |> List.of_seq
+
+  let pack_task_inst_id_to_task_seg_ids (task_inst_id_to_task_seg_ids : Int64_set.t Task_inst_id_map.t) :
+    (Task.task_inst_id * int64 list) list =
+    task_inst_id_to_task_seg_ids
+  |> Task_inst_id_map.to_seq|>Seq.map (fun (id, set) -> id, Int64_set.Serialize.pack set)
+  |> List.of_seq
+
+  let pack_sched_req_ids =
+Int64_set.Serialize.pack
+
+  let pack_sched_req_pending_store (sched_req_pending_store : sched_req_store) :
+    Sched_req_t.sched_req list =
+    sched_req_pending_store |> Sched_req_id_map.to_seq
+    |> Seq.map (fun (id, data) -> id, Sched_req.Serialize.pack_sched_req_data data)
+    |> List.of_seq
+
+  let pack_store (store : store) : Sched_t.store =
         {
-          task_list = sd.store.task_store |> Task_id_map.to_seq
-                      |> Seq.map (fun (id, data) -> (id, Task.Serialize.pack_task_data data))
-                      |> List.of_seq;
-          task_inst_list = [];
-          task_seg_list = [];
-          user_id_to_task_ids = [];
-          task_id_to_task_inst_ids = [];
-          task_inst_id_to_task_seg_ids = [];
-          sched_req_ids = [];
-          sched_req_pending_list = [];
+          task_list = pack_task_store store.task_store;
+          task_inst_list = pack_task_inst_store store.task_inst_store;
+          task_seg_list = pack_task_seg_store store.task_seg_store;
+          user_id_to_task_ids = pack_user_id_to_task_ids store.user_id_to_task_ids;
+          task_id_to_task_inst_ids = pack_task_id_to_task_inst_ids store.task_id_to_task_inst_ids;
+          task_inst_id_to_task_seg_ids = pack_task_inst_id_to_task_seg_ids store.task_inst_id_to_task_seg_ids;
+          sched_req_ids = pack_sched_req_ids store.sched_req_ids;
+          sched_req_pending_list = pack_sched_req_pending_store store.sched_req_pending_store;
           sched_req_record_list  = [];
           quota = [];
         }
-    in
-    let agenda : Sched_t.agenda = {
-      indexed_by_start = [];
+
+  let pack_indexed_by_start (indexed_by_start : task_seg_place_map) :
+    (int64 * Task_t.task_seg_place list) list =
+    indexed_by_start |> Int64_map.to_seq
+    |> Seq.map (fun (id, set) -> id, Task_seg_place_set.Serialize.pack set)
+    |> List.of_seq
+
+  let pack_agenda (agenda : agenda) : Sched_t.agenda =
+    {
+      indexed_by_start = pack_indexed_by_start agenda.indexed_by_start;
     }
-    in
+
+  let pack_sched ((sid, sd) : sched) : Sched_t.sched =
     (sid, {
-        store;
-        agenda;
+        store = pack_store sd.store;
+        agenda = pack_agenda sd.agenda;
     })
 end
 
