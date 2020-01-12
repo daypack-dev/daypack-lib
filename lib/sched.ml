@@ -768,6 +768,9 @@ module Serialize = struct
 
   let pack_sched ((sid, sd) : sched) : Sched_t.sched =
     (sid, { store = pack_store sd.store; agenda = pack_agenda sd.agenda })
+
+  let to_json (sched : sched) : string =
+    sched |> pack_sched |> Sched_j.string_of_sched
 end
 
 module Print = struct
