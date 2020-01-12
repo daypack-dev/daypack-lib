@@ -64,8 +64,8 @@ type store_diff = {
     Task_inst_id_map_utils.Int64_bucketed.diff_bucketed;
   sched_req_ids_diff : Int64_set_utils.diff;
   sched_req_pending_store_diff : sched_req_store_diff;
-  sched_req_record_store : sched_req_record_store_diff;
-  quota : int64 Int64_map_utils.diff;
+  sched_req_record_store_diff : sched_req_record_store_diff;
+  quota_diff : int64 Task_inst_id_map_utils.diff;
 }
 
 type agenda = {
@@ -782,6 +782,67 @@ module Serialize = struct
       removed = pack_task_seg_store x.removed;
     }
 
+  let pack_sched_req_pending_store (x : sched_req_store) :
+    Sched_req_t.sched_req list =
+    x |> Sched_req_id_map.to_seq
+    |> Seq.map Sched_req.Serialize.pack_sched_req
+    |> List.of_seq
+
+  let pack_sched_req_pending_store_diff (x : sched_req_store_diff) :
+    (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff =
+    {
+      updated =
+        x.updated |> Sched_req_id_map.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            ( id,
+              ( Sched_req.Serialize.pack_sched_req_data data1,
+                Sched_req.Serialize.pack_sched_req_data data2 ) ))
+        |> List.of_seq;
+      common = pack_sched_req_pending_store x.common;
+      added = pack_sched_req_pending_store x.added;
+      removed = pack_sched_req_pending_store x.removed;
+    }
+
+  let pack_sched_req_record_store (x : sched_req_record_store) :
+    Sched_req_t.sched_req_record list =
+    x |> Sched_req_id_map.to_seq
+    |> Seq.map Sched_req.Serialize.pack_sched_req_record
+    |> List.of_seq
+
+  let pack_sched_req_record_store_diff (x : sched_req_record_store_diff) :
+    ( Sched_req_t.sched_req_id,
+      Sched_req_t.sched_req_record_data )
+      Map_utils_t.diff =
+    {
+      updated =
+        x.updated |> Sched_req_id_map.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            ( id,
+              ( Sched_req.Serialize.pack_sched_req_record_data data1,
+                Sched_req.Serialize.pack_sched_req_record_data data2 ) ))
+        |> List.of_seq;
+      common = pack_sched_req_record_store x.common;
+      added = pack_sched_req_record_store x.added;
+      removed = pack_sched_req_record_store x.removed;
+    }
+
+  let pack_quota (x : int64 Task_inst_id_map.t) :
+    (Task.task_inst_id * int64) list =
+    x |> Task_inst_id_map.to_seq |> Seq.map (fun x -> x) |> List.of_seq
+
+  let pack_quota_diff (x : int64 Task_inst_id_map_utils.diff) :
+    (Task_t.task_inst_id, int64) Map_utils_t.diff =
+    {
+      updated =
+        x.updated |> Task_inst_id_map.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            (id, ((fun x -> x) data1, (fun x -> x) data2)))
+        |> List.of_seq;
+      common = pack_quota x.common;
+      added = pack_quota x.added;
+      removed = pack_quota x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -846,50 +907,12 @@ module Serialize = struct
       removed = diff.removed |> Int64_set.to_seq |> List.of_seq;
     }
 
-  let pack_sched_req_pending_store (sched_req_pending_store : sched_req_store) :
-    Sched_req_t.sched_req list =
-    sched_req_pending_store |> Sched_req_id_map.to_seq
-    |> Seq.map Sched_req.Serialize.pack_sched_req
-    |> List.of_seq
+  (*$ #use "lib/sched.cinaps";;
 
-  let pack_sched_req_pending_store_diff (diff : sched_req_store_diff) :
-    (Sched_req.sched_req_id, Sched_req.sched_req_data) Map_utils_t.diff =
-    {
-      common = diff.common |> Sched_req_id_map.to_seq |> List.of_seq;
-      updated = diff.updated |> Sched_req_id_map.to_seq |> List.of_seq;
-      added = diff.added |> Sched_req_id_map.to_seq |> List.of_seq;
-      removed = diff.removed |> Sched_req_id_map.to_seq |> List.of_seq;
-    }
+    print_pack_store ();
 
-  let pack_sched_req_record_store
-      (sched_req_record_store : sched_req_record_store) :
-    Sched_req_t.sched_req_record list =
-    sched_req_record_store |> Sched_req_id_map.to_seq
-    |> Seq.map Sched_req.Serialize.pack_sched_req_record
-    |> List.of_seq
-
-  let pack_sched_req_record_store_diff (diff : sched_req_record_store_diff) :
-    (Sched_req.sched_req_id, Sched_req.sched_req_record_data) Map_utils_t.diff
-    =
-    {
-      common = diff.common |> Sched_req_id_map.to_seq |> List.of_seq;
-      updated = diff.updated |> Sched_req_id_map.to_seq |> List.of_seq;
-      added = diff.added |> Sched_req_id_map.to_seq |> List.of_seq;
-      removed = diff.removed |> Sched_req_id_map.to_seq |> List.of_seq;
-    }
-
-  let pack_quota (quota : int64 Task_inst_id_map.t) :
-    (Task.task_inst_id * int64) list =
-    quota |> Task_inst_id_map.to_seq |> List.of_seq
-
-  let pack_quota_diff (diff : int64 Int64_map_utils.diff) :
-    (int64, int64) Map_utils_t.diff =
-    {
-      common = diff.common |> Int64_map.to_seq |> List.of_seq;
-      updated = diff.updated |> Int64_map.to_seq |> List.of_seq;
-      added = diff.added |> Int64_map.to_seq |> List.of_seq;
-      removed = diff.removed |> Int64_map.to_seq |> List.of_seq;
-    }
+    print_pack_store_diff ()
+  *)
 
   let pack_store (store : store) : Sched_t.store =
     {
@@ -922,7 +945,14 @@ module Serialize = struct
         pack_task_inst_id_to_task_seg_ids_diff
           diff.task_inst_id_to_task_seg_ids_diff;
       sched_req_ids_diff = pack_sched_req_ids_diff diff.sched_req_ids_diff;
+      sched_req_pending_list_diff =
+        pack_sched_req_pending_store_diff diff.sched_req_pending_store_diff;
+      sched_req_record_list_diff =
+        pack_sched_req_record_store_diff diff.sched_req_record_store_diff;
+      quota_diff = pack_quota_diff diff.quota_diff;
     }
+
+  (*$*)
 
   let pack_indexed_by_start (indexed_by_start : task_seg_place_map) :
     (int64 * Task_t.task_seg_place list) list =

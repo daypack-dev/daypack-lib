@@ -44,6 +44,40 @@ module Store = struct
         f_inner_pack = "Task.Serialize.pack_task_seg";
         f_inner_pack_data = "Task.Serialize.pack_task_seg_size";
       };
+      {
+        f_suffix = "sched_req_pending_store";
+        store_typ = "sched_req_store";
+        diff_typ = "sched_req_store_diff";
+        ret_typ = "Sched_req_t.sched_req list";
+        diff_ret_typ =
+          "(Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) \
+           Map_utils_t.diff";
+        f_to_seq = "Sched_req_id_map.to_seq";
+        f_inner_pack = "Sched_req.Serialize.pack_sched_req";
+        f_inner_pack_data = "Sched_req.Serialize.pack_sched_req_data";
+      };
+      {
+        f_suffix = "sched_req_record_store";
+        store_typ = "sched_req_record_store";
+        diff_typ = "sched_req_record_store_diff";
+        ret_typ = "Sched_req_t.sched_req_record list";
+        diff_ret_typ =
+          "(Sched_req_t.sched_req_id, Sched_req_t.sched_req_record_data) \
+           Map_utils_t.diff";
+        f_to_seq = "Sched_req_id_map.to_seq";
+        f_inner_pack = "Sched_req.Serialize.pack_sched_req_record";
+        f_inner_pack_data = "Sched_req.Serialize.pack_sched_req_record_data";
+      };
+      {
+        f_suffix = "quota";
+        store_typ = "int64 Task_inst_id_map.t";
+        diff_typ = "int64 Task_inst_id_map_utils.diff";
+        ret_typ = "(Task.task_inst_id * int64) list";
+        diff_ret_typ = "(Task_t.task_inst_id, int64) Map_utils_t.diff";
+        f_to_seq = "Task_inst_id_map.to_seq";
+        f_inner_pack = "(fun x -> x)";
+        f_inner_pack_data = "(fun x -> x)";
+      };
     ]
 
   let get_pack_f_name e = Printf.sprintf "pack_%s" e.f_suffix
@@ -148,3 +182,34 @@ module Bucket_store = struct
          print_pack_diff_function e)
       pack_bucket_store_list
 end
+
+let fields =
+  [
+    ("task_list", "task_store");
+    ("task_inst_list", "task_inst_store");
+    ("task_seg_list", "task_seg_store");
+    ("user_id_to_task_ids", "user_id_to_task_ids");
+    ("task_id_to_task_inst_ids", "task_id_to_task_inst_ids");
+    ("task_inst_id_to_task_seg_ids", "task_inst_id_to_task_seg_ids");
+    ("sched_req_ids", "sched_req_ids");
+    ("sched_req_pending_list", "sched_req_pending_store");
+    ("sched_req_record_list", "sched_req_record_store");
+    ("quota", "quota");
+  ]
+
+let print_pack_store () =
+  Printf.printf "let pack_store (store : store) : Sched_t.store =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r) -> Printf.printf "%s = pack_%s store.%s;\n" l r r)
+    fields;
+  print_endline "}"
+
+let print_pack_store_diff () =
+  Printf.printf
+    "let pack_store_diff (diff : store_diff) : Sched_t.store_diff =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r) -> Printf.printf "%s_diff = pack_%s_diff diff.%s_diff;\n" l r r)
+    fields;
+  print_endline "}"
