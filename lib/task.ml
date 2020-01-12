@@ -78,6 +78,57 @@ let task_seg_id_to_string ((id1, id2, id3, id4, id5) : task_seg_id) =
 let task_seg_alloc_req_sum_length reqs =
   List.fold_left (fun acc (_, size) -> acc +^ size) 0L reqs
 
+module Serialize = struct
+  let pack_arith_seq (arith_seq : arith_seq) : Task_t.arith_seq =
+    { start = arith_seq.start;
+      end_exc = arith_seq.end_exc;
+      diff = arith_seq.diff;
+    }
+
+  let rec pack_task_data (task_data :task_data) : Task_t.task_data =
+    { splittable = task_data.splittable;
+      parallelizable = task_data.parallelizable;
+      task_type = pack_task_type task_data.task_type;
+    }
+
+  and pack_task_type (task_type : task_type) : Task_t.task_type =
+    match task_type with
+    | One_off -> `One_off
+    | Recurring recur ->
+      `Recurring (pack_recur recur)
+
+  and pack_recur (recur : recur) : Task_t.recur =
+    match recur with
+    | Arithemtic_seq (arith_seq, recur_data) ->
+      `Arithmetic_seq (pack_arith_seq arith_seq,
+                       pack_recur_data recur_data)
+    | Time_pattern_match _ -> failwith "Unimplemented"
+
+  and pack_sched_req_template (sched_req_template : sched_req_template) : Task_t.sched_req_template =
+    match sched_req_template with
+    | Fixed { task_seg_related_data; start } -> `Fixed { task_seg_related_data; start}
+    | Shift (l, time_slots) -> `Shift (l, time_slots)
+    | Split_and_shift (x, time_slots) -> `Split_and_shift (x, time_slots)
+    | Split_even { task_seg_related_data; time_slots; buckets } -> `Split_even { task_seg_related_data; time_slots; buckets }
+    | Time_share (l, time_slots) -> `Time_share (l, time_slots)
+    | Push_to (dir, x, time_slots) -> `Push_to (dir, x, time_slots)
+
+  and pack_recur_data (recur_data : recur_data) : Task_t.recur_data =
+    {
+      task_inst_data = pack_task_inst_data recur_data.task_inst_data;
+      sched_req_templates = List.map pack_sched_req_template recur_data.sched_req_templates;
+    }
+
+  and pack_task_inst_data (task_inst_data : task_inst_data) : Task_t.task_inst_data =
+    { task_inst_type = pack_task_inst_type task_inst_data.task_inst_type }
+
+  and pack_task_inst_type (task_inst_type : task_inst_type) : Task_t.task_inst_type =
+    match task_inst_type with
+    | Reminder -> `Reminder
+    | Reminder_quota_counting { quota } -> `Reminder_quota_counting quota
+    | Passing -> `Passing
+end
+
 module Print = struct
   let debug_print_task ?(indent_level = 0) (id, data) =
     Debug_print.printf ~indent_level "task id : %s\n" (task_id_to_string id);

@@ -695,6 +695,34 @@ module Recur = struct
       sd.store.task_store (sid, sd)
 end
 
+module Serialize = struct
+  let pack ((sid, sd) : sched) : Sched_t.sched =
+    let store : Sched_t.store =
+        {
+          task_list = sd.store.task_store |> Task_id_map.to_seq
+                      |> Seq.map (fun (id, data) -> (id, Task.Serialize.pack_task_data data))
+                      |> List.of_seq;
+          task_inst_list = [];
+          task_seg_list = [];
+          user_id_to_task_ids = [];
+          task_id_to_task_inst_ids = [];
+          task_inst_id_to_task_seg_ids = [];
+          sched_req_ids = [];
+          sched_req_pending_list = [];
+          sched_req_record_list  = [];
+          quota = [];
+        }
+    in
+    let agenda : Sched_t.agenda = {
+      indexed_by_start = [];
+    }
+    in
+    (sid, {
+        store;
+        agenda;
+    })
+end
+
 module Print = struct
   let debug_print_sched ?(indent_level = 0) (sid, sd) =
     Debug_print.printf ~indent_level "schedule id : %s\n"

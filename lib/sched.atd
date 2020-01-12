@@ -90,3 +90,14 @@ type store_diff = {
   task_inst_list_diff : (task_inst_id, task_inst_data) diff;
   task_seg_list_diff : (task_seg_id, task_seg_size) diff;
 }
+
+type agenda = {
+  indexed_by_start : (int64 * task_seg_place list) list;
+}
+
+type sched_data = {
+  store : store;
+  agenda : agenda;
+}
+
+type sched = (sched_id * sched_data)
