@@ -19,16 +19,13 @@ module Make (Set : Set.S) : S with type set := Set.t = struct
     removed : set;
   }
 
-  let get_common (s1 : set) (s2 : set) : set =
-    Set.inter s1 s2
+  let get_common (s1 : set) (s2 : set) : set = Set.inter s1 s2
 
-  let get_added (s1 : set) (s2 : set) : set =
-    Set.diff s2 s1
+  let get_added (s1 : set) (s2 : set) : set = Set.diff s2 s1
 
-  let get_removed (s1 : set) (s2 : set) : set =
-    Set.diff s1 s2
+  let get_removed (s1 : set) (s2 : set) : set = Set.diff s1 s2
 
-  let diff ~(old:set) (s : set) : diff =
+  let diff ~(old : set) (s : set) : diff =
     {
       common = get_common old s;
       added = get_added old s;
