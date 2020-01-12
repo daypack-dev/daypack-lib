@@ -974,21 +974,139 @@ module Serialize = struct
 end
 
 module Deserialize = struct
-  let unpack_task_list (task_list : Sched_t.task list) : task_store =
-    task_list |> List.to_seq
+  (*$ #use "sched.cinaps";;
+
+    Store.print_unpack_related_functions ()
+  *)
+
+  let unpack_task_list (x : Sched_t.task list) : task_store =
+    x |> List.to_seq
     |> Seq.map Task.Deserialize.unpack_task
     |> Task_id_map.of_seq
 
-  let unpack_task_inst_list (task_inst_list : Sched_t.task_inst list) :
-    task_inst_store =
-    task_inst_list |> List.to_seq
+  let unpack_task_list_diff
+      (x : (Task_t.task_id, Task_t.task_data) Map_utils_t.diff) :
+    task_store_diff =
+    {
+      updated =
+        x.updated |> List.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            ( id,
+              ( Task.Deserialize.unpack_task_data data1,
+                Task.Deserialize.unpack_task_data data2 ) ))
+        |> Task_id_map.of_seq;
+      common = unpack_task_list x.common;
+      added = unpack_task_list x.added;
+      removed = unpack_task_list x.removed;
+    }
+
+  let unpack_task_inst_list (x : Sched_t.task_inst list) : task_inst_store =
+    x |> List.to_seq
     |> Seq.map Task.Deserialize.unpack_task_inst
     |> Task_inst_id_map.of_seq
 
-  let unpack_task_seg_list (task_seg_list : Sched_t.task_seg list) :
-    task_seg_store =
-    task_seg_list |> List.to_seq |> Task_seg_id_map.of_seq
+  let unpack_task_inst_list_diff
+      (x : (Task_t.task_inst_id, Task_t.task_inst_data) Map_utils_t.diff) :
+    task_inst_store_diff =
+    {
+      updated =
+        x.updated |> List.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            ( id,
+              ( Task.Deserialize.unpack_task_inst_data data1,
+                Task.Deserialize.unpack_task_inst_data data2 ) ))
+        |> Task_inst_id_map.of_seq;
+      common = unpack_task_inst_list x.common;
+      added = unpack_task_inst_list x.added;
+      removed = unpack_task_inst_list x.removed;
+    }
 
+  let unpack_task_seg_list (x : Sched_t.task_seg list) : task_seg_store =
+    x |> List.to_seq
+    |> Seq.map Task.Deserialize.unpack_task_seg
+    |> Task_seg_id_map.of_seq
+
+  let unpack_task_seg_list_diff
+      (x : (Task_t.task_seg_id, Task_t.task_seg_size) Map_utils_t.diff) :
+    task_seg_store_diff =
+    {
+      updated =
+        x.updated |> List.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            ( id,
+              ( Task.Deserialize.unpack_task_seg_size data1,
+                Task.Deserialize.unpack_task_seg_size data2 ) ))
+        |> Task_seg_id_map.of_seq;
+      common = unpack_task_seg_list x.common;
+      added = unpack_task_seg_list x.added;
+      removed = unpack_task_seg_list x.removed;
+    }
+
+  let unpack_sched_req_pending_list (x : Sched_req_t.sched_req list) :
+    sched_req_store =
+    x |> List.to_seq
+    |> Seq.map Sched_req.Deserialize.unpack_sched_req
+    |> Sched_req_id_map.of_seq
+
+  let unpack_sched_req_pending_list_diff
+      (x :
+         (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff)
+    : sched_req_store_diff =
+    {
+      updated =
+        x.updated |> List.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            ( id,
+              ( Sched_req.Deserialize.unpack_sched_req_data data1,
+                Sched_req.Deserialize.unpack_sched_req_data data2 ) ))
+        |> Sched_req_id_map.of_seq;
+      common = unpack_sched_req_pending_list x.common;
+      added = unpack_sched_req_pending_list x.added;
+      removed = unpack_sched_req_pending_list x.removed;
+    }
+
+  let unpack_sched_req_record_list (x : Sched_req_t.sched_req_record list) :
+    sched_req_record_store =
+    x |> List.to_seq
+    |> Seq.map Sched_req.Deserialize.unpack_sched_req_record
+    |> Sched_req_id_map.of_seq
+
+  let unpack_sched_req_record_list_diff
+      (x :
+         ( Sched_req_t.sched_req_id,
+           Sched_req_t.sched_req_record_data )
+           Map_utils_t.diff) : sched_req_record_store_diff =
+    {
+      updated =
+        x.updated |> List.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            ( id,
+              ( Sched_req.Deserialize.unpack_sched_req_record_data data1,
+                Sched_req.Deserialize.unpack_sched_req_record_data data2 ) ))
+        |> Sched_req_id_map.of_seq;
+      common = unpack_sched_req_record_list x.common;
+      added = unpack_sched_req_record_list x.added;
+      removed = unpack_sched_req_record_list x.removed;
+    }
+
+  let unpack_quota (x : (Task.task_inst_id * int64) list) :
+    int64 Task_inst_id_map.t =
+    x |> List.to_seq |> Seq.map (fun x -> x) |> Task_inst_id_map.of_seq
+
+  let unpack_quota_diff (x : (Task_t.task_inst_id, int64) Map_utils_t.diff) :
+    int64 Task_inst_id_map_utils.diff =
+    {
+      updated =
+        x.updated |> List.to_seq
+        |> Seq.map (fun (id, (data1, data2)) ->
+            (id, ((fun x -> x) data1, (fun x -> x) data2)))
+        |> Task_inst_id_map.of_seq;
+      common = unpack_quota x.common;
+      added = unpack_quota x.added;
+      removed = unpack_quota x.removed;
+    }
+
+  (*$*)
   let unpack_user_id_to_task_ids
       (user_id_to_task_ids : (Task.user_id * int64 list) list) :
     Int64_set.t User_id_map.t =
@@ -1011,23 +1129,6 @@ module Deserialize = struct
     |> Task_inst_id_map.of_seq
 
   let unpack_sched_req_ids = Int64_set.Deserialize.unpack
-
-  let unpack_sched_req_pending_list
-      (sched_req_pending_list : Sched_req_t.sched_req list) : sched_req_store =
-    sched_req_pending_list |> List.to_seq
-    |> Seq.map Sched_req.Deserialize.unpack_sched_req
-    |> Sched_req_id_map.of_seq
-
-  let unpack_sched_req_record_list
-      (sched_req_record_list : Sched_req_t.sched_req_record list) :
-    sched_req_record_store =
-    sched_req_record_list |> List.to_seq
-    |> Seq.map Sched_req.Deserialize.unpack_sched_req_record
-    |> Sched_req_id_map.of_seq
-
-  let unpack_quota (quota : (Task.task_inst_id * int64) list) :
-    int64 Task_inst_id_map.t =
-    quota |> List.to_seq |> Task_inst_id_map.of_seq
 
   let unpack_store (store : Sched_t.store) : store =
     {

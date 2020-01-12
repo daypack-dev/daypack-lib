@@ -192,6 +192,14 @@ module Deserialize = struct
     | `Reminder -> Reminder
     | `Reminder_quota_counting quota -> Reminder_quota_counting { quota }
     | `Passing -> Passing
+
+  and unpack_task_seg x = x
+
+  and unpack_task_seg_alloc_req x = x
+
+  and unpack_task_seg_size x = x
+
+  and unpack_task_seg_place x = x
 end
 
 module Print = struct
