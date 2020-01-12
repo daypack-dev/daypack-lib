@@ -57,7 +57,7 @@ module Store = struct
 
   let print_pack_diff_function e =
     let pack_f_name = get_pack_f_name e in
-    Printf.printf "let pack_%s_diff (x : %s) : %s =\n" e.f_suffix e.diff_typ
+    Printf.printf "let %s_diff (x : %s) : %s =\n" pack_f_name e.diff_typ
       e.diff_ret_typ;
     Printf.printf "{\n";
     Printf.printf "updated = x.updated\n";
@@ -102,6 +102,24 @@ module Bucket_store = struct
         f_to_seq = "User_id_map.to_seq";
         f_inner_pack = "Int64_set.Serialize.pack";
       };
+      {
+        f_suffix = "task_id_to_task_inst_ids";
+        store_typ = "Int64_set.t Task_id_map.t";
+        diff_typ = "Task_id_map_utils.Int64_bucketed.diff_bucketed";
+        ret_typ = "(Task_t.task_id * int64 list) list";
+        diff_ret_typ = "(Task_t.task_id, int64) Map_utils_t.diff_bucketed";
+        f_to_seq = "Task_id_map.to_seq";
+        f_inner_pack = "Int64_set.Serialize.pack";
+      };
+      {
+        f_suffix = "task_inst_id_to_task_seg_ids";
+        store_typ = "Int64_set.t Task_inst_id_map.t";
+        diff_typ = "Task_inst_id_map_utils.Int64_bucketed.diff_bucketed";
+        ret_typ = "(Task_t.task_inst_id * int64 list) list";
+        diff_ret_typ = "(Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed";
+        f_to_seq = "Task_inst_id_map.to_seq";
+        f_inner_pack = "Int64_set.Serialize.pack";
+      };
     ]
 
   let get_pack_f_name e = Printf.sprintf "pack_%s" e.f_suffix
@@ -115,7 +133,7 @@ module Bucket_store = struct
 
   let print_pack_diff_function e =
     let pack_f_name = get_pack_f_name e in
-    Printf.printf "let pack_%s_diff (x : %s) : %s =\n" pack_f_name e.diff_typ
+    Printf.printf "let %s_diff (x : %s) : %s =\n" pack_f_name e.diff_typ
       e.diff_ret_typ;
     Printf.printf "{\n";
     List.iter

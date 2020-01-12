@@ -795,7 +795,7 @@ module Serialize = struct
     |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
-  let pack_pack_user_id_to_task_ids_diff
+  let pack_user_id_to_task_ids_diff
       (x : User_id_map_utils.Int64_bucketed.diff_bucketed) :
     (Task_t.user_id, int64) Map_utils_t.diff_bucketed =
     {
@@ -804,54 +804,37 @@ module Serialize = struct
       removed = pack_user_id_to_task_ids x.removed;
     }
 
-  (*$*)
-
-  let pack_user_id_to_task_ids (user_id_to_task_ids : Int64_set.t User_id_map.t)
-    : (Task_t.user_id * int64 list) list =
-    user_id_to_task_ids |> User_id_map.to_seq
-    |> Seq.map (fun (id, set) -> (id, Int64_set.Serialize.pack set))
-    |> List.of_seq
-
-  let pack_user_id_to_task_ids_diff
-      (diff : User_id_map_utils.Int64_bucketed.diff_bucketed) :
-    (Task_t.user_id, int64) Map_utils_t.diff_bucketed =
-    {
-      common = pack_user_id_to_task_ids diff.common;
-      added = pack_user_id_to_task_ids diff.added;
-      removed = pack_user_id_to_task_ids diff.removed;
-    }
-
-  let pack_task_id_to_task_inst_ids
-      (task_id_to_task_inst_ids : Int64_set.t Task_id_map.t) :
-    (Task.task_id * int64 list) list =
-    task_id_to_task_inst_ids |> Task_id_map.to_seq
-    |> Seq.map (fun (id, set) -> (id, Int64_set.Serialize.pack set))
+  let pack_task_id_to_task_inst_ids (x : Int64_set.t Task_id_map.t) :
+    (Task_t.task_id * int64 list) list =
+    x |> Task_id_map.to_seq
+    |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_task_id_to_task_inst_ids_diff
-      (diff : Task_id_map_utils.Int64_bucketed.diff_bucketed) :
-    (Task.task_id, int64) Map_utils_t.diff_bucketed =
+      (x : Task_id_map_utils.Int64_bucketed.diff_bucketed) :
+    (Task_t.task_id, int64) Map_utils_t.diff_bucketed =
     {
-      common = pack_task_id_to_task_inst_ids diff.common;
-      added = pack_task_id_to_task_inst_ids diff.added;
-      removed = pack_task_id_to_task_inst_ids diff.removed;
+      common = pack_task_id_to_task_inst_ids x.common;
+      added = pack_task_id_to_task_inst_ids x.added;
+      removed = pack_task_id_to_task_inst_ids x.removed;
     }
 
-  let pack_task_inst_id_to_task_seg_ids
-      (task_inst_id_to_task_seg_ids : Int64_set.t Task_inst_id_map.t) :
+  let pack_task_inst_id_to_task_seg_ids (x : Int64_set.t Task_inst_id_map.t) :
     (Task_t.task_inst_id * int64 list) list =
-    task_inst_id_to_task_seg_ids |> Task_inst_id_map.to_seq
-    |> Seq.map (fun (id, set) -> (id, Int64_set.Serialize.pack set))
+    x |> Task_inst_id_map.to_seq
+    |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_task_inst_id_to_task_seg_ids_diff
-      (diff : Task_inst_id_map_utils.Int64_bucketed.diff_bucketed) :
+      (x : Task_inst_id_map_utils.Int64_bucketed.diff_bucketed) :
     (Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed =
     {
-      common = pack_task_inst_id_to_task_seg_ids diff.common;
-      added = pack_task_inst_id_to_task_seg_ids diff.added;
-      removed = pack_task_inst_id_to_task_seg_ids diff.removed;
+      common = pack_task_inst_id_to_task_seg_ids x.common;
+      added = pack_task_inst_id_to_task_seg_ids x.added;
+      removed = pack_task_inst_id_to_task_seg_ids x.removed;
     }
+
+  (*$*)
 
   let pack_sched_req_ids = Int64_set.Serialize.pack
 
