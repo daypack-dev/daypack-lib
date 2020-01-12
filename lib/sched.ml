@@ -721,7 +721,7 @@ module Serialize = struct
 
   (*$ #use "lib/sched.cinaps";;
 
-    print_pack_related_functions ()
+    Store.print_pack_related_functions ()
   *)
 
   let pack_task_store (x : task_store) : Sched_t.task list =
@@ -730,7 +730,6 @@ module Serialize = struct
   let pack_task_store_diff (x : task_store_diff) :
     (Task_t.task_id, Task_t.task_data) Map_utils_t.diff =
     {
-      common = pack_task_store x.common;
       updated =
         x.updated |> Task_id_map.to_seq
         |> Seq.map (fun (id, (data1, data2)) ->
@@ -738,6 +737,7 @@ module Serialize = struct
               ( Task.Serialize.pack_task_data data1,
                 Task.Serialize.pack_task_data data2 ) ))
         |> List.of_seq;
+      common = pack_task_store x.common;
       added = pack_task_store x.added;
       removed = pack_task_store x.removed;
     }
@@ -750,7 +750,6 @@ module Serialize = struct
   let pack_task_inst_store_diff (x : task_inst_store_diff) :
     (Task_t.task_inst_id, Task_t.task_inst_data) Map_utils_t.diff =
     {
-      common = pack_task_inst_store x.common;
       updated =
         x.updated |> Task_inst_id_map.to_seq
         |> Seq.map (fun (id, (data1, data2)) ->
@@ -758,6 +757,7 @@ module Serialize = struct
               ( Task.Serialize.pack_task_inst_data data1,
                 Task.Serialize.pack_task_inst_data data2 ) ))
         |> List.of_seq;
+      common = pack_task_inst_store x.common;
       added = pack_task_inst_store x.added;
       removed = pack_task_inst_store x.removed;
     }
@@ -770,7 +770,6 @@ module Serialize = struct
   let pack_task_seg_store_diff (x : task_seg_store_diff) :
     (Task_t.task_seg_id, Task_t.task_seg_size) Map_utils_t.diff =
     {
-      common = pack_task_seg_store x.common;
       updated =
         x.updated |> Task_seg_id_map.to_seq
         |> Seq.map (fun (id, (data1, data2)) ->
@@ -778,8 +777,31 @@ module Serialize = struct
               ( Task.Serialize.pack_task_seg_size data1,
                 Task.Serialize.pack_task_seg_size data2 ) ))
         |> List.of_seq;
+      common = pack_task_seg_store x.common;
       added = pack_task_seg_store x.added;
       removed = pack_task_seg_store x.removed;
+    }
+
+  (*$*)
+
+  (*$ #use "lib/sched.cinaps";;
+
+    Bucket_store.print_pack_related_functions ()
+  *)
+
+  let pack_user_id_to_task_ids (x : Int64_set.t User_id_map.t) :
+    (Task_t.user_id * int64 list) list =
+    x |> User_id_map.to_seq
+    |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
+    |> List.of_seq
+
+  let pack_pack_user_id_to_task_ids_diff
+      (x : User_id_map_utils.Int64_bucketed.diff_bucketed) :
+    (Task_t.user_id, int64) Map_utils_t.diff_bucketed =
+    {
+      common = pack_user_id_to_task_ids x.common;
+      added = pack_user_id_to_task_ids x.added;
+      removed = pack_user_id_to_task_ids x.removed;
     }
 
   (*$*)
