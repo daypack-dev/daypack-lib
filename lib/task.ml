@@ -130,6 +130,14 @@ module Serialize = struct
     | Reminder -> `Reminder
     | Reminder_quota_counting { quota } -> `Reminder_quota_counting quota
     | Passing -> `Passing
+
+  and pack_task_seg x = x
+
+  and pack_task_seg_alloc_req x = x
+
+  and pack_task_seg_size x = x
+
+  and pack_task_seg_place x = x
 end
 
 module Deserialize = struct

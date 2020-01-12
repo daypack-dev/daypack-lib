@@ -21,6 +21,28 @@ let pack_store_list =
       f_inner_pack = "Task.Serialize.pack_task";
       f_inner_pack_data = "Task.Serialize.pack_task_data";
     };
+    {
+      f_suffix = "task_inst_store";
+      store_typ = "task_inst_store";
+      diff_typ = "task_inst_store_diff";
+      ret_typ = "Sched_t.task_inst list";
+      diff_ret_typ =
+        "(Task_t.task_inst_id, Task_t.task_inst_data) Map_utils_t.diff";
+      f_to_seq = "Task_inst_id_map.to_seq";
+      f_inner_pack = "Task.Serialize.pack_task_inst";
+      f_inner_pack_data = "Task.Serialize.pack_task_inst_data";
+    };
+    {
+      f_suffix = "task_seg_store";
+      store_typ = "task_seg_store";
+      diff_typ = "task_seg_store_diff";
+      ret_typ = "Sched_t.task_seg list";
+      diff_ret_typ =
+        "(Task_t.task_seg_id, Task_t.task_seg_size) Map_utils_t.diff";
+      f_to_seq = "Task_seg_id_map.to_seq";
+      f_inner_pack = "Task.Serialize.pack_task_seg";
+      f_inner_pack_data = "Task.Serialize.pack_task_seg_size";
+    };
   ]
 
 let get_pack_f_name e = Printf.sprintf "pack_%s" e.f_suffix
