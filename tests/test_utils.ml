@@ -22,12 +22,18 @@ let pos_int64_bound_gen bound =
 let nz_pos_int64_bound_gen bound =
   QCheck.Gen.(map (fun x -> x |> max 1L |> min bound) ui64)
 
+let small_pos_int64_gen = pos_int64_bound_gen 100L
+
+let small_nz_pos_int64_gen = nz_pos_int64_bound_gen 100L
+
 let pos_int64_gen = pos_int64_bound_gen (Int64.sub Int64.max_int 1L)
 
 let pos_int64 = QCheck.make ~print:Print_utils.int64 pos_int64_gen
 
-let small_pos_int64 =
-  QCheck.make ~print:Print_utils.int64 (pos_int64_bound_gen 100L)
+let small_pos_int64 = QCheck.make ~print:Print_utils.int64 small_pos_int64_gen
+
+let small_nz_pos_int64 =
+  QCheck.make ~print:Print_utils.int64 small_nz_pos_int64_gen
 
 let nz_pos_int64_gen =
   QCheck.Gen.map (Int64.add 1L)
@@ -130,9 +136,15 @@ let task_seg_id_gen =
 
 let task_seg_id = QCheck.make task_seg_id_gen
 
+let tiny_task_seg_size_gen = nz_pos_int64_bound_gen 20L
+
 let tiny_task_seg_gen =
   let open QCheck in
-  Gen.(pair task_seg_id_gen (nz_pos_int64_bound_gen 20L))
+  Gen.(pair task_seg_id_gen tiny_task_seg_size_gen)
+
+let tiny_task_seg_sizes_gen =
+  let open QCheck in
+  Gen.(list_size (int_bound 5) tiny_task_seg_size_gen)
 
 let tiny_task_segs_gen =
   let open QCheck in
@@ -177,45 +189,72 @@ let sched_req_template_gen =
         (fun task_seg start ->
            Daypack_lib.Sched_req_data_skeleton.Fixed
              { task_seg_related_data = task_seg; start })
-        tiny_task_seg_gen pos_int64_gen;
+        tiny_task_seg_size_gen pos_int64_gen;
       map2
         (fun task_segs time_slots ->
            Daypack_lib.Sched_req_data_skeleton.Shift (task_segs, time_slots))
-        tiny_task_segs_gen tiny_time_slots_gen;
+        tiny_task_seg_sizes_gen tiny_time_slots_gen;
       map2
         (fun task_seg time_slots ->
            Daypack_lib.Sched_req_data_skeleton.Split_and_shift
              (task_seg, time_slots))
-        tiny_task_seg_gen tiny_time_slots_gen;
+        tiny_task_seg_size_gen tiny_time_slots_gen;
       map3
         (fun task_seg time_slots buckets ->
            Daypack_lib.Sched_req_data_skeleton.Split_even
              { task_seg_related_data = task_seg; time_slots; buckets })
-        tiny_task_seg_gen tiny_time_slots_gen tiny_time_slots_gen;
+        tiny_task_seg_size_gen tiny_time_slots_gen tiny_time_slots_gen;
       map2
         (fun task_segs time_slots ->
            Daypack_lib.Sched_req_data_skeleton.Time_share (task_segs, time_slots))
-        tiny_task_segs_gen tiny_time_slots_gen;
+        tiny_task_seg_sizes_gen tiny_time_slots_gen;
       map3
         (fun direction task_seg time_slots ->
            Daypack_lib.Sched_req_data_skeleton.Push_to
              (direction, task_seg, time_slots))
-        push_direction_gen tiny_task_seg_gen tiny_time_slots_gen;
+        push_direction_gen tiny_task_seg_size_gen tiny_time_slots_gen;
     ]
+
+let sched_req_templates_gen =
+  QCheck.Gen.(list_size (int_bound 10) sched_req_template_gen)
+
+let arith_seq_gen =
+  let open QCheck.Gen in
+  map3
+    (fun start offset diff ->
+       Daypack_lib.Task.{ start; end_exc = Int64.add start offset; diff })
+    pos_int64_gen small_pos_int64_gen small_nz_pos_int64_gen
 
 let recur_data_gen =
   let open QCheck.Gen in
   map2
     (fun task_inst_data sched_req_templates ->
        Daypack_lib.Task.{ task_inst_data; sched_req_templates })
-    task_inst_data_gen
+    task_inst_data_gen sched_req_templates_gen
 
-(* let task_data_gen =
- *   let open QCheck.Gen in
- *   oneof Daypack_lib.Task.[
- *       One_off;
- *       map (fun )Recurring
- *   ]
- *   |>
- *   map (fun task_type ->
- *     ) *)
+let recur_gen =
+  let open QCheck.Gen in
+  map2
+    (fun arith_seq recur_data ->
+       Daypack_lib.Task.Arithemtic_seq (arith_seq, recur_data))
+    arith_seq_gen recur_data_gen
+
+let task_type_gen =
+  let open QCheck.Gen in
+  oneof
+    [
+      return Daypack_lib.Task.One_off;
+      map (fun recur -> Daypack_lib.Task.Recurring recur) recur_gen;
+    ]
+
+let task_id_gen =
+  QCheck.Gen.map2 (fun id1 id2 -> (id1, id2)) pos_int64_gen pos_int64_gen
+
+let task_data_gen =
+  let open QCheck.Gen in
+  map3
+    (fun splittable parallelizable task_type ->
+       Daypack_lib.Task.{ splittable; parallelizable; task_type })
+    bool bool task_type_gen
+
+let task_gen = QCheck.Gen.(pair task_id_gen task_data_gen)
