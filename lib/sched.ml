@@ -1258,7 +1258,8 @@ module Deserialize = struct
   let unpack_sched ((sid, sd) : Sched_t.sched) : sched =
     (sid, { store = unpack_store sd.store; agenda = unpack_agenda sd.agenda })
 
-  let of_json string : sched = string |> Sched_j.sched_of_string |> unpack_sched
+  let sched_of_json_string string : sched =
+    string |> Sched_j.sched_of_string |> unpack_sched
 end
 
 module Print = struct
