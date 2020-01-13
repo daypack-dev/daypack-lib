@@ -35,86 +35,90 @@ let nz_pos_int64_gen =
 
 let nz_pos_int64 = QCheck.make ~print:Print_utils.int64 nz_pos_int64_gen
 
+let tiny_sorted_time_slots_gen =
+  let open QCheck.Gen in
+  map
+    (fun (start, sizes_and_gaps) ->
+       sizes_and_gaps
+       |> List.fold_left
+         (fun (last_end_exc, acc) (size, gap) ->
+            let start =
+              match last_end_exc with
+              | None -> start
+              | Some x -> Int64.add x gap
+            in
+            let end_exc = Int64.add start size in
+            (Some end_exc, (start, end_exc) :: acc))
+         (None, [])
+       |> fun (_, l) -> List.rev l)
+    (pair
+       (pos_int64_bound_gen 10_000L)
+       (list_size (int_bound 5)
+          (pair (pos_int64_bound_gen 20L) (pos_int64_bound_gen 20L))))
+
 let tiny_sorted_time_slots =
-  let open QCheck in
-  make ~print:Print_utils.time_slots
-    Gen.(
-      map
-        (fun (start, sizes_and_gaps) ->
-           sizes_and_gaps
-           |> List.fold_left
-             (fun (last_end_exc, acc) (size, gap) ->
-                let start =
-                  match last_end_exc with
-                  | None -> start
-                  | Some x -> Int64.add x gap
-                in
-                let end_exc = Int64.add start size in
-                (Some end_exc, (start, end_exc) :: acc))
-             (None, [])
-           |> fun (_, l) -> List.rev l)
-        (pair
-           (pos_int64_bound_gen 10_000L)
-           (list_size (int_bound 5)
-              (pair (pos_int64_bound_gen 20L) (pos_int64_bound_gen 20L)))))
+  QCheck.make ~print:Print_utils.time_slots tiny_sorted_time_slots_gen
+
+let sorted_time_slots_maybe_gaps_gen =
+  let open QCheck.Gen in
+  map
+    (fun (start, sizes_and_gaps) ->
+       sizes_and_gaps
+       |> List.fold_left
+         (fun (last_end_exc, acc) (size, gap) ->
+            let start =
+              match last_end_exc with
+              | None -> start
+              | Some x -> Int64.add x (Int64.of_int gap)
+            in
+            let end_exc = Int64.add start (Int64.of_int size) in
+            (Some end_exc, (start, end_exc) :: acc))
+         (None, [])
+       |> fun (_, l) -> List.rev l)
+    (pair pos_int64_gen (list (pair nz_small_nat_gen small_nat)))
 
 let sorted_time_slots_maybe_gaps =
-  let open QCheck in
-  make ~print:Print_utils.time_slots
-    Gen.(
-      map
-        (fun (start, sizes_and_gaps) ->
-           sizes_and_gaps
-           |> List.fold_left
-             (fun (last_end_exc, acc) (size, gap) ->
-                let start =
-                  match last_end_exc with
-                  | None -> start
-                  | Some x -> Int64.add x (Int64.of_int gap)
-                in
-                let end_exc = Int64.add start (Int64.of_int size) in
-                (Some end_exc, (start, end_exc) :: acc))
-             (None, [])
-           |> fun (_, l) -> List.rev l)
-        (pair pos_int64_gen (list (pair nz_small_nat_gen small_nat))))
+  QCheck.make ~print:Print_utils.time_slots sorted_time_slots_maybe_gaps_gen
+
+let sorted_time_slots_with_gaps_gen =
+  let open QCheck.Gen in
+  map
+    (fun (start, sizes_and_gaps) ->
+       sizes_and_gaps
+       |> List.fold_left
+         (fun (last_end_exc, acc) (size, gap) ->
+            let start =
+              match last_end_exc with
+              | None -> start
+              | Some x -> Int64.add x (Int64.of_int gap)
+            in
+            let end_exc = Int64.add start (Int64.of_int size) in
+            (Some end_exc, (start, end_exc) :: acc))
+         (None, [])
+       |> fun (_, l) -> List.rev l)
+    (pair pos_int64_gen (list (pair nz_small_nat_gen nz_small_nat_gen)))
 
 let sorted_time_slots_with_gaps =
-  let open QCheck in
-  make ~print:Print_utils.time_slots
-    Gen.(
-      map
-        (fun (start, sizes_and_gaps) ->
-           sizes_and_gaps
-           |> List.fold_left
-             (fun (last_end_exc, acc) (size, gap) ->
-                let start =
-                  match last_end_exc with
-                  | None -> start
-                  | Some x -> Int64.add x (Int64.of_int gap)
-                in
-                let end_exc = Int64.add start (Int64.of_int size) in
-                (Some end_exc, (start, end_exc) :: acc))
-             (None, [])
-           |> fun (_, l) -> List.rev l)
-        (pair pos_int64_gen (list (pair nz_small_nat_gen nz_small_nat_gen))))
+  QCheck.make ~print:Print_utils.time_slots sorted_time_slots_with_gaps_gen
+
+let tiny_time_slots_gen =
+  let open QCheck.Gen in
+  map
+    (List.map (fun (start, size) -> (start, Int64.add start size)))
+    (list_size (int_bound 5)
+       (pair (pos_int64_bound_gen 10_000L) (pos_int64_bound_gen 20L)))
 
 let tiny_time_slots =
-  let open QCheck in
-  make ~print:Print_utils.time_slots
-    Gen.(
-      map
-        (List.map (fun (start, size) -> (start, Int64.add start size)))
-        (list_size (int_bound 5)
-           (pair (pos_int64_bound_gen 10_000L) (pos_int64_bound_gen 20L))))
+  QCheck.make ~print:Print_utils.time_slots tiny_time_slots_gen
 
-let time_slots =
-  let open QCheck in
-  make ~print:Print_utils.time_slots
-    Gen.(
-      map
-        (List.map (fun (start, size) ->
-             (start, Int64.add start (Int64.of_int size))))
-        (list (pair ui64 small_nat)))
+let time_slots_gen =
+  let open QCheck.Gen in
+  map
+    (List.map (fun (start, size) ->
+         (start, Int64.add start (Int64.of_int size))))
+    (list (pair ui64 small_nat))
+
+let time_slots = QCheck.make ~print:Print_utils.time_slots time_slots_gen
 
 let task_seg_id_gen =
   let open QCheck.Gen in
@@ -130,12 +134,14 @@ let tiny_task_seg_gen =
   let open QCheck in
   Gen.(pair task_seg_id_gen (nz_pos_int64_bound_gen 20L))
 
+let tiny_task_segs_gen =
+  let open QCheck in
+  Gen.(list_size (int_bound 5) tiny_task_seg_gen)
+
 let tiny_task_seg = QCheck.(make ~print:Print_utils.task_seg tiny_task_seg_gen)
 
 let tiny_task_segs =
-  let open QCheck in
-  make ~print:Print_utils.task_segs
-    Gen.(list_size (int_bound 5) tiny_task_seg_gen)
+  QCheck.(make ~print:Print_utils.task_segs tiny_task_segs_gen)
 
 let task_inst_id_gen =
   QCheck.Gen.(triple pos_int64_gen pos_int64_gen pos_int64_gen)
@@ -160,3 +166,56 @@ let task_inst_gen = QCheck.Gen.(pair task_inst_id_gen task_inst_data_gen)
 let task_inst =
   let open QCheck in
   make ~print:Daypack_lib.Task.Print.debug_string_task_inst task_inst_gen
+
+let push_direction_gen = QCheck.Gen.(oneof [ return `Front; return `Back ])
+
+let sched_req_template_gen =
+  let open QCheck.Gen in
+  oneof
+    [
+      map2
+        (fun task_seg start ->
+           Daypack_lib.Sched_req_data_skeleton.Fixed
+             { task_seg_related_data = task_seg; start })
+        tiny_task_seg_gen pos_int64_gen;
+      map2
+        (fun task_segs time_slots ->
+           Daypack_lib.Sched_req_data_skeleton.Shift (task_segs, time_slots))
+        tiny_task_segs_gen tiny_time_slots_gen;
+      map2
+        (fun task_seg time_slots ->
+           Daypack_lib.Sched_req_data_skeleton.Split_and_shift
+             (task_seg, time_slots))
+        tiny_task_seg_gen tiny_time_slots_gen;
+      map3
+        (fun task_seg time_slots buckets ->
+           Daypack_lib.Sched_req_data_skeleton.Split_even
+             { task_seg_related_data = task_seg; time_slots; buckets })
+        tiny_task_seg_gen tiny_time_slots_gen tiny_time_slots_gen;
+      map2
+        (fun task_segs time_slots ->
+           Daypack_lib.Sched_req_data_skeleton.Time_share (task_segs, time_slots))
+        tiny_task_segs_gen tiny_time_slots_gen;
+      map3
+        (fun direction task_seg time_slots ->
+           Daypack_lib.Sched_req_data_skeleton.Push_to
+             (direction, task_seg, time_slots))
+        push_direction_gen tiny_task_seg_gen tiny_time_slots_gen;
+    ]
+
+let recur_data_gen =
+  let open QCheck.Gen in
+  map2
+    (fun task_inst_data sched_req_templates ->
+       Daypack_lib.Task.{ task_inst_data; sched_req_templates })
+    task_inst_data_gen
+
+(* let task_data_gen =
+ *   let open QCheck.Gen in
+ *   oneof Daypack_lib.Task.[
+ *       One_off;
+ *       map (fun )Recurring
+ *   ]
+ *   |>
+ *   map (fun task_type ->
+ *     ) *)
