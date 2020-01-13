@@ -1116,15 +1116,23 @@ module Deserialize = struct
 
   (*$*)
 
-  let unpack_sched_req_ids = Int64_set.Deserialize.unpack
+  (*$ #use "lib/sched.cinaps";;
 
-  let unpack_sched_req_ids_diff (diff : int64 Set_utils_t.diff) :
+    Set_store.print_unpack_related_functions ()
+  *)
+
+  let unpack_sched_req_ids (x : int64 list) : Int64_set.t =
+    x |> List.to_seq |> Seq.map (fun x -> x) |> Int64_set.of_seq
+
+  let unpack_sched_req_ids_diff (x : int64 Set_utils_t.diff) :
     Int64_set_utils.diff =
     {
-      common = diff.common |> List.to_seq |> Int64_set.of_seq;
-      added = diff.added |> List.to_seq |> Int64_set.of_seq;
-      removed = diff.removed |> List.to_seq |> Int64_set.of_seq;
+      common = unpack_sched_req_ids x.common;
+      added = unpack_sched_req_ids x.added;
+      removed = unpack_sched_req_ids x.removed;
     }
+
+  (*$*)
 
   (*$ #use "lib/sched.cinaps";;
 
