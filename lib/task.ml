@@ -203,7 +203,7 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let debug_string_task ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+  let debug_string_of_task ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (id, data) =
     Debug_print.bprintf ~indent_level buffer "task id : %s\n"
       (task_id_to_string id);
@@ -324,8 +324,8 @@ module Print = struct
           | Time_pattern_match _ -> failwith "Unimplemented" ) );
     Buffer.contents buffer
 
-  let debug_string_task_inst ?(indent_level = 0) ?(buffer = Buffer.create 4096)
-      (id, data) =
+  let debug_string_of_task_inst ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (id, data) =
     Debug_print.bprintf ~indent_level buffer "task inst id : %s\n"
       (task_inst_id_to_string id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "type : %s\n"
@@ -336,8 +336,8 @@ module Print = struct
         | Passing -> "passing" );
     Buffer.contents buffer
 
-  let debug_string_task_seg ?(indent_level = 0) ?(buffer = Buffer.create 4096)
-      (id, size) =
+  let debug_string_of_task_seg ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (id, size) =
     Debug_print.bprintf ~indent_level buffer "task seg id : %s\n"
       (task_seg_id_to_string id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "size : %Ld\n"
@@ -345,11 +345,11 @@ module Print = struct
     Buffer.contents buffer
 
   let debug_print_task ?(indent_level = 0) task =
-    print_string (debug_string_task ~indent_level task)
+    print_string (debug_string_of_task ~indent_level task)
 
   let debug_print_task_inst ?(indent_level = 0) task_inst =
-    print_string (debug_string_task_inst ~indent_level task_inst)
+    print_string (debug_string_of_task_inst ~indent_level task_inst)
 
   let debug_print_task_seg ?(indent_level = 0) task_seg =
-    print_string (debug_string_task_seg ~indent_level task_seg)
+    print_string (debug_string_of_task_seg ~indent_level task_seg)
 end

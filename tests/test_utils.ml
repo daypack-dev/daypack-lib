@@ -177,7 +177,7 @@ let task_inst_gen = QCheck.Gen.(pair task_inst_id_gen task_inst_data_gen)
 
 let task_inst =
   let open QCheck in
-  make ~print:Daypack_lib.Task.Print.debug_string_task_inst task_inst_gen
+  make ~print:Daypack_lib.Task.Print.debug_string_of_task_inst task_inst_gen
 
 let push_direction_gen = QCheck.Gen.(oneof [ return `Front; return `Back ])
 

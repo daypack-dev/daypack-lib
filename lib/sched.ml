@@ -1263,7 +1263,7 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let debug_string_sched ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+  let debug_string_of_sched ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (sid, sd) =
     Debug_print.bprintf ~indent_level buffer "schedule id : %s\n"
       (Id.sched_id_to_string sid);
@@ -1271,28 +1271,28 @@ module Print = struct
       "pending scheduling requests :\n";
     Sched_req_id_map.iter
       (fun id data ->
-         Sched_req.Print.debug_string_sched_req ~indent_level:(indent_level + 2)
-           ~buffer (id, data)
+         Sched_req.Print.debug_string_of_sched_req
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.sched_req_pending_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks :\n";
     Task_id_map.iter
       (fun id data ->
-         Task.Print.debug_string_task ~indent_level:(indent_level + 2) ~buffer
+         Task.Print.debug_string_of_task ~indent_level:(indent_level + 2) ~buffer
            (id, data)
          |> ignore)
       sd.store.task_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts :\n";
     Task_inst_id_map.iter
       (fun id data ->
-         Task.Print.debug_string_task_inst ~indent_level:(indent_level + 2)
+         Task.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs :\n";
     Task_seg_id_map.iter
       (fun id data ->
-         Task.Print.debug_string_task_seg ~indent_level:(indent_level + 2)
+         Task.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_seg_store;
@@ -1317,5 +1317,5 @@ module Print = struct
     Buffer.contents buffer
 
   let debug_print_sched ?(indent_level = 0) sched =
-    print_string (debug_string_sched ~indent_level sched)
+    print_string (debug_string_of_sched ~indent_level sched)
 end

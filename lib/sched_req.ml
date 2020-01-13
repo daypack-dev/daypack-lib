@@ -116,7 +116,7 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let debug_string_sched_req_data ?(indent_level = 0)
+  let debug_string_of_sched_req_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data =
     ( match req_data with
       | Sched_req_data_skeleton.Fixed { task_seg_related_data = id, len; start }
@@ -218,17 +218,17 @@ module Print = struct
           time_slots );
     Buffer.contents buffer
 
-  let debug_string_sched_req ?(indent_level = 0) ?(buffer = Buffer.create 4096)
-      (id, req_data) =
+  let debug_string_of_sched_req ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (id, req_data) =
     Debug_print.bprintf ~indent_level buffer "schedule request id : %Ld\n" id;
-    debug_string_sched_req_data ~indent_level:(indent_level + 1) ~buffer
+    debug_string_of_sched_req_data ~indent_level:(indent_level + 1) ~buffer
       req_data
     |> ignore;
     Buffer.contents buffer
 
   let debug_print_sched_req_data ?(indent_level = 0) sched_req_data =
-    print_string (debug_string_sched_req_data ~indent_level sched_req_data)
+    print_string (debug_string_of_sched_req_data ~indent_level sched_req_data)
 
   let debug_print_sched_req ?(indent_level = 0) sched_req =
-    print_string (debug_string_sched_req ~indent_level sched_req)
+    print_string (debug_string_of_sched_req ~indent_level sched_req)
 end
