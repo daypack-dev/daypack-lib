@@ -233,6 +233,19 @@ module Bucket_store = struct
         f_inner_pack = Some "Int64_set.Serialize.pack";
         f_inner_unpack = Some "Int64_set.Deserialize.unpack";
       };
+      {
+        f_pack_suffix = "indexed_by_start";
+        f_unpack_suffix = "indexed_by_start";
+        store_typ = "task_seg_place_map";
+        diff_typ = "task_seg_place_map_diff";
+        ret_typ = "(int64 * Task_t.task_seg_place list) list";
+        diff_ret_typ =
+          "(int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed";
+        f_to_seq = "Int64_map.to_seq";
+        f_of_seq = "Int64_map.of_seq";
+        f_inner_pack = Some "Task_seg_place_set.Serialize.pack";
+        f_inner_unpack = Some "Task_seg_place_set.Deserialize.unpack";
+      };
     ]
 
   let get_pack_f_name e = Printf.sprintf "pack_%s" e.f_pack_suffix

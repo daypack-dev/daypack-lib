@@ -36,7 +36,8 @@ type sched_req_record_store_diff =
 
 type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 
-type task_seg_place_map_diff = Task_seg_place_set.t Int64_map_utils.diff
+type task_seg_place_map_diff =
+  Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
 type store = {
   task_store : task_store;
@@ -891,6 +892,20 @@ module Serialize = struct
       removed = pack_task_inst_id_to_task_seg_ids x.removed;
     }
 
+  let pack_indexed_by_start (x : task_seg_place_map) :
+    (int64 * Task_t.task_seg_place list) list =
+    x |> Int64_map.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Serialize.pack y))
+    |> List.of_seq
+
+  let pack_indexed_by_start_diff (x : task_seg_place_map_diff) :
+    (int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed =
+    {
+      common = pack_indexed_by_start x.common;
+      added = pack_indexed_by_start x.added;
+      removed = pack_indexed_by_start x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -957,12 +972,6 @@ module Serialize = struct
     }
 
   (*$*)
-
-  let pack_indexed_by_start (indexed_by_start : task_seg_place_map) :
-    (int64 * Task_t.task_seg_place list) list =
-    indexed_by_start |> Int64_map.to_seq
-    |> Seq.map (fun (id, set) -> (id, Task_seg_place_set.Serialize.pack set))
-    |> List.of_seq
 
   let pack_agenda (agenda : agenda) : Sched_t.agenda =
     { indexed_by_start = pack_indexed_by_start agenda.indexed_by_start }
@@ -1177,6 +1186,21 @@ module Deserialize = struct
       removed = unpack_task_inst_id_to_task_seg_ids x.removed;
     }
 
+  let unpack_indexed_by_start (x : (int64 * Task_t.task_seg_place list) list) :
+    task_seg_place_map =
+    x |> List.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Deserialize.unpack y))
+    |> Int64_map.of_seq
+
+  let unpack_indexed_by_start_diff
+      (x : (int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed) :
+    task_seg_place_map_diff =
+    {
+      common = unpack_indexed_by_start x.common;
+      added = unpack_indexed_by_start x.added;
+      removed = unpack_indexed_by_start x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -1224,14 +1248,6 @@ module Deserialize = struct
     }
 
   (*$*)
-
-  let unpack_indexed_by_start
-      (indexed_by_start : (int64 * Task_t.task_seg_place list) list) :
-    task_seg_place_map =
-    indexed_by_start |> List.to_seq
-    |> Seq.map (fun (id, set) ->
-        (id, Task_seg_place_set.Deserialize.unpack set))
-    |> Int64_map.of_seq
 
   let unpack_agenda (agenda : Sched_t.agenda) : agenda =
     {
