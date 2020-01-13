@@ -899,7 +899,7 @@ module Serialize = struct
   *)
 
   let pack_sched_req_ids (x : Int64_set.t) : int64 list =
-    x |> Int64_set.to_seq |> Seq.map (fun x -> x) |> List.of_seq
+    x |> Int64_set.to_seq |> List.of_seq
 
   let pack_sched_req_ids_diff (x : Int64_set_utils.diff) :
     int64 Set_utils_t.diff =
@@ -1114,7 +1114,7 @@ module Deserialize = struct
   *)
 
   let unpack_sched_req_ids (x : int64 list) : Int64_set.t =
-    x |> List.to_seq |> Seq.map (fun x -> x) |> Int64_set.of_seq
+    x |> List.to_seq |> Int64_set.of_seq
 
   let unpack_sched_req_ids_diff (x : int64 Set_utils_t.diff) :
     Int64_set_utils.diff =

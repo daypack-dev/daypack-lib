@@ -191,8 +191,8 @@ module Bucket_store = struct
     diff_ret_typ : string;
     f_to_seq : string;
     f_of_seq : string;
-    f_inner_pack : string;
-    f_inner_unpack : string;
+    f_inner_pack : string option;
+    f_inner_unpack : string option;
   }
 
   let pack_bucket_store_list =
@@ -206,8 +206,8 @@ module Bucket_store = struct
         diff_ret_typ = "(Task_t.user_id, int64) Map_utils_t.diff_bucketed";
         f_to_seq = "User_id_map.to_seq";
         f_of_seq = "User_id_map.of_seq";
-        f_inner_pack = "Int64_set.Serialize.pack";
-        f_inner_unpack = "Int64_set.Deserialize.unpack";
+        f_inner_pack = Some "Int64_set.Serialize.pack";
+        f_inner_unpack = Some "Int64_set.Deserialize.unpack";
       };
       {
         f_pack_suffix = "task_id_to_task_inst_ids";
@@ -218,8 +218,8 @@ module Bucket_store = struct
         diff_ret_typ = "(Task_t.task_id, int64) Map_utils_t.diff_bucketed";
         f_to_seq = "Task_id_map.to_seq";
         f_of_seq = "Task_id_map.of_seq";
-        f_inner_pack = "Int64_set.Serialize.pack";
-        f_inner_unpack = "Int64_set.Deserialize.unpack";
+        f_inner_pack = Some "Int64_set.Serialize.pack";
+        f_inner_unpack = Some "Int64_set.Deserialize.unpack";
       };
       {
         f_pack_suffix = "task_inst_id_to_task_seg_ids";
@@ -230,8 +230,8 @@ module Bucket_store = struct
         diff_ret_typ = "(Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed";
         f_to_seq = "Task_inst_id_map.to_seq";
         f_of_seq = "Task_inst_id_map.of_seq";
-        f_inner_pack = "Int64_set.Serialize.pack";
-        f_inner_unpack = "Int64_set.Deserialize.unpack";
+        f_inner_pack = Some "Int64_set.Serialize.pack";
+        f_inner_unpack = Some "Int64_set.Deserialize.unpack";
       };
     ]
 
@@ -243,14 +243,18 @@ module Bucket_store = struct
     Printf.printf "let %s (x : %s) : %s =\n" (get_pack_f_name e) e.store_typ
       e.ret_typ;
     Printf.printf "x |> %s\n" e.f_to_seq;
-    Printf.printf "|> Seq.map (fun (id, y) -> (id, %s y))\n" e.f_inner_pack;
+    Option.iter
+      (fun x -> Printf.printf "|> Seq.map (fun (id, y) -> (id, %s y))\n" x)
+      e.f_inner_pack;
     Printf.printf "|> List.of_seq\n"
 
   let print_unpack_function e =
     Printf.printf "let %s (x : %s) : %s =\n" (get_unpack_f_name e) e.ret_typ
       e.store_typ;
     Printf.printf "x |> List.to_seq\n";
-    Printf.printf "|> Seq.map (fun (id, y) -> (id, %s y))\n" e.f_inner_unpack;
+    Option.iter
+      (fun x -> Printf.printf "|> Seq.map (fun (id, y) -> (id, %s y))\n" x)
+      e.f_inner_unpack;
     Printf.printf "|> %s\n" e.f_of_seq
 
   let print_pack_diff_function e =
@@ -298,8 +302,8 @@ module Set_store = struct
     diff_ret_typ : string;
     f_to_seq : string;
     f_of_seq : string;
-    f_inner_pack : string;
-    f_inner_unpack : string;
+    f_inner_pack : string option;
+    f_inner_unpack : string option;
   }
 
   let pack_set_store_list =
@@ -313,8 +317,8 @@ module Set_store = struct
         diff_ret_typ = "int64 Set_utils_t.diff";
         f_to_seq = "Int64_set.to_seq";
         f_of_seq = "Int64_set.of_seq";
-        f_inner_pack = "(fun x -> x)";
-        f_inner_unpack = "(fun x -> x)";
+        f_inner_pack = None;
+        f_inner_unpack = None;
       };
     ]
 
@@ -326,14 +330,14 @@ module Set_store = struct
     Printf.printf "let %s (x : %s) : %s =\n" (get_pack_f_name e) e.store_typ
       e.ret_typ;
     Printf.printf "x |> %s\n" e.f_to_seq;
-    Printf.printf "|> Seq.map %s\n" e.f_inner_pack;
+    Option.iter (fun x -> Printf.printf "|> Seq.map %s\n" x) e.f_inner_pack;
     Printf.printf "|> List.of_seq\n"
 
   let print_unpack_function e =
     Printf.printf "let %s (x : %s) : %s =\n" (get_unpack_f_name e) e.ret_typ
       e.store_typ;
     Printf.printf "x |> List.to_seq\n";
-    Printf.printf "|> Seq.map %s\n" e.f_inner_unpack;
+    Option.iter (fun x -> Printf.printf "|> Seq.map %s\n" x) e.f_inner_unpack;
     Printf.printf "|> %s\n" e.f_of_seq
 
   let print_pack_diff_function e =
