@@ -1263,48 +1263,59 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let debug_print_sched ?(indent_level = 0) (sid, sd) =
-    Debug_print.printf ~indent_level "schedule id : %s\n"
+  let debug_string_sched ?(indent_level = 0) ?(buffer = Buffer.create 4096) (sid, sd) =
+     begin
+    Debug_print.bprintf ~indent_level buffer "schedule id : %s\n"
       (Id.sched_id_to_string sid);
-    Debug_print.printf ~indent_level:(indent_level + 1)
+    Debug_print.bprintf ~indent_level:(indent_level + 1)
+     buffer
       "pending scheduling requests :\n";
     Sched_req_id_map.iter
       (fun id data ->
-         Sched_req.Print.debug_print_sched_req ~indent_level:(indent_level + 2)
-           (id, data))
+         Sched_req.Print.debug_string_sched_req ~indent_level:(indent_level + 2)
+     ~buffer
+           (id, data) |> ignore)
       sd.store.sched_req_pending_store;
-    Debug_print.printf ~indent_level:(indent_level + 1) "tasks :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks :\n";
     Task_id_map.iter
       (fun id data ->
-         Task.Print.debug_print_task ~indent_level:(indent_level + 2) (id, data))
+         Task.Print.debug_string_task ~indent_level:(indent_level + 2) ~buffer (id, data) |> ignore)
       sd.store.task_store;
-    Debug_print.printf ~indent_level:(indent_level + 1) "task insts :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts :\n";
     Task_inst_id_map.iter
       (fun id data ->
-         Task.Print.debug_print_task_inst ~indent_level:(indent_level + 2)
-           (id, data))
+         Task.Print.debug_string_task_inst ~indent_level:(indent_level + 2)
+     ~buffer
+           (id, data) |> ignore)
       sd.store.task_inst_store;
-    Debug_print.printf ~indent_level:(indent_level + 1) "task segs :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs :\n";
     Task_seg_id_map.iter
       (fun id data ->
-         Task.Print.debug_print_task_seg ~indent_level:(indent_level + 2)
-           (id, data))
+         Task.Print.debug_string_task_seg ~indent_level:(indent_level + 2)
+     ~buffer
+           (id, data) |> ignore)
       sd.store.task_seg_store;
-    Debug_print.printf ~indent_level:(indent_level + 1) "agenda :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "agenda :\n";
     Int64_map.iter
       (fun _start bucket ->
          Task_seg_place_set.iter
            (fun (id, start, end_exc) ->
-              Debug_print.printf ~indent_level:(indent_level + 2)
+              Debug_print.bprintf ~indent_level:(indent_level + 2)
+     buffer
                 "%Ld - %Ld | %s\n" start end_exc
                 (Task.task_seg_id_to_string id))
            bucket)
       sd.agenda.indexed_by_start;
-    Debug_print.printf ~indent_level:(indent_level + 1) "leftover quota :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "leftover quota :\n";
     Task_inst_id_map.iter
       (fun id quota ->
-         Debug_print.printf ~indent_level:(indent_level + 2) "%s : %Ld\n"
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s : %Ld\n"
            (Task.task_inst_id_to_string id)
            quota)
       sd.store.quota
+     end;
+     Buffer.contents buffer
+
+     let debug_print_sched ?(indent_level = 0) sched =
+     print_string (debug_string_sched ~indent_level sched)
 end

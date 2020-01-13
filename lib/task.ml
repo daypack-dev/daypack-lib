@@ -203,8 +203,7 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let debug_string_task ?(indent_level = 0) (id, data) =
-    let buffer = Buffer.create 4096 in
+  let debug_string_task ?(indent_level = 0) ?(buffer = Buffer.create 4096)(id, data) =
     Debug_print.bprintf ~indent_level buffer "task id : %s\n" (task_id_to_string id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "splittable : %b\n"
       data.splittable;
@@ -360,8 +359,7 @@ module Print = struct
   end;
     Buffer.contents buffer
 
-  let debug_string_task_inst ?(indent_level = 0) (id, data) =
-    let buffer = Buffer.create 4096 in
+  let debug_string_task_inst ?(indent_level = 0) ?(buffer = Buffer.create 4096) (id, data) =
     begin
     Debug_print.bprintf ~indent_level buffer "task inst id : %s\n"
       (task_inst_id_to_string id);
@@ -374,8 +372,7 @@ module Print = struct
   end;
     Buffer.contents buffer
 
-  let debug_string_task_seg ?(indent_level = 0) (id, size) =
-    let buffer = Buffer.create 4096 in
+  let debug_string_task_seg ?(indent_level = 0) ?(buffer = Buffer.create 4096) (id, size) =
     begin
     Debug_print.bprintf ~indent_level buffer "task seg id : %s\n"
       (task_seg_id_to_string id);

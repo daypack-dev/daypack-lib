@@ -162,4 +162,4 @@ let task_inst_gen =
   pair task_inst_id_gen task_inst_data_gen
 
 let task_inst =
-  QCheck.(make ~print:Daypack_lib.Task.Print.debug_print_task_inst task_inst_gen)
+  QCheck.(make ~print:Daypack_lib.Task.Print.debug_string_task_inst task_inst_gen)
