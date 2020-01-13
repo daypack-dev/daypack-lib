@@ -897,16 +897,23 @@ module Serialize = struct
 
   (*$*)
 
-  let pack_sched_req_ids = Int64_set.Serialize.pack
+  (*$ #use "lib/sched.cinaps";;
 
-  let pack_sched_req_ids_diff (diff : Int64_set_utils.diff) :
+    Set_store.print_pack_related_functions ()
+  *)
+
+  let pack_sched_req_ids (x : Int64_set.t) : int64 list =
+    x |> Int64_set.to_seq |> Seq.map (fun x -> x) |> List.of_seq
+
+  let pack_sched_req_ids_diff (x : Int64_set_utils.diff) :
     int64 Set_utils_t.diff =
     {
-      common = diff.common |> Int64_set.to_seq |> List.of_seq;
-      added = diff.added |> Int64_set.to_seq |> List.of_seq;
-      removed = diff.removed |> Int64_set.to_seq |> List.of_seq;
+      common = pack_sched_req_ids x.common;
+      added = pack_sched_req_ids x.added;
+      removed = pack_sched_req_ids x.removed;
     }
 
+  (*$*)
   (*$ #use "lib/sched.cinaps";;
 
     print_pack_store ();
