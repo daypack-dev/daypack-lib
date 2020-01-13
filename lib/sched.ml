@@ -828,16 +828,12 @@ module Serialize = struct
 
   let pack_quota (x : int64 Task_inst_id_map.t) :
     (Task.task_inst_id * int64) list =
-    x |> Task_inst_id_map.to_seq |> Seq.map (fun x -> x) |> List.of_seq
+    x |> Task_inst_id_map.to_seq |> List.of_seq
 
   let pack_quota_diff (x : int64 Task_inst_id_map_utils.diff) :
     (Task_t.task_inst_id, int64) Map_utils_t.diff =
     {
-      updated =
-        x.updated |> Task_inst_id_map.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            (id, ((fun x -> x) data1, (fun x -> x) data2)))
-        |> List.of_seq;
+      updated = x.updated |> Task_inst_id_map.to_seq |> List.of_seq;
       common = pack_quota x.common;
       added = pack_quota x.added;
       removed = pack_quota x.removed;
@@ -1099,16 +1095,12 @@ module Deserialize = struct
 
   let unpack_quota (x : (Task.task_inst_id * int64) list) :
     int64 Task_inst_id_map.t =
-    x |> List.to_seq |> Seq.map (fun x -> x) |> Task_inst_id_map.of_seq
+    x |> List.to_seq |> Task_inst_id_map.of_seq
 
   let unpack_quota_diff (x : (Task_t.task_inst_id, int64) Map_utils_t.diff) :
     int64 Task_inst_id_map_utils.diff =
     {
-      updated =
-        x.updated |> List.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            (id, ((fun x -> x) data1, (fun x -> x) data2)))
-        |> Task_inst_id_map.of_seq;
+      updated = x.updated |> List.to_seq |> Task_inst_id_map.of_seq;
       common = unpack_quota x.common;
       added = unpack_quota x.added;
       removed = unpack_quota x.removed;

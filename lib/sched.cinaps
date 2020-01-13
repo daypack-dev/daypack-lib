@@ -8,10 +8,10 @@ module Store = struct
     diff_ret_typ : string;
     f_to_seq : string;
     f_of_seq : string;
-    f_inner_pack : string;
-    f_inner_pack_data : string;
-    f_inner_unpack : string;
-    f_inner_unpack_data : string;
+    f_inner_pack : string option;
+    f_inner_pack_data : string option;
+    f_inner_unpack : string option;
+    f_inner_unpack_data : string option;
   }
 
   let pack_store_list =
@@ -25,10 +25,10 @@ module Store = struct
         diff_ret_typ = "(Task_t.task_id, Task_t.task_data) Map_utils_t.diff";
         f_to_seq = "Task_id_map.to_seq";
         f_of_seq = "Task_id_map.of_seq";
-        f_inner_pack = "Task.Serialize.pack_task";
-        f_inner_pack_data = "Task.Serialize.pack_task_data";
-        f_inner_unpack = "Task.Deserialize.unpack_task";
-        f_inner_unpack_data = "Task.Deserialize.unpack_task_data";
+        f_inner_pack = Some "Task.Serialize.pack_task";
+        f_inner_pack_data = Some "Task.Serialize.pack_task_data";
+        f_inner_unpack = Some "Task.Deserialize.unpack_task";
+        f_inner_unpack_data = Some "Task.Deserialize.unpack_task_data";
       };
       {
         f_pack_suffix = "task_inst_store";
@@ -40,10 +40,10 @@ module Store = struct
           "(Task_t.task_inst_id, Task_t.task_inst_data) Map_utils_t.diff";
         f_to_seq = "Task_inst_id_map.to_seq";
         f_of_seq = "Task_inst_id_map.of_seq";
-        f_inner_pack = "Task.Serialize.pack_task_inst";
-        f_inner_pack_data = "Task.Serialize.pack_task_inst_data";
-        f_inner_unpack = "Task.Deserialize.unpack_task_inst";
-        f_inner_unpack_data = "Task.Deserialize.unpack_task_inst_data";
+        f_inner_pack = Some "Task.Serialize.pack_task_inst";
+        f_inner_pack_data = Some "Task.Serialize.pack_task_inst_data";
+        f_inner_unpack = Some "Task.Deserialize.unpack_task_inst";
+        f_inner_unpack_data = Some "Task.Deserialize.unpack_task_inst_data";
       };
       {
         f_pack_suffix = "task_seg_store";
@@ -55,10 +55,10 @@ module Store = struct
           "(Task_t.task_seg_id, Task_t.task_seg_size) Map_utils_t.diff";
         f_to_seq = "Task_seg_id_map.to_seq";
         f_of_seq = "Task_seg_id_map.of_seq";
-        f_inner_pack = "Task.Serialize.pack_task_seg";
-        f_inner_pack_data = "Task.Serialize.pack_task_seg_size";
-        f_inner_unpack = "Task.Deserialize.unpack_task_seg";
-        f_inner_unpack_data = "Task.Deserialize.unpack_task_seg_size";
+        f_inner_pack = Some "Task.Serialize.pack_task_seg";
+        f_inner_pack_data = Some "Task.Serialize.pack_task_seg_size";
+        f_inner_unpack = Some "Task.Deserialize.unpack_task_seg";
+        f_inner_unpack_data = Some "Task.Deserialize.unpack_task_seg_size";
       };
       {
         f_pack_suffix = "sched_req_pending_store";
@@ -71,10 +71,10 @@ module Store = struct
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";
-        f_inner_pack = "Sched_req.Serialize.pack_sched_req";
-        f_inner_pack_data = "Sched_req.Serialize.pack_sched_req_data";
-        f_inner_unpack = "Sched_req.Deserialize.unpack_sched_req";
-        f_inner_unpack_data = "Sched_req.Deserialize.unpack_sched_req_data";
+        f_inner_pack = Some "Sched_req.Serialize.pack_sched_req";
+        f_inner_pack_data = Some "Sched_req.Serialize.pack_sched_req_data";
+        f_inner_unpack = Some "Sched_req.Deserialize.unpack_sched_req";
+        f_inner_unpack_data = Some "Sched_req.Deserialize.unpack_sched_req_data";
       };
       {
         f_pack_suffix = "sched_req_record_store";
@@ -87,11 +87,12 @@ module Store = struct
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";
-        f_inner_pack = "Sched_req.Serialize.pack_sched_req_record";
-        f_inner_pack_data = "Sched_req.Serialize.pack_sched_req_record_data";
-        f_inner_unpack = "Sched_req.Deserialize.unpack_sched_req_record";
+        f_inner_pack = Some "Sched_req.Serialize.pack_sched_req_record";
+        f_inner_pack_data =
+          Some "Sched_req.Serialize.pack_sched_req_record_data";
+        f_inner_unpack = Some "Sched_req.Deserialize.unpack_sched_req_record";
         f_inner_unpack_data =
-          "Sched_req.Deserialize.unpack_sched_req_record_data";
+          Some "Sched_req.Deserialize.unpack_sched_req_record_data";
       };
       {
         f_pack_suffix = "quota";
@@ -102,10 +103,10 @@ module Store = struct
         diff_ret_typ = "(Task_t.task_inst_id, int64) Map_utils_t.diff";
         f_to_seq = "Task_inst_id_map.to_seq";
         f_of_seq = "Task_inst_id_map.of_seq";
-        f_inner_pack = "(fun x -> x)";
-        f_inner_pack_data = "(fun x -> x)";
-        f_inner_unpack = "(fun x -> x)";
-        f_inner_unpack_data = "(fun x -> x)";
+        f_inner_pack = None;
+        f_inner_pack_data = None;
+        f_inner_unpack = None;
+        f_inner_unpack_data = None;
       };
     ]
 
@@ -117,14 +118,14 @@ module Store = struct
     Printf.printf "let %s (x : %s) : %s =\n" (get_pack_f_name e) e.store_typ
       e.ret_typ;
     Printf.printf "x |> %s\n" e.f_to_seq;
-    Printf.printf "|> Seq.map %s\n" e.f_inner_pack;
+    Option.iter (fun x -> Printf.printf "|> Seq.map %s\n" x) e.f_inner_pack;
     Printf.printf "|> List.of_seq\n"
 
   let print_unpack_function e =
     Printf.printf "let %s (x : %s) : %s =\n" (get_unpack_f_name e) e.ret_typ
       e.store_typ;
     Printf.printf "x |> List.to_seq\n";
-    Printf.printf "|> Seq.map %s\n" e.f_inner_unpack;
+    Option.iter (fun x -> Printf.printf "|> Seq.map %s\n" x) e.f_inner_unpack;
     Printf.printf "|> %s\n" e.f_of_seq
 
   let print_pack_diff_function e =
@@ -134,10 +135,12 @@ module Store = struct
     Printf.printf "{\n";
     Printf.printf "updated = x.updated\n";
     Printf.printf "|> %s\n" e.f_to_seq;
-    Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
-    Printf.printf "(id, (%s data1, %s data2))\n" e.f_inner_pack_data
+    Option.iter
+      (fun x ->
+         Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
+         Printf.printf "(id, (%s data1, %s data2))\n" x x;
+         Printf.printf ")\n")
       e.f_inner_pack_data;
-    Printf.printf ")\n";
     Printf.printf "|> List.of_seq;\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s pack_f_name s)
@@ -151,10 +154,12 @@ module Store = struct
     Printf.printf "{\n";
     Printf.printf "updated = x.updated\n";
     Printf.printf "|> List.to_seq\n";
-    Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
-    Printf.printf "(id, (%s data1, %s data2))\n" e.f_inner_unpack_data
+    Option.iter
+      (fun x ->
+         Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
+         Printf.printf "(id, (%s data1, %s data2))\n" x x;
+         Printf.printf ")\n")
       e.f_inner_unpack_data;
-    Printf.printf ")\n";
     Printf.printf "|> %s;\n" e.f_of_seq;
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s unpack_f_name s)
