@@ -360,21 +360,35 @@ module Print = struct
   end;
     Buffer.contents buffer
 
-  let debug_print_task_inst ?(indent_level = 0) (id, data) =
-    Debug_print.printf ~indent_level "task inst id : %s\n"
+  let debug_string_task_inst ?(indent_level = 0) (id, data) =
+    let buffer = Buffer.create 4096 in
+    begin
+    Debug_print.bprintf ~indent_level buffer "task inst id : %s\n"
       (task_inst_id_to_string id);
-    Debug_print.printf ~indent_level:(indent_level + 1) "type : %s\n"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "type : %s\n"
       ( match data.task_inst_type with
         | Reminder -> "reminder"
         | Reminder_quota_counting { quota } ->
           Printf.sprintf "reminder with quota : %Ld" quota
         | Passing -> "passing" )
+  end;
+    Buffer.contents buffer
 
-  let debug_print_task_seg ?(indent_level = 0) (id, size) =
-    Debug_print.printf ~indent_level "task seg id : %s\n"
+  let debug_string_task_seg ?(indent_level = 0) (id, size) =
+    let buffer = Buffer.create 4096 in
+    begin
+    Debug_print.bprintf ~indent_level buffer "task seg id : %s\n"
       (task_seg_id_to_string id);
-    Debug_print.printf ~indent_level:(indent_level + 1) "size : %Ld\n" size
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "size : %Ld\n" size
+  end;
+    Buffer.contents buffer
 
   let debug_print_task ?(indent_level = 0) task =
     print_string (debug_string_task ~indent_level task)
+
+  let debug_print_task_inst ?(indent_level = 0) task_inst =
+    print_string (debug_string_task_inst ~indent_level task_inst)
+
+  let debug_print_task_seg ?(indent_level = 0) task_seg =
+    print_string (debug_string_task_seg ~indent_level task_seg)
 end
