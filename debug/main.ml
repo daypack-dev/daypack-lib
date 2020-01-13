@@ -414,7 +414,10 @@ let debug_sched_usage_simulation () =
     |> fun x ->
     Sched.Print.debug_print_sched x;
     x )
-  |> fun x -> print_endline (Sched.Serialize.json_string_of_sched x)
+  |> fun x ->
+  print_newline ();
+  print_endline "JSON:";
+  print_endline (Sched.Serialize.json_string_of_sched x)
 
 (* let () = debug_single_task_seg_shift (); print_newline () *)
 
