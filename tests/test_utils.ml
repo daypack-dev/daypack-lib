@@ -138,28 +138,25 @@ let tiny_task_segs =
     Gen.(list_size (int_bound 5) tiny_task_seg_gen)
 
 let task_inst_id_gen =
-  let open QCheck.Gen in
-  triple pos_int64_gen pos_int64_gen pos_int64_gen
+  QCheck.Gen.(triple pos_int64_gen pos_int64_gen pos_int64_gen)
 
 let task_inst_id = QCheck.make task_inst_id_gen
 
 let task_inst_data_gen =
   let open QCheck.Gen in
-  oneof [
-     return Daypack_lib.Task.{
-       task_inst_type = Reminder
-     };
-     map (fun quota -> Daypack_lib.Task.{
-       task_inst_type = Reminder_quota_counting { quota}
-     }) pos_int64_gen;
-     return Daypack_lib.Task.{
-       task_inst_type = Passing
-     };
-  ]
+  oneof
+    [
+      return Daypack_lib.Task.{ task_inst_type = Reminder };
+      map
+        (fun quota ->
+           let open Daypack_lib.Task in
+           { task_inst_type = Reminder_quota_counting { quota } })
+        pos_int64_gen;
+      return Daypack_lib.Task.{ task_inst_type = Passing };
+    ]
 
-let task_inst_gen =
-  let open QCheck.Gen in
-  pair task_inst_id_gen task_inst_data_gen
+let task_inst_gen = QCheck.Gen.(pair task_inst_id_gen task_inst_data_gen)
 
 let task_inst =
-  QCheck.(make ~print:Daypack_lib.Task.Print.debug_string_task_inst task_inst_gen)
+  let open QCheck in
+  make ~print:Daypack_lib.Task.Print.debug_string_task_inst task_inst_gen
