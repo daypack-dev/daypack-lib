@@ -1,7 +1,7 @@
 let indent_single = "  "
 
-let printf ?(indent_level : int = 0) fmt =
+let bprintf ?(indent_level : int = 0) buffer fmt =
   for _ = 0 to indent_level - 1 do
-    print_string indent_single
+    Buffer.add_string buffer indent_single
   done;
-  Printf.printf fmt
+  Printf.bprintf buffer fmt
