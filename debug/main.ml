@@ -389,29 +389,32 @@ let debug_sched_usage_simulation () =
     Task.Print.debug_print_task ~indent_level:1 task;
     sched
   in
-  Sched.empty
-  (* |> add_task ~parent_user_id:0L
-   *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
-   *   Task.[ { task_inst_type = Reminder } ] *)
-  |> add_task ~parent_user_id:0L
-    Task.
-      {
-        splittable = false;
-        parallelizable = false;
-        task_type =
-          Recurring
-            (Arithemtic_seq
-               ( { start = 0L; end_exc = 200L; diff = 10L },
-                 {
-                   task_inst_data = { task_inst_type = Reminder };
-                   sched_req_templates =
-                     [ Fixed { task_seg_related_data = 6L; start = 0L } ];
-                 } ));
-      }
-    []
-  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-  |> Sched.Print.debug_print_sched
+  ( Sched.empty
+    (* |> add_task ~parent_user_id:0L
+     *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
+     *   Task.[ { task_inst_type = Reminder } ] *)
+    |> add_task ~parent_user_id:0L
+      Task.
+        {
+          splittable = false;
+          parallelizable = false;
+          task_type =
+            Recurring
+              (Arithemtic_seq
+                 ( { start = 0L; end_exc = 200L; diff = 10L },
+                   {
+                     task_inst_data = { task_inst_type = Reminder };
+                     sched_req_templates =
+                       [ Fixed { task_seg_related_data = 6L; start = 0L } ];
+                   } ));
+        }
+      []
+    |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
+    |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
+    |> fun x ->
+    Sched.Print.debug_print_sched x;
+    x )
+  |> fun x -> print_endline (Sched.Serialize.json_string_of_sched x)
 
 (* let () = debug_single_task_seg_shift (); print_newline () *)
 
