@@ -21,10 +21,10 @@ open Test_utils
     );
   ] in
 
-  List.iter (fun (typ, f_pack_name, f_unpack_name) ->
+  List.iter (fun (typ, f_pack, f_unpack) ->
       print_unpack_is_inverse_of_pack_test ~typ
-        ~f_pack_name
-        ~f_unpack_name
+        ~f_pack
+        ~f_unpack
     ) unpack_pack_list;
 
   print_endline "let suite = [";
