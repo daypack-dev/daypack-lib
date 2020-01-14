@@ -5,6 +5,7 @@ module Sched = Sched
 module Sched_req_data_skeleton = Sched_req_data_skeleton
 module Sched_req = Sched_req
 module Sched_gens = Sched_gens
+module Sched_req_id_map = Sched_req_id_map
 module User_id_map = User_id_map
 module Task_id_map = Task_id_map
 module Task_seg_id_map = Task_seg_id_map

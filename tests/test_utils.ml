@@ -229,6 +229,10 @@ let sched_req_data_gen : Daypack_lib.Sched_req.sched_req_data QCheck.Gen.t =
 let sched_req_gen : Daypack_lib.Sched_req.sched_req QCheck.Gen.t =
   QCheck.Gen.(pair pos_int64_gen sched_req_data_gen)
 
+let sched_req =
+  QCheck.make ~print:Daypack_lib.Sched_req.Print.debug_string_of_sched_req
+    sched_req_gen
+
 let sched_req_record_data_gen :
   Daypack_lib.Sched_req.sched_req_record_data QCheck.Gen.t =
   let open QCheck.Gen in
@@ -241,6 +245,11 @@ let sched_req_record_data_gen :
 
 let sched_req_record_gen : Daypack_lib.Sched_req.sched_req_record QCheck.Gen.t =
   QCheck.Gen.(pair pos_int64_gen sched_req_record_data_gen)
+
+let sched_req_record =
+  QCheck.make
+    ~print:Daypack_lib.Sched_req.Print.debug_string_of_sched_req_record
+    sched_req_record_gen
 
 let arith_seq_gen =
   let open QCheck.Gen in
