@@ -33,7 +33,8 @@ open Test_utils
      "Daypack_lib.User_id_map.of_seq",
      "Daypack_lib.Sched.Serialize.pack_user_id_to_task_ids",
      "Daypack_lib.Sched.Deserialize.unpack_user_id_to_task_ids",
-     "Daypack_lib.User_id_map.equal"
+     "Daypack_lib.User_id_map.equal",
+     "Daypack_lib.Int64_set.equal"
     );
   ] in
 
@@ -47,7 +48,7 @@ open Test_utils
         ~f_equal)
     unpack_pack_store_list;
 
-  List.iter (fun (name, id_gen, bucket_gen, f_of_seq, f_pack, f_unpack, f_equal) ->
+  List.iter (fun (name, id_gen, bucket_gen, f_of_seq, f_pack, f_unpack, f_equal, f_bucket_equal) ->
       print_unpack_is_inverse_of_pack_test_bucket_store
         ~name
         ~id_gen
@@ -55,14 +56,16 @@ open Test_utils
         ~f_of_seq
         ~f_pack
         ~f_unpack
-        ~f_equal)
+        ~f_equal
+        ~f_bucket_equal
+    )
     unpack_pack_bucket_store_list;
 
   print_endline "let suite = [";
   List.iter (fun (name, _, _, _, _, _) ->
       Printf.printf "%s;\n" (unpack_is_inverse_of_pack_test_name name);
     ) unpack_pack_store_list;
-  List.iter (fun (name, _, _, _, _, _, _) ->
+  List.iter (fun (name, _, _, _, _, _, _, _) ->
       Printf.printf "%s;\n" (unpack_is_inverse_of_pack_test_name name);
     ) unpack_pack_bucket_store_list;
   print_endline "]";
@@ -113,7 +116,7 @@ let qc_unpack_is_inverse_of_pack_user_id_to_task_ids =
          x |> Daypack_lib.Sched.Serialize.pack_user_id_to_task_ids
          |> Daypack_lib.Sched.Deserialize.unpack_user_id_to_task_ids
        in
-       Daypack_lib.User_id_map.equal (fun x y -> compare x y = 0) x y)
+       Daypack_lib.User_id_map.equal Daypack_lib.Int64_set.equal x y)
 
 let suite =
   [
