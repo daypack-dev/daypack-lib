@@ -287,3 +287,6 @@ let task_data_gen =
     bool bool task_type_gen
 
 let task_gen = QCheck.Gen.(pair task_id_gen task_data_gen)
+
+let task =
+  QCheck.make ~print:Daypack_lib.Task.Print.debug_string_of_task task_gen
