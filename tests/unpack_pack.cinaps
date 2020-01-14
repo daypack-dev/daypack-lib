@@ -1,0 +1,8 @@
+let print_unpack_is_inverse_of_pack_test ~typ ~f_pack_name ~f_unpack_name =
+  let name = Printf.sprintf "qc_unpack_is_inverse_of_pack_%s" typ in
+  Printf.printf "let %s =\n" name;
+  Printf.printf "QCheck.Test.make ~count:10_000 ~name:\"%s\"\n" name;
+  Printf.printf "%s\n" typ;
+  Printf.printf "(fun x ->\n";
+  Printf.printf "x |> %s |> %s = x\n" f_pack_name f_unpack_name;
+  Printf.printf ")\n";
