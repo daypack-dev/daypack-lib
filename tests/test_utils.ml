@@ -278,6 +278,8 @@ let task_type_gen =
 let task_id_gen =
   QCheck.Gen.map2 (fun id1 id2 -> (id1, id2)) pos_int64_gen pos_int64_gen
 
+let task_id = QCheck.make task_id_gen
+
 let task_data_gen =
   let open QCheck.Gen in
   map3

@@ -36,6 +36,24 @@ open Test_utils
      "Daypack_lib.User_id_map.equal",
      "Daypack_lib.Int64_set.equal"
     );
+    ("task_id_to_task_inst_ids",
+     "task_id",
+     "pos_int64_set",
+     "Daypack_lib.Task_id_map.of_seq",
+     "Daypack_lib.Sched.Serialize.pack_task_id_to_task_inst_ids",
+     "Daypack_lib.Sched.Deserialize.unpack_task_id_to_task_inst_ids",
+     "Daypack_lib.Task_id_map.equal",
+     "Daypack_lib.Int64_set.equal"
+    );
+    ("task_inst_id_to_task_seg_ids",
+     "task_inst_id",
+     "pos_int64_set",
+     "Daypack_lib.Task_inst_id_map.of_seq",
+     "Daypack_lib.Sched.Serialize.pack_task_inst_id_to_task_seg_ids",
+     "Daypack_lib.Sched.Deserialize.unpack_task_inst_id_to_task_seg_ids",
+     "Daypack_lib.Task_inst_id_map.equal",
+     "Daypack_lib.Int64_set.equal"
+    );
   ] in
 
   List.iter (fun (name, inner_typ_gen, f_of_seq, f_pack, f_unpack, f_equal) ->
@@ -118,12 +136,38 @@ let qc_unpack_is_inverse_of_pack_user_id_to_task_ids =
        in
        Daypack_lib.User_id_map.equal Daypack_lib.Int64_set.equal x y)
 
+let qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids =
+  QCheck.Test.make ~count:1000
+    ~name:"qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids"
+    QCheck.(list_of_size Gen.(int_bound 10) (pair task_id pos_int64_set))
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Task_id_map.of_seq in
+       let y =
+         x |> Daypack_lib.Sched.Serialize.pack_task_id_to_task_inst_ids
+         |> Daypack_lib.Sched.Deserialize.unpack_task_id_to_task_inst_ids
+       in
+       Daypack_lib.Task_id_map.equal Daypack_lib.Int64_set.equal x y)
+
+let qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids =
+  QCheck.Test.make ~count:1000
+    ~name:"qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids"
+    QCheck.(list_of_size Gen.(int_bound 10) (pair task_inst_id pos_int64_set))
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq in
+       let y =
+         x |> Daypack_lib.Sched.Serialize.pack_task_inst_id_to_task_seg_ids
+         |> Daypack_lib.Sched.Deserialize.unpack_task_inst_id_to_task_seg_ids
+       in
+       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal x y)
+
 let suite =
   [
     qc_unpack_is_inverse_of_pack_task_store;
     qc_unpack_is_inverse_of_pack_task_inst_store;
     qc_unpack_is_inverse_of_pack_task_seg_store;
     qc_unpack_is_inverse_of_pack_user_id_to_task_ids;
+    qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids;
+    qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids;
   ]
 
 (*$*)
