@@ -31,6 +31,13 @@ open Test_utils
      "Daypack_lib.Sched.Deserialize.unpack_sched_req_pending_list",
      "Daypack_lib.Sched_req_id_map.equal"
     );
+    ("sched_req_record_store",
+     "sched_req_record",
+     "Daypack_lib.Sched_req_id_map.of_seq",
+     "Daypack_lib.Sched.Serialize.pack_sched_req_record_store",
+     "Daypack_lib.Sched.Deserialize.unpack_sched_req_record_list",
+     "Daypack_lib.Sched_req_id_map.equal"
+    );
   ] in
 
   let unpack_pack_bucket_store_list = [
@@ -143,6 +150,18 @@ let qc_unpack_is_inverse_of_pack_sched_req_pending_store =
        in
        Daypack_lib.Sched_req_id_map.equal (fun x y -> compare x y = 0) x y)
 
+let qc_unpack_is_inverse_of_pack_sched_req_record_store =
+  QCheck.Test.make ~count:1000
+    ~name:"qc_unpack_is_inverse_of_pack_sched_req_record_store"
+    QCheck.(list_of_size Gen.(int_bound 100) sched_req_record)
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Sched_req_id_map.of_seq in
+       let y =
+         x |> Daypack_lib.Sched.Serialize.pack_sched_req_record_store
+         |> Daypack_lib.Sched.Deserialize.unpack_sched_req_record_list
+       in
+       Daypack_lib.Sched_req_id_map.equal (fun x y -> compare x y = 0) x y)
+
 let qc_unpack_is_inverse_of_pack_user_id_to_task_ids =
   QCheck.Test.make ~count:1000
     ~name:"qc_unpack_is_inverse_of_pack_user_id_to_task_ids"
@@ -185,6 +204,7 @@ let suite =
     qc_unpack_is_inverse_of_pack_task_inst_store;
     qc_unpack_is_inverse_of_pack_task_seg_store;
     qc_unpack_is_inverse_of_pack_sched_req_pending_store;
+    qc_unpack_is_inverse_of_pack_sched_req_record_store;
     qc_unpack_is_inverse_of_pack_user_id_to_task_ids;
     qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids;
     qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids;
