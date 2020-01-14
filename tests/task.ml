@@ -11,6 +11,14 @@ open Test_utils
      "Daypack_lib.Task.Serialize.pack_task",
      "Daypack_lib.Task.Deserialize.unpack_task"
     );
+    ("task_inst",
+     "Daypack_lib.Task.Serialize.pack_task_inst",
+     "Daypack_lib.Task.Deserialize.unpack_task_inst"
+    );
+    ("task_seg",
+     "Daypack_lib.Task.Serialize.pack_task_seg",
+     "Daypack_lib.Task.Deserialize.unpack_task_seg"
+    );
   ] in
 
   List.iter (fun (typ, f_pack_name, f_unpack_name) ->
@@ -38,7 +46,24 @@ let qc_unpack_is_inverse_of_pack_task =
        x |> Daypack_lib.Task.Serialize.pack_task
        |> Daypack_lib.Task.Deserialize.unpack_task = x)
 
+let qc_unpack_is_inverse_of_pack_task_inst =
+  QCheck.Test.make ~count:10_000 ~name:"qc_unpack_is_inverse_of_pack_task_inst"
+    task_inst (fun x ->
+        x |> Daypack_lib.Task.Serialize.pack_task_inst
+        |> Daypack_lib.Task.Deserialize.unpack_task_inst = x)
+
+let qc_unpack_is_inverse_of_pack_task_seg =
+  QCheck.Test.make ~count:10_000 ~name:"qc_unpack_is_inverse_of_pack_task_seg"
+    task_seg (fun x ->
+        x |> Daypack_lib.Task.Serialize.pack_task_seg
+        |> Daypack_lib.Task.Deserialize.unpack_task_seg = x)
+
 let suite =
-  [ qc_unpack_is_inverse_of_pack_arith_seq; qc_unpack_is_inverse_of_pack_task ]
+  [
+    qc_unpack_is_inverse_of_pack_arith_seq;
+    qc_unpack_is_inverse_of_pack_task;
+    qc_unpack_is_inverse_of_pack_task_inst;
+    qc_unpack_is_inverse_of_pack_task_seg;
+  ]
 
 (*$*)

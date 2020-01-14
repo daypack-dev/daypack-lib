@@ -136,24 +136,24 @@ let task_seg_id_gen =
 
 let task_seg_id = QCheck.make task_seg_id_gen
 
-let tiny_task_seg_size_gen = nz_pos_int64_bound_gen 20L
+let task_seg_size_gen = nz_pos_int64_bound_gen 20L
 
-let tiny_task_seg_gen =
+let task_seg_gen =
   let open QCheck in
-  Gen.(pair task_seg_id_gen tiny_task_seg_size_gen)
+  Gen.(pair task_seg_id_gen task_seg_size_gen)
 
-let tiny_task_seg_sizes_gen =
+let task_seg_sizes_gen =
   let open QCheck in
-  Gen.(list_size (int_bound 5) tiny_task_seg_size_gen)
+  Gen.(list_size (int_bound 5) task_seg_size_gen)
 
-let tiny_task_segs_gen =
+let task_segs_gen =
   let open QCheck in
-  Gen.(list_size (int_bound 5) tiny_task_seg_gen)
+  Gen.(list_size (int_bound 5) task_seg_gen)
 
-let tiny_task_seg = QCheck.(make ~print:Print_utils.task_seg tiny_task_seg_gen)
+let task_seg = QCheck.(make ~print:Print_utils.task_seg task_seg_gen)
 
-let tiny_task_segs =
-  QCheck.(make ~print:Print_utils.task_segs tiny_task_segs_gen)
+let task_segs =
+  QCheck.(make ~print:Print_utils.task_segs task_segs_gen)
 
 let task_inst_id_gen =
   QCheck.Gen.(triple pos_int64_gen pos_int64_gen pos_int64_gen)
@@ -189,30 +189,30 @@ let sched_req_template_gen =
         (fun task_seg start ->
            Daypack_lib.Sched_req_data_skeleton.Fixed
              { task_seg_related_data = task_seg; start })
-        tiny_task_seg_size_gen pos_int64_gen;
+        task_seg_size_gen pos_int64_gen;
       map2
         (fun task_segs time_slots ->
            Daypack_lib.Sched_req_data_skeleton.Shift (task_segs, time_slots))
-        tiny_task_seg_sizes_gen tiny_time_slots_gen;
+        task_seg_sizes_gen tiny_time_slots_gen;
       map2
         (fun task_seg time_slots ->
            Daypack_lib.Sched_req_data_skeleton.Split_and_shift
              (task_seg, time_slots))
-        tiny_task_seg_size_gen tiny_time_slots_gen;
+        task_seg_size_gen tiny_time_slots_gen;
       map3
         (fun task_seg time_slots buckets ->
            Daypack_lib.Sched_req_data_skeleton.Split_even
              { task_seg_related_data = task_seg; time_slots; buckets })
-        tiny_task_seg_size_gen tiny_time_slots_gen tiny_time_slots_gen;
+        task_seg_size_gen tiny_time_slots_gen tiny_time_slots_gen;
       map2
         (fun task_segs time_slots ->
            Daypack_lib.Sched_req_data_skeleton.Time_share (task_segs, time_slots))
-        tiny_task_seg_sizes_gen tiny_time_slots_gen;
+        task_seg_sizes_gen tiny_time_slots_gen;
       map3
         (fun direction task_seg time_slots ->
            Daypack_lib.Sched_req_data_skeleton.Push_to
              (direction, task_seg, time_slots))
-        push_direction_gen tiny_task_seg_size_gen tiny_time_slots_gen;
+        push_direction_gen task_seg_size_gen tiny_time_slots_gen;
     ]
 
 let sched_req_templates_gen =
