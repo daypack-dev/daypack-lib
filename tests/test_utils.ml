@@ -250,6 +250,10 @@ let arith_seq_gen =
        Daypack_lib.Task.{ start; end_exc = Int64.add start offset; diff })
     pos_int64_gen small_pos_int64_gen small_nz_pos_int64_gen
 
+let arith_seq =
+  QCheck.make ~print:Daypack_lib.Task.Print.debug_string_of_arith_seq
+    arith_seq_gen
+
 let recur_data_gen =
   let open QCheck.Gen in
   map2
