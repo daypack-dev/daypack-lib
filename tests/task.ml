@@ -1,6 +1,6 @@
 open Test_utils
 
-(*$ #use "tests/unpack_pack.cinaps";;
+(*$ #use "tests/serialization_related.cinaps";;
 
   print_unpack_is_inverse_of_pack_test ~typ:"arith_seq"
     ~f_pack_name:"Daypack_lib.Task.Serialize.pack_arith_seq"
