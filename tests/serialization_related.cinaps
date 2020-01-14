@@ -32,4 +32,31 @@ let print_unpack_is_inverse_of_pack_test_store
   Printf.printf "|> %s\n" f_unpack;
   Printf.printf "in\n";
   Printf.printf "%s (fun x y -> compare x y = 0) x y\n" f_equal;
-  Printf.printf ")\n";
+  Printf.printf ")\n"
+
+let print_unpack_is_inverse_of_pack_test_bucket_store
+    ~name
+    ~id_gen
+    ~bucket_gen
+    ~f_of_seq
+    ~f_pack
+    ~f_unpack
+    ~f_equal
+  =
+  let name = unpack_is_inverse_of_pack_test_name name in
+  Printf.printf "let %s =\n" name;
+  Printf.printf "QCheck.Test.make ~count:1000 ~name:\"%s\"\n" name;
+  Printf.printf "QCheck.(";
+  Printf.printf "list_of_size Gen.(int_bound 10)";
+  Printf.printf "(pair %s %s))" id_gen bucket_gen;
+  Printf.printf "(fun l ->\n";
+  Printf.printf "let x = l\n";
+  Printf.printf "|> List.to_seq\n";
+  Printf.printf "|> %s\n" f_of_seq;
+  Printf.printf "in\n";
+  Printf.printf "let y = x\n";
+  Printf.printf "|> %s\n" f_pack;
+  Printf.printf "|> %s\n" f_unpack;
+  Printf.printf "in\n";
+  Printf.printf "%s (fun x y -> compare x y = 0) x y\n" f_equal;
+  Printf.printf ")\n"

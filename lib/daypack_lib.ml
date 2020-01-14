@@ -9,3 +9,4 @@ module User_id_map = User_id_map
 module Task_id_map = Task_id_map
 module Task_seg_id_map = Task_seg_id_map
 module Task_inst_id_map = Task_inst_id_map
+module Int64_set = Int64_set

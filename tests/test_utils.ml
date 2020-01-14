@@ -289,3 +289,16 @@ let task_gen = QCheck.Gen.(pair task_id_gen task_data_gen)
 
 let task =
   QCheck.make ~print:Daypack_lib.Task.Print.debug_string_of_task task_gen
+
+let pos_int64_set_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> Daypack_lib.Int64_set.of_list l)
+    (list_size (int_bound 100) pos_int64_gen)
+
+let pos_int64_set =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.Int64_set.to_seq |> List.of_seq
+        |> QCheck.Print.list Print_utils.int64)
+    pos_int64_set_gen
