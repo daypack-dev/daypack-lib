@@ -203,13 +203,15 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let debug_string_of_arith_seq ?(indent_level = 0) ?(buffer = Buffer.create 4096)
-      arith_seq
-    =
+  let debug_string_of_arith_seq ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) arith_seq =
     Debug_print.bprintf ~indent_level buffer "{";
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "start = %Ld" arith_seq.start;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "end_exc = %Ld" arith_seq.end_exc;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "diff = %Ld" arith_seq.diff;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "start = %Ld"
+      arith_seq.start;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "end_exc = %Ld"
+      arith_seq.end_exc;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "diff = %Ld"
+      arith_seq.diff;
     Debug_print.bprintf ~indent_level buffer "}";
     Buffer.contents buffer
 
