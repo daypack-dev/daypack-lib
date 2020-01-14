@@ -1,5 +1,5 @@
-let unpack_is_inverse_of_pack_test_name typ =
-  Printf.sprintf "qc_unpack_is_inverse_of_pack_%s" typ
+let unpack_is_inverse_of_pack_test_name suffix =
+  Printf.sprintf "qc_unpack_is_inverse_of_pack_%s" suffix
 
 let print_unpack_is_inverse_of_pack_test ~typ ~f_pack_name ~f_unpack_name =
   let name = unpack_is_inverse_of_pack_test_name typ in
@@ -8,4 +8,16 @@ let print_unpack_is_inverse_of_pack_test ~typ ~f_pack_name ~f_unpack_name =
   Printf.printf "%s\n" typ;
   Printf.printf "(fun x ->\n";
   Printf.printf "x |> %s |> %s = x\n" f_pack_name f_unpack_name;
-  Printf.printf ")\n";
+  Printf.printf ")\n"
+
+let print_unpack_is_inverse_of_pack_test_store
+    ~name
+    ~inner_typ
+    ~f_pack_name
+    ~f_unpack_name
+    ~f_of_seq
+    ~f_to_seq
+    ~f_equal
+  =
+  let name = unpack_is_inverse_of_pack_test_name name in
+  Printf.printf "let %s = \n"

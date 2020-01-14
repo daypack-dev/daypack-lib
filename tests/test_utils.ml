@@ -152,8 +152,7 @@ let task_segs_gen =
 
 let task_seg = QCheck.(make ~print:Print_utils.task_seg task_seg_gen)
 
-let task_segs =
-  QCheck.(make ~print:Print_utils.task_segs task_segs_gen)
+let task_segs = QCheck.(make ~print:Print_utils.task_segs task_segs_gen)
 
 let task_inst_id_gen =
   QCheck.Gen.(triple pos_int64_gen pos_int64_gen pos_int64_gen)

@@ -3,7 +3,8 @@ let () =
     [
       (* ("Time_slot", Time_slot.suite);
        * ("Task_seg_gens", Task_seg_place_gens.suite); *)
-      ("Task", Task.suite);
+      (* ("Task", Task.suite); *)
+      ("Sched", Sched.suite);
     ]
     |> List.map (fun (name, suite) ->
         (name, List.map QCheck_alcotest.to_alcotest suite))
