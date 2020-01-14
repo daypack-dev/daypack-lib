@@ -2,7 +2,7 @@ open Test_utils
 
 (*$ #use "tests/serialization_related.cinaps";;
 
-  let l = [
+  let unpack_pack_list = [
     ("arith_seq",
      "Daypack_lib.Task.Serialize.pack_arith_seq",
      "Daypack_lib.Task.Deserialize.unpack_arith_seq"
@@ -25,12 +25,12 @@ open Test_utils
       print_unpack_is_inverse_of_pack_test ~typ
         ~f_pack_name
         ~f_unpack_name
-    ) l;
+    ) unpack_pack_list;
 
   print_endline "let suite = [";
   List.iter (fun (typ, _, _) ->
       Printf.printf "%s;" (unpack_is_inverse_of_pack_test_name typ);
-    ) l;
+    ) unpack_pack_list;
   print_endline "]";
 *)
 
