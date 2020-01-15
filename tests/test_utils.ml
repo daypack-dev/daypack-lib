@@ -313,3 +313,61 @@ let pos_int64_set =
         s |> Daypack_lib.Int64_set.to_seq |> List.of_seq
         |> QCheck.Print.list Print_utils.int64)
     pos_int64_set_gen
+
+(*$
+  let get_gen_name ~name = Printf.sprintf "%s_gen" name in
+
+  let print_store_gen ~name ~f_of_seq ~inner_typ_gen =
+    Printf.printf "let %s =\n" (get_gen_name ~name);
+    Printf.printf "let open QCheck.Gen in\n";
+    Printf.printf "map\n";
+    Printf.printf "(fun l -> l\n";
+    Printf.printf "|> List.to_seq\n";
+    Printf.printf "|> %s\n" f_of_seq;
+    Printf.printf ")\n";
+    Printf.printf "(list_size (int_bound 100) %s)\n" inner_typ_gen
+  in
+
+  let print_store_arbitrary ~name ~f_to_seq ~inner_typ_print =
+    let gen_name = get_gen_name ~name in
+    Printf.printf "let %s =\n" name;
+    Printf.printf "QCheck.make\n";
+    Printf.printf "~print:(fun s -> s\n";
+    Printf.printf "|> %s\n" f_to_seq;
+    Printf.printf "|> List.of_seq\n";
+    Printf.printf "|> QCheck.Print.list %s\n" inner_typ_print;
+    Printf.printf ")\n";
+    Printf.printf "%s\n" gen_name
+  in
+
+  let store_list =
+    [
+      ( "task_store",
+        "Daypack_lib.Task_id_map.of_seq",
+        "Daypack_lib.Task_id_map.to_seq",
+        "task_gen",
+        "Daypack_lib.Task.Print.debug_string_of_task" );
+    ]
+  in
+
+  List.iter
+    (fun (name, f_of_seq, f_to_seq, inner_typ_gen, inner_typ_print) ->
+       print_store_gen ~name ~f_of_seq ~inner_typ_gen;
+       print_store_arbitrary ~name ~f_to_seq ~inner_typ_print)
+    store_list
+*)
+
+let task_store_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Task_id_map.of_seq)
+    (list_size (int_bound 100) task_gen)
+
+let task_store =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.Task_id_map.to_seq |> List.of_seq
+        |> QCheck.Print.list Daypack_lib.Task.Print.debug_string_of_task)
+    task_store_gen
+
+(*$*)
