@@ -110,7 +110,6 @@ open Test_utils
     )
     unpack_pack_bucket_store_list;
 
-
   List.iter (fun (name, set_gen, f_pack, f_unpack, f_equal) ->
       print_unpack_is_inverse_of_pack_test_set_store
         ~name
