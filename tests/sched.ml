@@ -77,6 +77,16 @@ open Test_utils
     );
   ] in
 
+  let unpack_pack_set_store_list = [
+    ("sched_req_ids",
+     "pos_int64_set",
+     "Daypack_lib.Sched.Serialize.pack_sched_req_ids",
+     "Daypack_lib.Sched.Deserialize.unpack_sched_req_ids",
+     "Daypack_lib.Int64_set.equal"
+    )
+  ]
+  in
+
   List.iter (fun (name, inner_typ_gen, f_of_seq, f_pack, f_unpack, f_equal) ->
       print_unpack_is_inverse_of_pack_test_store
         ~name
@@ -100,6 +110,16 @@ open Test_utils
     )
     unpack_pack_bucket_store_list;
 
+
+  List.iter (fun (name, set_gen, f_pack, f_unpack, f_equal) ->
+      print_unpack_is_inverse_of_pack_test_set_store
+        ~name
+        ~set_gen
+        ~f_pack
+        ~f_unpack
+        ~f_equal)
+    unpack_pack_set_store_list;
+
   print_endline "let suite = [";
   List.iter (fun (name, _, _, _, _, _) ->
       Printf.printf "%s;\n" (unpack_is_inverse_of_pack_test_name name);
@@ -107,6 +127,10 @@ open Test_utils
   List.iter (fun (name, _, _, _, _, _, _, _) ->
       Printf.printf "%s;\n" (unpack_is_inverse_of_pack_test_name name);
     ) unpack_pack_bucket_store_list;
+  List.iter (fun (name, _, _, _, _) ->
+      Printf.printf "%s;\n" (unpack_is_inverse_of_pack_test_name name);
+    )
+    unpack_pack_set_store_list;
   print_endline "]";
 *)
 
@@ -216,6 +240,15 @@ let qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids =
        in
        Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal x y)
 
+let qc_unpack_is_inverse_of_pack_sched_req_ids =
+  QCheck.Test.make ~count:1000
+    ~name:"qc_unpack_is_inverse_of_pack_sched_req_ids" pos_int64_set (fun x ->
+        let y =
+          x |> Daypack_lib.Sched.Serialize.pack_sched_req_ids
+          |> Daypack_lib.Sched.Deserialize.unpack_sched_req_ids
+        in
+        Daypack_lib.Int64_set.equal x y)
+
 let suite =
   [
     qc_unpack_is_inverse_of_pack_task_store;
@@ -227,6 +260,7 @@ let suite =
     qc_unpack_is_inverse_of_pack_user_id_to_task_ids;
     qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids;
     qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids;
+    qc_unpack_is_inverse_of_pack_sched_req_ids;
   ]
 
 (*$*)
