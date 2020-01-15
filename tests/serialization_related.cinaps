@@ -20,7 +20,7 @@ let print_unpack_is_inverse_of_pack_test_store
   =
   let name = unpack_is_inverse_of_pack_test_name name in
   Printf.printf "let %s =\n" name;
-  Printf.printf "QCheck.Test.make ~count:1000 ~name:\"%s\"\n" name;
+  Printf.printf "QCheck.Test.make ~count:5000 ~name:\"%s\"\n" name;
   Printf.printf "QCheck.(list_of_size Gen.(int_bound 100) %s)\n" inner_typ_gen;
   Printf.printf "(fun l ->\n";
   Printf.printf "let x = l\n";
@@ -46,7 +46,7 @@ let print_unpack_is_inverse_of_pack_test_bucket_store
   =
   let name = unpack_is_inverse_of_pack_test_name name in
   Printf.printf "let %s =\n" name;
-  Printf.printf "QCheck.Test.make ~count:1000 ~name:\"%s\"\n" name;
+  Printf.printf "QCheck.Test.make ~count:5000 ~name:\"%s\"\n" name;
   Printf.printf "QCheck.(";
   Printf.printf "list_of_size Gen.(int_bound 10)";
   Printf.printf "(pair %s %s))" id_gen bucket_gen;
@@ -71,7 +71,7 @@ let print_unpack_is_inverse_of_pack_test_set_store
   =
   let name = unpack_is_inverse_of_pack_test_name name in
   Printf.printf "let %s =\n" name;
-  Printf.printf "QCheck.Test.make ~count:1000 ~name:\"%s\"\n" name;
+  Printf.printf "QCheck.Test.make ~count:5000 ~name:\"%s\"\n" name;
   Printf.printf "%s\n" set_gen;
   Printf.printf "(fun x ->\n";
   Printf.printf "let y = x\n";
