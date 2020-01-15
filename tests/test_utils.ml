@@ -347,6 +347,32 @@ let pos_int64_set =
         "Daypack_lib.Task_id_map.to_seq",
         "task_gen",
         "Daypack_lib.Task.Print.debug_string_of_task" );
+      ( "task_inst_store",
+        "Daypack_lib.Task_inst_id_map.of_seq",
+        "Daypack_lib.Task_inst_id_map.to_seq",
+        "task_inst_gen",
+        "Daypack_lib.Task.Print.debug_string_of_task_inst" );
+      ( "task_seg_store",
+        "Daypack_lib.Task_seg_id_map.of_seq",
+        "Daypack_lib.Task_seg_id_map.to_seq",
+        "task_seg_gen",
+        "Daypack_lib.Task.Print.debug_string_of_task_seg" );
+      ( "sched_req_pending_store",
+        "Daypack_lib.Sched_req_id_map.of_seq",
+        "Daypack_lib.Sched_req_id_map.to_seq",
+        "sched_req_gen",
+        "Daypack_lib.Sched_req.Print.debug_string_of_sched_req" );
+      ( "sched_req_record_store",
+        "Daypack_lib.Sched_req_id_map.of_seq",
+        "Daypack_lib.Sched_req_id_map.to_seq",
+        "sched_req_record_gen",
+        "Daypack_lib.Sched_req.Print.debug_string_of_sched_req_record" );
+      ( "quota",
+        "Daypack_lib.Task_inst_id_map.of_seq",
+        "Daypack_lib.Task_inst_id_map.to_seq",
+        "(pair task_inst_id_gen pos_int64_gen)",
+        "(QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string \
+         Print_utils.int64)" );
     ]
   in
 
@@ -369,5 +395,73 @@ let task_store =
         s |> Daypack_lib.Task_id_map.to_seq |> List.of_seq
         |> QCheck.Print.list Daypack_lib.Task.Print.debug_string_of_task)
     task_store_gen
+
+let task_inst_store_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq)
+    (list_size (int_bound 100) task_inst_gen)
+
+let task_inst_store =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.Task_inst_id_map.to_seq |> List.of_seq
+        |> QCheck.Print.list Daypack_lib.Task.Print.debug_string_of_task_inst)
+    task_inst_store_gen
+
+let task_seg_store_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Task_seg_id_map.of_seq)
+    (list_size (int_bound 100) task_seg_gen)
+
+let task_seg_store =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.Task_seg_id_map.to_seq |> List.of_seq
+        |> QCheck.Print.list Daypack_lib.Task.Print.debug_string_of_task_seg)
+    task_seg_store_gen
+
+let sched_req_pending_store_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Sched_req_id_map.of_seq)
+    (list_size (int_bound 100) sched_req_gen)
+
+let sched_req_pending_store =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.Sched_req_id_map.to_seq |> List.of_seq
+        |> QCheck.Print.list Daypack_lib.Sched_req.Print.debug_string_of_sched_req)
+    sched_req_pending_store_gen
+
+let sched_req_record_store_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Sched_req_id_map.of_seq)
+    (list_size (int_bound 100) sched_req_record_gen)
+
+let sched_req_record_store =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.Sched_req_id_map.to_seq |> List.of_seq
+        |> QCheck.Print.list
+          Daypack_lib.Sched_req.Print.debug_string_of_sched_req_record)
+    sched_req_record_store_gen
+
+let quota_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq)
+    (list_size (int_bound 100) (pair task_inst_id_gen pos_int64_gen))
+
+let quota =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.Task_inst_id_map.to_seq |> List.of_seq
+        |> QCheck.Print.list
+          (QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string
+             Print_utils.int64))
+    quota_gen
 
 (*$*)
