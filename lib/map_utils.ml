@@ -56,24 +56,14 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
       m1 m2
 
   let get_added (m1 : 'a t) (m2 : 'a t) : 'a t =
-    M.merge
-      (fun _key x1 x2 ->
-         match (x1, x2) with
-         | None, None -> None
-         | Some _, None -> None
-         | None, Some _ -> x2
-         | Some _, Some _ -> None)
-      m1 m2
+    M.filter (fun key2 _ ->
+        not (M.mem key2 m1)
+      ) m2
 
   let get_removed (m1 : 'a t) (m2 : 'a t) : 'a t =
-    M.merge
-      (fun _key x1 x2 ->
-         match (x1, x2) with
-         | None, None -> None
-         | Some _, None -> x1
-         | None, Some _ -> None
-         | Some _, Some _ -> None)
-      m1 m2
+    M.filter (fun key1 _ ->
+        not (M.mem key1 m2)
+      ) m1
 
   let diff ~(old : 'a t) (m : 'a t) : 'a diff =
     {
@@ -82,6 +72,15 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
       added = get_added old m;
       removed = get_removed old m;
     }
+
+  let add_map (m1 : 'a t) (m2 : 'a t) : 'a t =
+    M.add_seq (M.to_seq m2) m1
+
+  let filter_map (m1 : 'a t) (m2 : 'a t) : 'a t =
+    M.merge
+      (fun _key x1 x2 ->
+      )
+
 end
 
 module Make_bucketed (Map : Map.S) (Set : Set.S) :
