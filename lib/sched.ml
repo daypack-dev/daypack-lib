@@ -716,10 +716,6 @@ module Recur = struct
 end
 
 module Serialize = struct
-  let pack_int64_bucket_w_id ((id, bucket) : 'a * Int64_set.t) : 'a * int64 list
-    =
-    (id, bucket |> Int64_set.to_seq |> List.of_seq)
-
   (*$ #use "lib/sched.cinaps";;
 
     Store.print_pack_related_functions ()
