@@ -116,98 +116,53 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let debug_print_sched_req_data ?(indent_level = 0) req_data =
-    match req_data with
-    | Sched_req_data_skeleton.Fixed { task_seg_related_data = id, len; start }
-      ->
-      Debug_print.printf ~indent_level "fixed :\n";
-      Debug_print.printf ~indent_level:(indent_level + 1)
-        "task segment allocation :\n";
-      Debug_print.printf ~indent_level:(indent_level + 2) "%s : %Ld\n"
-        (Task.task_inst_id_to_string id)
-        len;
-      Debug_print.printf ~indent_level:(indent_level + 1) "start :\n";
-      Debug_print.printf ~indent_level:(indent_level + 2) "%Ld\n" start
-    | Shift (task_seg_allocs, time_slots) ->
-      Debug_print.printf ~indent_level "shift :\n";
-      Debug_print.printf ~indent_level:(indent_level + 1)
-        "  task segment allocations :\n";
-      List.iter
-        (fun (id, len) ->
-           Debug_print.printf ~indent_level:(indent_level + 2) "%s : %Ld\n"
-             (Task.task_inst_id_to_string id)
-             len)
-        task_seg_allocs;
-      Debug_print.printf ~indent_level:(indent_level + 1) "time slots :\n";
-      List.iter
-        (fun (start, end_exc) ->
-           Debug_print.printf ~indent_level:(indent_level + 2) "[%Ld, %Ld)\n"
-             start end_exc)
-        time_slots
-    | Split_and_shift ((id, len), time_slots) ->
-      Debug_print.printf ~indent_level "split and shift :\n";
-      Debug_print.printf ~indent_level:(indent_level + 1)
-        "task segment allocation :\n";
-      Debug_print.printf ~indent_level:(indent_level + 2) "%s : %Ld\n"
-        (Task.task_inst_id_to_string id)
-        len;
-      Debug_print.printf ~indent_level:(indent_level + 1) "time slots :\n";
-      List.iter
-        (fun (start, end_exc) ->
-           Debug_print.printf ~indent_level:(indent_level + 2) "[%Ld, %Ld)\n"
-             start end_exc)
-        time_slots
-    | Split_even { task_seg_related_data = id, len; time_slots; buckets } ->
-      Debug_print.printf ~indent_level "split even :\n";
-      Debug_print.printf ~indent_level:(indent_level + 1)
-        "task segment allocation :\n";
-      Debug_print.printf ~indent_level:(indent_level + 2) "%s : %Ld\n"
-        (Task.task_inst_id_to_string id)
-        len;
-      Debug_print.printf ~indent_level:(indent_level + 1) "time slots :\n";
-      List.iter
-        (fun (start, end_exc) ->
-           Debug_print.printf ~indent_level:(indent_level + 2) "[%Ld, %Ld)\n"
-             start end_exc)
-        time_slots;
-      Debug_print.printf ~indent_level:(indent_level + 1) "buckets :\n";
-      List.iter
-        (fun (start, end_exc) ->
-           Debug_print.printf ~indent_level:(indent_level + 2) "[%Ld, %Ld)\n"
-             start end_exc)
-        buckets
-    | Time_share (task_seg_allocs, time_slots) ->
-      Debug_print.printf ~indent_level "time share :\n";
-      Debug_print.printf ~indent_level:(indent_level + 1)
-        "task segment allocations :\n";
-      List.iter
-        (fun (id, len) ->
-           Debug_print.printf ~indent_level:(indent_level + 2) "%s : %Ld\n"
-             (Task.task_inst_id_to_string id)
-             len)
-        task_seg_allocs;
-      Debug_print.printf ~indent_level:(indent_level + 1) "time slots :\n";
-      List.iter
-        (fun (start, end_exc) ->
-           Debug_print.printf ~indent_level:(indent_level + 2) "[%Ld, %Ld)\n"
-             start end_exc)
-        time_slots
-    | Push_to (side, (id, len), time_slots) ->
-      Debug_print.printf ~indent_level "push to %s:\n"
-        (match side with `Front -> "front" | `Back -> "back");
-      Debug_print.printf ~indent_level:(indent_level + 1)
-        "task segment allocation :\n";
-      Debug_print.printf ~indent_level:(indent_level + 2) "%s : %Ld\n"
-        (Task.task_inst_id_to_string id)
-        len;
-      Debug_print.printf ~indent_level:(indent_level + 1) "time slots :\n";
-      List.iter
-        (fun (start, end_exc) ->
-           Debug_print.printf ~indent_level:(indent_level + 2) "[%Ld, %Ld)\n"
-             start end_exc)
-        time_slots
+  let debug_string_of_sched_req_data ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) req_data =
+    Sched_req_data_skeleton.Print.debug_string_of_sched_req_data_skeleton
+      ~indent_level ~buffer
+      (fun (id, len) ->
+         Printf.sprintf "id : %s, len : %Ld\n"
+           (Task.task_inst_id_to_string id)
+           len)
+      req_data
 
-  let debug_print_sched_req ?(indent_level = 0) (id, req_data) =
-    Debug_print.printf ~indent_level "schedule request id : %Ld\n" id;
-    debug_print_sched_req_data ~indent_level:(indent_level + 1) req_data
+  let debug_string_of_sched_req ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (id, req_data) =
+    Debug_print.bprintf ~indent_level buffer "schedule request id : %Ld\n" id;
+    debug_string_of_sched_req_data ~indent_level:(indent_level + 1) ~buffer
+      req_data
+    |> ignore;
+    Buffer.contents buffer
+
+  let debug_string_of_sched_req_record_data ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) req_data =
+    Sched_req_data_skeleton.Print.debug_string_of_sched_req_data_skeleton
+      ~indent_level ~buffer
+      (fun (id, len) ->
+         Printf.sprintf "id : %s, len : %Ld\n"
+           (Task.task_seg_id_to_string id)
+           len)
+      req_data
+
+  let debug_string_of_sched_req_record ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (id, req_data) =
+    Debug_print.bprintf ~indent_level buffer
+      "schedule request record id : %Ld\n" id;
+    debug_string_of_sched_req_record_data ~indent_level:(indent_level + 1)
+      ~buffer req_data
+    |> ignore;
+    Buffer.contents buffer
+
+  let debug_print_sched_req_data ?(indent_level = 0) sched_req_data =
+    print_string (debug_string_of_sched_req_data ~indent_level sched_req_data)
+
+  let debug_print_sched_req ?(indent_level = 0) sched_req =
+    print_string (debug_string_of_sched_req ~indent_level sched_req)
+
+  let debug_print_sched_req_record_data ?(indent_level = 0) sched_req_data =
+    print_string
+      (debug_string_of_sched_req_record_data ~indent_level sched_req_data)
+
+  let debug_print_sched_req_record ?(indent_level = 0) sched_req =
+    print_string (debug_string_of_sched_req_record ~indent_level sched_req)
 end

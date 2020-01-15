@@ -36,7 +36,8 @@ type sched_req_record_store_diff =
 
 type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 
-type task_seg_place_map_diff = Task_seg_place_set.t Int64_map_utils.diff
+type task_seg_place_map_diff =
+  Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
 type store = {
   task_store : task_store;
@@ -828,16 +829,12 @@ module Serialize = struct
 
   let pack_quota (x : int64 Task_inst_id_map.t) :
     (Task.task_inst_id * int64) list =
-    x |> Task_inst_id_map.to_seq |> Seq.map (fun x -> x) |> List.of_seq
+    x |> Task_inst_id_map.to_seq |> List.of_seq
 
   let pack_quota_diff (x : int64 Task_inst_id_map_utils.diff) :
     (Task_t.task_inst_id, int64) Map_utils_t.diff =
     {
-      updated =
-        x.updated |> Task_inst_id_map.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            (id, ((fun x -> x) data1, (fun x -> x) data2)))
-        |> List.of_seq;
+      updated = x.updated |> Task_inst_id_map.to_seq |> List.of_seq;
       common = pack_quota x.common;
       added = pack_quota x.added;
       removed = pack_quota x.removed;
@@ -895,17 +892,39 @@ module Serialize = struct
       removed = pack_task_inst_id_to_task_seg_ids x.removed;
     }
 
+  let pack_indexed_by_start (x : task_seg_place_map) :
+    (int64 * Task_t.task_seg_place list) list =
+    x |> Int64_map.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Serialize.pack y))
+    |> List.of_seq
+
+  let pack_indexed_by_start_diff (x : task_seg_place_map_diff) :
+    (int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed =
+    {
+      common = pack_indexed_by_start x.common;
+      added = pack_indexed_by_start x.added;
+      removed = pack_indexed_by_start x.removed;
+    }
+
   (*$*)
 
-  let pack_sched_req_ids = Int64_set.Serialize.pack
+  (*$ #use "lib/sched.cinaps";;
 
-  let pack_sched_req_ids_diff (diff : Int64_set_utils.diff) :
+    Set_store.print_pack_related_functions ()
+  *)
+
+  let pack_sched_req_ids (x : Int64_set.t) : int64 list =
+    x |> Int64_set.to_seq |> List.of_seq
+
+  let pack_sched_req_ids_diff (x : Int64_set_utils.diff) :
     int64 Set_utils_t.diff =
     {
-      common = diff.common |> Int64_set.to_seq |> List.of_seq;
-      added = diff.added |> Int64_set.to_seq |> List.of_seq;
-      removed = diff.removed |> Int64_set.to_seq |> List.of_seq;
+      common = pack_sched_req_ids x.common;
+      added = pack_sched_req_ids x.added;
+      removed = pack_sched_req_ids x.removed;
     }
+
+  (*$*)
 
   (*$ #use "lib/sched.cinaps";;
 
@@ -953,12 +972,6 @@ module Serialize = struct
     }
 
   (*$*)
-
-  let pack_indexed_by_start (indexed_by_start : task_seg_place_map) :
-    (int64 * Task_t.task_seg_place list) list =
-    indexed_by_start |> Int64_map.to_seq
-    |> Seq.map (fun (id, set) -> (id, Task_seg_place_set.Serialize.pack set))
-    |> List.of_seq
 
   let pack_agenda (agenda : agenda) : Sched_t.agenda =
     { indexed_by_start = pack_indexed_by_start agenda.indexed_by_start }
@@ -1091,16 +1104,12 @@ module Deserialize = struct
 
   let unpack_quota (x : (Task.task_inst_id * int64) list) :
     int64 Task_inst_id_map.t =
-    x |> List.to_seq |> Seq.map (fun x -> x) |> Task_inst_id_map.of_seq
+    x |> List.to_seq |> Task_inst_id_map.of_seq
 
   let unpack_quota_diff (x : (Task_t.task_inst_id, int64) Map_utils_t.diff) :
     int64 Task_inst_id_map_utils.diff =
     {
-      updated =
-        x.updated |> List.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            (id, ((fun x -> x) data1, (fun x -> x) data2)))
-        |> Task_inst_id_map.of_seq;
+      updated = x.updated |> List.to_seq |> Task_inst_id_map.of_seq;
       common = unpack_quota x.common;
       added = unpack_quota x.added;
       removed = unpack_quota x.removed;
@@ -1108,15 +1117,23 @@ module Deserialize = struct
 
   (*$*)
 
-  let unpack_sched_req_ids = Int64_set.Deserialize.unpack
+  (*$ #use "lib/sched.cinaps";;
 
-  let unpack_sched_req_ids_diff (diff : int64 Set_utils_t.diff) :
+    Set_store.print_unpack_related_functions ()
+  *)
+
+  let unpack_sched_req_ids (x : int64 list) : Int64_set.t =
+    x |> List.to_seq |> Int64_set.of_seq
+
+  let unpack_sched_req_ids_diff (x : int64 Set_utils_t.diff) :
     Int64_set_utils.diff =
     {
-      common = diff.common |> List.to_seq |> Int64_set.of_seq;
-      added = diff.added |> List.to_seq |> Int64_set.of_seq;
-      removed = diff.removed |> List.to_seq |> Int64_set.of_seq;
+      common = unpack_sched_req_ids x.common;
+      added = unpack_sched_req_ids x.added;
+      removed = unpack_sched_req_ids x.removed;
     }
+
+  (*$*)
 
   (*$ #use "lib/sched.cinaps";;
 
@@ -1169,6 +1186,21 @@ module Deserialize = struct
       removed = unpack_task_inst_id_to_task_seg_ids x.removed;
     }
 
+  let unpack_indexed_by_start (x : (int64 * Task_t.task_seg_place list) list) :
+    task_seg_place_map =
+    x |> List.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Deserialize.unpack y))
+    |> Int64_map.of_seq
+
+  let unpack_indexed_by_start_diff
+      (x : (int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed) :
+    task_seg_place_map_diff =
+    {
+      common = unpack_indexed_by_start x.common;
+      added = unpack_indexed_by_start x.added;
+      removed = unpack_indexed_by_start x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -1217,14 +1249,6 @@ module Deserialize = struct
 
   (*$*)
 
-  let unpack_indexed_by_start
-      (indexed_by_start : (int64 * Task_t.task_seg_place list) list) :
-    task_seg_place_map =
-    indexed_by_start |> List.to_seq
-    |> Seq.map (fun (id, set) ->
-        (id, Task_seg_place_set.Deserialize.unpack set))
-    |> Int64_map.of_seq
-
   let unpack_agenda (agenda : Sched_t.agenda) : agenda =
     {
       (* start_and_end_exc = None; *)
@@ -1234,52 +1258,64 @@ module Deserialize = struct
   let unpack_sched ((sid, sd) : Sched_t.sched) : sched =
     (sid, { store = unpack_store sd.store; agenda = unpack_agenda sd.agenda })
 
-  let of_json string : sched = string |> Sched_j.sched_of_string |> unpack_sched
+  let sched_of_json_string string : sched =
+    string |> Sched_j.sched_of_string |> unpack_sched
 end
 
 module Print = struct
-  let debug_print_sched ?(indent_level = 0) (sid, sd) =
-    Debug_print.printf ~indent_level "schedule id : %s\n"
+  let debug_string_of_sched ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+      (sid, sd) =
+    Debug_print.bprintf ~indent_level buffer "schedule id : %s\n"
       (Id.sched_id_to_string sid);
-    Debug_print.printf ~indent_level:(indent_level + 1)
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "pending scheduling requests :\n";
     Sched_req_id_map.iter
       (fun id data ->
-         Sched_req.Print.debug_print_sched_req ~indent_level:(indent_level + 2)
-           (id, data))
+         Sched_req.Print.debug_string_of_sched_req
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
+         |> ignore)
       sd.store.sched_req_pending_store;
-    Debug_print.printf ~indent_level:(indent_level + 1) "tasks :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks :\n";
     Task_id_map.iter
       (fun id data ->
-         Task.Print.debug_print_task ~indent_level:(indent_level + 2) (id, data))
+         Task.Print.debug_string_of_task ~indent_level:(indent_level + 2) ~buffer
+           (id, data)
+         |> ignore)
       sd.store.task_store;
-    Debug_print.printf ~indent_level:(indent_level + 1) "task insts :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts :\n";
     Task_inst_id_map.iter
       (fun id data ->
-         Task.Print.debug_print_task_inst ~indent_level:(indent_level + 2)
-           (id, data))
+         Task.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
+           ~buffer (id, data)
+         |> ignore)
       sd.store.task_inst_store;
-    Debug_print.printf ~indent_level:(indent_level + 1) "task segs :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs :\n";
     Task_seg_id_map.iter
       (fun id data ->
-         Task.Print.debug_print_task_seg ~indent_level:(indent_level + 2)
-           (id, data))
+         Task.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
+           ~buffer (id, data)
+         |> ignore)
       sd.store.task_seg_store;
-    Debug_print.printf ~indent_level:(indent_level + 1) "agenda :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "agenda :\n";
     Int64_map.iter
       (fun _start bucket ->
          Task_seg_place_set.iter
            (fun (id, start, end_exc) ->
-              Debug_print.printf ~indent_level:(indent_level + 2)
+              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
                 "%Ld - %Ld | %s\n" start end_exc
                 (Task.task_seg_id_to_string id))
            bucket)
       sd.agenda.indexed_by_start;
-    Debug_print.printf ~indent_level:(indent_level + 1) "leftover quota :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "leftover quota :\n";
     Task_inst_id_map.iter
       (fun id quota ->
-         Debug_print.printf ~indent_level:(indent_level + 2) "%s : %Ld\n"
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s : %Ld\n"
            (Task.task_inst_id_to_string id)
            quota)
-      sd.store.quota
+      sd.store.quota;
+    Buffer.contents buffer
+
+  let debug_print_sched ?(indent_level = 0) sched =
+    print_string (debug_string_of_sched ~indent_level sched)
 end

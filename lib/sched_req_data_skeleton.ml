@@ -55,6 +55,92 @@ let map (f : 'a -> 'b) (t : 'a t) : 'b t =
 
 let map_list f ts = List.map (map f) ts
 
+module Print = struct
+  let debug_string_of_sched_req_data_skeleton ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (f : 'a -> string) (t : 'a t) =
+    ( match t with
+      | Fixed { task_seg_related_data; start } ->
+        Debug_print.bprintf ~indent_level buffer "fixed\n";
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "data = %s\n" (f task_seg_related_data);
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "start = %Ld\n" start
+      | Shift (l, time_slots) ->
+        Debug_print.bprintf ~indent_level buffer "shift\n";
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "data\n";
+        List.iter
+          (fun x ->
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+               (f x))
+          l;
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "time slots\n";
+        List.iter
+          (fun (start, end_exc) ->
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+               "[%Ld, %Ld)" start end_exc)
+          time_slots
+      | Split_and_shift (x, time_slots) ->
+        Debug_print.bprintf ~indent_level buffer "split and shift\n";
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "data = %s\n" (f x);
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "time slots\n";
+        List.iter
+          (fun (start, end_exc) ->
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+               "[%Ld, %Ld)" start end_exc)
+          time_slots
+      | Split_even { task_seg_related_data; time_slots; buckets } ->
+        Debug_print.bprintf ~indent_level buffer "split even\n";
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "data = %s\n" (f task_seg_related_data);
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "time slots\n";
+        List.iter
+          (fun (start, end_exc) ->
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+               "[%Ld, %Ld)" start end_exc)
+          time_slots;
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "buckets\n";
+        List.iter
+          (fun (start, end_exc) ->
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+               "[%Ld, %Ld)" start end_exc)
+          buckets
+      | Time_share (l, time_slots) ->
+        Debug_print.bprintf ~indent_level buffer "time share\n";
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "data\n";
+        List.iter
+          (fun x ->
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+               (f x))
+          l;
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "time slots\n";
+        List.iter
+          (fun (start, end_exc) ->
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+               "[%Ld, %Ld)" start end_exc)
+          time_slots
+      | Push_to (dir, x, time_slots) ->
+        Debug_print.bprintf ~indent_level buffer "push to\n";
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "direction\n";
+        Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
+          (match dir with `Front -> "front" | `Back -> "back");
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "data = %s\n" (f x);
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+          "time slots\n";
+        List.iter
+          (fun (start, end_exc) ->
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+               "[%Ld, %Ld)" start end_exc)
+          time_slots );
+    Buffer.contents buffer
+end
+
 module Serialize = struct
   let pack (t : 'a t) : 'a Sched_req_data_skeleton_t.sched_req_data_skeleton =
     match t with
