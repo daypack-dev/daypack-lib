@@ -66,6 +66,8 @@ let init_task_seg_sub_id ((id, len) : task_seg) : task_seg =
 let succ_task_seg_sub_id ((id1, id2, id3, id4, id5) : task_seg_id) =
   (id1, id2, id3, id4, Option.map (fun x -> x +^ 1L) id5)
 
+let user_id_to_string (id : user_id) = Printf.sprintf "%Ld" id
+
 let task_id_to_string ((id1, id2) : task_id) = Printf.sprintf "%Ld_%Ld" id1 id2
 
 let task_inst_id_to_string ((id1, id2, id3) : task_inst_id) =

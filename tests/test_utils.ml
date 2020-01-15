@@ -3,6 +3,9 @@ module Print_utils = struct
 
   let int64 = Int64.to_string
 
+  let int64_set s =
+    s |> Daypack_lib.Int64_set.to_seq |> List.of_seq |> QCheck.Print.list int64
+
   let time_slots = QCheck.Print.list (QCheck.Print.pair int64 int64)
 
   let task_seg_id = Daypack_lib.Task.task_seg_id_to_string
@@ -307,12 +310,7 @@ let pos_int64_set_gen =
     (fun l -> Daypack_lib.Int64_set.of_list l)
     (list_size (int_bound 100) pos_int64_gen)
 
-let pos_int64_set =
-  QCheck.make
-    ~print:(fun s ->
-        s |> Daypack_lib.Int64_set.to_seq |> List.of_seq
-        |> QCheck.Print.list Print_utils.int64)
-    pos_int64_set_gen
+let pos_int64_set = QCheck.make ~print:Print_utils.int64_set pos_int64_set_gen
 
 (*$
   let get_gen_name ~name = Printf.sprintf "%s_gen" name in
@@ -373,6 +371,24 @@ let pos_int64_set =
         "(pair task_inst_id_gen pos_int64_gen)",
         "(QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string \
          Print_utils.int64)" );
+      ( "user_id_to_task_ids",
+        "Daypack_lib.User_id_map.of_seq",
+        "Daypack_lib.User_id_map.to_seq",
+        "(pair pos_int64_gen pos_int64_set_gen)",
+        "(QCheck.Print.pair Daypack_lib.Task.user_id_to_string \
+         Print_utils.int64_set)" );
+      ( "task_id_to_task_inst_ids",
+        "Daypack_lib.Task_id_map.of_seq",
+        "Daypack_lib.Task_id_map.to_seq",
+        "(pair task_id_gen pos_int64_set_gen)",
+        "(QCheck.Print.pair Daypack_lib.Task.task_id_to_string \
+         Print_utils.int64_set)" );
+      ( "task_inst_id_to_task_seg_ids",
+        "Daypack_lib.Task_inst_id_map.of_seq",
+        "Daypack_lib.Task_inst_id_map.to_seq",
+        "(pair task_inst_id_gen pos_int64_set_gen)",
+        "(QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string \
+         Print_utils.int64_set)" );
     ]
   in
 
@@ -463,5 +479,50 @@ let quota =
           (QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string
              Print_utils.int64))
     quota_gen
+
+let user_id_to_task_ids_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.User_id_map.of_seq)
+    (list_size (int_bound 100) (pair pos_int64_gen pos_int64_set_gen))
+
+let user_id_to_task_ids =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.User_id_map.to_seq |> List.of_seq
+        |> QCheck.Print.list
+          (QCheck.Print.pair Daypack_lib.Task.user_id_to_string
+             Print_utils.int64_set))
+    user_id_to_task_ids_gen
+
+let task_id_to_task_inst_ids_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Task_id_map.of_seq)
+    (list_size (int_bound 100) (pair task_id_gen pos_int64_set_gen))
+
+let task_id_to_task_inst_ids =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.Task_id_map.to_seq |> List.of_seq
+        |> QCheck.Print.list
+          (QCheck.Print.pair Daypack_lib.Task.task_id_to_string
+             Print_utils.int64_set))
+    task_id_to_task_inst_ids_gen
+
+let task_inst_id_to_task_seg_ids_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq)
+    (list_size (int_bound 100) (pair task_inst_id_gen pos_int64_set_gen))
+
+let task_inst_id_to_task_seg_ids =
+  QCheck.make
+    ~print:(fun s ->
+        s |> Daypack_lib.Task_inst_id_map.to_seq |> List.of_seq
+        |> QCheck.Print.list
+          (QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string
+             Print_utils.int64_set))
+    task_inst_id_to_task_seg_ids_gen
 
 (*$*)
