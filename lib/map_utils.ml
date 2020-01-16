@@ -11,6 +11,9 @@ module type S = sig
   }
 
   val diff : old:'a t -> 'a t -> 'a diff
+
+  val add_diff : 'a diff -> 'a t -> 'a t
+  val sub_diff : 'a diff -> 'a t -> 'a t
 end
 
 module type S_bucketed = sig
@@ -75,7 +78,7 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
       removed = get_removed old m;
     }
 
-  let add (diff : 'a diff) (m : 'a t) : 'a t =
+  let add_diff (diff : 'a diff) (m : 'a t) : 'a t =
     m
     (* apply updates *)
     |> M.mapi (fun key x ->
@@ -90,18 +93,18 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
     (* remove *)
     |> M.merge (fun _key to_be_removed x ->
         match to_be_removed, x with
-        | None, _
-        | _, None -> x
+        | None, _ -> x
+        | _, None -> raise Invalid_diff
         | Some to_be_removed, Some x -> if x = to_be_removed then None else raise Invalid_diff
       ) diff.removed
 
-  let sub (diff : 'a diff) (m : 'a t) : 'a t =
+  let sub_diff (diff : 'a diff) (m : 'a t) : 'a t =
     m
       (* revert updates *)
     |> M.mapi (fun key x ->
         match M.find_opt key diff.updated with
         | None -> x
-        | Some (x1, x2) -> if x2 = x then x1 else Invalid_diff
+        | Some (x1, x2) -> if x2 = x then x1 else raise Invalid_diff
       )
       (* revert add *)
     |> M.merge (fun _key to_be_removed x ->
@@ -163,4 +166,32 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
       added = get_added old m;
       removed = get_removed old m;
     }
+
+  let add_diff_bucketed (diff : diff_bucketed) (m : set map) : set map =
+    m
+      (* add *)
+    |> Map.union (fun _key s1 s2 ->
+        Some (Set.union s1 s2)
+      ) diff.added
+    (* remove *)
+    |> Map.merge (fun _key to_be_removed s ->
+        match to_be_removed, s with
+        | None, _ -> s
+        | _, None -> raise Invalid_diff
+        | Some to_be_removed, Some s -> Some (Set.diff s to_be_removed)
+      ) diff.removed
+
+  let sub_diff_bucketed (diff : diff_bucketed) (m : set map) : set map =
+    m
+    (* revert add *)
+    |> Map.merge (fun _key to_be_removed s ->
+        match to_be_removed, s with
+        | None, _ -> s
+        | _, None -> raise Invalid_diff
+        | Some to_be_removed, Some s -> Some (Set.diff s to_be_removed)
+      ) diff.added
+    (* revert remove *)
+    |> Map.union (fun _key s1 s2 ->
+        Some (Set.union s1 s2)
+      ) diff.removed
 end
