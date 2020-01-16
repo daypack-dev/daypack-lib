@@ -10,14 +10,8 @@ let print_unpack_is_inverse_of_pack_test ~typ ~f_pack ~f_unpack =
   Printf.printf "x |> %s |> %s = x\n" f_pack f_unpack;
   Printf.printf ")\n"
 
-let print_unpack_is_inverse_of_pack_test_store
-    ~name
-    ~inner_typ_gen
-    ~f_of_seq
-    ~f_pack
-    ~f_unpack
-    ~f_equal
-  =
+let print_unpack_is_inverse_of_pack_test_store ~name ~inner_typ_gen ~f_of_seq
+    ~f_pack ~f_unpack ~f_equal =
   let name = unpack_is_inverse_of_pack_test_name name in
   Printf.printf "let %s =\n" name;
   Printf.printf "QCheck.Test.make ~count:5000 ~name:\"%s\"\n" name;
@@ -34,16 +28,8 @@ let print_unpack_is_inverse_of_pack_test_store
   Printf.printf "%s (fun x y -> compare x y = 0) x y\n" f_equal;
   Printf.printf ")\n"
 
-let print_unpack_is_inverse_of_pack_test_bucket_store
-    ~name
-    ~id_gen
-    ~bucket_gen
-    ~f_of_seq
-    ~f_pack
-    ~f_unpack
-    ~f_equal
-    ~f_bucket_equal
-  =
+let print_unpack_is_inverse_of_pack_test_bucket_store ~name ~id_gen ~bucket_gen
+    ~f_of_seq ~f_pack ~f_unpack ~f_equal ~f_bucket_equal =
   let name = unpack_is_inverse_of_pack_test_name name in
   Printf.printf "let %s =\n" name;
   Printf.printf "QCheck.Test.make ~count:5000 ~name:\"%s\"\n" name;
@@ -62,13 +48,8 @@ let print_unpack_is_inverse_of_pack_test_bucket_store
   Printf.printf "%s %s x y\n" f_equal f_bucket_equal;
   Printf.printf ")\n"
 
-let print_unpack_is_inverse_of_pack_test_set_store
-    ~name
-    ~set_gen
-    ~f_pack
-    ~f_unpack
-    ~f_equal
-  =
+let print_unpack_is_inverse_of_pack_test_set_store ~name ~set_gen ~f_pack
+    ~f_unpack ~f_equal =
   let name = unpack_is_inverse_of_pack_test_name name in
   Printf.printf "let %s =\n" name;
   Printf.printf "QCheck.Test.make ~count:5000 ~name:\"%s\"\n" name;
