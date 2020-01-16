@@ -726,17 +726,7 @@ module Serialize = struct
 
   let pack_task_store_diff (x : task_store_diff) :
     (Task_t.task_id, Task_t.task_data) Map_utils_t.diff =
-    {
-      updated =
-        x.updated |> Task_id_map.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Task.Serialize.pack_task_data data1,
-                Task.Serialize.pack_task_data data2 ) ))
-        |> List.of_seq;
-      added = pack_task_store x.added;
-      removed = pack_task_store x.removed;
-    }
+    { added = pack_task_store x.added; removed = pack_task_store x.removed }
 
   let pack_task_inst_store (x : task_inst_store) : Sched_t.task_inst list =
     x |> Task_inst_id_map.to_seq
@@ -746,13 +736,6 @@ module Serialize = struct
   let pack_task_inst_store_diff (x : task_inst_store_diff) :
     (Task_t.task_inst_id, Task_t.task_inst_data) Map_utils_t.diff =
     {
-      updated =
-        x.updated |> Task_inst_id_map.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Task.Serialize.pack_task_inst_data data1,
-                Task.Serialize.pack_task_inst_data data2 ) ))
-        |> List.of_seq;
       added = pack_task_inst_store x.added;
       removed = pack_task_inst_store x.removed;
     }
@@ -765,13 +748,6 @@ module Serialize = struct
   let pack_task_seg_store_diff (x : task_seg_store_diff) :
     (Task_t.task_seg_id, Task_t.task_seg_size) Map_utils_t.diff =
     {
-      updated =
-        x.updated |> Task_seg_id_map.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Task.Serialize.pack_task_seg_size data1,
-                Task.Serialize.pack_task_seg_size data2 ) ))
-        |> List.of_seq;
       added = pack_task_seg_store x.added;
       removed = pack_task_seg_store x.removed;
     }
@@ -785,13 +761,6 @@ module Serialize = struct
   let pack_sched_req_pending_store_diff (x : sched_req_store_diff) :
     (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff =
     {
-      updated =
-        x.updated |> Sched_req_id_map.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Sched_req.Serialize.pack_sched_req_data data1,
-                Sched_req.Serialize.pack_sched_req_data data2 ) ))
-        |> List.of_seq;
       added = pack_sched_req_pending_store x.added;
       removed = pack_sched_req_pending_store x.removed;
     }
@@ -807,13 +776,6 @@ module Serialize = struct
       Sched_req_t.sched_req_record_data )
       Map_utils_t.diff =
     {
-      updated =
-        x.updated |> Sched_req_id_map.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Sched_req.Serialize.pack_sched_req_record_data data1,
-                Sched_req.Serialize.pack_sched_req_record_data data2 ) ))
-        |> List.of_seq;
       added = pack_sched_req_record_store x.added;
       removed = pack_sched_req_record_store x.removed;
     }
@@ -824,11 +786,7 @@ module Serialize = struct
 
   let pack_quota_diff (x : int64 Task_inst_id_map_utils.diff) :
     (Task_t.task_inst_id, int64) Map_utils_t.diff =
-    {
-      updated = x.updated |> Task_inst_id_map.to_seq |> List.of_seq;
-      added = pack_quota x.added;
-      removed = pack_quota x.removed;
-    }
+    { added = pack_quota x.added; removed = pack_quota x.removed }
 
   (*$*)
 
@@ -985,17 +943,7 @@ module Deserialize = struct
   let unpack_task_list_diff
       (x : (Task_t.task_id, Task_t.task_data) Map_utils_t.diff) :
     task_store_diff =
-    {
-      updated =
-        x.updated |> List.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Task.Deserialize.unpack_task_data data1,
-                Task.Deserialize.unpack_task_data data2 ) ))
-        |> Task_id_map.of_seq;
-      added = unpack_task_list x.added;
-      removed = unpack_task_list x.removed;
-    }
+    { added = unpack_task_list x.added; removed = unpack_task_list x.removed }
 
   let unpack_task_inst_list (x : Sched_t.task_inst list) : task_inst_store =
     x |> List.to_seq
@@ -1006,13 +954,6 @@ module Deserialize = struct
       (x : (Task_t.task_inst_id, Task_t.task_inst_data) Map_utils_t.diff) :
     task_inst_store_diff =
     {
-      updated =
-        x.updated |> List.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Task.Deserialize.unpack_task_inst_data data1,
-                Task.Deserialize.unpack_task_inst_data data2 ) ))
-        |> Task_inst_id_map.of_seq;
       added = unpack_task_inst_list x.added;
       removed = unpack_task_inst_list x.removed;
     }
@@ -1026,13 +967,6 @@ module Deserialize = struct
       (x : (Task_t.task_seg_id, Task_t.task_seg_size) Map_utils_t.diff) :
     task_seg_store_diff =
     {
-      updated =
-        x.updated |> List.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Task.Deserialize.unpack_task_seg_size data1,
-                Task.Deserialize.unpack_task_seg_size data2 ) ))
-        |> Task_seg_id_map.of_seq;
       added = unpack_task_seg_list x.added;
       removed = unpack_task_seg_list x.removed;
     }
@@ -1048,13 +982,6 @@ module Deserialize = struct
          (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff)
     : sched_req_store_diff =
     {
-      updated =
-        x.updated |> List.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Sched_req.Deserialize.unpack_sched_req_data data1,
-                Sched_req.Deserialize.unpack_sched_req_data data2 ) ))
-        |> Sched_req_id_map.of_seq;
       added = unpack_sched_req_pending_list x.added;
       removed = unpack_sched_req_pending_list x.removed;
     }
@@ -1071,13 +998,6 @@ module Deserialize = struct
            Sched_req_t.sched_req_record_data )
            Map_utils_t.diff) : sched_req_record_store_diff =
     {
-      updated =
-        x.updated |> List.to_seq
-        |> Seq.map (fun (id, (data1, data2)) ->
-            ( id,
-              ( Sched_req.Deserialize.unpack_sched_req_record_data data1,
-                Sched_req.Deserialize.unpack_sched_req_record_data data2 ) ))
-        |> Sched_req_id_map.of_seq;
       added = unpack_sched_req_record_list x.added;
       removed = unpack_sched_req_record_list x.removed;
     }
@@ -1088,11 +1008,7 @@ module Deserialize = struct
 
   let unpack_quota_diff (x : (Task_t.task_inst_id, int64) Map_utils_t.diff) :
     int64 Task_inst_id_map_utils.diff =
-    {
-      updated = x.updated |> List.to_seq |> Task_inst_id_map.of_seq;
-      added = unpack_quota x.added;
-      removed = unpack_quota x.removed;
-    }
+    { added = unpack_quota x.added; removed = unpack_quota x.removed }
 
   (*$*)
 

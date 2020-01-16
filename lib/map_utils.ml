@@ -5,7 +5,7 @@ module type S = sig
 
   type 'a diff = {
     (* common : 'a t; *)
-    updated : ('a * 'a) t;
+    (* updated : ('a * 'a) t; *)
     added : 'a t;
     removed : 'a t;
   }
@@ -40,7 +40,7 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
 
   type 'a diff = {
     (* common : 'a t; *)
-    updated : ('a * 'a) t;
+    (* updated : ('a * 'a) t; *)
     added : 'a t;
     removed : 'a t;
   }
@@ -55,15 +55,15 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
    *        | Some x1, Some x2 -> if x1 = x2 then Some x1 else None)
    *     m1 m2 *)
 
-  let get_updated (m1 : 'a t) (m2 : 'a t) : ('a * 'a) t =
-    M.merge
-      (fun _key x1 x2 ->
-         match (x1, x2) with
-         | None, None -> None
-         | Some _, None -> None
-         | None, Some _ -> None
-         | Some x1, Some x2 -> if x1 <> x2 then Some (x1, x2) else None)
-      m1 m2
+  (* let get_updated (m1 : 'a t) (m2 : 'a t) : ('a * 'a) t =
+   *   M.merge
+   *     (fun _key x1 x2 ->
+   *        match (x1, x2) with
+   *        | None, None -> None
+   *        | Some _, None -> None
+   *        | None, Some _ -> None
+   *        | Some x1, Some x2 -> if x1 <> x2 then Some (x1, x2) else None)
+   *     m1 m2 *)
 
   let get_added (m1 : 'a t) (m2 : 'a t) : 'a t =
     M.filter (fun key2 _ -> not (M.mem key2 m1)) m2
@@ -74,7 +74,7 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
   let diff ~(old : 'a t) (m : 'a t) : 'a diff =
     {
       (* common = get_common old m; *)
-      updated = get_updated old m;
+      (* updated = get_updated old m; *)
       added = get_added old m;
       removed = get_removed old m;
     }
@@ -82,10 +82,10 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
   let add_diff (diff : 'a diff) (m : 'a t) : 'a t =
     m
     (* apply updates *)
-    |> M.mapi (fun key x ->
-        match M.find_opt key diff.updated with
-        | None -> x
-        | Some (x1, x2) -> if x1 = x then x2 else raise Invalid_diff)
+    (* |> M.mapi (fun key x ->
+     *     match M.find_opt key diff.updated with
+     *     | None -> x
+     *     | Some (x1, x2) -> if x1 = x then x2 else raise Invalid_diff) *)
     (* add *)
     |> M.union (fun _key _ _ -> raise Invalid_diff) diff.added
     (* remove *)
@@ -101,10 +101,10 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
   let sub_diff (diff : 'a diff) (m : 'a t) : 'a t =
     m
     (* revert updates *)
-    |> M.mapi (fun key x ->
-        match M.find_opt key diff.updated with
-        | None -> x
-        | Some (x1, x2) -> if x2 = x then x1 else raise Invalid_diff)
+    (* |> M.mapi (fun key x ->
+     *     match M.find_opt key diff.updated with
+     *     | None -> x
+     *     | Some (x1, x2) -> if x2 = x then x1 else raise Invalid_diff) *)
     (* revert add *)
     |> M.merge
       (fun _key to_be_removed x ->

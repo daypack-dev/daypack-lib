@@ -133,15 +133,15 @@ module Store = struct
     Printf.printf "let %s_diff (x : %s) : %s =\n" pack_f_name e.diff_typ
       e.diff_ret_typ;
     Printf.printf "{\n";
-    Printf.printf "updated = x.updated\n";
-    Printf.printf "|> %s\n" e.f_to_seq;
-    Option.iter
-      (fun x ->
-         Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
-         Printf.printf "(id, (%s data1, %s data2))\n" x x;
-         Printf.printf ")\n")
-      e.f_inner_pack_data;
-    Printf.printf "|> List.of_seq;\n";
+    (* Printf.printf "updated = x.updated\n";
+     * Printf.printf "|> %s\n" e.f_to_seq;
+     * Option.iter
+     *   (fun x ->
+     *      Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
+     *      Printf.printf "(id, (%s data1, %s data2))\n" x x;
+     *      Printf.printf ")\n")
+     *   e.f_inner_pack_data;
+     * Printf.printf "|> List.of_seq;\n"; *)
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s pack_f_name s)
       (* [ "common"; "added"; "removed" ]; *)
@@ -153,15 +153,15 @@ module Store = struct
     Printf.printf "let %s_diff (x : %s) : %s =\n" unpack_f_name e.diff_ret_typ
       e.diff_typ;
     Printf.printf "{\n";
-    Printf.printf "updated = x.updated\n";
-    Printf.printf "|> List.to_seq\n";
-    Option.iter
-      (fun x ->
-         Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
-         Printf.printf "(id, (%s data1, %s data2))\n" x x;
-         Printf.printf ")\n")
-      e.f_inner_unpack_data;
-    Printf.printf "|> %s;\n" e.f_of_seq;
+    (* Printf.printf "updated = x.updated\n";
+     * Printf.printf "|> List.to_seq\n";
+     * Option.iter
+     *   (fun x ->
+     *      Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
+     *      Printf.printf "(id, (%s data1, %s data2))\n" x x;
+     *      Printf.printf ")\n")
+     *   e.f_inner_unpack_data;
+     * Printf.printf "|> %s;\n" e.f_of_seq; *)
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s unpack_f_name s)
       (* [ "common"; "added"; "removed" ]; *)
