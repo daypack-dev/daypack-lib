@@ -75,4 +75,15 @@ module Diff_bucketed = struct
 
   let get_sub_diff_bucketed_test_name s =
     Printf.sprintf "sub_diff_bucketed_test_%s" s
+
+  let print_add_diff_bucketed_test ~name ~store_gen ~f_diff ~f_add_diff ~f_equal
+      ~f_bucket_equal =
+    let name = get_add_diff_bucketed_test_name name in
+    Printf.printf "let %s =\n" name;
+    Printf.printf "QCheck.Test.make ~count:5000 ~name:\"%s\"\n" name;
+    Printf.printf "QCheck.(pair %s %s)\n" store_gen store_gen;
+    Printf.printf "(fun (old, x) -> \n";
+    Printf.printf "let diff = %s ~old x in\n" f_diff;
+    Printf.printf "%s %s (%s diff old) x\n" f_equal f_bucket_equal f_add_diff;
+    Printf.printf ")\n"
 end
