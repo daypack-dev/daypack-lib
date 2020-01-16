@@ -89,7 +89,7 @@ open Test_utils
      "Daypack_lib.User_id_map_utils.Int64_bucketed.diff_bucketed",
      "Daypack_lib.User_id_map_utils.Int64_bucketed.add_diff_bucketed",
      "Daypack_lib.User_id_map_utils.Int64_bucketed.sub_diff_bucketed",
-     "Daypack_lib.User_id_map_utils.Int64_bucketed.equal",
+     "Daypack_lib.User_id_map.equal",
      "Daypack_lib.Int64_set.equal"
     );
   ] in
@@ -352,8 +352,7 @@ let add_diff_bucketed_test_user_id_to_task_ids =
        let diff =
          Daypack_lib.User_id_map_utils.Int64_bucketed.diff_bucketed ~old x
        in
-       Daypack_lib.User_id_map_utils.Int64_bucketed.equal
-         Daypack_lib.Int64_set.equal
+       Daypack_lib.User_id_map.equal Daypack_lib.Int64_set.equal
          (Daypack_lib.User_id_map_utils.Int64_bucketed.add_diff_bucketed diff
             old)
          x)

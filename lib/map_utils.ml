@@ -28,8 +28,6 @@ module type S_bucketed = sig
     removed : set map;
   }
 
-  val equal : (set -> set -> bool) -> set map -> set map -> bool
-
   val diff_bucketed : old:set map -> set map -> diff_bucketed
 
   val add_diff_bucketed : diff_bucketed -> set map -> set map
@@ -130,14 +128,6 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
     added : set map;
     removed : set map;
   }
-
-  let equal (f : set -> set -> bool) (m1 : set map) (m2 : set map) : bool =
-    Map.for_all
-      (fun key1 s1 ->
-         match Map.find_opt key1 m2 with
-         | None -> Set.is_empty s1
-         | Some s2 -> f s1 s2)
-      m1
 
   (* let get_common (m1 : set map) (m2 : set map) : set map =
    *   Map.merge

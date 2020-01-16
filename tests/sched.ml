@@ -54,7 +54,7 @@ open Test_utils
      "Daypack_lib.User_id_map.of_seq",
      "Daypack_lib.Sched.Serialize.pack_user_id_to_task_ids",
      "Daypack_lib.Sched.Deserialize.unpack_user_id_to_task_ids",
-     "Daypack_lib.User_id_map_utils.Int64_bucketed.equal",
+     "Daypack_lib.User_id_map.equal",
      "Daypack_lib.Int64_set.equal"
     );
     ("task_id_to_task_inst_ids",
@@ -63,7 +63,7 @@ open Test_utils
      "Daypack_lib.Task_id_map.of_seq",
      "Daypack_lib.Sched.Serialize.pack_task_id_to_task_inst_ids",
      "Daypack_lib.Sched.Deserialize.unpack_task_id_to_task_inst_ids",
-     "Daypack_lib.Task_id_map_utils.Int64_bucketed.equal",
+     "Daypack_lib.Task_id_map.equal",
      "Daypack_lib.Int64_set.equal"
     );
     ("task_inst_id_to_task_seg_ids",
@@ -72,7 +72,7 @@ open Test_utils
      "Daypack_lib.Task_inst_id_map.of_seq",
      "Daypack_lib.Sched.Serialize.pack_task_inst_id_to_task_seg_ids",
      "Daypack_lib.Sched.Deserialize.unpack_task_inst_id_to_task_seg_ids",
-     "Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.equal",
+     "Daypack_lib.Task_inst_id_map.equal",
      "Daypack_lib.Int64_set.equal"
     );
   ] in
@@ -213,8 +213,7 @@ let qc_unpack_is_inverse_of_pack_user_id_to_task_ids =
          x |> Daypack_lib.Sched.Serialize.pack_user_id_to_task_ids
          |> Daypack_lib.Sched.Deserialize.unpack_user_id_to_task_ids
        in
-       Daypack_lib.User_id_map_utils.Int64_bucketed.equal
-         Daypack_lib.Int64_set.equal x y)
+       Daypack_lib.User_id_map.equal Daypack_lib.Int64_set.equal x y)
 
 let qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids =
   QCheck.Test.make ~count:5000
@@ -226,8 +225,7 @@ let qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids =
          x |> Daypack_lib.Sched.Serialize.pack_task_id_to_task_inst_ids
          |> Daypack_lib.Sched.Deserialize.unpack_task_id_to_task_inst_ids
        in
-       Daypack_lib.Task_id_map_utils.Int64_bucketed.equal
-         Daypack_lib.Int64_set.equal x y)
+       Daypack_lib.Task_id_map.equal Daypack_lib.Int64_set.equal x y)
 
 let qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids =
   QCheck.Test.make ~count:5000
@@ -239,8 +237,7 @@ let qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids =
          x |> Daypack_lib.Sched.Serialize.pack_task_inst_id_to_task_seg_ids
          |> Daypack_lib.Sched.Deserialize.unpack_task_inst_id_to_task_seg_ids
        in
-       Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.equal
-         Daypack_lib.Int64_set.equal x y)
+       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal x y)
 
 let qc_unpack_is_inverse_of_pack_sched_req_ids =
   QCheck.Test.make ~count:5000
