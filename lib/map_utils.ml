@@ -1,3 +1,5 @@
+exception Invalid_diff
+
 module type S = sig
   type 'a t
 
@@ -73,14 +75,44 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
       removed = get_removed old m;
     }
 
-  let add_map (m1 : 'a t) (m2 : 'a t) : 'a t =
-    M.add_seq (M.to_seq m2) m1
-
-  let filter_map (m1 : 'a t) (m2 : 'a t) : 'a t =
-    M.merge
-      (fun _key x1 x2 ->
+  let add (diff : 'a diff) (m : 'a t) : 'a t =
+    m
+    (* apply updates *)
+    |> M.mapi (fun key x ->
+        match M.find_opt key diff.updated with
+        | None -> x
+        | Some (x1, x2) -> if x1 = x then x2 else raise Invalid_diff
       )
+    (* add *)
+    |> M.union (fun _key _ _ ->
+        raise Invalid_diff
+      ) diff.added
+    (* remove *)
+    |> M.merge (fun _key to_be_removed x ->
+        match to_be_removed, x with
+        | None, _
+        | _, None -> x
+        | Some to_be_removed, Some x -> if x = to_be_removed then None else raise Invalid_diff
+      ) diff.removed
 
+  let sub (diff : 'a diff) (m : 'a t) : 'a t =
+    m
+      (* revert updates *)
+    |> M.mapi (fun key x ->
+        match M.find_opt key diff.updated with
+        | None -> x
+        | Some (x1, x2) -> if x2 = x then x1 else Invalid_diff
+      )
+      (* revert add *)
+    |> M.merge (fun _key to_be_removed x ->
+        match to_be_removed, x with
+        | None, _
+        | _, None -> x
+        | Some to_be_removed, Some x -> if x = to_be_removed then None else raise Invalid_diff
+      ) diff.added
+    (* revert remove *)
+    |> M.union (fun _key _ _ -> raise Invalid_diff)
+      diff.removed
 end
 
 module Make_bucketed (Map : Map.S) (Set : Set.S) :
