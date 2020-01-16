@@ -2,7 +2,7 @@ module type S = sig
   type set
 
   type diff = {
-    common : set;
+    (* common : set; *)
     added : set;
     removed : set;
   }
@@ -14,12 +14,12 @@ module Make (Set : Set.S) : S with type set := Set.t = struct
   type set = Set.t
 
   type diff = {
-    common : set;
+    (* common : set; *)
     added : set;
     removed : set;
   }
 
-  let get_common (s1 : set) (s2 : set) : set = Set.inter s1 s2
+  (* let get_common (s1 : set) (s2 : set) : set = Set.inter s1 s2 *)
 
   let get_added (s1 : set) (s2 : set) : set = Set.diff s2 s1
 
@@ -27,7 +27,7 @@ module Make (Set : Set.S) : S with type set := Set.t = struct
 
   let diff ~(old : set) (s : set) : diff =
     {
-      common = get_common old s;
+      (* common = get_common old s; *)
       added = get_added old s;
       removed = get_removed old s;
     }

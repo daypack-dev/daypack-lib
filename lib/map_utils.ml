@@ -23,7 +23,7 @@ module type S_bucketed = sig
   type set
 
   type diff_bucketed = {
-    common : set map;
+    (* common : set map; *)
     added : set map;
     removed : set map;
   }
@@ -124,20 +124,20 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
   type set = Set.t
 
   type diff_bucketed = {
-    common : set map;
+    (* common : set map; *)
     added : set map;
     removed : set map;
   }
 
-  let get_common (m1 : set map) (m2 : set map) : set map =
-    Map.merge
-      (fun _key s1 s2 ->
-         match (s1, s2) with
-         | None, None -> None
-         | Some _, None -> None
-         | None, Some _ -> None
-         | Some s1, Some s2 -> Some (Set.inter s1 s2))
-      m1 m2
+  (* let get_common (m1 : set map) (m2 : set map) : set map =
+   *   Map.merge
+   *     (fun _key s1 s2 ->
+   *        match (s1, s2) with
+   *        | None, None -> None
+   *        | Some _, None -> None
+   *        | None, Some _ -> None
+   *        | Some s1, Some s2 -> Some (Set.inter s1 s2))
+   *     m1 m2 *)
 
   let get_added (m1 : set map) (m2 : set map) : set map =
     Map.merge
@@ -161,7 +161,7 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
 
   let diff_bucketed ~(old : set map) (m : set map) : diff_bucketed =
     {
-      common = get_common old m;
+      (* common = get_common old m; *)
       added = get_added old m;
       removed = get_removed old m;
     }
