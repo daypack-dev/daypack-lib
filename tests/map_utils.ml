@@ -42,7 +42,7 @@ open Test_utils
   in
 
   List.iter (fun (name, store_gen, f_diff, f_add_diff, _f_sub_diff, f_equal) ->
-      print_add_diff_test
+      Diff.print_add_diff_test
         ~name
         ~store_gen
         ~f_diff
@@ -52,7 +52,7 @@ open Test_utils
     store_list;
 
   List.iter (fun (name, store_gen, f_diff, _f_add_diff, f_sub_diff, f_equal) ->
-      print_sub_diff_test
+      Diff.print_sub_diff_test
         ~name
         ~store_gen
         ~f_diff
@@ -62,7 +62,7 @@ open Test_utils
     store_list;
 
   List.iter (fun (name, store_gen, f_diff, f_add_diff, f_sub_diff, f_equal) ->
-      print_sub_diff_is_inverse_of_add_diff_test
+      Diff.print_sub_diff_is_inverse_of_add_diff_test
         ~name
         ~store_gen
         ~f_diff
@@ -73,7 +73,7 @@ open Test_utils
     store_list;
 
   List.iter (fun (name, store_gen, f_diff, f_add_diff, f_sub_diff, f_equal) ->
-      print_add_diff_is_inverse_of_sub_diff_test
+      Diff.print_add_diff_is_inverse_of_sub_diff_test
         ~name
         ~store_gen
         ~f_diff
@@ -85,16 +85,16 @@ open Test_utils
 
   print_endline "let suite = [";
   List.iter (fun (name, _, _, _, _, _) ->
-      Printf.printf "%s;\n" (get_add_diff_test_name name);
+      Printf.printf "%s;\n" (Diff.get_add_diff_test_name name);
     ) store_list;
   List.iter (fun (name, _, _, _, _, _) ->
-      Printf.printf "%s;\n" (get_sub_diff_test_name name);
+      Printf.printf "%s;\n" (Diff.get_sub_diff_test_name name);
     ) store_list;
   List.iter (fun (name, _, _, _, _, _) ->
-      Printf.printf "%s;\n" (get_sub_diff_is_inverse_of_add_diff_test_name name);
+      Printf.printf "%s;\n" (Diff.get_sub_diff_is_inverse_of_add_diff_test_name name);
     ) store_list;
   List.iter (fun (name, _, _, _, _, _) ->
-      Printf.printf "%s;\n" (get_add_diff_is_inverse_of_sub_diff_test_name name);
+      Printf.printf "%s;\n" (Diff.get_add_diff_is_inverse_of_sub_diff_test_name name);
     ) store_list;
   print_endline "]"
 *)
