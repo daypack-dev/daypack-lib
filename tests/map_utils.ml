@@ -29,7 +29,7 @@ open Test_utils
 *)
 
 let add_diff_test_task_store =
-  QCheck.Test.make ~count:10_000 ~name:"add_diff_test_task_store"
+  QCheck.Test.make ~count:5000 ~name:"add_diff_test_task_store"
     QCheck.(pair task_store task_store)
     (fun (old, x) ->
        let diff = Daypack_lib.Task_id_map_utils.diff ~old x in

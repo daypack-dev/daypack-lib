@@ -10,7 +10,7 @@ let print_add_diff_test
   =
   let name =get_add_diff_test_name name in
   Printf.printf "let %s =\n" name;
-  Printf.printf "QCheck.Test.make ~count:10_000 ~name:\"%s\"\n" name;
+  Printf.printf "QCheck.Test.make ~count:5000 ~name:\"%s\"\n" name;
   Printf.printf "QCheck.(pair %s %s)\n" store_gen store_gen;
   Printf.printf "(fun (old, x) -> \n";
   Printf.printf "let diff = %s ~old x in\n" f_diff;
