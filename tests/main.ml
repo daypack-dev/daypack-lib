@@ -4,7 +4,7 @@ let () =
       (* ("Time_slot", Time_slot.suite);
        * ("Task_seg_gens", Task_seg_place_gens.suite); *)
       (* ("Task", Task.suite); *)
-      ("Sched", Sched.suite);
+      (* ("Sched", Sched.suite); *)
       ("Map_utils", Map_utils.suite);
     ]
     |> List.map (fun (name, suite) ->
