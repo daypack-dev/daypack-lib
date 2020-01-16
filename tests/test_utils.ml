@@ -355,7 +355,7 @@ let pos_int64_set = QCheck.make ~print:Print_utils.int64_set pos_int64_set_gen
         "Daypack_lib.Task_seg_id_map.to_seq",
         "task_seg_gen",
         "Daypack_lib.Task.Print.debug_string_of_task_seg" );
-      ( "sched_req_pending_store",
+      ( "sched_req_store",
         "Daypack_lib.Sched_req_id_map.of_seq",
         "Daypack_lib.Sched_req_id_map.to_seq",
         "sched_req_gen",
@@ -438,18 +438,18 @@ let task_seg_store =
         |> QCheck.Print.list Daypack_lib.Task.Print.debug_string_of_task_seg)
     task_seg_store_gen
 
-let sched_req_pending_store_gen =
+let sched_req_store_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Sched_req_id_map.of_seq)
     (list_size (int_bound 100) sched_req_gen)
 
-let sched_req_pending_store =
+let sched_req_store =
   QCheck.make
     ~print:(fun s ->
         s |> Daypack_lib.Sched_req_id_map.to_seq |> List.of_seq
         |> QCheck.Print.list Daypack_lib.Sched_req.Print.debug_string_of_sched_req)
-    sched_req_pending_store_gen
+    sched_req_store_gen
 
 let sched_req_record_store_gen =
   let open QCheck.Gen in
