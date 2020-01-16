@@ -144,7 +144,8 @@ module Store = struct
     Printf.printf "|> List.of_seq;\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s pack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_unpack_diff_function e =
@@ -163,7 +164,8 @@ module Store = struct
     Printf.printf "|> %s;\n" e.f_of_seq;
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s unpack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_pack_related_functions () =
@@ -277,7 +279,8 @@ module Bucket_store = struct
     Printf.printf "{\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s pack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_unpack_diff_function e =
@@ -287,7 +290,8 @@ module Bucket_store = struct
     Printf.printf "{\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s unpack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_pack_related_functions () =
@@ -360,7 +364,8 @@ module Set_store = struct
     Printf.printf "{\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s pack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_unpack_diff_function e =
@@ -370,7 +375,8 @@ module Set_store = struct
     Printf.printf "{\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s unpack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_pack_related_functions () =

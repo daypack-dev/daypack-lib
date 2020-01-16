@@ -4,7 +4,7 @@ module type S = sig
   type 'a t
 
   type 'a diff = {
-    common : 'a t;
+    (* common : 'a t; *)
     updated : ('a * 'a) t;
     added : 'a t;
     removed : 'a t;
@@ -29,27 +29,31 @@ module type S_bucketed = sig
   }
 
   val diff_bucketed : old:set map -> set map -> diff_bucketed
+
+  val add_diff_bucketed : diff_bucketed -> set map -> set map
+
+  val sub_diff_bucketed : diff_bucketed -> set map -> set map
 end
 
 module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
   type 'a t = 'a M.t
 
   type 'a diff = {
-    common : 'a t;
+    (* common : 'a t; *)
     updated : ('a * 'a) t;
     added : 'a t;
     removed : 'a t;
   }
 
-  let get_common (m1 : 'a t) (m2 : 'a t) : 'a t =
-    M.merge
-      (fun _key x1 x2 ->
-         match (x1, x2) with
-         | None, None -> None
-         | Some _, None -> None
-         | None, Some _ -> None
-         | Some x1, Some x2 -> if x1 = x2 then Some x1 else None)
-      m1 m2
+  (* let get_common (m1 : 'a t) (m2 : 'a t) : 'a t =
+   *   M.merge
+   *     (fun _key x1 x2 ->
+   *        match (x1, x2) with
+   *        | None, None -> None
+   *        | Some _, None -> None
+   *        | None, Some _ -> None
+   *        | Some x1, Some x2 -> if x1 = x2 then Some x1 else None)
+   *     m1 m2 *)
 
   let get_updated (m1 : 'a t) (m2 : 'a t) : ('a * 'a) t =
     M.merge
@@ -69,7 +73,7 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
 
   let diff ~(old : 'a t) (m : 'a t) : 'a diff =
     {
-      common = get_common old m;
+      (* common = get_common old m; *)
       updated = get_updated old m;
       added = get_added old m;
       removed = get_removed old m;
