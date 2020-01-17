@@ -78,7 +78,16 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
       ) m1 m2
 
   let get_removed (m1 : 'a t) (m2 : 'a t) : 'a t =
-    M.filter (fun key1 _ -> not (M.mem key1 m2)) m1
+    M.merge (fun _key x1 x2 ->
+        match x1, x2 with
+        | None, _ -> None
+        | Some _, None -> x1
+        | Some x1, Some x2 ->
+          if x1 = x2 then
+            None
+          else
+            Some x1
+      ) m1 m2
 
   let diff ~(old : 'a t) (m : 'a t) : 'a diff =
     {
