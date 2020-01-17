@@ -106,18 +106,18 @@ open Test_utils
     bucket_store_list;
 
   print_endline "let suite = [";
-  (* List.iter (fun (name, _, _, _, _, _) ->
-   *     Printf.printf "%s;\n" (Diff.get_add_diff_test_name name);
-   *   ) store_list;
-   * List.iter (fun (name, _, _, _, _, _) ->
-   *     Printf.printf "%s;\n" (Diff.get_sub_diff_test_name name);
-   *   ) store_list;
-   * List.iter (fun (name, _, _, _, _, _) ->
-   *     Printf.printf "%s;\n" (Diff.get_sub_diff_is_inverse_of_add_diff_test_name name);
-   *   ) store_list;
-   * List.iter (fun (name, _, _, _, _, _) ->
-   *     Printf.printf "%s;\n" (Diff.get_add_diff_is_inverse_of_sub_diff_test_name name);
-   *   ) store_list; *)
+  List.iter (fun (name, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff.get_add_diff_test_name name);
+    ) store_list;
+  List.iter (fun (name, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff.get_sub_diff_test_name name);
+    ) store_list;
+  List.iter (fun (name, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff.get_sub_diff_is_inverse_of_add_diff_test_name name);
+    ) store_list;
+  List.iter (fun (name, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff.get_add_diff_is_inverse_of_sub_diff_test_name name);
+    ) store_list;
   List.iter (fun (name, _, _, _, _, _, _) ->
       Printf.printf "%s;\n" (Diff_bucketed.get_add_diff_bucketed_test_name name);
     ) bucket_store_list;
@@ -357,6 +357,29 @@ let add_diff_bucketed_test_user_id_to_task_ids =
             old)
          x)
 
-let suite = [ add_diff_bucketed_test_user_id_to_task_ids ]
+let suite =
+  [
+    add_diff_test_task_store;
+    add_diff_test_task_inst_store;
+    add_diff_test_task_seg_store;
+    add_diff_test_sched_req_pending_store;
+    add_diff_test_sched_req_record_store;
+    sub_diff_test_task_store;
+    sub_diff_test_task_inst_store;
+    sub_diff_test_task_seg_store;
+    sub_diff_test_sched_req_pending_store;
+    sub_diff_test_sched_req_record_store;
+    sub_diff_is_inverse_of_add_diff_test_task_store;
+    sub_diff_is_inverse_of_add_diff_test_task_inst_store;
+    sub_diff_is_inverse_of_add_diff_test_task_seg_store;
+    sub_diff_is_inverse_of_add_diff_test_sched_req_pending_store;
+    sub_diff_is_inverse_of_add_diff_test_sched_req_record_store;
+    add_diff_is_inverse_of_sub_diff_test_task_store;
+    add_diff_is_inverse_of_sub_diff_test_task_inst_store;
+    add_diff_is_inverse_of_sub_diff_test_task_seg_store;
+    add_diff_is_inverse_of_sub_diff_test_sched_req_pending_store;
+    add_diff_is_inverse_of_sub_diff_test_sched_req_record_store;
+    add_diff_bucketed_test_user_id_to_task_ids;
+  ]
 
 (*$*)

@@ -66,7 +66,16 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
    *     m1 m2 *)
 
   let get_added (m1 : 'a t) (m2 : 'a t) : 'a t =
-    M.filter (fun key2 _ -> not (M.mem key2 m1)) m2
+    M.merge (fun _key x1 x2 ->
+        match x1, x2 with
+        | None, _ -> x2
+        | Some _, None -> None
+        | Some x1, Some x2 ->
+          if x1 = x2 then
+            None
+          else
+            Some x2
+      ) m1 m2
 
   let get_removed (m1 : 'a t) (m2 : 'a t) : 'a t =
     M.filter (fun key1 _ -> not (M.mem key1 m2)) m1
@@ -86,8 +95,6 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
      *     match M.find_opt key diff.updated with
      *     | None -> x
      *     | Some (x1, x2) -> if x1 = x then x2 else raise Invalid_diff) *)
-    (* add *)
-    |> M.union (fun _key _ _ -> raise Invalid_diff) diff.added
     (* remove *)
     |> M.merge
       (fun _key to_be_removed x ->
@@ -95,8 +102,11 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
          | None, _ -> x
          | _, None -> raise Invalid_diff
          | Some to_be_removed, Some x ->
-           if x = to_be_removed then None else raise Invalid_diff)
+           if x = to_be_removed then None else raise Invalid_diff
+      )
       diff.removed
+    (* add *)
+    |> M.union (fun _key added _ -> Some added) diff.added
 
   let sub_diff (diff : 'a diff) (m : 'a t) : 'a t =
     m
@@ -114,7 +124,7 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
            if x = to_be_removed then None else raise Invalid_diff)
       diff.added
     (* revert remove *)
-    |> M.union (fun _key _ _ -> raise Invalid_diff) diff.removed
+    |> M.union (fun _key removed _ -> Some removed) diff.removed
 end
 
 module Make_bucketed (Map : Map.S) (Set : Set.S) :
