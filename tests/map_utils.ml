@@ -92,6 +92,22 @@ open Test_utils
      "Daypack_lib.User_id_map.equal",
      "Daypack_lib.Int64_set.equal"
     );
+    ("task_id_to_task_inst_ids",
+     "task_id_to_task_inst_ids",
+     "Daypack_lib.Task_id_map_utils.Int64_bucketed.diff_bucketed",
+     "Daypack_lib.Task_id_map_utils.Int64_bucketed.add_diff_bucketed",
+     "Daypack_lib.Task_id_map_utils.Int64_bucketed.sub_diff_bucketed",
+     "Daypack_lib.Task_id_map.equal",
+     "Daypack_lib.Int64_set.equal"
+    );
+    ("task_inst_id_to_task_seg_ids",
+     "task_inst_id_to_task_seg_ids",
+     "Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed",
+     "Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed",
+     "Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed",
+     "Daypack_lib.Task_inst_id_map.equal",
+     "Daypack_lib.Int64_set.equal"
+    );
   ] in
 
   List.iter (fun (name, store_gen, f_diff, f_add_diff, _f_sub_diff, f_equal, f_bucket_equal) ->
@@ -401,6 +417,32 @@ let add_diff_bucketed_test_user_id_to_task_ids =
             old)
          x)
 
+let add_diff_bucketed_test_task_id_to_task_inst_ids =
+  QCheck.Test.make ~count:5000
+    ~name:"add_diff_bucketed_test_task_id_to_task_inst_ids"
+    QCheck.(pair task_id_to_task_inst_ids task_id_to_task_inst_ids)
+    (fun (old, x) ->
+       let diff =
+         Daypack_lib.Task_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+       in
+       Daypack_lib.Task_id_map.equal Daypack_lib.Int64_set.equal
+         (Daypack_lib.Task_id_map_utils.Int64_bucketed.add_diff_bucketed diff
+            old)
+         x)
+
+let add_diff_bucketed_test_task_inst_id_to_task_seg_ids =
+  QCheck.Test.make ~count:5000
+    ~name:"add_diff_bucketed_test_task_inst_id_to_task_seg_ids"
+    QCheck.(pair task_inst_id_to_task_seg_ids task_inst_id_to_task_seg_ids)
+    (fun (old, x) ->
+       let diff =
+         Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+       in
+       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal
+         (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed
+            diff old)
+         x)
+
 let sub_diff_bucketed_test_user_id_to_task_ids =
   QCheck.Test.make ~count:5000
     ~name:"sub_diff_bucketed_test_user_id_to_task_ids"
@@ -411,6 +453,31 @@ let sub_diff_bucketed_test_user_id_to_task_ids =
        in
        Daypack_lib.User_id_map.equal Daypack_lib.Int64_set.equal
          (Daypack_lib.User_id_map_utils.Int64_bucketed.sub_diff_bucketed diff x)
+         old)
+
+let sub_diff_bucketed_test_task_id_to_task_inst_ids =
+  QCheck.Test.make ~count:5000
+    ~name:"sub_diff_bucketed_test_task_id_to_task_inst_ids"
+    QCheck.(pair task_id_to_task_inst_ids task_id_to_task_inst_ids)
+    (fun (old, x) ->
+       let diff =
+         Daypack_lib.Task_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+       in
+       Daypack_lib.Task_id_map.equal Daypack_lib.Int64_set.equal
+         (Daypack_lib.Task_id_map_utils.Int64_bucketed.sub_diff_bucketed diff x)
+         old)
+
+let sub_diff_bucketed_test_task_inst_id_to_task_seg_ids =
+  QCheck.Test.make ~count:5000
+    ~name:"sub_diff_bucketed_test_task_inst_id_to_task_seg_ids"
+    QCheck.(pair task_inst_id_to_task_seg_ids task_inst_id_to_task_seg_ids)
+    (fun (old, x) ->
+       let diff =
+         Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+       in
+       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal
+         (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed
+            diff x)
          old)
 
 let sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_user_id_to_task_ids =
@@ -428,6 +495,39 @@ let sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_user_id_to_task_ids =
                old))
          old)
 
+let sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_task_id_to_task_inst_ids
+  =
+  QCheck.Test.make ~count:5000
+    ~name:
+      "sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_task_id_to_task_inst_ids"
+    QCheck.(pair task_id_to_task_inst_ids task_id_to_task_inst_ids)
+    (fun (old, x) ->
+       let diff =
+         Daypack_lib.Task_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+       in
+       Daypack_lib.Task_id_map.equal Daypack_lib.Int64_set.equal
+         (Daypack_lib.Task_id_map_utils.Int64_bucketed.sub_diff_bucketed diff
+            (Daypack_lib.Task_id_map_utils.Int64_bucketed.add_diff_bucketed diff
+               old))
+         old)
+
+let sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_task_inst_id_to_task_seg_ids
+  =
+  QCheck.Test.make ~count:5000
+    ~name:
+      "sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_task_inst_id_to_task_seg_ids"
+    QCheck.(pair task_inst_id_to_task_seg_ids task_inst_id_to_task_seg_ids)
+    (fun (old, x) ->
+       let diff =
+         Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+       in
+       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal
+         (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed
+            diff
+            (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed
+               diff old))
+         old)
+
 let add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_user_id_to_task_ids =
   QCheck.Test.make ~count:5000
     ~name:
@@ -441,6 +541,39 @@ let add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_user_id_to_task_ids =
          (Daypack_lib.User_id_map_utils.Int64_bucketed.add_diff_bucketed diff
             (Daypack_lib.User_id_map_utils.Int64_bucketed.sub_diff_bucketed diff
                x))
+         x)
+
+let add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_task_id_to_task_inst_ids
+  =
+  QCheck.Test.make ~count:5000
+    ~name:
+      "add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_task_id_to_task_inst_ids"
+    QCheck.(pair task_id_to_task_inst_ids task_id_to_task_inst_ids)
+    (fun (old, x) ->
+       let diff =
+         Daypack_lib.Task_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+       in
+       Daypack_lib.Task_id_map.equal Daypack_lib.Int64_set.equal
+         (Daypack_lib.Task_id_map_utils.Int64_bucketed.add_diff_bucketed diff
+            (Daypack_lib.Task_id_map_utils.Int64_bucketed.sub_diff_bucketed diff
+               x))
+         x)
+
+let add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_task_inst_id_to_task_seg_ids
+  =
+  QCheck.Test.make ~count:5000
+    ~name:
+      "add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_task_inst_id_to_task_seg_ids"
+    QCheck.(pair task_inst_id_to_task_seg_ids task_inst_id_to_task_seg_ids)
+    (fun (old, x) ->
+       let diff =
+         Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+       in
+       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal
+         (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed
+            diff
+            (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed
+               diff x))
          x)
 
 let suite =
@@ -466,9 +599,17 @@ let suite =
     add_diff_is_inverse_of_sub_diff_test_sched_req_pending_store;
     add_diff_is_inverse_of_sub_diff_test_sched_req_record_store;
     add_diff_bucketed_test_user_id_to_task_ids;
+    add_diff_bucketed_test_task_id_to_task_inst_ids;
+    add_diff_bucketed_test_task_inst_id_to_task_seg_ids;
     sub_diff_bucketed_test_user_id_to_task_ids;
+    sub_diff_bucketed_test_task_id_to_task_inst_ids;
+    sub_diff_bucketed_test_task_inst_id_to_task_seg_ids;
     sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_user_id_to_task_ids;
+    sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_task_id_to_task_inst_ids;
+    sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_task_inst_id_to_task_seg_ids;
     add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_user_id_to_task_ids;
+    add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_task_id_to_task_inst_ids;
+    add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_task_inst_id_to_task_seg_ids;
   ]
 
 (*$*)
