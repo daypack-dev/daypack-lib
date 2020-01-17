@@ -66,28 +66,22 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
    *     m1 m2 *)
 
   let get_added (m1 : 'a t) (m2 : 'a t) : 'a t =
-    M.merge (fun _key x1 x2 ->
-        match x1, x2 with
-        | None, _ -> x2
-        | Some _, None -> None
-        | Some x1, Some x2 ->
-          if x1 = x2 then
-            None
-          else
-            Some x2
-      ) m1 m2
+    M.merge
+      (fun _key x1 x2 ->
+         match (x1, x2) with
+         | None, _ -> x2
+         | Some _, None -> None
+         | Some x1, Some x2 -> if x1 = x2 then None else Some x2)
+      m1 m2
 
   let get_removed (m1 : 'a t) (m2 : 'a t) : 'a t =
-    M.merge (fun _key x1 x2 ->
-        match x1, x2 with
-        | None, _ -> None
-        | Some _, None -> x1
-        | Some x1, Some x2 ->
-          if x1 = x2 then
-            None
-          else
-            Some x1
-      ) m1 m2
+    M.merge
+      (fun _key x1 x2 ->
+         match (x1, x2) with
+         | None, _ -> None
+         | Some _, None -> x1
+         | Some x1, Some x2 -> if x1 = x2 then None else Some x1)
+      m1 m2
 
   let diff ~(old : 'a t) (m : 'a t) : 'a diff =
     {
@@ -111,8 +105,7 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
          | None, _ -> x
          | _, None -> raise Invalid_diff
          | Some to_be_removed, Some x ->
-           if x = to_be_removed then None else raise Invalid_diff
-      )
+           if x = to_be_removed then None else raise Invalid_diff)
       diff.removed
     (* add *)
     |> M.union (fun _key added _ -> Some added) diff.added
@@ -165,10 +158,7 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
          | None, _ -> s2
          | Some _, None -> None
          | Some s1, Some s2 ->
-           if Set.equal s1 s2 then
-             None
-           else
-           Some (Set.diff s2 s1))
+           if Set.equal s1 s2 then None else Some (Set.diff s2 s1))
       m1 m2
 
   let get_removed (m1 : set map) (m2 : set map) : set map =
@@ -178,10 +168,7 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
          | None, _ -> None
          | Some _, None -> s1
          | Some s1, Some s2 ->
-           if Set.equal s1 s2 then
-             None
-           else
-             Some (Set.diff s1 s2))
+           if Set.equal s1 s2 then None else Some (Set.diff s1 s2))
       m1 m2
 
   let diff_bucketed ~(old : set map) (m : set map) : diff_bucketed =
@@ -200,11 +187,8 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
          | None, _ -> s
          | _, None -> raise Invalid_diff
          | Some to_be_removed, Some s ->
-           if Set.equal to_be_removed s then
-             None
-           else
-             Some (Set.diff s to_be_removed)
-      )
+           if Set.equal to_be_removed s then None
+           else Some (Set.diff s to_be_removed))
       diff.removed
     (* add *)
     |> Map.union (fun _key s1 s2 -> Some (Set.union s1 s2)) diff.added
