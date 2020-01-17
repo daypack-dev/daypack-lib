@@ -202,10 +202,8 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
          | None, _ -> s
          | _, None -> raise Invalid_diff
          | Some to_be_removed, Some s ->
-           (* if Set.equal to_be_removed s then
-            *   None
-            * else *)
-           Some (Set.diff s to_be_removed))
+           if Set.equal to_be_removed s then None
+           else Some (Set.diff s to_be_removed))
       diff.added
     (* revert remove *)
     |> Map.union (fun _key s1 s2 -> Some (Set.union s1 s2)) diff.removed
