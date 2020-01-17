@@ -105,12 +105,24 @@ open Test_utils
     )
     bucket_store_list;
 
-  List.iter (fun (name, store_gen, f_diff, f_add_diff, _f_sub_diff, f_equal, f_bucket_equal) ->
+  List.iter (fun (name, store_gen, f_diff, _f_add_diff, f_sub_diff, f_equal, f_bucket_equal) ->
       Diff_bucketed.print_sub_diff_bucketed_test
         ~name
         ~store_gen
         ~f_diff
+        ~f_sub_diff
+        ~f_equal
+        ~f_bucket_equal;
+    )
+    bucket_store_list;
+
+  List.iter (fun (name, store_gen, f_diff, f_add_diff, f_sub_diff, f_equal, f_bucket_equal) ->
+      Diff_bucketed.print_sub_diff_bucketed_is_inverse_of_add_diff_bucketed_test
+        ~name
+        ~store_gen
+        ~f_diff
         ~f_add_diff
+        ~f_sub_diff
         ~f_equal
         ~f_bucket_equal;
     )
@@ -134,6 +146,9 @@ open Test_utils
     ) bucket_store_list;
   List.iter (fun (name, _, _, _, _, _, _) ->
       Printf.printf "%s;\n" (Diff_bucketed.get_sub_diff_bucketed_test_name name);
+    ) bucket_store_list;
+  List.iter (fun (name, _, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff_bucketed.get_sub_diff_bucketed_is_inverse_of_add_diff_bucketed_test_name name);
     ) bucket_store_list;
   print_endline "]"
 *)
@@ -380,7 +395,22 @@ let sub_diff_bucketed_test_user_id_to_task_ids =
          Daypack_lib.User_id_map_utils.Int64_bucketed.diff_bucketed ~old x
        in
        Daypack_lib.User_id_map.equal Daypack_lib.Int64_set.equal
-         (Daypack_lib.User_id_map_utils.Int64_bucketed.add_diff_bucketed diff x)
+         (Daypack_lib.User_id_map_utils.Int64_bucketed.sub_diff_bucketed diff x)
+         old)
+
+let sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_user_id_to_task_ids =
+  QCheck.Test.make ~count:5000
+    ~name:
+      "sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_user_id_to_task_ids"
+    QCheck.(pair user_id_to_task_ids user_id_to_task_ids)
+    (fun (old, x) ->
+       let diff =
+         Daypack_lib.User_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+       in
+       Daypack_lib.User_id_map.equal Daypack_lib.Int64_set.equal
+         (Daypack_lib.User_id_map_utils.Int64_bucketed.sub_diff_bucketed diff
+            (Daypack_lib.User_id_map_utils.Int64_bucketed.add_diff_bucketed diff
+               old))
          old)
 
 let suite =
@@ -407,6 +437,7 @@ let suite =
     add_diff_is_inverse_of_sub_diff_test_sched_req_record_store;
     add_diff_bucketed_test_user_id_to_task_ids;
     sub_diff_bucketed_test_user_id_to_task_ids;
+    sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_user_id_to_task_ids;
   ]
 
 (*$*)
