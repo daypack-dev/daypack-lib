@@ -345,8 +345,6 @@ module Task_seg_store = struct
               Task_seg_id_map.remove task_seg_id sd.store.task_seg_store;
           };
       } )
-
-  let diff = Task_seg_id_map_utils.diff
 end
 
 module Task_inst_store = struct
@@ -377,8 +375,6 @@ module Task_inst_store = struct
          (inst :: acc, sched))
       ([], sched) data_list
     |> fun (l, t) -> (List.rev l, t)
-
-  let diff = Task_inst_id_map_utils.diff
 end
 
 module Task_store = struct
@@ -403,8 +399,6 @@ module Task_store = struct
         (sid, sd)
     in
     ((parent_task_id, data), inst_list, (sid, sd))
-
-  let diff = Task_id_map_utils.diff
 end
 
 module Task_seg_place_map = struct
@@ -472,8 +466,6 @@ module Task_seg_place_map = struct
         (* agenda = { sd.agenda with indexed_by_start }; *)
         agenda = { indexed_by_start };
       } )
-
-  let diff = Int64_map_utils.Int64_bucketed.diff_bucketed
 end
 
 module Sched_req_store = struct
@@ -1150,6 +1142,46 @@ module Deserialize = struct
 
   let sched_of_json_string string : sched =
     string |> Sched_j.sched_of_string |> unpack_sched
+end
+
+module Diff = struct
+  (*$ #use "lib/sched.cinaps";;
+
+    print_diff_store ();
+  *)
+
+  let diff_store (store1 : store) (store2 : store) : store_diff =
+    {
+      task_store_diff =
+        Task_id_map_utils.diff ~old:store1.task_store store2.task_store;
+      task_inst_store_diff =
+        Task_inst_id_map_utils.diff ~old:store1.task_inst_store
+          store2.task_inst_store;
+      task_seg_store_diff =
+        Task_seg_id_map_utils.diff ~old:store1.task_seg_store
+          store2.task_seg_store;
+      user_id_to_task_ids_diff =
+        User_id_map_utils.Int64_bucketed.diff_bucketed
+          ~old:store1.user_id_to_task_ids store2.user_id_to_task_ids;
+      task_id_to_task_inst_ids_diff =
+        Task_id_map_utils.Int64_bucketed.diff_bucketed
+          ~old:store1.task_id_to_task_inst_ids store2.task_id_to_task_inst_ids;
+      task_inst_id_to_task_seg_ids_diff =
+        Task_inst_id_map_utils.Int64_bucketed.diff_bucketed
+          ~old:store1.task_inst_id_to_task_seg_ids
+          store2.task_inst_id_to_task_seg_ids;
+      sched_req_ids_diff =
+        Int64_set_utils.diff ~old:store1.sched_req_ids store2.sched_req_ids;
+      sched_req_pending_store_diff =
+        Sched_req_id_map_utils.diff ~old:store1.sched_req_pending_store
+          store2.sched_req_pending_store;
+      sched_req_record_store_diff =
+        Sched_req_id_map_utils.diff ~old:store1.sched_req_record_store
+          store2.sched_req_record_store;
+      quota_diff = Task_inst_id_map_utils.diff ~old:store1.quota store2.quota;
+    }
+
+  (*$*)
 end
 
 module Print = struct
