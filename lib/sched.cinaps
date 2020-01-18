@@ -604,10 +604,19 @@ let print_add_diff_agenda () =
 
 let print_sub_diff_agenda () =
   Printf.printf
-    "let add_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =\n";
+    "let sub_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =\n";
   print_endline "{";
   List.iter
     (fun (_l, r, _equal, _diff, _add_diff, sub_diff) ->
        Printf.printf "%s = %s diff.%s_diff agenda.%s;\n" r sub_diff r r)
     agenda_fields;
   print_endline "}"
+
+let print_agenda_equal () =
+  Printf.printf
+    "let agenda_equal (agenda1 : agenda) (agenda2 : agenda) : bool =\n";
+  List.map
+    (fun (_l, r, equal, _diff, _add_diff, _sub_diff) ->
+       Printf.sprintf "(%s agenda1.%s agenda2.%s)" equal r r)
+    agenda_fields
+  |> String.concat " && " |> print_string

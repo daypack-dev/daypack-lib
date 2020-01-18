@@ -121,20 +121,20 @@ open Test_utils
     unpack_pack_set_store_list;
 
   let diff_list = [
-    ("store",
-     "store",
-     "Daypack_lib.Sched.Diff.diff_store",
-     "Daypack_lib.Sched.Diff.add_diff_store",
-     "Daypack_lib.Sched.Diff.sub_diff_store",
-     "Daypack_lib.Sched.Equal.store_equal"
-    );
-    (* ("sched",
-     *  "sched",
-     *  "Daypack_lib.Sched.Diff.diff_sched",
-     *  "Daypack_lib.Sched.Diff.add_diff_sched",
-     *  "Daypack_lib.Sched.Diff.sub_diff_sched"
-     *  "Daypack_lib.Sched.Equal.sched_equal"
+    (* ("store",
+     *  "store",
+     *  "Daypack_lib.Sched.Diff.diff_store",
+     *  "Daypack_lib.Sched.Diff.add_diff_store",
+     *  "Daypack_lib.Sched.Diff.sub_diff_store",
+     *  "Daypack_lib.Sched.Equal.store_equal"
      * ); *)
+    ("sched",
+     "sched",
+     "Daypack_lib.Sched.Diff.diff_sched",
+     "Daypack_lib.Sched.Diff.add_diff_sched",
+     "Daypack_lib.Sched.Diff.sub_diff_sched",
+     "Daypack_lib.Sched.Equal.sched_equal"
+    );
   ] in
 
   List.iter (fun (name, gen, f_diff, f_add_diff, _f_sub_diff, f_equal) ->
@@ -274,14 +274,13 @@ let qc_unpack_is_inverse_of_pack_sched_req_ids =
         in
         Daypack_lib.Int64_set.equal x y)
 
-let qc_add_diff_test_store =
-  QCheck.Test.make ~count:5000 ~name:"qc_add_diff_test_store"
-    QCheck.(pair store store)
+let qc_add_diff_test_sched =
+  QCheck.Test.make ~count:5000 ~name:"qc_add_diff_test_sched"
+    QCheck.(pair sched sched)
     (fun (old, x) ->
-       let diff = Daypack_lib.Sched.Diff.diff_store ~old x in
-       Daypack_lib.Sched.Equal.store_equal
-         (fun x y -> compare x y = 0)
-         (Daypack_lib.Sched.Diff.add_diff_store diff old)
+       let diff = Daypack_lib.Sched.Diff.diff_sched ~old x in
+       Daypack_lib.Sched.Equal.sched_equal
+         (Daypack_lib.Sched.Diff.add_diff_sched diff old)
          x)
 
 let suite =
@@ -296,7 +295,7 @@ let suite =
     qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids;
     qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids;
     qc_unpack_is_inverse_of_pack_sched_req_ids;
-    qc_add_diff_test_store;
+    qc_add_diff_test_sched;
   ]
 
 (*$*)

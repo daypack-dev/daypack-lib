@@ -1175,6 +1175,7 @@ module Equal = struct
   (*$ #use "lib/sched.cinaps";;
 
     print_store_equal ();
+    print_agenda_equal ();
   *)
 
   let store_equal (store1 : store) (store2 : store) : bool =
@@ -1204,7 +1205,17 @@ module Equal = struct
       (fun x y -> compare x y = 0)
       store1.quota store2.quota
 
+  let agenda_equal (agenda1 : agenda) (agenda2 : agenda) : bool =
+    Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_start
+      agenda2.indexed_by_start
+
   (*$*)
+
+  let sched_data_equal (sd1 : sched_data) (sd2 : sched_data) =
+    store_equal sd1.store sd2.store && agenda_equal sd1.agenda sd2.agenda
+
+  let sched_equal ((sid1, sd1) : sched) ((sid2, sd2) : sched) =
+    sid1 = sid2 && sched_data_equal sd1 sd2
 end
 
 module Diff = struct
@@ -1331,7 +1342,7 @@ module Diff = struct
           diff.indexed_by_start_diff agenda.indexed_by_start;
     }
 
-  let add_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
+  let sub_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
     {
       indexed_by_start =
         Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
@@ -1340,14 +1351,36 @@ module Diff = struct
 
   (*$*)
 
-  let diff_sched_data (sd1 : sched_data) (sd2 : sched_data) : sched_data_diff =
+  let diff_sched_data ~(old : sched_data) (sd : sched_data) : sched_data_diff =
     {
-      store_diff = diff_store sd1.store sd2.store;
-      agenda_diff = diff_agenda sd1.agenda sd2.agenda;
+      store_diff = diff_store old.store sd.store;
+      agenda_diff = diff_agenda old.agenda sd.agenda;
     }
 
-  let diff_sched ((_sid1, sd1) : sched) ((sid2, sd2) : sched) : sched_diff =
-    (sid2, diff_sched_data sd1 sd2)
+  let diff_sched ~(old : sched) ((sid, sd) : sched) : sched_diff =
+    let _, sd_old = old in
+    (sid, diff_sched_data ~old:sd_old sd)
+
+  let add_diff_sched_data (diff : sched_data_diff) (sd : sched_data) :
+    sched_data =
+    {
+      store = add_diff_store diff.store_diff sd.store;
+      agenda = add_diff_agenda diff.agenda_diff sd.agenda;
+    }
+
+  let sub_diff_sched_data (diff : sched_data_diff) (sd : sched_data) :
+    sched_data =
+    {
+      store = sub_diff_store diff.store_diff sd.store;
+      agenda = sub_diff_agenda diff.agenda_diff sd.agenda;
+    }
+
+  let add_diff_sched ((sid_diff, sd_diff) : sched_diff) ((_, sd) : sched) :
+    sched =
+    (sid_diff, add_diff_sched_data sd_diff sd)
+
+  let sub_diff_sched ((_, sd_diff) : sched_diff) ((sid, sd) : sched) : sched =
+    (sid, sub_diff_sched_data sd_diff sd)
 end
 
 module Print = struct
