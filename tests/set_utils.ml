@@ -70,8 +70,8 @@ open Test_utils
   print_endline "]"
 *)
 
-let add_diff_test_int64_set =
-  QCheck.Test.make ~count:5000 ~name:"add_diff_test_int64_set"
+let qc_add_diff_test_int64_set =
+  QCheck.Test.make ~count:5000 ~name:"qc_add_diff_test_int64_set"
     QCheck.(pair pos_int64_set pos_int64_set)
     (fun (old, x) ->
        let diff = Daypack_lib.Int64_set_utils.diff ~old x in
@@ -79,8 +79,8 @@ let add_diff_test_int64_set =
          (Daypack_lib.Int64_set_utils.add_diff diff old)
          x)
 
-let sub_diff_test_int64_set =
-  QCheck.Test.make ~count:5000 ~name:"sub_diff_test_int64_set"
+let qc_sub_diff_test_int64_set =
+  QCheck.Test.make ~count:5000 ~name:"qc_sub_diff_test_int64_set"
     QCheck.(pair pos_int64_set pos_int64_set)
     (fun (old, x) ->
        let diff = Daypack_lib.Int64_set_utils.diff ~old x in
@@ -88,9 +88,9 @@ let sub_diff_test_int64_set =
          (Daypack_lib.Int64_set_utils.sub_diff diff x)
          old)
 
-let sub_diff_is_inverse_of_add_diff_test_int64_set =
+let qc_sub_diff_is_inverse_of_add_diff_test_int64_set =
   QCheck.Test.make ~count:5000
-    ~name:"sub_diff_is_inverse_of_add_diff_test_int64_set"
+    ~name:"qc_sub_diff_is_inverse_of_add_diff_test_int64_set"
     QCheck.(pair pos_int64_set pos_int64_set)
     (fun (old, x) ->
        let diff = Daypack_lib.Int64_set_utils.diff ~old x in
@@ -99,9 +99,9 @@ let sub_diff_is_inverse_of_add_diff_test_int64_set =
             (Daypack_lib.Int64_set_utils.add_diff diff old))
          old)
 
-let add_diff_is_inverse_of_sub_diff_test_int64_set =
+let qc_add_diff_is_inverse_of_sub_diff_test_int64_set =
   QCheck.Test.make ~count:5000
-    ~name:"add_diff_is_inverse_of_sub_diff_test_int64_set"
+    ~name:"qc_add_diff_is_inverse_of_sub_diff_test_int64_set"
     QCheck.(pair pos_int64_set pos_int64_set)
     (fun (old, x) ->
        let diff = Daypack_lib.Int64_set_utils.diff ~old x in
@@ -112,10 +112,10 @@ let add_diff_is_inverse_of_sub_diff_test_int64_set =
 
 let suite =
   [
-    add_diff_test_int64_set;
-    sub_diff_test_int64_set;
-    sub_diff_is_inverse_of_add_diff_test_int64_set;
-    add_diff_is_inverse_of_sub_diff_test_int64_set;
+    qc_add_diff_test_int64_set;
+    qc_sub_diff_test_int64_set;
+    qc_sub_diff_is_inverse_of_add_diff_test_int64_set;
+    qc_add_diff_is_inverse_of_sub_diff_test_int64_set;
   ]
 
 (*$*)
