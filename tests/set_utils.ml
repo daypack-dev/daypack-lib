@@ -107,8 +107,8 @@ let add_diff_is_inverse_of_sub_diff_test_int64_set =
        let diff = Daypack_lib.Int64_set_utils.diff ~old x in
        Daypack_lib.Int64_set.equal
          (Daypack_lib.Int64_set_utils.add_diff diff
-            (Daypack_lib.Int64_set_utils.sub_diff diff old))
-         old)
+            (Daypack_lib.Int64_set_utils.sub_diff diff x))
+         x)
 
 let suite =
   [

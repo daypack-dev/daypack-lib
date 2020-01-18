@@ -353,8 +353,8 @@ let add_diff_is_inverse_of_sub_diff_test_task_store =
        Daypack_lib.Task_id_map.equal
          (fun x y -> compare x y = 0)
          (Daypack_lib.Task_id_map_utils.add_diff diff
-            (Daypack_lib.Task_id_map_utils.sub_diff diff old))
-         old)
+            (Daypack_lib.Task_id_map_utils.sub_diff diff x))
+         x)
 
 let add_diff_is_inverse_of_sub_diff_test_task_inst_store =
   QCheck.Test.make ~count:5000
@@ -365,8 +365,8 @@ let add_diff_is_inverse_of_sub_diff_test_task_inst_store =
        Daypack_lib.Task_inst_id_map.equal
          (fun x y -> compare x y = 0)
          (Daypack_lib.Task_inst_id_map_utils.add_diff diff
-            (Daypack_lib.Task_inst_id_map_utils.sub_diff diff old))
-         old)
+            (Daypack_lib.Task_inst_id_map_utils.sub_diff diff x))
+         x)
 
 let add_diff_is_inverse_of_sub_diff_test_task_seg_store =
   QCheck.Test.make ~count:5000
@@ -377,8 +377,8 @@ let add_diff_is_inverse_of_sub_diff_test_task_seg_store =
        Daypack_lib.Task_seg_id_map.equal
          (fun x y -> compare x y = 0)
          (Daypack_lib.Task_seg_id_map_utils.add_diff diff
-            (Daypack_lib.Task_seg_id_map_utils.sub_diff diff old))
-         old)
+            (Daypack_lib.Task_seg_id_map_utils.sub_diff diff x))
+         x)
 
 let add_diff_is_inverse_of_sub_diff_test_sched_req_pending_store =
   QCheck.Test.make ~count:5000
@@ -389,8 +389,8 @@ let add_diff_is_inverse_of_sub_diff_test_sched_req_pending_store =
        Daypack_lib.Sched_req_id_map.equal
          (fun x y -> compare x y = 0)
          (Daypack_lib.Sched_req_id_map_utils.add_diff diff
-            (Daypack_lib.Sched_req_id_map_utils.sub_diff diff old))
-         old)
+            (Daypack_lib.Sched_req_id_map_utils.sub_diff diff x))
+         x)
 
 let add_diff_is_inverse_of_sub_diff_test_sched_req_record_store =
   QCheck.Test.make ~count:5000
@@ -401,8 +401,8 @@ let add_diff_is_inverse_of_sub_diff_test_sched_req_record_store =
        Daypack_lib.Sched_req_id_map.equal
          (fun x y -> compare x y = 0)
          (Daypack_lib.Sched_req_id_map_utils.add_diff diff
-            (Daypack_lib.Sched_req_id_map_utils.sub_diff diff old))
-         old)
+            (Daypack_lib.Sched_req_id_map_utils.sub_diff diff x))
+         x)
 
 let add_diff_bucketed_test_user_id_to_task_ids =
   QCheck.Test.make ~count:5000

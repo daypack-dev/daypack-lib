@@ -52,9 +52,8 @@ module Diff = struct
     Printf.printf "QCheck.(pair %s %s)\n" store_gen store_gen;
     Printf.printf "(fun (old, x) -> \n";
     Printf.printf "let diff = %s ~old x in\n" f_diff;
-    Printf.printf
-      "%s (fun x y -> compare x y = 0) (%s diff (%s diff old)) old\n" f_equal
-      f_add_diff f_sub_diff;
+    Printf.printf "%s (fun x y -> compare x y = 0) (%s diff (%s diff x)) x\n"
+      f_equal f_add_diff f_sub_diff;
     Printf.printf ")\n"
 end
 

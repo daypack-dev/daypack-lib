@@ -47,5 +47,5 @@ let print_add_diff_is_inverse_of_sub_diff_test ~name ~set_gen ~f_diff
   Printf.printf "QCheck.(pair %s %s)\n" set_gen set_gen;
   Printf.printf "(fun (old, x) -> \n";
   Printf.printf "let diff = %s ~old x in\n" f_diff;
-  Printf.printf "%s (%s diff (%s diff old)) old\n" f_equal f_add_diff f_sub_diff;
+  Printf.printf "%s (%s diff (%s diff x)) x\n" f_equal f_add_diff f_sub_diff;
   Printf.printf ")\n"
