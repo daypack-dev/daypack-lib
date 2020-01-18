@@ -57,8 +57,8 @@ let sub_diff_test_int64_set =
     (fun (old, x) ->
        let diff = Daypack_lib.Int64_set_utils.diff ~old x in
        Daypack_lib.Int64_set.equal
-         (Daypack_lib.Int64_set_utils.sub_diff diff old)
-         x)
+         (Daypack_lib.Int64_set_utils.sub_diff diff x)
+         old)
 
 let suite = [ add_diff_test_int64_set; sub_diff_test_int64_set ]
 
