@@ -54,7 +54,7 @@ module Diff = struct
     Printf.printf "let diff = %s ~old x in\n" f_diff;
     Printf.printf
       "%s (fun x y -> compare x y = 0) (%s diff (%s diff old)) old\n" f_equal
-      f_sub_diff f_add_diff;
+      f_add_diff f_sub_diff;
     Printf.printf ")\n"
 end
 
