@@ -526,3 +526,33 @@ let task_inst_id_to_task_seg_ids =
     task_inst_id_to_task_seg_ids_gen
 
 (*$*)
+
+let store_gen =
+  let open QCheck.Gen in
+  map
+    (fun (task_store, task_inst_store, task_seg_store,
+          (user_id_to_task_ids, task_id_to_task_inst_ids, task_inst_id_to_task_seg_ids,
+           (sched_req_ids, sched_req_pending_store, sched_req_record_store, quota
+           )
+          )
+         ) ->
+      Daypack_lib.Sched.{
+  task_store;
+  task_inst_store;
+  task_seg_store;
+  user_id_to_task_ids;
+  task_id_to_task_inst_ids;
+  task_inst_id_to_task_seg_ids;
+  sched_req_ids;
+  sched_req_pending_store;
+  sched_req_record_store;
+  quota;
+      }
+    )
+    (quad task_store_gen task_inst_store_gen task_seg_store_gen
+       (quad user_id_to_task_ids_gen task_id_to_task_inst_ids_gen task_inst_id_to_task_seg_ids_gen
+          (quad pos_int64_set_gen sched_req_store_gen sched_req_record_store_gen
+             quota_gen
+          )
+       )
+    )

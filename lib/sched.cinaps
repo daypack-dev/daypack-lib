@@ -527,14 +527,12 @@ let print_sub_diff_store () =
   print_endline "}"
 
 let print_store_equal () =
-  Printf.printf
-    "let store_equal (store1 : store) (store2 : store) : bool =\n";
+  Printf.printf "let store_equal (store1 : store) (store2 : store) : bool =\n";
   List.map
     (fun (_l, r, equal, _diff, _add_diff, _sub_diff) ->
-       Printf.sprintf "(%s store1.%s_diff store2.%s)" equal r r)
+       Printf.sprintf "(%s store1.%s store2.%s)" equal r r)
     store_fields
-  |> String.concat " && "
-  |> print_string
+  |> String.concat " && " |> print_string
 
 let agenda_fields =
   [

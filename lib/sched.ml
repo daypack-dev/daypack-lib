@@ -1176,8 +1176,35 @@ module Equal = struct
 
     print_store_equal ();
   *)
-     (*$*)
 
+  let store_equal (store1 : store) (store2 : store) : bool =
+    Task_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_store store2.task_store
+    && Task_inst_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_inst_store store2.task_inst_store
+    && Task_seg_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_seg_store store2.task_seg_store
+    && User_id_map.equal Int64_set.equal store1.user_id_to_task_ids
+      store2.user_id_to_task_ids
+    && Task_id_map.equal Int64_set.equal store1.task_id_to_task_inst_ids
+      store2.task_id_to_task_inst_ids
+    && Task_inst_id_map.equal Int64_set.equal
+      store1.task_inst_id_to_task_seg_ids store2.task_inst_id_to_task_seg_ids
+    && Int64_set.equal store1.sched_req_ids store2.sched_req_ids
+    && Sched_req_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.sched_req_pending_store store2.sched_req_pending_store
+    && Sched_req_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.sched_req_record_store store2.sched_req_record_store
+    && Task_inst_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.quota store2.quota
+
+  (*$*)
 end
 
 module Diff = struct
