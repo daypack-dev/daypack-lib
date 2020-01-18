@@ -1375,18 +1375,15 @@ module Diff = struct
       agenda = sub_diff_agenda diff.agenda_diff sd.agenda;
     }
 
-  let add_diff_sched ((sid_old, sid_new, sd_diff) : sched_diff) ((sid, sd) : sched) :
-    sched =
-     if sid_old <> sid then
-     raise Exceptions.Invalid_diff
-     else
-     (sid_new, add_diff_sched_data sd_diff sd)
+  let add_diff_sched ((sid_old, sid_new, sd_diff) : sched_diff)
+      ((sid, sd) : sched) : sched =
+    if sid_old <> sid then raise Exceptions.Invalid_diff
+    else (sid_new, add_diff_sched_data sd_diff sd)
 
-  let sub_diff_sched ((sid_old, sid_new, sd_diff) : sched_diff) ((sid, sd) : sched) : sched =
-     if sid_new <> sid then
-     raise Exceptions.Invalid_diff
-     else
-    (sid_old, sub_diff_sched_data sd_diff sd)
+  let sub_diff_sched ((sid_old, sid_new, sd_diff) : sched_diff)
+      ((sid, sd) : sched) : sched =
+    if sid_new <> sid then raise Exceptions.Invalid_diff
+    else (sid_old, sub_diff_sched_data sd_diff sd)
 end
 
 module Print = struct
