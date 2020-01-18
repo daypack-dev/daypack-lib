@@ -120,14 +120,24 @@ open Test_utils
         ~f_equal)
     unpack_pack_set_store_list;
 
-  let diff_test_list = [
+  let diff_list = [
+    ("store",
+     "store",
+     "Daypack_lib.Sched.Diff.diff_store",
+     "Daypack_lib.Sched.Diff.add_diff_store",
+     "Daypack_lib.Sched.Diff.sub_diff_store"
+    );
     ("sched",
      "sched",
      "Daypack_lib.Sched.Diff.diff_sched",
      "Daypack_lib.Sched.Diff.add_diff_sched",
      "Daypack_lib.Sched.Diff.sub_diff_sched"
-    )
+    );
   ] in
+
+  List.iter (fun (name, gen, f_diff, f_add_diff, _f_sub_diff) ->
+      Diff.print_add_diff_test ~name ~gen ~f_diff ~f_add_diff ~f_equal
+      ) diff_list;
 
   print_endline "let suite = [";
   List.iter (fun (name, _, _, _, _, _) ->
@@ -140,6 +150,10 @@ open Test_utils
       Printf.printf "%s;\n" (unpack_is_inverse_of_pack_test_name name);
     )
     unpack_pack_set_store_list;
+  List.iter (fun (name, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff.get_add_diff_test_name name);
+    )
+    diff_list;
   print_endline "]";
 *)
 

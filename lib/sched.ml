@@ -1171,6 +1171,15 @@ module Deserialize = struct
     string |> Sched_j.sched_of_string |> unpack_sched
 end
 
+module Equal = struct
+  (*$ #use "lib/sched.cinaps";;
+
+    print_store_equal ();
+  *)
+     (*$*)
+
+end
+
 module Diff = struct
   (*$ #use "lib/sched.cinaps";;
 
