@@ -1175,6 +1175,9 @@ module Diff = struct
   (*$ #use "lib/sched.cinaps";;
 
     print_diff_store ();
+    print_add_diff_store ();
+    print_sub_diff_store ();
+
     print_diff_agenda ();
   *)
 
@@ -1207,6 +1210,68 @@ module Diff = struct
         Sched_req_id_map_utils.diff ~old:store1.sched_req_record_store
           store2.sched_req_record_store;
       quota_diff = Task_inst_id_map_utils.diff ~old:store1.quota store2.quota;
+    }
+
+  let add_diff_store (diff : store_diff) (store : store) : store =
+    {
+      task_store =
+        Task_id_map_utils.add_diff diff.task_store_diff store.task_store;
+      task_inst_store =
+        Task_inst_id_map_utils.add_diff diff.task_inst_store_diff
+          store.task_inst_store;
+      task_seg_store =
+        Task_seg_id_map_utils.add_diff diff.task_seg_store_diff
+          store.task_seg_store;
+      user_id_to_task_ids =
+        User_id_map_utils.Int64_bucketed.add_diff_bucketed
+          diff.user_id_to_task_ids_diff store.user_id_to_task_ids;
+      task_id_to_task_inst_ids =
+        Task_id_map_utils.Int64_bucketed.add_diff_bucketed
+          diff.task_id_to_task_inst_ids_diff store.task_id_to_task_inst_ids;
+      task_inst_id_to_task_seg_ids =
+        Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed
+          diff.task_inst_id_to_task_seg_ids_diff
+          store.task_inst_id_to_task_seg_ids;
+      sched_req_ids =
+        Int64_set_utils.add_diff diff.sched_req_ids_diff store.sched_req_ids;
+      sched_req_pending_store =
+        Sched_req_id_map_utils.add_diff diff.sched_req_pending_store_diff
+          store.sched_req_pending_store;
+      sched_req_record_store =
+        Sched_req_id_map_utils.add_diff diff.sched_req_record_store_diff
+          store.sched_req_record_store;
+      quota = Task_inst_id_map_utils.add_diff diff.quota_diff store.quota;
+    }
+
+  let sub_diff_store (diff : store_diff) (store : store) : store =
+    {
+      task_store =
+        Task_id_map_utils.sub_diff diff.task_store_diff store.task_store;
+      task_inst_store =
+        Task_inst_id_map_utils.sub_diff diff.task_inst_store_diff
+          store.task_inst_store;
+      task_seg_store =
+        Task_seg_id_map_utils.sub_diff diff.task_seg_store_diff
+          store.task_seg_store;
+      user_id_to_task_ids =
+        User_id_map_utils.Int64_bucketed.sub_diff_bucketed
+          diff.user_id_to_task_ids_diff store.user_id_to_task_ids;
+      task_id_to_task_inst_ids =
+        Task_id_map_utils.Int64_bucketed.sub_diff_bucketed
+          diff.task_id_to_task_inst_ids_diff store.task_id_to_task_inst_ids;
+      task_inst_id_to_task_seg_ids =
+        Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed
+          diff.task_inst_id_to_task_seg_ids_diff
+          store.task_inst_id_to_task_seg_ids;
+      sched_req_ids =
+        Int64_set_utils.sub_diff diff.sched_req_ids_diff store.sched_req_ids;
+      sched_req_pending_store =
+        Sched_req_id_map_utils.sub_diff diff.sched_req_pending_store_diff
+          store.sched_req_pending_store;
+      sched_req_record_store =
+        Sched_req_id_map_utils.sub_diff diff.sched_req_record_store_diff
+          store.sched_req_record_store;
+      quota = Task_inst_id_map_utils.sub_diff diff.quota_diff store.quota;
     }
 
   let diff_agenda (agenda1 : agenda) (agenda2 : agenda) : agenda_diff =

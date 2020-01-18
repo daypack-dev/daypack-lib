@@ -1,6 +1,7 @@
 open Test_utils
 
 (*$ #use "tests/serialization_related.cinaps";;
+  #use "tests/sched.cinaps";;
 
   let unpack_pack_store_list = [
     ("task_store",
@@ -118,6 +119,15 @@ open Test_utils
         ~f_unpack
         ~f_equal)
     unpack_pack_set_store_list;
+
+  let diff_test_list = [
+    ("sched",
+     "sched",
+     "Daypack_lib.Sched.Diff.diff_sched",
+     "Daypack_lib.Sched.Diff.add_diff_sched",
+     "Daypack_lib.Sched.Diff.sub_diff_sched"
+    )
+  ] in
 
   print_endline "let suite = [";
   List.iter (fun (name, _, _, _, _, _) ->
