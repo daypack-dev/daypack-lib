@@ -930,8 +930,14 @@ module Serialize = struct
   let pack_sched ((sid, sd) : sched) : Sched_t.sched =
     (sid, { store = pack_store sd.store; agenda = pack_agenda sd.agenda })
 
-  let pack_sched_diff ((sid_old, sid_new, sd_diff) : sched_diff) : Sched_t.sched_diff =
-    (sid_old, sid_new, { store_diff = pack_store_diff sd_diff.store_diff; agenda_diff = pack_agenda_diff sd_diff.agenda_diff })
+  let pack_sched_diff ((sid_old, sid_new, sd_diff) : sched_diff) :
+    Sched_t.sched_diff =
+    ( sid_old,
+      sid_new,
+      {
+        store_diff = pack_store_diff sd_diff.store_diff;
+        agenda_diff = pack_agenda_diff sd_diff.agenda_diff;
+      } )
 
   let json_string_of_sched (sched : sched) : string =
     sched |> pack_sched |> Sched_j.string_of_sched
@@ -1170,8 +1176,14 @@ module Deserialize = struct
   let unpack_sched ((sid, sd) : Sched_t.sched) : sched =
     (sid, { store = unpack_store sd.store; agenda = unpack_agenda sd.agenda })
 
-  let unpack_sched_diff ((sid_old, sid_new, sd_diff) : Sched_t.sched_diff) : sched_diff =
-    (sid_old, sid_new, { store_diff = unpack_store_diff sd_diff.store_diff; agenda_diff = unpack_agenda_diff sd_diff.agenda_diff })
+  let unpack_sched_diff ((sid_old, sid_new, sd_diff) : Sched_t.sched_diff) :
+    sched_diff =
+    ( sid_old,
+      sid_new,
+      {
+        store_diff = unpack_store_diff sd_diff.store_diff;
+        agenda_diff = unpack_agenda_diff sd_diff.agenda_diff;
+      } )
 
   let sched_of_json_string string : sched =
     string |> Sched_j.sched_of_string |> unpack_sched
