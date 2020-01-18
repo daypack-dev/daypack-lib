@@ -936,8 +936,8 @@ module Serialize = struct
   let json_string_of_sched (sched : sched) : string =
     sched |> pack_sched |> Sched_j.string_of_sched
 
-  (* let json_string_of_sched_diff (diff : sched_diff) : string =
-   *   diff |> pack_sched_di *)
+  let json_string_of_sched_diff (diff : sched_diff) : string =
+    diff |> pack_sched_diff |> Sched_j.string_of_sched_diff
 end
 
 module Deserialize = struct
@@ -1175,6 +1175,9 @@ module Deserialize = struct
 
   let sched_of_json_string string : sched =
     string |> Sched_j.sched_of_string |> unpack_sched
+
+  let sched_diff_of_json_string string : sched_diff =
+    string |> Sched_j.sched_diff_of_string |> unpack_sched_diff
 end
 
 module Equal = struct
