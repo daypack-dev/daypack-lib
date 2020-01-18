@@ -1177,8 +1177,6 @@ module Diff = struct
     print_diff_store ();
     print_add_diff_store ();
     print_sub_diff_store ();
-
-    print_diff_agenda ();
   *)
 
   let diff_store (store1 : store) (store2 : store) : store_diff =
@@ -1274,11 +1272,34 @@ module Diff = struct
       quota = Task_inst_id_map_utils.sub_diff diff.quota_diff store.quota;
     }
 
+  (*$*)
+
+  (*$ #use "lib/sched.cinaps";;
+
+    print_diff_agenda ();
+    print_add_diff_agenda ();
+    print_sub_diff_agenda ();
+  *)
+
   let diff_agenda (agenda1 : agenda) (agenda2 : agenda) : agenda_diff =
     {
       indexed_by_start_diff =
         Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
           ~old:agenda1.indexed_by_start agenda2.indexed_by_start;
+    }
+
+  let add_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
+    {
+      indexed_by_start =
+        Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed
+          diff.indexed_by_start_diff agenda.indexed_by_start;
+    }
+
+  let add_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
+    {
+      indexed_by_start =
+        Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
+          diff.indexed_by_start_diff agenda.indexed_by_start;
     }
 
   (*$*)
