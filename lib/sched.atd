@@ -115,4 +115,11 @@ type sched_data = {
   agenda : agenda;
 }
 
+type sched_data_diff = {
+  store_diff : store_diff;
+  agenda_diff : agenda_diff;
+}
+
 type sched = (sched_id * sched_data)
+
+type sched_diff = (sched_id * sched_id * sched_data_diff)
