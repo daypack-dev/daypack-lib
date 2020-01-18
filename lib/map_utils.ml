@@ -1,5 +1,3 @@
-exception Invalid_diff
-
 module type S = sig
   type 'a t
 
@@ -97,15 +95,15 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
     (* |> M.mapi (fun key x ->
      *     match M.find_opt key diff.updated with
      *     | None -> x
-     *     | Some (x1, x2) -> if x1 = x then x2 else raise Invalid_diff) *)
+     *     | Some (x1, x2) -> if x1 = x then x2 else raise Exceptions.Invalid_diff) *)
     (* remove *)
     |> M.merge
       (fun _key to_be_removed x ->
          match (to_be_removed, x) with
          | None, _ -> x
-         | _, None -> raise Invalid_diff
+         | _, None -> raise Exceptions.Invalid_diff
          | Some to_be_removed, Some x ->
-           if x = to_be_removed then None else raise Invalid_diff)
+           if x = to_be_removed then None else raise Exceptions.Invalid_diff)
       diff.removed
     (* add *)
     |> M.union (fun _key added _ -> Some added) diff.added
@@ -116,14 +114,14 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
     (* |> M.mapi (fun key x ->
      *     match M.find_opt key diff.updated with
      *     | None -> x
-     *     | Some (x1, x2) -> if x2 = x then x1 else raise Invalid_diff) *)
+     *     | Some (x1, x2) -> if x2 = x then x1 else raise Exceptions.Invalid_diff) *)
     (* revert add *)
     |> M.merge
       (fun _key to_be_removed x ->
          match (to_be_removed, x) with
          | None, _ | _, None -> x
          | Some to_be_removed, Some x ->
-           if x = to_be_removed then None else raise Invalid_diff)
+           if x = to_be_removed then None else raise Exceptions.Invalid_diff)
       diff.added
     (* revert remove *)
     |> M.union (fun _key removed _ -> Some removed) diff.removed
@@ -185,7 +183,7 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
       (fun _key to_be_removed s ->
          match (to_be_removed, s) with
          | None, _ -> s
-         | _, None -> raise Invalid_diff
+         | _, None -> raise Exceptions.Invalid_diff
          | Some to_be_removed, Some s ->
            if Set.equal to_be_removed s then None
            else Some (Set.diff s to_be_removed))
@@ -200,7 +198,7 @@ module Make_bucketed (Map : Map.S) (Set : Set.S) :
       (fun _key to_be_removed s ->
          match (to_be_removed, s) with
          | None, _ -> s
-         | _, None -> raise Invalid_diff
+         | _, None -> raise Exceptions.Invalid_diff
          | Some to_be_removed, Some s ->
            if Set.equal to_be_removed s then None
            else Some (Set.diff s to_be_removed))

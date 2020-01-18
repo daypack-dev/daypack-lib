@@ -18,4 +18,14 @@ module Diff = struct
     Printf.printf "let diff = %s ~old x in\n" f_diff;
     Printf.printf "%s (%s diff old) x\n" f_equal f_add_diff;
     Printf.printf ")\n"
+
+  let print_sub_diff_test ~name ~gen ~f_diff ~f_sub_diff ~f_equal =
+    let name = get_sub_diff_test_name name in
+    Printf.printf "let %s =\n" name;
+    Printf.printf "QCheck.Test.make ~count:50 ~name:\"%s\"\n" name;
+    Printf.printf "QCheck.(pair %s %s)\n" gen gen;
+    Printf.printf "(fun (old, x) -> \n";
+    Printf.printf "let diff = %s ~old x in\n" f_diff;
+    Printf.printf "%s (%s diff x) old\n" f_equal f_sub_diff;
+    Printf.printf ")\n"
 end

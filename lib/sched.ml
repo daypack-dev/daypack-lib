@@ -88,7 +88,7 @@ type sched_data_diff = {
 
 type sched = sched_id * sched_data
 
-type sched_diff = sched_id * sched_data_diff
+type sched_diff = sched_id * sched_id * sched_data_diff
 
 let store_empty =
   {
@@ -1358,8 +1358,8 @@ module Diff = struct
     }
 
   let diff_sched ~(old : sched) ((sid, sd) : sched) : sched_diff =
-    let _, sd_old = old in
-    (sid, diff_sched_data ~old:sd_old sd)
+    let sid_old, sd_old = old in
+    (sid_old, sid, diff_sched_data ~old:sd_old sd)
 
   let add_diff_sched_data (diff : sched_data_diff) (sd : sched_data) :
     sched_data =
@@ -1375,12 +1375,18 @@ module Diff = struct
       agenda = sub_diff_agenda diff.agenda_diff sd.agenda;
     }
 
-  let add_diff_sched ((sid_diff, sd_diff) : sched_diff) ((_, sd) : sched) :
+  let add_diff_sched ((sid_old, sid_new, sd_diff) : sched_diff) ((sid, sd) : sched) :
     sched =
-    (sid_diff, add_diff_sched_data sd_diff sd)
+     if sid_old <> sid then
+     raise Exceptions.Invalid_diff
+     else
+     (sid_new, add_diff_sched_data sd_diff sd)
 
-  let sub_diff_sched ((_, sd_diff) : sched_diff) ((sid, sd) : sched) : sched =
-    (sid, sub_diff_sched_data sd_diff sd)
+  let sub_diff_sched ((sid_old, sid_new, sd_diff) : sched_diff) ((sid, sd) : sched) : sched =
+     if sid_new <> sid then
+     raise Exceptions.Invalid_diff
+     else
+    (sid_old, sub_diff_sched_data sd_diff sd)
 end
 
 module Print = struct
