@@ -31,4 +31,18 @@ module Make (Set : Set.S) : S with type set := Set.t = struct
       added = get_added old s;
       removed = get_removed old s;
     }
+
+  let add_diff (diff : diff) (s : set) : set =
+    s
+    (* remove *)
+    |> Set.diff diff.removed
+    (* add *)
+    |> Set.union diff.added
+
+  let add_diff (diff : diff) (s : set) : set =
+    s
+    (* revert add *)
+    |> Set.diff diff.added
+    (* revert remove *)
+    |> Set.union diff.removed
 end
