@@ -394,7 +394,7 @@ module Set_store = struct
       pack_set_store_list
 end
 
-let fields =
+let store_fields =
   [
     ("task_list", "task_store", "Task_id_map_utils.diff");
     ("task_inst_list", "task_inst_store", "Task_inst_id_map_utils.diff");
@@ -423,7 +423,7 @@ let print_pack_store () =
   print_endline "{";
   List.iter
     (fun (l, r, _diff) -> Printf.printf "%s = pack_%s store.%s;\n" l r r)
-    fields;
+    store_fields;
   print_endline "}"
 
 let print_pack_store_diff () =
@@ -433,7 +433,7 @@ let print_pack_store_diff () =
   List.iter
     (fun (l, r, _diff) ->
        Printf.printf "%s_diff = pack_%s_diff diff.%s_diff;\n" l r r)
-    fields;
+    store_fields;
   print_endline "}"
 
 let print_unpack_store () =
@@ -441,7 +441,7 @@ let print_unpack_store () =
   print_endline "{";
   List.iter
     (fun (l, r, _diff) -> Printf.printf "%s = unpack_%s store.%s;\n" r l l)
-    fields;
+    store_fields;
   print_endline "}"
 
 let print_unpack_store_diff () =
@@ -451,7 +451,7 @@ let print_unpack_store_diff () =
   List.iter
     (fun (l, r, _diff) ->
        Printf.printf "%s_diff = unpack_%s_diff diff.%s_diff;\n" r l l)
-    fields;
+    store_fields;
   print_endline "}"
 
 let print_diff_store () =
@@ -461,5 +461,58 @@ let print_diff_store () =
   List.iter
     (fun (_l, r, diff) ->
        Printf.printf "%s_diff = %s ~old:store1.%s store2.%s;\n" r diff r r)
-    fields;
+    store_fields;
+  print_endline "}"
+
+let agenda_fields =
+  [
+    ( "indexed_by_start",
+      "indexed_by_start",
+      "Int64_map_utils.Task_seg_place_bucketed.diff_bucketed" );
+  ]
+
+let print_pack_agenda () =
+  Printf.printf "let pack_agenda (agenda : agenda) : Sched_t.agenda =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r, _diff) -> Printf.printf "%s = pack_%s agenda.%s;\n" l r r)
+    agenda_fields;
+  print_endline "}"
+
+let print_pack_agenda_diff () =
+  Printf.printf
+    "let pack_agenda_diff (diff : agenda_diff) : Sched_t.agenda_diff =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r, _diff) ->
+       Printf.printf "%s_diff = pack_%s_diff diff.%s_diff;\n" l r r)
+    agenda_fields;
+  print_endline "}"
+
+let print_unpack_agenda () =
+  Printf.printf "let unpack_agenda (agenda : Sched_t.agenda) : agenda =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r, _diff) -> Printf.printf "%s = unpack_%s agenda.%s;\n" r l l)
+    agenda_fields;
+  print_endline "}"
+
+let print_unpack_agenda_diff () =
+  Printf.printf
+    "let unpack_agenda_diff (diff : Sched_t.agenda_diff) : agenda_diff =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r, _diff) ->
+       Printf.printf "%s_diff = unpack_%s_diff diff.%s_diff;\n" r l l)
+    agenda_fields;
+  print_endline "}"
+
+let print_diff_agenda () =
+  Printf.printf
+    "let diff_agenda (agenda1 : agenda) (agenda2 : agenda) : agenda_diff =\n";
+  print_endline "{";
+  List.iter
+    (fun (_l, r, diff) ->
+       Printf.printf "%s_diff = %s ~old:agenda1.%s agenda2.%s;\n" r diff r r)
+    agenda_fields;
   print_endline "}"

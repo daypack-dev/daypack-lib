@@ -864,7 +864,6 @@ module Serialize = struct
   (*$ #use "lib/sched.cinaps";;
 
     print_pack_store ();
-
     print_pack_store_diff ()
   *)
 
@@ -908,8 +907,23 @@ module Serialize = struct
 
   (*$*)
 
+  (*$ #use "lib/sched.cinaps";;
+
+    print_pack_agenda ();
+
+    print_pack_agenda_diff ()
+  *)
+
   let pack_agenda (agenda : agenda) : Sched_t.agenda =
     { indexed_by_start = pack_indexed_by_start agenda.indexed_by_start }
+
+  let pack_agenda_diff (diff : agenda_diff) : Sched_t.agenda_diff =
+    {
+      indexed_by_start_diff =
+        pack_indexed_by_start_diff diff.indexed_by_start_diff;
+    }
+
+  (*$*)
 
   let pack_sched ((sid, sd) : sched) : Sched_t.sched =
     (sid, { store = pack_store sd.store; agenda = pack_agenda sd.agenda })
@@ -1131,11 +1145,22 @@ module Deserialize = struct
 
   (*$*)
 
+  (*$ #use "lib/sched.cinaps";;
+
+    print_unpack_agenda ();
+    print_unpack_agenda_diff ();
+  *)
+
   let unpack_agenda (agenda : Sched_t.agenda) : agenda =
+    { indexed_by_start = unpack_indexed_by_start agenda.indexed_by_start }
+
+  let unpack_agenda_diff (diff : Sched_t.agenda_diff) : agenda_diff =
     {
-      (* start_and_end_exc = None; *)
-      indexed_by_start = unpack_indexed_by_start agenda.indexed_by_start;
+      indexed_by_start_diff =
+        unpack_indexed_by_start_diff diff.indexed_by_start_diff;
     }
+
+  (*$*)
 
   let unpack_sched ((sid, sd) : Sched_t.sched) : sched =
     (sid, { store = unpack_store sd.store; agenda = unpack_agenda sd.agenda })
