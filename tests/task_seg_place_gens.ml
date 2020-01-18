@@ -62,7 +62,7 @@ let qc_single_task_seg_shift_rev_sorted_and_uniq =
 
 let qc_multi_task_segs_shift_uniq =
   QCheck.Test.make ~count:1000 ~name:"qc_multi_task_segs_shift_uniq"
-    QCheck.(triple nz_pos_int64 tiny_task_segs tiny_sorted_time_slots)
+    QCheck.(triple nz_pos_int64 task_segs tiny_sorted_time_slots)
     (fun (incre, task_segs, time_slots) ->
        let time_slots = List.to_seq time_slots in
        let l =
@@ -75,7 +75,7 @@ let qc_multi_task_segs_shift_uniq =
 let qc_single_task_seg_single_split_consistent =
   QCheck.Test.make ~count:1000
     ~name:"qc_single_task_seg_single_split_consistent"
-    QCheck.(quad nz_pos_int64 nz_pos_int64 nz_pos_int64 tiny_task_seg)
+    QCheck.(quad nz_pos_int64 nz_pos_int64 nz_pos_int64 task_seg)
     (fun (min_seg_size, offset, cur_split_pos, task_seg) ->
        let _, task_seg_size = task_seg in
        let cur_split_pos = Int64.rem cur_split_pos task_seg_size in
@@ -90,8 +90,7 @@ let qc_single_task_seg_single_split_consistent =
 let qc_single_task_seg_multi_splits_exact_consistent =
   QCheck.Test.make ~count:1000
     ~name:"qc_single_task_seg_multi_splits_exact_consistent"
-    QCheck.(
-      quad nz_pos_int64 (pair nz_pos_int64 bool) small_pos_int64 tiny_task_seg)
+    QCheck.(quad nz_pos_int64 (pair nz_pos_int64 bool) small_pos_int64 task_seg)
     (fun (min_seg_size, (offset, test_max), split_count, task_seg) ->
        let (id1, id2, id3, id4, _), task_seg_size = task_seg in
        let split_count = Int64.rem split_count task_seg_size in
@@ -119,8 +118,7 @@ let qc_single_task_seg_multi_splits_exact_consistent =
 let qc_single_task_seg_multi_splits_max_consistent =
   QCheck.Test.make ~count:1000
     ~name:"qc_single_task_seg_multi_splits_max_consistent"
-    QCheck.(
-      quad nz_pos_int64 (pair nz_pos_int64 bool) small_pos_int64 tiny_task_seg)
+    QCheck.(quad nz_pos_int64 (pair nz_pos_int64 bool) small_pos_int64 task_seg)
     (fun (min_seg_size, (offset, test_max), split_count, task_seg) ->
        let (id1, id2, id3, id4, _), task_seg_size = task_seg in
        let split_count = Int64.rem split_count task_seg_size in
@@ -152,7 +150,7 @@ let qc_single_task_seg_multi_splits_exact_shift_consistent =
       quad nz_pos_int64
         (triple nz_pos_int64 bool nz_pos_int64)
         small_pos_int64
-        (pair tiny_task_seg tiny_sorted_time_slots))
+        (pair task_seg tiny_sorted_time_slots))
     (fun ( min_seg_size,
            (offset, test_max, incre),
            split_count,
@@ -187,7 +185,7 @@ let qc_single_task_seg_multi_splits_max_shift_consistent =
       quad nz_pos_int64
         (triple nz_pos_int64 bool nz_pos_int64)
         small_pos_int64
-        (pair tiny_task_seg tiny_sorted_time_slots))
+        (pair task_seg tiny_sorted_time_slots))
     (fun ( min_seg_size,
            (offset, test_max, incre),
            split_count,

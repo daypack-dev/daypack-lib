@@ -1,9 +1,11 @@
 let () =
   let suites =
     [
-      (* ("Time_slot", Time_slot.suite);
-       * ("Task_seg_gens", Task_seg_place_gens.suite); *)
-      (* ("Task", Task.suite); *)
+      ("Map_utils", Map_utils.suite);
+      ("Set_utils", Set_utils.suite);
+      ("Time_slot", Time_slot.suite);
+      ("Task_seg_gens", Task_seg_place_gens.suite);
+      ("Task", Task.suite);
       ("Sched", Sched.suite);
     ]
     |> List.map (fun (name, suite) ->

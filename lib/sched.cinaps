@@ -133,18 +133,19 @@ module Store = struct
     Printf.printf "let %s_diff (x : %s) : %s =\n" pack_f_name e.diff_typ
       e.diff_ret_typ;
     Printf.printf "{\n";
-    Printf.printf "updated = x.updated\n";
-    Printf.printf "|> %s\n" e.f_to_seq;
-    Option.iter
-      (fun x ->
-         Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
-         Printf.printf "(id, (%s data1, %s data2))\n" x x;
-         Printf.printf ")\n")
-      e.f_inner_pack_data;
-    Printf.printf "|> List.of_seq;\n";
+    (* Printf.printf "updated = x.updated\n";
+     * Printf.printf "|> %s\n" e.f_to_seq;
+     * Option.iter
+     *   (fun x ->
+     *      Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
+     *      Printf.printf "(id, (%s data1, %s data2))\n" x x;
+     *      Printf.printf ")\n")
+     *   e.f_inner_pack_data;
+     * Printf.printf "|> List.of_seq;\n"; *)
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s pack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_unpack_diff_function e =
@@ -152,18 +153,19 @@ module Store = struct
     Printf.printf "let %s_diff (x : %s) : %s =\n" unpack_f_name e.diff_ret_typ
       e.diff_typ;
     Printf.printf "{\n";
-    Printf.printf "updated = x.updated\n";
-    Printf.printf "|> List.to_seq\n";
-    Option.iter
-      (fun x ->
-         Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
-         Printf.printf "(id, (%s data1, %s data2))\n" x x;
-         Printf.printf ")\n")
-      e.f_inner_unpack_data;
-    Printf.printf "|> %s;\n" e.f_of_seq;
+    (* Printf.printf "updated = x.updated\n";
+     * Printf.printf "|> List.to_seq\n";
+     * Option.iter
+     *   (fun x ->
+     *      Printf.printf "|> Seq.map (fun (id, (data1, data2)) ->\n";
+     *      Printf.printf "(id, (%s data1, %s data2))\n" x x;
+     *      Printf.printf ")\n")
+     *   e.f_inner_unpack_data;
+     * Printf.printf "|> %s;\n" e.f_of_seq; *)
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s unpack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_pack_related_functions () =
@@ -277,7 +279,8 @@ module Bucket_store = struct
     Printf.printf "{\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s pack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_unpack_diff_function e =
@@ -287,7 +290,8 @@ module Bucket_store = struct
     Printf.printf "{\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s unpack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_pack_related_functions () =
@@ -360,7 +364,8 @@ module Set_store = struct
     Printf.printf "{\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s pack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_unpack_diff_function e =
@@ -370,7 +375,8 @@ module Set_store = struct
     Printf.printf "{\n";
     List.iter
       (fun s -> Printf.printf "%s = %s x.%s;\n" s unpack_f_name s)
-      [ "common"; "added"; "removed" ];
+      (* [ "common"; "added"; "removed" ]; *)
+      [ "added"; "removed" ];
     Printf.printf "}\n"
 
   let print_pack_related_functions () =
@@ -388,26 +394,77 @@ module Set_store = struct
       pack_set_store_list
 end
 
-let fields =
+let store_fields =
   [
-    ("task_list", "task_store");
-    ("task_inst_list", "task_inst_store");
-    ("task_seg_list", "task_seg_store");
-    ("user_id_to_task_ids", "user_id_to_task_ids");
-    ("task_id_to_task_inst_ids", "task_id_to_task_inst_ids");
-    ("task_inst_id_to_task_seg_ids", "task_inst_id_to_task_seg_ids");
-    ("sched_req_ids", "sched_req_ids");
-    ("sched_req_pending_list", "sched_req_pending_store");
-    ("sched_req_record_list", "sched_req_record_store");
-    ("quota", "quota");
+    ( "task_list",
+      "task_store",
+      "Task_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_id_map_utils.diff",
+      "Task_id_map_utils.add_diff",
+      "Task_id_map_utils.sub_diff" );
+    ( "task_inst_list",
+      "task_inst_store",
+      "Task_inst_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_inst_id_map_utils.diff",
+      "Task_inst_id_map_utils.add_diff",
+      "Task_inst_id_map_utils.sub_diff" );
+    ( "task_seg_list",
+      "task_seg_store",
+      "Task_seg_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_seg_id_map_utils.diff",
+      "Task_seg_id_map_utils.add_diff",
+      "Task_seg_id_map_utils.sub_diff" );
+    ( "user_id_to_task_ids",
+      "user_id_to_task_ids",
+      "User_id_map.equal Int64_set.equal",
+      "User_id_map_utils.Int64_bucketed.diff_bucketed",
+      "User_id_map_utils.Int64_bucketed.add_diff_bucketed",
+      "User_id_map_utils.Int64_bucketed.sub_diff_bucketed" );
+    ( "task_id_to_task_inst_ids",
+      "task_id_to_task_inst_ids",
+      "Task_id_map.equal Int64_set.equal",
+      "Task_id_map_utils.Int64_bucketed.diff_bucketed",
+      "Task_id_map_utils.Int64_bucketed.add_diff_bucketed",
+      "Task_id_map_utils.Int64_bucketed.sub_diff_bucketed" );
+    ( "task_inst_id_to_task_seg_ids",
+      "task_inst_id_to_task_seg_ids",
+      "Task_inst_id_map.equal Int64_set.equal",
+      "Task_inst_id_map_utils.Int64_bucketed.diff_bucketed",
+      "Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed",
+      "Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed" );
+    ( "sched_req_ids",
+      "sched_req_ids",
+      "Int64_set.equal",
+      "Int64_set_utils.diff",
+      "Int64_set_utils.add_diff",
+      "Int64_set_utils.sub_diff" );
+    ( "sched_req_pending_list",
+      "sched_req_pending_store",
+      "Sched_req_id_map.equal (fun x y -> compare x y = 0)",
+      "Sched_req_id_map_utils.diff",
+      "Sched_req_id_map_utils.add_diff",
+      "Sched_req_id_map_utils.sub_diff" );
+    ( "sched_req_record_list",
+      "sched_req_record_store",
+      "Sched_req_id_map.equal (fun x y -> compare x y = 0)",
+      "Sched_req_id_map_utils.diff",
+      "Sched_req_id_map_utils.add_diff",
+      "Sched_req_id_map_utils.sub_diff" );
+    ( "quota",
+      "quota",
+      "Task_inst_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_inst_id_map_utils.diff",
+      "Task_inst_id_map_utils.add_diff",
+      "Task_inst_id_map_utils.sub_diff" );
   ]
 
 let print_pack_store () =
   Printf.printf "let pack_store (store : store) : Sched_t.store =\n";
   print_endline "{";
   List.iter
-    (fun (l, r) -> Printf.printf "%s = pack_%s store.%s;\n" l r r)
-    fields;
+    (fun (l, r, _equal, _diff, _add_diff, _sub_diff) ->
+       Printf.printf "%s = pack_%s store.%s;\n" l r r)
+    store_fields;
   print_endline "}"
 
 let print_pack_store_diff () =
@@ -415,16 +472,18 @@ let print_pack_store_diff () =
     "let pack_store_diff (diff : store_diff) : Sched_t.store_diff =\n";
   print_endline "{";
   List.iter
-    (fun (l, r) -> Printf.printf "%s_diff = pack_%s_diff diff.%s_diff;\n" l r r)
-    fields;
+    (fun (l, r, _equal, _diff, _add_diff, _sub_diff) ->
+       Printf.printf "%s_diff = pack_%s_diff diff.%s_diff;\n" l r r)
+    store_fields;
   print_endline "}"
 
 let print_unpack_store () =
   Printf.printf "let unpack_store (store : Sched_t.store) : store =\n";
   print_endline "{";
   List.iter
-    (fun (l, r) -> Printf.printf "%s = unpack_%s store.%s;\n" r l l)
-    fields;
+    (fun (l, r, _equal, _diff, _add_diff, _sub_diff) ->
+       Printf.printf "%s = unpack_%s store.%s;\n" r l l)
+    store_fields;
   print_endline "}"
 
 let print_unpack_store_diff () =
@@ -432,7 +491,132 @@ let print_unpack_store_diff () =
     "let unpack_store_diff (diff : Sched_t.store_diff) : store_diff =\n";
   print_endline "{";
   List.iter
-    (fun (l, r) ->
+    (fun (l, r, _equal, _diff, _add_diff, _sub_diff) ->
        Printf.printf "%s_diff = unpack_%s_diff diff.%s_diff;\n" r l l)
-    fields;
+    store_fields;
   print_endline "}"
+
+let print_diff_store () =
+  Printf.printf
+    "let diff_store (store1 : store) (store2 : store) : store_diff =\n";
+  print_endline "{";
+  List.iter
+    (fun (_l, r, _equal, diff, _add_diff, _sub_diff) ->
+       Printf.printf "%s_diff = %s ~old:store1.%s store2.%s;\n" r diff r r)
+    store_fields;
+  print_endline "}"
+
+let print_add_diff_store () =
+  Printf.printf
+    "let add_diff_store (diff : store_diff) (store : store) : store =\n";
+  print_endline "{";
+  List.iter
+    (fun (_l, r, _equal, _diff, add_diff, _sub_diff) ->
+       Printf.printf "%s = %s diff.%s_diff store.%s;\n" r add_diff r r)
+    store_fields;
+  print_endline "}"
+
+let print_sub_diff_store () =
+  Printf.printf
+    "let sub_diff_store (diff : store_diff) (store : store) : store =\n";
+  print_endline "{";
+  List.iter
+    (fun (_l, r, _equal, _diff, _add_diff, sub_diff) ->
+       Printf.printf "%s = %s diff.%s_diff store.%s;\n" r sub_diff r r)
+    store_fields;
+  print_endline "}"
+
+let print_store_equal () =
+  Printf.printf "let store_equal (store1 : store) (store2 : store) : bool =\n";
+  List.map
+    (fun (_l, r, equal, _diff, _add_diff, _sub_diff) ->
+       Printf.sprintf "(%s store1.%s store2.%s)" equal r r)
+    store_fields
+  |> String.concat " && " |> print_string
+
+let agenda_fields =
+  [
+    ( "indexed_by_start",
+      "indexed_by_start",
+      "Int64_map.equal Task_seg_place_set.equal",
+      "Int64_map_utils.Task_seg_place_bucketed.diff_bucketed",
+      "Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed",
+      "Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed" );
+  ]
+
+let print_pack_agenda () =
+  Printf.printf "let pack_agenda (agenda : agenda) : Sched_t.agenda =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r, _equal, _diff, _add_diff, _sub_diff) ->
+       Printf.printf "%s = pack_%s agenda.%s;\n" l r r)
+    agenda_fields;
+  print_endline "}"
+
+let print_pack_agenda_diff () =
+  Printf.printf
+    "let pack_agenda_diff (diff : agenda_diff) : Sched_t.agenda_diff =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r, _equal, _diff, _add_diff, _sub_diff) ->
+       Printf.printf "%s_diff = pack_%s_diff diff.%s_diff;\n" l r r)
+    agenda_fields;
+  print_endline "}"
+
+let print_unpack_agenda () =
+  Printf.printf "let unpack_agenda (agenda : Sched_t.agenda) : agenda =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r, _equal, _diff, _add_diff, _sub_diff) ->
+       Printf.printf "%s = unpack_%s agenda.%s;\n" r l l)
+    agenda_fields;
+  print_endline "}"
+
+let print_unpack_agenda_diff () =
+  Printf.printf
+    "let unpack_agenda_diff (diff : Sched_t.agenda_diff) : agenda_diff =\n";
+  print_endline "{";
+  List.iter
+    (fun (l, r, _equal, _diff, _add_diff, _sub_diff) ->
+       Printf.printf "%s_diff = unpack_%s_diff diff.%s_diff;\n" r l l)
+    agenda_fields;
+  print_endline "}"
+
+let print_diff_agenda () =
+  Printf.printf
+    "let diff_agenda (agenda1 : agenda) (agenda2 : agenda) : agenda_diff =\n";
+  print_endline "{";
+  List.iter
+    (fun (_l, r, _equal, diff, _add_diff, _sub_diff) ->
+       Printf.printf "%s_diff = %s ~old:agenda1.%s agenda2.%s;\n" r diff r r)
+    agenda_fields;
+  print_endline "}"
+
+let print_add_diff_agenda () =
+  Printf.printf
+    "let add_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =\n";
+  print_endline "{";
+  List.iter
+    (fun (_l, r, _equal, _diff, add_diff, _sub_diff) ->
+       Printf.printf "%s = %s diff.%s_diff agenda.%s;\n" r add_diff r r)
+    agenda_fields;
+  print_endline "}"
+
+let print_sub_diff_agenda () =
+  Printf.printf
+    "let sub_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =\n";
+  print_endline "{";
+  List.iter
+    (fun (_l, r, _equal, _diff, _add_diff, sub_diff) ->
+       Printf.printf "%s = %s diff.%s_diff agenda.%s;\n" r sub_diff r r)
+    agenda_fields;
+  print_endline "}"
+
+let print_agenda_equal () =
+  Printf.printf
+    "let agenda_equal (agenda1 : agenda) (agenda2 : agenda) : bool =\n";
+  List.map
+    (fun (_l, r, equal, _diff, _add_diff, _sub_diff) ->
+       Printf.sprintf "(%s agenda1.%s agenda2.%s)" equal r r)
+    agenda_fields
+  |> String.concat " && " |> print_string

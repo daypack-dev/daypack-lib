@@ -106,6 +106,10 @@ type agenda = {
   indexed_by_start : (int64 * task_seg_place list) list;
 }
 
+type agenda_diff = {
+  indexed_by_start_diff : (int64, task_seg_place) diff_bucketed;
+}
+
 type sched_data = {
   store : store;
   agenda : agenda;

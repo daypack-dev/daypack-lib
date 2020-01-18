@@ -1,5 +1,5 @@
 type 'a diff = {
-  common : 'a list;
+  (* common : 'a list; *)
   added : 'a list;
   removed : 'a list;
 }

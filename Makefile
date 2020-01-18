@@ -1,6 +1,6 @@
 SRCFILES = debug/*.ml* tests/*.ml* lib/*.ml*
 
-CINAPSFILES = lib/*.cinaps
+CINAPSFILES = lib/*.cinaps tests/*.cinaps
 
 OCAMLFORMAT = ocamlformat \
 	--inplace \

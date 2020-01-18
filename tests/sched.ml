@@ -1,6 +1,7 @@
 open Test_utils
 
 (*$ #use "tests/serialization_related.cinaps";;
+  #use "tests/sched.cinaps";;
 
   let unpack_pack_store_list = [
     ("task_store",
@@ -119,6 +120,39 @@ open Test_utils
         ~f_equal)
     unpack_pack_set_store_list;
 
+  let diff_list = [
+    (* ("store",
+     *  "store",
+     *  "Daypack_lib.Sched.Diff.diff_store",
+     *  "Daypack_lib.Sched.Diff.add_diff_store",
+     *  "Daypack_lib.Sched.Diff.sub_diff_store",
+     *  "Daypack_lib.Sched.Equal.store_equal"
+     * ); *)
+    ("sched",
+     "sched",
+     "Daypack_lib.Sched.Diff.diff_sched",
+     "Daypack_lib.Sched.Diff.add_diff_sched",
+     "Daypack_lib.Sched.Diff.sub_diff_sched",
+     "Daypack_lib.Sched.Equal.sched_equal"
+    );
+  ] in
+
+  List.iter (fun (name, gen, f_diff, f_add_diff, _f_sub_diff, f_equal) ->
+      Diff.print_add_diff_test ~name ~gen ~f_diff ~f_add_diff ~f_equal
+    ) diff_list;
+
+  List.iter (fun (name, gen, f_diff, _f_add_diff, f_sub_diff, f_equal) ->
+      Diff.print_sub_diff_test ~name ~gen ~f_diff ~f_sub_diff ~f_equal
+    ) diff_list;
+
+  List.iter (fun (name, gen, f_diff, f_add_diff, f_sub_diff, f_equal) ->
+      Diff.print_sub_diff_is_inverse_of_add_diff_test ~name ~gen ~f_diff ~f_add_diff ~f_sub_diff ~f_equal
+    ) diff_list;
+
+  List.iter (fun (name, gen, f_diff, f_add_diff, f_sub_diff, f_equal) ->
+      Diff.print_add_diff_is_inverse_of_sub_diff_test ~name ~gen ~f_diff ~f_add_diff ~f_sub_diff ~f_equal
+    ) diff_list;
+
   print_endline "let suite = [";
   List.iter (fun (name, _, _, _, _, _) ->
       Printf.printf "%s;\n" (unpack_is_inverse_of_pack_test_name name);
@@ -130,6 +164,22 @@ open Test_utils
       Printf.printf "%s;\n" (unpack_is_inverse_of_pack_test_name name);
     )
     unpack_pack_set_store_list;
+  List.iter (fun (name, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff.get_add_diff_test_name name);
+    )
+    diff_list;
+  List.iter (fun (name, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff.get_sub_diff_test_name name);
+    )
+    diff_list;
+  List.iter (fun (name, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff.get_sub_diff_is_inverse_of_add_diff_test_name name);
+    )
+    diff_list;
+  List.iter (fun (name, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (Diff.get_add_diff_is_inverse_of_sub_diff_test_name name);
+    )
+    diff_list;
   print_endline "]";
 *)
 
@@ -248,6 +298,46 @@ let qc_unpack_is_inverse_of_pack_sched_req_ids =
         in
         Daypack_lib.Int64_set.equal x y)
 
+let qc_add_diff_test_sched =
+  QCheck.Test.make ~count:50 ~name:"qc_add_diff_test_sched"
+    QCheck.(pair sched sched)
+    (fun (old, x) ->
+       let diff = Daypack_lib.Sched.Diff.diff_sched ~old x in
+       Daypack_lib.Sched.Equal.sched_equal
+         (Daypack_lib.Sched.Diff.add_diff_sched diff old)
+         x)
+
+let qc_sub_diff_test_sched =
+  QCheck.Test.make ~count:50 ~name:"qc_sub_diff_test_sched"
+    QCheck.(pair sched sched)
+    (fun (old, x) ->
+       let diff = Daypack_lib.Sched.Diff.diff_sched ~old x in
+       Daypack_lib.Sched.Equal.sched_equal
+         (Daypack_lib.Sched.Diff.sub_diff_sched diff x)
+         old)
+
+let qc_sub_diff_is_inverse_of_add_diff_test_sched =
+  QCheck.Test.make ~count:50
+    ~name:"qc_sub_diff_is_inverse_of_add_diff_test_sched"
+    QCheck.(pair sched sched)
+    (fun (old, x) ->
+       let diff = Daypack_lib.Sched.Diff.diff_sched ~old x in
+       Daypack_lib.Sched.Equal.sched_equal
+         (Daypack_lib.Sched.Diff.sub_diff_sched diff
+            (Daypack_lib.Sched.Diff.add_diff_sched diff old))
+         old)
+
+let qc_add_diff_is_inverse_of_sub_diff_test_sched =
+  QCheck.Test.make ~count:50
+    ~name:"qc_add_diff_is_inverse_of_sub_diff_test_sched"
+    QCheck.(pair sched sched)
+    (fun (old, x) ->
+       let diff = Daypack_lib.Sched.Diff.diff_sched ~old x in
+       Daypack_lib.Sched.Equal.sched_equal
+         (Daypack_lib.Sched.Diff.add_diff_sched diff
+            (Daypack_lib.Sched.Diff.sub_diff_sched diff x))
+         x)
+
 let suite =
   [
     qc_unpack_is_inverse_of_pack_task_store;
@@ -260,6 +350,10 @@ let suite =
     qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids;
     qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids;
     qc_unpack_is_inverse_of_pack_sched_req_ids;
+    qc_add_diff_test_sched;
+    qc_sub_diff_test_sched;
+    qc_sub_diff_is_inverse_of_add_diff_test_sched;
+    qc_add_diff_is_inverse_of_sub_diff_test_sched;
   ]
 
 (*$*)
