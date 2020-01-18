@@ -86,6 +86,10 @@ type sched_data_diff = {
   agenda_diff : agenda_diff;
 }
 
+type sched = sched_id * sched_data
+
+type sched_diff = sched_id * sched_data_diff
+
 let store_empty =
   {
     task_store = Task_id_map.empty;
@@ -106,8 +110,6 @@ let agenda_empty =
     indexed_by_start = Int64_map.empty }
 
 let sched_data_empty = { store = store_empty; agenda = agenda_empty }
-
-type sched = sched_id * sched_data
 
 let empty : sched = (0, sched_data_empty)
 
@@ -1173,6 +1175,7 @@ module Diff = struct
   (*$ #use "lib/sched.cinaps";;
 
     print_diff_store ();
+    print_diff_agenda ();
   *)
 
   let diff_store (store1 : store) (store2 : store) : store_diff =
@@ -1206,7 +1209,23 @@ module Diff = struct
       quota_diff = Task_inst_id_map_utils.diff ~old:store1.quota store2.quota;
     }
 
+  let diff_agenda (agenda1 : agenda) (agenda2 : agenda) : agenda_diff =
+    {
+      indexed_by_start_diff =
+        Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
+          ~old:agenda1.indexed_by_start agenda2.indexed_by_start;
+    }
+
   (*$*)
+
+  let diff_sched_data (sd1 : sched_data) (sd2 : sched_data) : sched_data_diff =
+    {
+      store_diff = diff_store sd1.store sd2.store;
+      agenda_diff = diff_agenda sd1.agenda sd2.agenda;
+    }
+
+  let diff_sched ((_sid1, sd1) : sched) ((sid2, sd2) : sched) : sched_diff =
+    (sid2, diff_sched_data sd1 sd2)
 end
 
 module Print = struct
