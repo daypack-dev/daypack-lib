@@ -8,6 +8,10 @@ module type S = sig
   }
 
   val diff : old:set -> set -> diff
+
+  val add_diff : diff -> set -> set
+
+  val sub_diff : diff -> set -> set
 end
 
 module Make (Set : Set.S) : S with type set := Set.t = struct
@@ -39,7 +43,7 @@ module Make (Set : Set.S) : S with type set := Set.t = struct
     (* add *)
     |> Set.union diff.added
 
-  let add_diff (diff : diff) (s : set) : set =
+  let sub_diff (diff : diff) (s : set) : set =
     s
     (* revert add *)
     |> Set.diff diff.added
