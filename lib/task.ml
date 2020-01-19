@@ -110,7 +110,9 @@ module Serialize = struct
 
   and pack_sched_req_template (sched_req_template : sched_req_template) :
     Task_t.sched_req_template =
-    Sched_req_data_skeleton.Serialize.pack ~pack_time_slot:(fun x -> x) sched_req_template
+    Sched_req_data_skeleton.Serialize.pack
+      ~pack_time_slot:(fun x -> x)
+      sched_req_template
 
   and pack_recur_data (recur_data : recur_data) : Task_t.recur_data =
     {
@@ -172,7 +174,9 @@ module Deserialize = struct
 
   and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
     : sched_req_template =
-    Sched_req_data_skeleton.Deserialize.unpack ~unpack_time_slot:(fun x -> x) sched_req_template
+    Sched_req_data_skeleton.Deserialize.unpack
+      ~unpack_time_slot:(fun x -> x)
+      sched_req_template
 
   and unpack_recur_data (recur_data : Task_t.recur_data) : recur_data =
     {
