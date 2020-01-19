@@ -32,7 +32,7 @@ and recur =
   | Arithemtic_seq of arith_seq * recur_data
   | Time_pattern_match of time_pattern * recur_data
 
-and sched_req_template = task_seg_size Sched_req_data_skeleton.t
+and sched_req_template = (task_seg_size, Time_slot.t) Sched_req_data_skeleton.t
 
 and recur_data = {
   task_inst_data : task_inst_data;
@@ -110,7 +110,7 @@ module Serialize = struct
 
   and pack_sched_req_template (sched_req_template : sched_req_template) :
     Task_t.sched_req_template =
-    Sched_req_data_skeleton.Serialize.pack sched_req_template
+    Sched_req_data_skeleton.Serialize.pack ~pack_time_slot:(fun x -> x) sched_req_template
 
   and pack_recur_data (recur_data : recur_data) : Task_t.recur_data =
     {
@@ -172,7 +172,7 @@ module Deserialize = struct
 
   and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
     : sched_req_template =
-    Sched_req_data_skeleton.Deserialize.unpack sched_req_template
+    Sched_req_data_skeleton.Deserialize.unpack ~unpack_time_slot:(fun x -> x) sched_req_template
 
   and unpack_recur_data (recur_data : Task_t.recur_data) : recur_data =
     {

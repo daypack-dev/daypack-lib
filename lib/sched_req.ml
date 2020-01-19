@@ -4,11 +4,11 @@ type sched_req_id = int64
 
 type sched_req = sched_req_id * sched_req_data
 
-and sched_req_data = Task.task_seg_alloc_req Sched_req_data_skeleton.t
+and sched_req_data = (Task.task_seg_alloc_req, Time_slot.t) Sched_req_data_skeleton.t
 
 type sched_req_record = sched_req_id * sched_req_record_data
 
-and sched_req_record_data = Task.task_seg Sched_req_data_skeleton.t
+and sched_req_record_data = (Task.task_seg, Time_slot.t) Sched_req_data_skeleton.t
 
 let flexibility_score_of_sched_req_record
     ((_id, req_record_data) : sched_req_record) : float =
@@ -88,14 +88,14 @@ module Serialize = struct
 
   and pack_sched_req_data (sched_req_data : sched_req_data) :
     Sched_req_t.sched_req_data =
-    Sched_req_data_skeleton.Serialize.pack sched_req_data
+    Sched_req_data_skeleton.Serialize.pack ~pack_time_slot:(fun x-> x) sched_req_data
 
   let rec pack_sched_req_record (id, data) : Sched_req_t.sched_req_record =
     (id, pack_sched_req_record_data data)
 
   and pack_sched_req_record_data (sched_req_record_data : sched_req_record_data)
     : Sched_req_t.sched_req_record_data =
-    Sched_req_data_skeleton.Serialize.pack sched_req_record_data
+    Sched_req_data_skeleton.Serialize.pack ~pack_time_slot:(fun x -> x) sched_req_record_data
 end
 
 module Deserialize = struct
@@ -104,7 +104,7 @@ module Deserialize = struct
 
   and unpack_sched_req_data (sched_req_data : Sched_req_t.sched_req_data) :
     sched_req_data =
-    Sched_req_data_skeleton.Deserialize.unpack sched_req_data
+    Sched_req_data_skeleton.Deserialize.unpack ~unpack_time_slot:(fun x -> x) sched_req_data
 
   let rec unpack_sched_req_record (id, data) : sched_req_record =
     (id, unpack_sched_req_record_data data)
@@ -112,7 +112,7 @@ module Deserialize = struct
   and unpack_sched_req_record_data
       (sched_req_record_data : Sched_req_t.sched_req_record_data) :
     sched_req_record_data =
-    Sched_req_data_skeleton.Deserialize.unpack sched_req_record_data
+    Sched_req_data_skeleton.Deserialize.unpack ~unpack_time_slot:(fun x -> x) sched_req_record_data
 end
 
 module Print = struct
@@ -120,10 +120,11 @@ module Print = struct
       ?(buffer = Buffer.create 4096) req_data =
     Sched_req_data_skeleton.Print.debug_string_of_sched_req_data_skeleton
       ~indent_level ~buffer
-      (fun (id, len) ->
+      ~string_of_data:(fun (id, len) ->
          Printf.sprintf "id : %s, len : %Ld\n"
            (Task.task_inst_id_to_string id)
            len)
+      ~string_of_time_slot:Time_slot.to_string
       req_data
 
   let debug_string_of_sched_req ?(indent_level = 0)
@@ -138,10 +139,11 @@ module Print = struct
       ?(buffer = Buffer.create 4096) req_data =
     Sched_req_data_skeleton.Print.debug_string_of_sched_req_data_skeleton
       ~indent_level ~buffer
-      (fun (id, len) ->
+      ~string_of_data:(fun (id, len) ->
          Printf.sprintf "id : %s, len : %Ld\n"
            (Task.task_seg_id_to_string id)
            len)
+      ~string_of_time_slot:Time_slot.to_string
       req_data
 
   let debug_string_of_sched_req_record ?(indent_level = 0)

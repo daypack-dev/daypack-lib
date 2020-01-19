@@ -700,7 +700,8 @@ module Recur = struct
               in
               let sched_req_data_list =
                 Sched_req_data_skeleton.map_list
-                  (fun task_seg_size -> (task_inst_id, task_seg_size))
+                  ~f_data:(fun task_seg_size -> (task_inst_id, task_seg_size))
+                  ~f_time_slot:(fun x -> x)
                   sched_req_templates
               in
               Sched_req_store.queue_sched_req_data_list sched_req_data_list

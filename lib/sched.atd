@@ -18,9 +18,9 @@ type time_slot <ocaml from="Time_slot"> = abstract
 *)
 type 'a fixed <ocaml from ="Sched_req_data_skeleton"> =  abstract
 
-type 'a split_even <ocaml from ="Sched_req_data_skeleton"> = abstract
+type ('a, 'b) split_even <ocaml from ="Sched_req_data_skeleton"> = abstract
 
-type 'a sched_req_data_skeleton <ocaml from ="Sched_req_data_skeleton"> = abstract
+type ('a, 'b) sched_req_data_skeleton <ocaml from ="Sched_req_data_skeleton"> = abstract
 
 (* corresponds to Task
 *)
