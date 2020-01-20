@@ -42,8 +42,7 @@ complex scheduling scenarios
 
 But we believe it might still be useful as a personal task scheduler due to the potentially leaner memory
 profile (space complexity of bruteforcing procedure is linear to number of total task
-segments derived from scheduling requests), which allows it to be run on most personal
-devices
+segments derived from scheduling requests)
 
 ## Getting started
 
