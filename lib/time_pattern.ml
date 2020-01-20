@@ -5,3 +5,5 @@ type t = {
   hour : int option;
   minute : int option;
 }
+
+let matching_time_slots  (t : t) (time_slots : Time_slot.t list) : time_slots =
