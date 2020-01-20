@@ -30,19 +30,17 @@ Daypack as a library aims to be powerful enough to accomodate basic scheduling n
 
 - (WIP) Taking transit time into account during scheduling (WIP)
 
-- Time slots to indicate when tasks can be scheduled
-
-  - Essentially strict time preference
+- Strict time preferences to indicate when tasks can be scheduled
 
 ## Characteristics and limitations
 
-Daypack only uses a basic backtracking search procedure with pruning,
+Daypack only uses a backtracking search procedure with basic pruning,
 and does not use any advanced or potentially more efficient constraint solving techniques
 
 It is subsequently inferior to a lot of other automatic task scheduling software,
 and cannot accomodate very complex scheduling scenarios
 
-Nevertheless, it might still be useful as a personal task scheduler
+Nevertheless, it might still be useful as a simple and standalone personal task scheduler
 
 ## Getting started
 
@@ -65,7 +63,7 @@ __TODO__
 
 ## Architecture and design
 
-- Overall, the search procedure is just backtracking with pruning
+- Overall, the search procedure is just backtracking with pruning,
   implemented using lazy sequences
 
 - The search tree is as follows
