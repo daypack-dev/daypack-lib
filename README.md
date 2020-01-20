@@ -1,13 +1,12 @@
 # Daypack
 
-Daypack is a lazily bruteforcing automatic personal task scheduler
+Daypack is a basic constraint solving automatic personal task scheduler
 
 This repo contains the core library of Daypack `daypack_lib`, and the cli frontend `daypc`.
 Other frontends (e.g. Electron, web) are underway.
 
-`daypack_lib` was primarily developed for personal task scheduling (or day planning),
-but we are exploring its use in more general scheduling scenarios as well,
-e.g. computational tasks scheduling
+`daypack_lib` was primarily developed for basic personal task scheduling (or day planning),
+but we are exploring its use in more general scheduling scenarios as well
 
 ## Note: Daypack is still WIP
 
@@ -19,30 +18,37 @@ are still underway
 
 Daypack as a user-facing personal task scheduler program aims to be ergonomic to use, and relatively featureful
 
-Daypack as a library aims to be powerful enough to accomodate scheduling needs in myraid envrionments
+Daypack as a library aims to be powerful enough to accomodate basic scheduling needs in myraid envrionments
 
 ## Features
 
-- Automatic scheduling while allowing manual intervention
+- Automatic scheduling
 
-  - This feature is accessed by putting in a "Fixed" schedluing requests
-    (see user guide for more details)
+- Manual scheduling
 
-  - This feature means you can ask Daypack to schedule first few tasks
-    automatically, but let you schedule next few ones yourself, and
-    hand back control over to Daypack, and so on
+- (WIP) Multiple user (supported by library, but frontend adoption is WIP)
 
-- Multiple user (supported by library, but frontend adoption underway)
+- (WIP) Taking transit time into account during scheduling (WIP)
 
-- Taking transit time into account during scheduling
+- Strict time preferences to indicate when tasks can be scheduled
 
-- Time segments to indicate when tasks should be scheduled
+## Characteristics and limitations
+
+Daypack only uses a backtracking search procedure with basic pruning,
+and does not use any advanced or potentially more efficient constraint solving techniques
+
+Daypack also does not support constrained optimisation (e.g. soft time preferences)
+
+It is subsequently inferior to a lot of other automatic task scheduling software,
+and cannot accomodate very complex scheduling scenarios
+
+Nevertheless, it might still be useful as a simple and standalone personal task scheduler
 
 ## Getting started
 
 #### Installation
 
-**TODO**
+__TODO__
 
 #### User guide
 
@@ -51,39 +57,43 @@ It is recommended that you at least read through the first chapter to understand
 This will allow you to understand the behaviour of Daypack more precisely, whether as a user of the frontends
 a user of the library
 
-**TODO**
+__TODO__
 
 ## Demos
 
-**TODO**
+__TODO__
 
 ## Architecture and design
 
-- As mentioned above, Daypack is not very smart, and just bruteforces for solutions
+- Overall, the search procedure is just backtracking with pruning,
+  implemented using lazy sequences
 
-  - Essentially it does a Depth-first Search on a schedule tree, where
+- The search tree is as follows
 
-    - Each node represents a schedule
+  - Each node represents a schedule
 
-    - Each branch represents a possible way of handling a task scheduling request,
-      i.e. possible scheduling choice that leads to another schedule
-
-  - Computing the entire tree obviously explodes in time complexity as well as memory complexity
-  
-  - The solution used is lazy construction of said tree, which in essence means
-
-    - Only one branch of the tree is stored in the memory at any given point (branch picked follows DFS pattern),
-      this flattens the memory complexity
-
-    - Still carry the same time complexity for generation of a single schedule,
-      though generating first schedule is a lot faster than generating all schedules in practice/most cases
- 
-  - Finally, it's not just completely random bruteforcing,
-    `daypack_lib` has a (heavy) set of utilities for dealing with time, and
-    can for example extract free time slots.
-    A lot of pruning of computation is done as a result.
+  - Each branch represents a possible way of handling a task scheduling request,
+    i.e. possible scheduling choice that leads to another schedule
 
 - More detailed docs on the way
+
+## Contributions
+
+#### Ideas
+
+Got a feature request? Feel free to open an issue to start a discussion.
+
+Please note that since Daypack was never designed to be a full blown "solver", there
+are things prohibitively expensive to properly implement as a result (short of
+adding a proper solver into Daypack),
+which we may cite as a reason should we reject your feature request.
+
+We ask for your understanding should that be the case
+
+#### Code
+
+Code contributions are welcome. Please note that by submitting your original work, you agree to
+license your work under the MIT license.
 
 ## Acknowledgements
 
@@ -92,8 +102,6 @@ a user of the library
 - We became aware of [Eva](https://github.com/Procrat/eva) later on as well, and took inspiration from its UI/UX design choices and feature set
 
   - The underlying architecture was independently designed and developed however
-
-- GUI version is inspired by graphical calendar designs used by programs such as **TODO**
 
 ## LICENSE
 

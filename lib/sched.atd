@@ -18,9 +18,9 @@ type time_slot <ocaml from="Time_slot"> = abstract
 *)
 type 'a fixed <ocaml from ="Sched_req_data_skeleton"> =  abstract
 
-type 'a split_even <ocaml from ="Sched_req_data_skeleton"> = abstract
+type ('a, 'b) split_even <ocaml from ="Sched_req_data_skeleton"> = abstract
 
-type 'a sched_req_data_skeleton <ocaml from ="Sched_req_data_skeleton"> = abstract
+type ('a, 'b) sched_req_data_skeleton <ocaml from ="Sched_req_data_skeleton"> = abstract
 
 (* corresponds to Task
 *)
@@ -115,4 +115,11 @@ type sched_data = {
   agenda : agenda;
 }
 
+type sched_data_diff = {
+  store_diff : store_diff;
+  agenda_diff : agenda_diff;
+}
+
 type sched = (sched_id * sched_data)
+
+type sched_diff = (sched_id * sched_id * sched_data_diff)

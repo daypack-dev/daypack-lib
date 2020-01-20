@@ -32,3 +32,5 @@ val min_start_and_max_end_exc_list : t list -> (int64 * int64) option
 val shift_list : offset:int64 -> t list -> t list
 
 val equal : t list -> t list -> bool
+
+val to_string : t -> string

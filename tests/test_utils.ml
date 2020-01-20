@@ -231,7 +231,8 @@ let sched_req_data_gen : Daypack_lib.Sched_req.sched_req_data QCheck.Gen.t =
   map2
     (fun task_inst_id sched_req_template ->
        Daypack_lib.Sched_req_data_skeleton.map
-         (fun task_seg_size -> (task_inst_id, task_seg_size))
+         ~f_data:(fun task_seg_size -> (task_inst_id, task_seg_size))
+         ~f_time_slot:(fun x -> x)
          sched_req_template)
     task_inst_id_gen sched_req_template_gen
 
@@ -248,7 +249,8 @@ let sched_req_record_data_gen :
   map2
     (fun task_seg_id sched_req_template ->
        Daypack_lib.Sched_req_data_skeleton.map
-         (fun task_seg_size -> (task_seg_id, task_seg_size))
+         ~f_data:(fun task_seg_size -> (task_seg_id, task_seg_size))
+         ~f_time_slot:(fun x -> x)
          sched_req_template)
     task_seg_id_gen sched_req_template_gen
 
