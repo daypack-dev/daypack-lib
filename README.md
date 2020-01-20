@@ -1,6 +1,6 @@
 # Daypack
 
-Daypack is a lazily bruteforcing automatic personal task scheduler
+Daypack is a basic constraint solving automatic personal task scheduler
 
 This repo contains the core library of Daypack `daypack_lib`, and the cli frontend `daypc`.
 Other frontends (e.g. Electron, web) are underway.
@@ -36,13 +36,13 @@ Daypack as a library aims to be powerful enough to accomodate basic scheduling n
 
 ## Characteristics and limitations
 
-Daypack does not utilise any constraint solving or AI, and subsequently inferior
-to a lot of other automatic task scheduling software feature wise, and cannot accomodate
-complex scheduling scenarios
+Daypack only uses a basic backtracking search procedure with pruning,
+and does not use any advanced or potentially more efficient constraint solving techniques
 
-But we believe it might still be useful as a personal task scheduler due to the potentially leaner memory
-profile (space complexity of bruteforcing procedure is linear to number of total task
-segments derived from scheduling requests)
+It is subsequently inferior to a lot of other automatic task scheduling software,
+and cannot accomodate very complex scheduling scenarios
+
+Nevertheless, it might still be useful as a personal task scheduler
 
 ## Getting started
 
@@ -65,29 +65,15 @@ __TODO__
 
 ## Architecture and design
 
-- As mentioned above, Daypack is not very smart, and just bruteforces for solutions
+- Overall, the search procedure is just backtracking with pruning
+  implemented using lazy sequences
 
-  - Essentially it does a Depth-first Search on a schedule tree, where
+- The search tree is as follows
 
-    - Each node represents a schedule
+  - Each node represents a schedule
 
-    - Each branch represents a possible way of handling a task scheduling request,
-      i.e. possible scheduling choice that leads to another schedule
-
-  - Computing the entire tree obviously explodes in time complexity as well as memory complexity
-  
-  - The solution used is lazy construction of said tree, which in essence means
-
-    - Only one branch of the tree is stored in the memory at any given point (branch picked follows DFS pattern),
-      this flattens the memory complexity
-
-    - Still carry the same time complexity for generation of a single schedule,
-      though generating first schedule is a lot faster than generating all schedules in practice/most cases
- 
-  - Finally, it's not just completely random bruteforcing,
-    `daypack_lib` has a (heavy) set of utilities for dealing with time, and
-    can for example extract free time slots.
-    A lot of pruning of computation is done as a result.
+  - Each branch represents a possible way of handling a task scheduling request,
+    i.e. possible scheduling choice that leads to another schedule
 
 - More detailed docs on the way
 
