@@ -37,6 +37,8 @@ Daypack as a library aims to be powerful enough to accomodate basic scheduling n
 Daypack only uses a backtracking search procedure with basic pruning,
 and does not use any advanced or potentially more efficient constraint solving techniques
 
+Daypack also does not support constrained optimisation (e.g. soft time preferences)
+
 It is subsequently inferior to a lot of other automatic task scheduling software,
 and cannot accomodate very complex scheduling scenarios
 
