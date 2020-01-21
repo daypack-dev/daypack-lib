@@ -237,7 +237,7 @@ let sched_req_data_gen : Daypack_lib.Sched_req.sched_req_data QCheck.Gen.t =
     task_inst_id_gen sched_req_template_gen
 
 let sched_req_gen : Daypack_lib.Sched_req.sched_req QCheck.Gen.t =
-  QCheck.Gen.(pair pos_int64_gen (list sched_req_data_gen))
+  QCheck.Gen.(pair pos_int64_gen (list_size (int_bound 2) sched_req_data_gen))
 
 let sched_req =
   QCheck.make ~print:Daypack_lib.Sched_req.Print.debug_string_of_sched_req
@@ -255,7 +255,8 @@ let sched_req_record_data_gen :
     task_seg_id_gen sched_req_template_gen
 
 let sched_req_record_gen : Daypack_lib.Sched_req.sched_req_record QCheck.Gen.t =
-  QCheck.Gen.(pair pos_int64_gen (list sched_req_record_data_gen))
+  let open QCheck.Gen in
+  pair pos_int64_gen (list_size (int_bound 2) sched_req_record_data_gen)
 
 let sched_req_record =
   QCheck.make
