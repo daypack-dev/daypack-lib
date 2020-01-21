@@ -347,6 +347,12 @@ let debug_sched_backtracking_search_pending () =
             time_slots = [ (0L, 50L) ];
             buckets = [ (0L, 10L); (10L, 20L) ];
           };
+        Split_even
+          {
+            task_seg_related_data = ((0L, 0L, 0L), 20L);
+            time_slots = [ (50L, 100L) ];
+            buckets = [ (50L, 60L); (60L, 70L) ];
+          };
       ];
       [ Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]) ];
       [ Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]) ];
