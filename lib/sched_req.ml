@@ -174,12 +174,19 @@ module Print = struct
             len)
       ~string_of_time_slot:Time_slot.to_string req_data
 
+  let debug_string_of_sched_req_record_data_list ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) req_record_data_list =
+    List.iter (fun req_record_data ->
+        debug_string_of_sched_req_record_data ~indent_level ~buffer req_record_data |> ignore
+      ) req_record_data_list;
+    Buffer.contents
+
   let debug_string_of_sched_req_record ?(indent_level = 0)
-      ?(buffer = Buffer.create 4096) (id, req_data) =
+      ?(buffer = Buffer.create 4096) (id, req_data_list) =
     Debug_print.bprintf ~indent_level buffer
       "schedule request record id : %Ld\n" id;
-    debug_string_of_sched_req_record_data ~indent_level:(indent_level + 1)
-      ~buffer req_data
+    debug_string_of_sched_req_record_data_list ~indent_level:(indent_level + 1)
+      ~buffer req_data_list
     |> ignore;
     Buffer.contents buffer
 

@@ -1,5 +1,5 @@
 let backtracking_search ~start ~end_exc ~(base : Sched.sched)
-    ((_sched_req_id, sched_req_record_data) : Sched_req.sched_req_record) :
+    ((_sched_req_id, sched_req_record_data_list) : Sched_req.sched_req_record) :
   Sched.sched Seq.t =
   let free_time_slots =
     Sched.Time_slot.get_free_time_slots ~start ~end_exc base
@@ -8,6 +8,7 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
     time_slots |> Time_slot.normalize_list_in_seq_out
     |> Time_slot.intersect free_time_slots
   in
+  OSeq.flat_map (fun sched_req_record_data ->
   match sched_req_record_data with
   | Sched_req_data_skeleton.Fixed { task_seg_related_data = task_seg; start } ->
     let _, size = task_seg in
@@ -58,6 +59,7 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
       |> OSeq.take 1
     in
     Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s)
+    ) (sched_req_record_data_list |> List.to_seq)
 
 let backtracking_search_multi ~start ~end_exc ~base
     (sched_req_records : Sched_req.sched_req_record list) : Sched.sched Seq.t =
