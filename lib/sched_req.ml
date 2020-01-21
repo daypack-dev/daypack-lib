@@ -157,14 +157,18 @@ module Print = struct
 
   let debug_string_of_sched_req_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data =
-    List.iter (fun data_unit -> debug_string_of_sched_req_data_unit ~indent_level ~buffer data_unit |> ignore) req_data;
+    List.iter
+      (fun data_unit ->
+         debug_string_of_sched_req_data_unit ~indent_level ~buffer data_unit
+         |> ignore)
+      req_data;
     Buffer.contents buffer
 
   let debug_string_of_sched_req ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, req_data) =
     Debug_print.bprintf ~indent_level buffer "schedule request id : %Ld\n" id;
-    debug_string_of_sched_req_data ~indent_level:(indent_level + 1)
-      ~buffer req_data
+    debug_string_of_sched_req_data ~indent_level:(indent_level + 1) ~buffer
+      req_data
     |> ignore;
     Buffer.contents buffer
 
@@ -202,19 +206,18 @@ module Print = struct
       (debug_string_of_sched_req_data_unit ~indent_level sched_req_data_unit)
 
   let debug_print_sched_req_data ?(indent_level = 0) sched_req_data =
-    print_string
-      (debug_string_of_sched_req_data ~indent_level sched_req_data)
+    print_string (debug_string_of_sched_req_data ~indent_level sched_req_data)
 
   let debug_print_sched_req ?(indent_level = 0) sched_req =
     print_string (debug_string_of_sched_req ~indent_level sched_req)
 
-  let debug_print_sched_req_record_data_unit ?(indent_level = 0) sched_req_data_unit
-    =
+  let debug_print_sched_req_record_data_unit ?(indent_level = 0)
+      sched_req_data_unit =
     print_string
-      (debug_string_of_sched_req_record_data_unit ~indent_level sched_req_data_unit)
+      (debug_string_of_sched_req_record_data_unit ~indent_level
+         sched_req_data_unit)
 
-  let debug_print_sched_req_record_data ?(indent_level = 0) sched_req_data
-    =
+  let debug_print_sched_req_record_data ?(indent_level = 0) sched_req_data =
     print_string
       (debug_string_of_sched_req_record_data ~indent_level sched_req_data)
 

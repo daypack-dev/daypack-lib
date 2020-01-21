@@ -471,8 +471,7 @@ module Task_seg_place_map = struct
 end
 
 module Sched_req_store = struct
-  let queue_sched_req_data
-      (sched_req_data : Sched_req.sched_req_data)
+  let queue_sched_req_data (sched_req_data : Sched_req.sched_req_data)
       (sched : sched) : sched =
     let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
     ( sid,
@@ -488,13 +487,11 @@ module Sched_req_store = struct
       } )
 
   let queue_sched_req_data_list
-      (sched_req_data_list : Sched_req.sched_req_data list)
-      (sched : sched) : sched =
-    List.fold_left (fun sched sched_req_data ->
-        queue_sched_req_data sched_req_data sched
-      )
-      sched
-      sched_req_data_list
+      (sched_req_data_list : Sched_req.sched_req_data list) (sched : sched) :
+    sched =
+    List.fold_left
+      (fun sched sched_req_data -> queue_sched_req_data sched_req_data sched)
+      sched sched_req_data_list
 
   let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
       ((_sid, sd) : sched) : sched_req_store * sched_req_store * sched_req_store
@@ -516,8 +513,8 @@ module Sched_req_store = struct
     (fully_within, partially_within, leftover)
 
   let allocate_task_segs_for_sched_req_data
-      (sched_req_data : Sched_req.sched_req_data)
-      (sched : sched) : Sched_req.sched_req_record_data * sched =
+      (sched_req_data : Sched_req.sched_req_data) (sched : sched) :
+    Sched_req.sched_req_record_data * sched =
     List.fold_left
       (fun (acc, sched) sched_req_data_unit ->
          match sched_req_data_unit with
@@ -568,8 +565,7 @@ module Sched_req_store = struct
     List.fold_left
       (fun (acc, sched) (sched_req_id, sched_req_data) ->
          let sched_req_record_data_list, (sid, sd) =
-           allocate_task_segs_for_sched_req_data
-             sched_req_data sched
+           allocate_task_segs_for_sched_req_data sched_req_data sched
          in
          ( (sched_req_id, sched_req_record_data_list) :: acc,
            ( sid,
@@ -714,8 +710,8 @@ module Recur = struct
                   ~f_time_slot:(fun x -> x)
                   sched_req_templates
               in
-              Sched_req_store.queue_sched_req_data
-                sched_req_data_unit_list sched)
+              Sched_req_store.queue_sched_req_data sched_req_data_unit_list
+                sched)
            sched)
       sd.store.task_store (sid, sd)
 end

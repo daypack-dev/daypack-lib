@@ -214,7 +214,8 @@ let sched_req_template_gen =
         task_seg_size_gen tiny_time_slots_gen tiny_time_slots_gen;
       map2
         (fun task_segs time_slots ->
-           Daypack_lib.Sched_req_data_unit_skeleton.Time_share (task_segs, time_slots))
+           Daypack_lib.Sched_req_data_unit_skeleton.Time_share
+             (task_segs, time_slots))
         task_seg_sizes_gen tiny_time_slots_gen;
       map3
         (fun direction task_seg time_slots ->
