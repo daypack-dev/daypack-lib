@@ -18,9 +18,11 @@ are still underway
 
 Daypack as a user-facing personal task scheduler program aims to be ergonomic to use, and relatively featureful
 
-Daypack as a library aims to be powerful enough to accomodate basic scheduling needs in myraid envrionments
+Daypack as a library aims to be powerful enough to accomodate everyday personal task scheduling needs
 
 ## Features
+
+Overview
 
 - Automatic scheduling
 
@@ -28,21 +30,31 @@ Daypack as a library aims to be powerful enough to accomodate basic scheduling n
 
 - (WIP) Multiple user (supported by library, but frontend adoption is WIP)
 
-- (WIP) Taking transit time into account during scheduling (WIP)
+- (WIP) Taking transit time into account during scheduling
 
 - Strict time preferences to indicate when tasks can be scheduled
 
-## Characteristics and limitations
+Specific types of constraints (or scheduling requests) supported
 
-Daypack only uses a backtracking search procedure with basic pruning,
+-
+
+## Architecture and limitations
+
+Daypack only uses a backtracking search procedure with pruning (implemented using lazy sequences),
 and does not use any advanced or potentially more efficient constraint solving techniques
-
-Daypack also does not support constrained optimisation (e.g. soft time preferences)
 
 It is subsequently inferior to a lot of other automatic task scheduling software,
 and cannot accomodate very complex scheduling scenarios
 
 Nevertheless, it might still be useful as a simple and standalone personal task scheduler
+
+More detailed docs on the way
+
+Some of the features that Daypack does __NOT__ support
+
+- Resource allocation
+
+  - Doesn't seem to be a useful item for personal TODO list
 
 ## Getting started
 
@@ -62,20 +74,6 @@ __TODO__
 ## Demos
 
 __TODO__
-
-## Architecture and design
-
-- Overall, the search procedure is backtracking with pruning,
-  implemented using lazy sequences
-
-- The search tree is as follows
-
-  - Each node represents a schedule
-
-  - Each branch represents a possible way of handling a task scheduling request,
-    i.e. possible scheduling choice that leads to another schedule
-
-- More detailed docs on the way
 
 ## Contributions
 
