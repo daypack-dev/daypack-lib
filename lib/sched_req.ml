@@ -151,9 +151,10 @@ module Print = struct
 
   let debug_string_of_sched_req_data_list ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data_list =
-    List.iter (fun req_data ->
-        debug_string_of_sched_req_data ~indent_level ~buffer req_data |> ignore
-      ) req_data_list;
+    List.iter
+      (fun req_data ->
+         debug_string_of_sched_req_data ~indent_level ~buffer req_data |> ignore)
+      req_data_list;
     Buffer.contents
 
   let debug_string_of_sched_req ?(indent_level = 0)
@@ -176,9 +177,12 @@ module Print = struct
 
   let debug_string_of_sched_req_record_data_list ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_record_data_list =
-    List.iter (fun req_record_data ->
-        debug_string_of_sched_req_record_data ~indent_level ~buffer req_record_data |> ignore
-      ) req_record_data_list;
+    List.iter
+      (fun req_record_data ->
+         debug_string_of_sched_req_record_data ~indent_level ~buffer
+           req_record_data
+         |> ignore)
+      req_record_data_list;
     Buffer.contents
 
   let debug_string_of_sched_req_record ?(indent_level = 0)
