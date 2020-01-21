@@ -65,7 +65,8 @@ let backtracking_search_multi ~start ~end_exc ~base
   |> List.fold_left
     (fun sched_seq sched_req ->
        Seq.flat_map
-         (fun sched -> backtracking_search ~start ~end_exc ~base:sched sched_req)
+         (fun sched ->
+            backtracking_search ~start ~end_exc ~base:sched sched_req)
          sched_seq)
     (Seq.return base)
 

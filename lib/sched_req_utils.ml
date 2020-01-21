@@ -37,10 +37,18 @@ let sched_req_template_matches_sched_req_data
     dir1 = dir2 && size1 = size2 && Time_slot.equal time_slots1 time_slots2
   | _ -> false
 
+let sched_req_template_matches_sched_req_data_list
+    (sched_req_template : Task.sched_req_template)
+    (sched_req_data_list : Sched_req.sched_req_data list) : bool =
+  List.for_all
+    (sched_req_template_matches_sched_req_data sched_req_template)
+    sched_req_data_list
+
 let sched_req_template_matches_sched_req
     (sched_req_template : Task.sched_req_template)
-    ((_sched_req_id, sched_req_data) : Sched_req.sched_req) : bool =
-  sched_req_template_matches_sched_req_data sched_req_template sched_req_data
+    ((_sched_req_id, sched_req_data_list) : Sched_req.sched_req) : bool =
+  sched_req_template_matches_sched_req_data_list sched_req_template
+    sched_req_data_list
 
 let sched_req_template_matches_sched_req_record_data
     (sched_req_template : Task.sched_req_template)
@@ -81,9 +89,18 @@ let sched_req_template_matches_sched_req_record_data
     dir1 = dir2 && size1 = size2 && Time_slot.equal time_slots1 time_slots2
   | _ -> false
 
+let sched_req_template_matches_sched_req_record_data_list
+    (sched_req_template : Task.sched_req_template)
+    (sched_req_record_data_list : Sched_req.sched_req_record_data list) : bool =
+  List.for_all
+    (fun sched_req_record_data ->
+       sched_req_template_matches_sched_req_record_data sched_req_template
+         sched_req_record_data)
+    sched_req_record_data_list
+
 let sched_req_template_matches_sched_req_record
     (sched_req_template : Task.sched_req_template)
     ((_sched_req_record_id, sched_req_record_data) : Sched_req.sched_req_record)
   : bool =
-  sched_req_template_matches_sched_req_record_data sched_req_template
+  sched_req_template_matches_sched_req_record_data_list sched_req_template
     sched_req_record_data

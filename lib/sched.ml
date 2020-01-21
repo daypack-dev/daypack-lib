@@ -25,14 +25,16 @@ type transit_time_slice = {
  * 
  * type transit_time_store_diff = transit_time_record Transit_time_map_utils.diff *)
 
-type sched_req_store = Sched_req.sched_req_data Sched_req_id_map.t
+type sched_req_store = Sched_req.sched_req_data list Sched_req_id_map.t
 
-type sched_req_store_diff = Sched_req.sched_req_data Sched_req_id_map_utils.diff
+type sched_req_store_diff =
+  Sched_req.sched_req_data list Sched_req_id_map_utils.diff
 
-type sched_req_record_store = Sched_req.sched_req_record_data Sched_req_id_map.t
+type sched_req_record_store =
+  Sched_req.sched_req_record_data list Sched_req_id_map.t
 
 type sched_req_record_store_diff =
-  Sched_req.sched_req_record_data Sched_req_id_map_utils.diff
+  Sched_req.sched_req_record_data list Sched_req_id_map_utils.diff
 
 type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 
@@ -471,8 +473,9 @@ module Task_seg_place_map = struct
 end
 
 module Sched_req_store = struct
-  let queue_sched_req_data (sched_req_data : Sched_req.sched_req_data)
-      (sched : sched) : sched =
+  let queue_sched_req_data_list
+      (sched_req_data_list : Sched_req.sched_req_data list) (sched : sched) :
+    sched =
     let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
     ( sid,
       {
@@ -481,26 +484,19 @@ module Sched_req_store = struct
           {
             sd.store with
             sched_req_pending_store =
-              Sched_req_id_map.add sched_req_id sched_req_data
+              Sched_req_id_map.add sched_req_id sched_req_data_list
                 sd.store.sched_req_pending_store;
           };
       } )
-
-  let queue_sched_req_data_list
-      (sched_req_data_list : Sched_req.sched_req_data list) (sched : sched) :
-    sched =
-    List.fold_left
-      (fun sched sched_req_data -> queue_sched_req_data sched_req_data sched)
-      sched sched_req_data_list
 
   let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
       ((_sid, sd) : sched) : sched_req_store * sched_req_store * sched_req_store
     =
     let fully_within, leftover =
       Sched_req_id_map.partition
-        (fun id req_record_data ->
+        (fun id req_record_data_list ->
            Sched_req.sched_req_fully_within_time_period ~start ~end_exc
-             (id, req_record_data))
+             (id, req_record_data_list))
         sd.store.sched_req_pending_store
     in
     let partially_within, leftover =
@@ -512,56 +508,62 @@ module Sched_req_store = struct
     in
     (fully_within, partially_within, leftover)
 
-  let allocate_task_segs_for_sched_req_data
-      (sched_req_data : Sched_req.sched_req_data) (sched : sched) :
-    Sched_req.sched_req_record_data * sched =
-    match sched_req_data with
-    | Sched_req_data_skeleton.Fixed { task_seg_related_data; start } ->
-      let task_seg_related_data, sched =
-        Task_seg_store.add_task_seg_via_task_seg_alloc_req
-          task_seg_related_data sched
-      in
-      (Fixed { task_seg_related_data; start }, sched)
-    | Shift (task_seg_alloc_reqs, time_slots) ->
-      let task_segs, sched =
-        Task_seg_store.add_task_segs_via_task_seg_alloc_req_list
-          task_seg_alloc_reqs sched
-      in
-      (Shift (task_segs, time_slots), sched)
-    | Split_and_shift (task_seg_alloc_req, time_slots) ->
-      let task_seg, sched =
-        Task_seg_store.add_task_seg_via_task_seg_alloc_req task_seg_alloc_req
-          sched
-      in
-      (Split_and_shift (task_seg, time_slots), sched)
-    | Split_even { task_seg_related_data; time_slots; buckets } ->
-      let task_seg_related_data, sched =
-        Task_seg_store.add_task_seg_via_task_seg_alloc_req
-          task_seg_related_data sched
-      in
-      (Split_even { task_seg_related_data; time_slots; buckets }, sched)
-    | Time_share (task_seg_alloc_reqs, time_slots) ->
-      let task_segs, sched =
-        Task_seg_store.add_task_segs_via_task_seg_alloc_req_list
-          task_seg_alloc_reqs sched
-      in
-      (Time_share (task_segs, time_slots), sched)
-    | Push_to (direction, task_seg_alloc_req, time_slots) ->
-      let task_seg, sched =
-        Task_seg_store.add_task_seg_via_task_seg_alloc_req task_seg_alloc_req
-          sched
-      in
-      (Push_to (direction, task_seg, time_slots), sched)
+  let allocate_task_segs_for_sched_req_data_list
+      (sched_req_data_list : Sched_req.sched_req_data list) (sched : sched) :
+    Sched_req.sched_req_record_data list * sched =
+    List.fold_left
+      (fun (acc, sched) sched_req_data ->
+         match sched_req_data with
+         | Sched_req_data_skeleton.Fixed { task_seg_related_data; start } ->
+           let task_seg_related_data, sched =
+             Task_seg_store.add_task_seg_via_task_seg_alloc_req
+               task_seg_related_data sched
+           in
+           ( Sched_req_data_skeleton.Fixed { task_seg_related_data; start }
+             :: acc,
+             sched )
+         | Shift (task_seg_alloc_reqs, time_slots) ->
+           let task_segs, sched =
+             Task_seg_store.add_task_segs_via_task_seg_alloc_req_list
+               task_seg_alloc_reqs sched
+           in
+           (Shift (task_segs, time_slots) :: acc, sched)
+         | Split_and_shift (task_seg_alloc_req, time_slots) ->
+           let task_seg, sched =
+             Task_seg_store.add_task_seg_via_task_seg_alloc_req
+               task_seg_alloc_req sched
+           in
+           (Split_and_shift (task_seg, time_slots) :: acc, sched)
+         | Split_even { task_seg_related_data; time_slots; buckets } ->
+           let task_seg_related_data, sched =
+             Task_seg_store.add_task_seg_via_task_seg_alloc_req
+               task_seg_related_data sched
+           in
+           ( Split_even { task_seg_related_data; time_slots; buckets } :: acc,
+             sched )
+         | Time_share (task_seg_alloc_reqs, time_slots) ->
+           let task_segs, sched =
+             Task_seg_store.add_task_segs_via_task_seg_alloc_req_list
+               task_seg_alloc_reqs sched
+           in
+           (Time_share (task_segs, time_slots) :: acc, sched)
+         | Push_to (direction, task_seg_alloc_req, time_slots) ->
+           let task_seg, sched =
+             Task_seg_store.add_task_seg_via_task_seg_alloc_req
+               task_seg_alloc_req sched
+           in
+           (Push_to (direction, task_seg, time_slots) :: acc, sched))
+      ([], sched) sched_req_data_list
 
-  let allocate_task_segs_for_sched_req_list
-      (sched_req_list : Sched_req.sched_req list) (sched : sched) :
+  let allocate_task_segs_for_sched_req_batches
+      (sched_req_batches : Sched_req.sched_req list) (sched : sched) :
     Sched_req.sched_req_record list * sched =
     List.fold_left
-      (fun (acc, sched) (sched_req_id, sched_req_data) ->
-         let sched_req_record_data, (sid, sd) =
-           allocate_task_segs_for_sched_req_data sched_req_data sched
+      (fun (acc, sched) (sched_req_id, sched_req_data_list) ->
+         let sched_req_record_data_list, (sid, sd) =
+           allocate_task_segs_for_sched_req_data_list sched_req_data_list sched
          in
-         ( (sched_req_id, sched_req_record_data) :: acc,
+         ( (sched_req_id, sched_req_record_data_list) :: acc,
            ( sid,
              {
                sd with
@@ -569,11 +571,11 @@ module Sched_req_store = struct
                  {
                    sd.store with
                    sched_req_record_store =
-                     Sched_req_id_map.add sched_req_id sched_req_record_data
+                     Sched_req_id_map.add sched_req_id sched_req_record_data_list
                        sd.store.sched_req_record_store;
                  };
              } ) ))
-      ([], sched) sched_req_list
+      ([], sched) sched_req_batches
     |> fun (l, sched) -> (List.rev l, sched)
 
   let allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
@@ -614,7 +616,7 @@ module Sched_req_store = struct
     let sd =
       { sd with store = { sd.store with sched_req_pending_store = leftover } }
     in
-    allocate_task_segs_for_sched_req_list to_be_scheduled_sched_reqs (sid, sd)
+    allocate_task_segs_for_sched_req_batches to_be_scheduled_sched_reqs (sid, sd)
 end
 
 module Recur = struct
@@ -668,7 +670,7 @@ module Recur = struct
                      Sched_req_id_map.exists
                        (fun _sched_req_id sched_req_record_data ->
                           Sched_req_utils
-                          .sched_req_template_matches_sched_req_record_data
+                          .sched_req_template_matches_sched_req_record_data_list
                             sched_req_template sched_req_record_data)
                        sd.store.sched_req_record_store)
                   sched_req_template_list
@@ -677,7 +679,7 @@ module Recur = struct
                      Sched_req_id_map.exists
                        (fun _sched_req_id sched_req_data ->
                           Sched_req_utils
-                          .sched_req_template_matches_sched_req_data
+                          .sched_req_template_matches_sched_req_data_list
                             sched_req_template sched_req_data)
                        sd.store.sched_req_pending_store)
                   sched_req_template_list ))

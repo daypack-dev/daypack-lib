@@ -2,19 +2,19 @@ open Int64_utils
 
 type sched_req_id = int64
 
-type sched_req = sched_req_id * sched_req_data
+type sched_req = sched_req_id * sched_req_data list
 
 and sched_req_data =
   (Task.task_seg_alloc_req, Time_slot.t) Sched_req_data_skeleton.t
 
-type sched_req_record = sched_req_id * sched_req_record_data
+type sched_req_record = sched_req_id * sched_req_record_data list
 
 and sched_req_record_data =
   (Task.task_seg, Time_slot.t) Sched_req_data_skeleton.t
 
 let flexibility_score_of_sched_req_record
-    ((_id, req_record_data) : sched_req_record) : float =
-  match req_record_data with
+    ((_id, req_record_data_list) : sched_req_record) : float =
+  match List.hd req_record_data_list with
   | Sched_req_data_skeleton.Fixed _ -> 0.0
   | Shift (task_seg_alloc_reqs, time_slots) ->
     let task_seg_alloc_req_sum_len =
@@ -58,17 +58,30 @@ let sort_sched_req_record_list_by_flexibility_score
          (flexibility_score_of_sched_req_record y))
     reqs
 
-let sched_req_bound_on_start_and_end_exc ((_id, req_record_data) : sched_req) :
-  (int64 * int64) option =
-  match req_record_data with
-  | Fixed { task_seg_related_data = _, task_seg_size; start } ->
-    Some (start, start +^ task_seg_size)
-  | Shift (_, time_slots)
-  | Split_and_shift (_, time_slots)
-  | Split_even { time_slots; _ }
-  | Time_share (_, time_slots)
-  | Push_to (_, _, time_slots) ->
-    Time_slot.min_start_and_max_end_exc_list time_slots
+let sched_req_bound_on_start_and_end_exc
+    ((_id, req_record_data_list) : sched_req) : (int64 * int64) option =
+  List.fold_left
+    (fun acc req_record_data ->
+       let cur =
+         match req_record_data with
+         | Sched_req_data_skeleton.Fixed
+             { task_seg_related_data = _, task_seg_size; start } ->
+           Some (start, start +^ task_seg_size)
+         | Shift (_, time_slots)
+         | Split_and_shift (_, time_slots)
+         | Split_even { time_slots; _ }
+         | Time_share (_, time_slots)
+         | Push_to (_, _, time_slots) ->
+           Time_slot.min_start_and_max_end_exc_list time_slots
+       in
+       match acc with
+       | None -> cur
+       | Some (start, end_exc) -> (
+           match cur with
+           | None -> acc
+           | Some (cur_start, cur_end_exc) ->
+             Some (min start cur_start, max end_exc cur_end_exc) ))
+    None req_record_data_list
 
 let sched_req_fully_within_time_period ~start ~end_exc (sched_req : sched_req) :
   bool =
@@ -86,7 +99,7 @@ let sched_req_partially_within_time_period ~start ~end_exc
 
 module Serialize = struct
   let rec pack_sched_req (id, data) : Sched_req_t.sched_req =
-    (id, pack_sched_req_data data)
+    (id, List.map pack_sched_req_data data)
 
   and pack_sched_req_data (sched_req_data : sched_req_data) :
     Sched_req_t.sched_req_data =
@@ -106,7 +119,7 @@ end
 
 module Deserialize = struct
   let rec unpack_sched_req (id, data) : sched_req =
-    (id, unpack_sched_req_data data)
+    (id, List.map unpack_sched_req_data data)
 
   and unpack_sched_req_data (sched_req_data : Sched_req_t.sched_req_data) :
     sched_req_data =
@@ -115,7 +128,7 @@ module Deserialize = struct
       sched_req_data
 
   let rec unpack_sched_req_record (id, data) : sched_req_record =
-    (id, unpack_sched_req_record_data data)
+    (id, List.map unpack_sched_req_record_data data)
 
   and unpack_sched_req_record_data
       (sched_req_record_data : Sched_req_t.sched_req_record_data) :
