@@ -155,24 +155,20 @@ module Print = struct
             len)
       ~string_of_time_slot:Time_slot.to_string req_data
 
-  let debug_string_of_sched_req_data_unit_list ?(indent_level = 0)
-      ?(buffer = Buffer.create 4096) req_data_list =
-    List.iter
-      (fun req_data ->
-         debug_string_of_sched_req_data_unit ~indent_level ~buffer req_data
-         |> ignore)
-      req_data_list;
-    Buffer.contents
+  let debug_string_of_sched_req_data ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) req_data =
+    List.iter (fun data_unit -> debug_string_of_sched_req_data_unit ~indent_level ~buffer data_unit |> ignore) req_data;
+    Buffer.contents buffer
 
   let debug_string_of_sched_req ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, req_data) =
     Debug_print.bprintf ~indent_level buffer "schedule request id : %Ld\n" id;
-    debug_string_of_sched_req_data_unit_list ~indent_level:(indent_level + 1)
+    debug_string_of_sched_req_data ~indent_level:(indent_level + 1)
       ~buffer req_data
     |> ignore;
     Buffer.contents buffer
 
-  let debug_string_of_sched_req_record_data ?(indent_level = 0)
+  let debug_string_of_sched_req_record_data_unit ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data =
     Sched_req_data_unit_skeleton.Print
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
@@ -182,21 +178,21 @@ module Print = struct
             len)
       ~string_of_time_slot:Time_slot.to_string req_data
 
-  let debug_string_of_sched_req_record_data_list ?(indent_level = 0)
+  let debug_string_of_sched_req_record_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_record_data_list =
     List.iter
       (fun req_record_data ->
-         debug_string_of_sched_req_record_data ~indent_level ~buffer
+         debug_string_of_sched_req_record_data_unit ~indent_level ~buffer
            req_record_data
          |> ignore)
       req_record_data_list;
-    Buffer.contents
+    Buffer.contents buffer
 
   let debug_string_of_sched_req_record ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, req_data_list) =
     Debug_print.bprintf ~indent_level buffer
       "schedule request record id : %Ld\n" id;
-    debug_string_of_sched_req_record_data_list ~indent_level:(indent_level + 1)
+    debug_string_of_sched_req_record_data ~indent_level:(indent_level + 1)
       ~buffer req_data_list
     |> ignore;
     Buffer.contents buffer
@@ -205,13 +201,22 @@ module Print = struct
     print_string
       (debug_string_of_sched_req_data_unit ~indent_level sched_req_data_unit)
 
+  let debug_print_sched_req_data ?(indent_level = 0) sched_req_data =
+    print_string
+      (debug_string_of_sched_req_data ~indent_level sched_req_data)
+
   let debug_print_sched_req ?(indent_level = 0) sched_req =
     print_string (debug_string_of_sched_req ~indent_level sched_req)
 
-  let debug_print_sched_req_record_data ?(indent_level = 0) sched_req_data_unit
+  let debug_print_sched_req_record_data_unit ?(indent_level = 0) sched_req_data_unit
     =
     print_string
-      (debug_string_of_sched_req_record_data ~indent_level sched_req_data_unit)
+      (debug_string_of_sched_req_record_data_unit ~indent_level sched_req_data_unit)
+
+  let debug_print_sched_req_record_data ?(indent_level = 0) sched_req_data
+    =
+    print_string
+      (debug_string_of_sched_req_record_data ~indent_level sched_req_data)
 
   let debug_print_sched_req_record ?(indent_level = 0) sched_req =
     print_string (debug_string_of_sched_req_record ~indent_level sched_req)
