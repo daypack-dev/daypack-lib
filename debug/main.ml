@@ -335,8 +335,8 @@ let debug_union_time_slots () =
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
-let debug_sched_brute_force_pending () =
-  print_endline "Debug print for Sched_gens.brute_force_pending";
+let debug_sched_backtracking_search_pending () =
+  print_endline "Debug print for Sched_gens.backtracking_search_pending";
   let sched_req_data_list =
     let open Sched_req_data_skeleton in
     [
@@ -374,7 +374,7 @@ let debug_sched_brute_force_pending () =
     |> Sched.Quota_store.update_quota quota
     |> Sched.Sched_req_store.queue_sched_req_data_list sched_req_data_list
   in
-  Sched_gens.brute_force_pending ~start:0L ~end_exc:50L
+  Sched_gens.backtracking_search_pending ~start:0L ~end_exc:50L
     ~include_sched_reqs_partially_within_time_period:true
     ~up_to_sched_req_id_inc:None ~base
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
@@ -494,7 +494,7 @@ let debug_sched_usage_simulation () =
  *   print_newline () *)
 
 (* let () =
- *   debug_sched_brute_force_pending ();
+ *   debug_sched_backtracking_search_pending ();
  *   print_newline () *)
 
 let () =

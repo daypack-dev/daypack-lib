@@ -1,4 +1,4 @@
-let brute_force ~start ~end_exc ~(base : Sched.sched)
+let backtracking_search ~start ~end_exc ~(base : Sched.sched)
     ((_sched_req_id, sched_req_record_data) : Sched_req.sched_req_record) :
   Sched.sched Seq.t =
   let free_time_slots =
@@ -59,17 +59,17 @@ let brute_force ~start ~end_exc ~(base : Sched.sched)
     in
     Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s)
 
-let brute_force_multi ~start ~end_exc ~base
+let backtracking_search_multi ~start ~end_exc ~base
     (sched_req_records : Sched_req.sched_req_record list) : Sched.sched Seq.t =
   sched_req_records |> Sched_req.sort_sched_req_record_list_by_flexibility_score
   |> List.fold_left
     (fun sched_seq sched_req ->
        Seq.flat_map
-         (fun sched -> brute_force ~start ~end_exc ~base:sched sched_req)
+         (fun sched -> backtracking_search ~start ~end_exc ~base:sched sched_req)
          sched_seq)
     (Seq.return base)
 
-let brute_force_pending ~start ~end_exc
+let backtracking_search_pending ~start ~end_exc
     ~include_sched_reqs_partially_within_time_period ~up_to_sched_req_id_inc
     ~base : Sched.sched Seq.t =
   let sched_req_records, base =
@@ -77,4 +77,4 @@ let brute_force_pending ~start ~end_exc
       ~end_exc ~include_sched_reqs_partially_within_time_period
       ~up_to_sched_req_id_inc base
   in
-  brute_force_multi ~start ~end_exc ~base sched_req_records
+  backtracking_search_multi ~start ~end_exc ~base sched_req_records
