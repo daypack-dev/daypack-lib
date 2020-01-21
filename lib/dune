@@ -69,15 +69,15 @@
  (action  (run atdgen -t %{deps})))
 
 (rule
- (targets sched_req_data_skeleton_j.ml
-          sched_req_data_skeleton_j.mli)
- (deps    sched_req_data_skeleton.atd)
+ (targets sched_req_data_unit_skeleton_j.ml
+          sched_req_data_unit_skeleton_j.mli)
+ (deps    sched_req_data_unit_skeleton.atd)
  (action  (run atdgen -j -j-std %{deps})))
 
 (rule
- (targets sched_req_data_skeleton_t.ml
-          sched_req_data_skeleton_t.mli)
- (deps    sched_req_data_skeleton.atd)
+ (targets sched_req_data_unit_skeleton_t.ml
+          sched_req_data_unit_skeleton_t.mli)
+ (deps    sched_req_data_unit_skeleton.atd)
  (action  (run atdgen -t %{deps})))
 
 (rule

@@ -25,16 +25,14 @@ type transit_time_slice = {
  * 
  * type transit_time_store_diff = transit_time_record Transit_time_map_utils.diff *)
 
-type sched_req_store = Sched_req.sched_req_data list Sched_req_id_map.t
+type sched_req_store = Sched_req.sched_req_data Sched_req_id_map.t
 
-type sched_req_store_diff =
-  Sched_req.sched_req_data list Sched_req_id_map_utils.diff
+type sched_req_store_diff = Sched_req.sched_req_data Sched_req_id_map_utils.diff
 
-type sched_req_record_store =
-  Sched_req.sched_req_record_data list Sched_req_id_map.t
+type sched_req_record_store = Sched_req.sched_req_record_data Sched_req_id_map.t
 
 type sched_req_record_store_diff =
-  Sched_req.sched_req_record_data list Sched_req_id_map_utils.diff
+  Sched_req.sched_req_record_data Sched_req_id_map_utils.diff
 
 type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 
@@ -473,9 +471,9 @@ module Task_seg_place_map = struct
 end
 
 module Sched_req_store = struct
-  let queue_sched_req_data_list
-      (sched_req_data_list : Sched_req.sched_req_data list) (sched : sched) :
-    sched =
+  let queue_sched_req_data_unit_list
+      (sched_req_data_unit_list : Sched_req.sched_req_data_unit list)
+      (sched : sched) : sched =
     let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
     ( sid,
       {
@@ -484,7 +482,7 @@ module Sched_req_store = struct
           {
             sd.store with
             sched_req_pending_store =
-              Sched_req_id_map.add sched_req_id sched_req_data_list
+              Sched_req_id_map.add sched_req_id sched_req_data_unit_list
                 sd.store.sched_req_pending_store;
           };
       } )
@@ -508,18 +506,18 @@ module Sched_req_store = struct
     in
     (fully_within, partially_within, leftover)
 
-  let allocate_task_segs_for_sched_req_data_list
-      (sched_req_data_list : Sched_req.sched_req_data list) (sched : sched) :
-    Sched_req.sched_req_record_data list * sched =
+  let allocate_task_segs_for_sched_req_data_unit_list
+      (sched_req_data_unit_list : Sched_req.sched_req_data_unit list)
+      (sched : sched) : Sched_req.sched_req_record_data * sched =
     List.fold_left
-      (fun (acc, sched) sched_req_data ->
-         match sched_req_data with
-         | Sched_req_data_skeleton.Fixed { task_seg_related_data; start } ->
+      (fun (acc, sched) sched_req_data_unit ->
+         match sched_req_data_unit with
+         | Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start } ->
            let task_seg_related_data, sched =
              Task_seg_store.add_task_seg_via_task_seg_alloc_req
                task_seg_related_data sched
            in
-           ( Sched_req_data_skeleton.Fixed { task_seg_related_data; start }
+           ( Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start }
              :: acc,
              sched )
          | Shift (task_seg_alloc_reqs, time_slots) ->
@@ -553,15 +551,16 @@ module Sched_req_store = struct
                task_seg_alloc_req sched
            in
            (Push_to (direction, task_seg, time_slots) :: acc, sched))
-      ([], sched) sched_req_data_list
+      ([], sched) sched_req_data_unit_list
 
   let allocate_task_segs_for_sched_req_batches
       (sched_req_batches : Sched_req.sched_req list) (sched : sched) :
     Sched_req.sched_req_record list * sched =
     List.fold_left
-      (fun (acc, sched) (sched_req_id, sched_req_data_list) ->
+      (fun (acc, sched) (sched_req_id, sched_req_data_unit_list) ->
          let sched_req_record_data_list, (sid, sd) =
-           allocate_task_segs_for_sched_req_data_list sched_req_data_list sched
+           allocate_task_segs_for_sched_req_data_unit_list
+             sched_req_data_unit_list sched
          in
          ( (sched_req_id, sched_req_record_data_list) :: acc,
            ( sid,
@@ -632,7 +631,7 @@ module Recur = struct
           let rec aux cur end_exc diff task_inst_data sched_req_templates =
             if cur < end_exc then
               let sched_reqs =
-                Sched_req_data_skeleton.shift_time_list ~offset:cur
+                Sched_req_data_unit_skeleton.shift_time_list ~offset:cur
                   sched_req_templates
               in
               fun () ->
@@ -677,10 +676,10 @@ module Recur = struct
                 || List.exists
                   (fun sched_req_template ->
                      Sched_req_id_map.exists
-                       (fun _sched_req_id sched_req_data ->
+                       (fun _sched_req_id sched_req_data_unit ->
                           Sched_req_utils
-                          .sched_req_template_matches_sched_req_data_list
-                            sched_req_template sched_req_data)
+                          .sched_req_template_matches_sched_req_data_unit_list
+                            sched_req_template sched_req_data_unit)
                        sd.store.sched_req_pending_store)
                   sched_req_template_list ))
         task_inst_ids
@@ -700,14 +699,14 @@ module Recur = struct
                 Task_inst_store.add_task_inst ~parent_task_id:task_id
                   task_inst_data sched
               in
-              let sched_req_data_list =
-                Sched_req_data_skeleton.map_list
+              let sched_req_data_unit_list =
+                Sched_req_data_unit_skeleton.map_list
                   ~f_data:(fun task_seg_size -> (task_inst_id, task_seg_size))
                   ~f_time_slot:(fun x -> x)
                   sched_req_templates
               in
-              Sched_req_store.queue_sched_req_data_list sched_req_data_list
-                sched)
+              Sched_req_store.queue_sched_req_data_unit_list
+                sched_req_data_unit_list sched)
            sched)
       sd.store.task_store (sid, sd)
 end
@@ -756,9 +755,7 @@ module Serialize = struct
     |> List.of_seq
 
   let pack_sched_req_pending_store_diff (x : sched_req_store_diff) :
-    ( Sched_req_t.sched_req_id,
-      Sched_req_t.sched_req_data list )
-      Map_utils_t.diff =
+    (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff =
     {
       added = pack_sched_req_pending_store x.added;
       removed = pack_sched_req_pending_store x.removed;
@@ -772,7 +769,7 @@ module Serialize = struct
 
   let pack_sched_req_record_store_diff (x : sched_req_record_store_diff) :
     ( Sched_req_t.sched_req_id,
-      Sched_req_t.sched_req_record_data list )
+      Sched_req_t.sched_req_record_data )
       Map_utils_t.diff =
     {
       added = pack_sched_req_record_store x.added;
@@ -1001,9 +998,8 @@ module Deserialize = struct
 
   let unpack_sched_req_pending_list_diff
       (x :
-         ( Sched_req_t.sched_req_id,
-           Sched_req_t.sched_req_data list )
-           Map_utils_t.diff) : sched_req_store_diff =
+         (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff)
+    : sched_req_store_diff =
     {
       added = unpack_sched_req_pending_list x.added;
       removed = unpack_sched_req_pending_list x.removed;
@@ -1018,7 +1014,7 @@ module Deserialize = struct
   let unpack_sched_req_record_list_diff
       (x :
          ( Sched_req_t.sched_req_id,
-           Sched_req_t.sched_req_record_data list )
+           Sched_req_t.sched_req_record_data )
            Map_utils_t.diff) : sched_req_record_store_diff =
     {
       added = unpack_sched_req_record_list x.added;

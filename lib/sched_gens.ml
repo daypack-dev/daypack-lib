@@ -11,7 +11,7 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
   OSeq.flat_map
     (fun sched_req_record_data ->
        match sched_req_record_data with
-       | Sched_req_data_skeleton.Fixed
+       | Sched_req_data_unit_skeleton.Fixed
            { task_seg_related_data = task_seg; start } ->
          let _, size = task_seg in
          Task_seg_place_gens.multi_task_segs_shift ~incre:1L

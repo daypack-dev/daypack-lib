@@ -32,7 +32,8 @@ and recur =
   | Arithemtic_seq of arith_seq * recur_data
   | Time_pattern_match of time_pattern * recur_data
 
-and sched_req_template = (task_seg_size, Time_slot.t) Sched_req_data_skeleton.t
+and sched_req_template =
+  (task_seg_size, Time_slot.t) Sched_req_data_unit_skeleton.t
 
 and recur_data = {
   task_inst_data : task_inst_data;
@@ -110,7 +111,7 @@ module Serialize = struct
 
   and pack_sched_req_template (sched_req_template : sched_req_template) :
     Task_t.sched_req_template =
-    Sched_req_data_skeleton.Serialize.pack
+    Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_time_slot:(fun x -> x)
       sched_req_template
 
@@ -174,7 +175,7 @@ module Deserialize = struct
 
   and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
     : sched_req_template =
-    Sched_req_data_skeleton.Deserialize.unpack
+    Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_time_slot:(fun x -> x)
       sched_req_template
 
@@ -256,8 +257,8 @@ module Print = struct
             List.iter
               (fun sched_req_template ->
                  match sched_req_template with
-                 | Sched_req_data_skeleton.Fixed { task_seg_related_data; start }
-                   ->
+                 | Sched_req_data_unit_skeleton.Fixed
+                     { task_seg_related_data; start } ->
                    Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
                      "fixed : size : %Ld, start : %Ld\n" task_seg_related_data
                      start

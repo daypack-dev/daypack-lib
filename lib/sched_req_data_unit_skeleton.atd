@@ -11,7 +11,7 @@ type ('a, 'b) split_even = {
   buckets : 'b list;
 }
 
-type ('a, 'b) sched_req_data_skeleton = [
+type ('a, 'b) sched_req_data_unit_skeleton = [
   | Fixed of 'a fixed
   | Shift of ('a list * 'b list)
   | Split_and_shift of ('a * 'b list)

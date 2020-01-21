@@ -226,7 +226,8 @@ let sched_req_template_gen =
 let sched_req_templates_gen =
   QCheck.Gen.(list_size (int_bound 10) sched_req_template_gen)
 
-let sched_req_data_gen : Daypack_lib.Sched_req.sched_req_data QCheck.Gen.t =
+let sched_req_data_unit_gen :
+  Daypack_lib.Sched_req.sched_req_data_unit QCheck.Gen.t =
   let open QCheck.Gen in
   map2
     (fun task_inst_id sched_req_template ->
@@ -237,7 +238,8 @@ let sched_req_data_gen : Daypack_lib.Sched_req.sched_req_data QCheck.Gen.t =
     task_inst_id_gen sched_req_template_gen
 
 let sched_req_gen : Daypack_lib.Sched_req.sched_req QCheck.Gen.t =
-  QCheck.Gen.(pair pos_int64_gen (list_size (int_bound 2) sched_req_data_gen))
+  let open QCheck.Gen in
+  pair pos_int64_gen (list_size (int_bound 2) sched_req_data_unit_gen)
 
 let sched_req =
   QCheck.make ~print:Daypack_lib.Sched_req.Print.debug_string_of_sched_req
