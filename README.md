@@ -65,7 +65,7 @@ __TODO__
 
 ## Architecture and design
 
-- Overall, the search procedure is just backtracking with pruning,
+- Overall, the search procedure is backtracking with pruning,
   implemented using lazy sequences
 
 - The search tree is as follows
