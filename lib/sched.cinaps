@@ -67,7 +67,7 @@ module Store = struct
         diff_typ = "sched_req_store_diff";
         ret_typ = "Sched_req_t.sched_req list";
         diff_ret_typ =
-          "(Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) \
+          "(Sched_req_t.sched_req_id, Sched_req_t.sched_req_data list) \
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";
@@ -83,7 +83,7 @@ module Store = struct
         diff_typ = "sched_req_record_store_diff";
         ret_typ = "Sched_req_t.sched_req_record list";
         diff_ret_typ =
-          "(Sched_req_t.sched_req_id, Sched_req_t.sched_req_record_data) \
+          "(Sched_req_t.sched_req_id, Sched_req_t.sched_req_record_data list) \
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";

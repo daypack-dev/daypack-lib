@@ -14,6 +14,6 @@ type sched_req = (sched_req_id * sched_req_data list)
 
 type sched_req_data = (task_seg_alloc_req, time_slot) sched_req_data_skeleton
 
-type sched_req_record = (sched_req_id * sched_req_record_data)
+type sched_req_record = (sched_req_id * sched_req_record_data list)
 
 type sched_req_record_data = (task_seg, time_slot) sched_req_data_skeleton

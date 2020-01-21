@@ -107,8 +107,8 @@ module Serialize = struct
       ~pack_time_slot:(fun x -> x)
       sched_req_data
 
-  let rec pack_sched_req_record (id, data) : Sched_req_t.sched_req_record =
-    (id, pack_sched_req_record_data data)
+  let rec pack_sched_req_record (id, data_list) : Sched_req_t.sched_req_record =
+    (id, List.map pack_sched_req_record_data data_list)
 
   and pack_sched_req_record_data (sched_req_record_data : sched_req_record_data)
     : Sched_req_t.sched_req_record_data =
@@ -149,10 +149,17 @@ module Print = struct
             len)
       ~string_of_time_slot:Time_slot.to_string req_data
 
+  let debug_string_of_sched_req_data_list ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) req_data_list =
+    List.iter (fun req_data ->
+        debug_string_of_sched_req_data ~indent_level ~buffer req_data |> ignore
+      ) req_data_list;
+    Buffer.contents
+
   let debug_string_of_sched_req ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, req_data) =
     Debug_print.bprintf ~indent_level buffer "schedule request id : %Ld\n" id;
-    debug_string_of_sched_req_data ~indent_level:(indent_level + 1) ~buffer
+    debug_string_of_sched_req_data_list ~indent_level:(indent_level + 1) ~buffer
       req_data
     |> ignore;
     Buffer.contents buffer
