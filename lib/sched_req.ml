@@ -2,14 +2,14 @@ open Int64_utils
 
 type sched_req_id = int64
 
-type sched_req = sched_req_id * sched_req_data_unit list
+type sched_req = sched_req_id * sched_req_data
 
 and sched_req_data_unit =
   (Task.task_seg_alloc_req, Time_slot.t) Sched_req_data_unit_skeleton.t
 
 and sched_req_data = sched_req_data_unit list
 
-type sched_req_record = sched_req_id * sched_req_record_data_unit list
+type sched_req_record = sched_req_id * sched_req_record_data
 
 and sched_req_record_data_unit =
   (Task.task_seg, Time_slot.t) Sched_req_data_unit_skeleton.t

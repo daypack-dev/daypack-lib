@@ -674,7 +674,7 @@ module Recur = struct
                      Sched_req_id_map.exists
                        (fun _sched_req_id sched_req_record_data ->
                           Sched_req_utils
-                          .sched_req_template_matches_sched_req_record_data_list
+                          .sched_req_template_matches_sched_req_record_data
                             sched_req_template sched_req_record_data)
                        sd.store.sched_req_record_store)
                   sched_req_template_list
@@ -683,7 +683,7 @@ module Recur = struct
                      Sched_req_id_map.exists
                        (fun _sched_req_id sched_req_data_unit ->
                           Sched_req_utils
-                          .sched_req_template_matches_sched_req_data_unit_list
+                          .sched_req_template_matches_sched_req_data
                             sched_req_template sched_req_data_unit)
                        sd.store.sched_req_pending_store)
                   sched_req_template_list ))
@@ -704,14 +704,13 @@ module Recur = struct
                 Task_inst_store.add_task_inst ~parent_task_id:task_id
                   task_inst_data sched
               in
-              let sched_req_data_unit_list =
+              let sched_req_data =
                 Sched_req_data_unit_skeleton.map_list
                   ~f_data:(fun task_seg_size -> (task_inst_id, task_seg_size))
                   ~f_time_slot:(fun x -> x)
                   sched_req_templates
               in
-              Sched_req_store.queue_sched_req_data sched_req_data_unit_list
-                sched)
+              Sched_req_store.queue_sched_req_data sched_req_data sched)
            sched)
       sd.store.task_store (sid, sd)
 end

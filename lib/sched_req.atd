@@ -10,13 +10,13 @@ type ('a, 'b) sched_req_data_unit_skeleton <ocaml from ="Sched_req_data_unit_ske
 
 type sched_req_id = int64
 
-type sched_req = (sched_req_id * sched_req_data_unit list)
+type sched_req = (sched_req_id * sched_req_data)
 
 type sched_req_data_unit = (task_seg_alloc_req, time_slot) sched_req_data_unit_skeleton
 
 type sched_req_data = sched_req_data_unit list
 
-type sched_req_record = (sched_req_id * sched_req_record_data_unit list)
+type sched_req_record = (sched_req_id * sched_req_record_data)
 
 type sched_req_record_data_unit = (task_seg, time_slot) sched_req_data_unit_skeleton
 
