@@ -81,10 +81,10 @@ __TODO__
 
 Got a feature request? Feel free to open an issue to start a discussion.
 
-Please note that since Daypack was never designed to be a full blown "solver", there
+Please note that since Daypack was never designed to be a general solver, there
 are things prohibitively expensive to properly implement as a result (short of
-adding a proper solver into Daypack),
-which we may cite as a reason should we reject your feature request.
+adding a general solver into Daypack),
+which we may cite as a reason should we reject your feature request
 
 We ask for your understanding should that be the case
 
