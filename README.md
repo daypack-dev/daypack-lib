@@ -18,9 +18,11 @@ are still underway
 
 Daypack as a user-facing personal task scheduler program aims to be ergonomic to use, and relatively featureful
 
-Daypack as a library aims to be powerful enough to accomodate basic scheduling needs in myraid envrionments
+Daypack as a library aims to be powerful enough to accomodate everyday personal task scheduling needs
 
 ## Features
+
+Overview
 
 - Automatic scheduling
 
@@ -28,21 +30,31 @@ Daypack as a library aims to be powerful enough to accomodate basic scheduling n
 
 - (WIP) Multiple user (supported by library, but frontend adoption is WIP)
 
-- (WIP) Taking transit time into account during scheduling (WIP)
+- (WIP) Taking transit time into account during scheduling
 
 - Strict time preferences to indicate when tasks can be scheduled
 
-## Characteristics and limitations
+Specific types of constraints (or scheduling requests) supported
 
-Daypack only uses a backtracking search procedure with basic pruning,
+-
+
+## Architecture and limitations
+
+Daypack only uses a backtracking search procedure with pruning (implemented using lazy sequences),
 and does not use any advanced or potentially more efficient constraint solving techniques
-
-Daypack also does not support constrained optimisation (e.g. soft time preferences)
 
 It is subsequently inferior to a lot of other automatic task scheduling software,
 and cannot accomodate very complex scheduling scenarios
 
 Nevertheless, it might still be useful as a simple and standalone personal task scheduler
+
+More detailed docs on the way
+
+Some of the features that Daypack does __NOT__ support
+
+- Resource allocation
+
+  - Doesn't seem to be a useful item for personal TODO list
 
 ## Getting started
 
@@ -63,30 +75,16 @@ __TODO__
 
 __TODO__
 
-## Architecture and design
-
-- Overall, the search procedure is just backtracking with pruning,
-  implemented using lazy sequences
-
-- The search tree is as follows
-
-  - Each node represents a schedule
-
-  - Each branch represents a possible way of handling a task scheduling request,
-    i.e. possible scheduling choice that leads to another schedule
-
-- More detailed docs on the way
-
 ## Contributions
 
 #### Ideas
 
 Got a feature request? Feel free to open an issue to start a discussion.
 
-Please note that since Daypack was never designed to be a full blown "solver", there
+Please note that since Daypack was never designed to be a general solver, there
 are things prohibitively expensive to properly implement as a result (short of
-adding a proper solver into Daypack),
-which we may cite as a reason should we reject your feature request.
+adding a general solver into Daypack),
+which we may cite as a reason should we reject your feature request
 
 We ask for your understanding should that be the case
 

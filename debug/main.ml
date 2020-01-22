@@ -335,23 +335,34 @@ let debug_union_time_slots () =
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
-let debug_sched_brute_force_pending () =
-  print_endline "Debug print for Sched_gens.brute_force_pending";
+let debug_sched_backtracking_search_pending () =
+  print_endline "Debug print for Sched_gens.backtracking_search_pending";
   let sched_req_data_list =
-    let open Sched_req_data_skeleton in
+    let open Sched_req_data_unit_skeleton in
     [
-      Split_even
-        {
-          task_seg_related_data = ((0L, 0L, 0L), 20L);
-          time_slots = [ (0L, 50L) ];
-          buckets = [ (0L, 10L); (10L, 20L) ];
-        };
-      Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]);
-      Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]);
-      Split_and_shift (((0L, 0L, 2L), 15L), [ (50L, 150L) ]);
-      Time_share ([ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ], [ (50L, 200L) ]);
-      Push_to (`Front, ((0L, 0L, 4L), 10L), [ (0L, 200L) ]);
-      Push_to (`Back, ((0L, 0L, 5L), 10L), [ (0L, 200L) ]);
+      [
+        Split_even
+          {
+            task_seg_related_data = ((0L, 0L, 0L), 20L);
+            time_slots = [ (0L, 50L) ];
+            buckets = [ (0L, 10L); (10L, 20L) ];
+          };
+        Split_even
+          {
+            task_seg_related_data = ((0L, 0L, 0L), 20L);
+            time_slots = [ (50L, 100L) ];
+            buckets = [ (50L, 60L); (60L, 70L) ];
+          };
+      ];
+      [ Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]) ];
+      [ Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]) ];
+      [ Split_and_shift (((0L, 0L, 2L), 15L), [ (50L, 150L) ]) ];
+      [
+        Time_share
+          ([ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ], [ (50L, 200L) ]);
+      ];
+      [ Push_to (`Front, ((0L, 0L, 4L), 10L), [ (0L, 200L) ]) ];
+      [ Push_to (`Back, ((0L, 0L, 5L), 10L), [ (0L, 200L) ]) ];
     ]
   in
   let quota =
@@ -374,7 +385,7 @@ let debug_sched_brute_force_pending () =
     |> Sched.Quota_store.update_quota quota
     |> Sched.Sched_req_store.queue_sched_req_data_list sched_req_data_list
   in
-  Sched_gens.brute_force_pending ~start:0L ~end_exc:50L
+  Sched_gens.backtracking_search_pending ~start:0L ~end_exc:50L
     ~include_sched_reqs_partially_within_time_period:true
     ~up_to_sched_req_id_inc:None ~base
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
@@ -494,7 +505,7 @@ let debug_sched_usage_simulation () =
  *   print_newline () *)
 
 (* let () =
- *   debug_sched_brute_force_pending ();
+ *   debug_sched_backtracking_search_pending ();
  *   print_newline () *)
 
 let () =

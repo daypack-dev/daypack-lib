@@ -66,7 +66,7 @@ let map (type a b c d) ~(f_data : a -> c) ~(f_time_slot : b -> d) (t : (a, b) t)
 let map_list ~f_data ~f_time_slot ts = List.map (map ~f_data ~f_time_slot) ts
 
 module Print = struct
-  let debug_string_of_sched_req_data_skeleton ?(indent_level = 0)
+  let debug_string_of_sched_req_data_unit_skeleton ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) ~(string_of_data : 'a -> string)
       ~(string_of_time_slot : 'b -> string) (t : ('a, 'b) t) =
     ( match t with
@@ -156,7 +156,7 @@ end
 
 module Serialize = struct
   let pack ~(pack_time_slot : 'b -> 'c) (t : ('a, 'b) t) :
-    ('a, 'c) Sched_req_data_skeleton_t.sched_req_data_skeleton =
+    ('a, 'c) Sched_req_data_unit_skeleton_t.sched_req_data_unit_skeleton =
     match t with
     | Fixed { task_seg_related_data; start } ->
       `Fixed { task_seg_related_data; start }
@@ -178,8 +178,8 @@ end
 
 module Deserialize = struct
   let unpack ~(unpack_time_slot : 'c -> 'b)
-      (x : ('a, 'c) Sched_req_data_skeleton_t.sched_req_data_skeleton) :
-    ('a, 'b) t =
+      (x : ('a, 'c) Sched_req_data_unit_skeleton_t.sched_req_data_unit_skeleton)
+    : ('a, 'b) t =
     match x with
     | `Fixed { task_seg_related_data; start } ->
       Fixed { task_seg_related_data; start }

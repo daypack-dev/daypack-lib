@@ -74,7 +74,8 @@ module Store = struct
         f_inner_pack = Some "Sched_req.Serialize.pack_sched_req";
         f_inner_pack_data = Some "Sched_req.Serialize.pack_sched_req_data";
         f_inner_unpack = Some "Sched_req.Deserialize.unpack_sched_req";
-        f_inner_unpack_data = Some "Sched_req.Deserialize.unpack_sched_req_data";
+        f_inner_unpack_data =
+          Some "Sched_req.Deserialize.unpack_sched_req_data_unit";
       };
       {
         f_pack_suffix = "sched_req_record_store";

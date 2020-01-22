@@ -14,13 +14,13 @@ type 'a set_diff <ocaml from="Set_utils" t="diff"> = abstract
 *)
 type time_slot <ocaml from="Time_slot"> = abstract
 
-(* corresponds to Sched_req_data_skeleton
+(* corresponds to Sched_req_data_unit_skeleton
 *)
-type 'a fixed <ocaml from ="Sched_req_data_skeleton"> =  abstract
+type 'a fixed <ocaml from ="Sched_req_data_unit_skeleton"> =  abstract
 
-type ('a, 'b) split_even <ocaml from ="Sched_req_data_skeleton"> = abstract
+type ('a, 'b) split_even <ocaml from ="Sched_req_data_unit_skeleton"> = abstract
 
-type ('a, 'b) sched_req_data_skeleton <ocaml from ="Sched_req_data_skeleton"> = abstract
+type ('a, 'b) sched_req_data_unit_skeleton <ocaml from ="Sched_req_data_unit_skeleton"> = abstract
 
 (* corresponds to Task
 *)
@@ -66,9 +66,13 @@ type sched_req_id <ocaml from="Sched_req"> = abstract
 
 type sched_req <ocaml from="Sched_req"> = abstract
 
+type sched_req_data_unit <ocaml from="Sched_req"> = abstract
+
 type sched_req_data <ocaml from="Sched_req"> = abstract
 
 type sched_req_record <ocaml from="Sched_req"> = abstract
+
+type sched_req_record_data_unit <ocaml from="Sched_req"> = abstract
 
 type sched_req_record_data <ocaml from="Sched_req"> = abstract
 
