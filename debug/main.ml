@@ -338,20 +338,31 @@ let debug_union_time_slots () =
 let debug_sched_backtracking_search_pending () =
   print_endline "Debug print for Sched_gens.backtracking_search_pending";
   let sched_req_data_list =
-    let open Sched_req_data_skeleton in
+    let open Sched_req_data_unit_skeleton in
     [
-      Split_even
-        {
-          task_seg_related_data = ((0L, 0L, 0L), 20L);
-          time_slots = [ (0L, 50L) ];
-          buckets = [ (0L, 10L); (10L, 20L) ];
-        };
-      Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]);
-      Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]);
-      Split_and_shift (((0L, 0L, 2L), 15L), [ (50L, 150L) ]);
-      Time_share ([ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ], [ (50L, 200L) ]);
-      Push_to (`Front, ((0L, 0L, 4L), 10L), [ (0L, 200L) ]);
-      Push_to (`Back, ((0L, 0L, 5L), 10L), [ (0L, 200L) ]);
+      [
+        Split_even
+          {
+            task_seg_related_data = ((0L, 0L, 0L), 20L);
+            time_slots = [ (0L, 50L) ];
+            buckets = [ (0L, 10L); (10L, 20L) ];
+          };
+        Split_even
+          {
+            task_seg_related_data = ((0L, 0L, 0L), 20L);
+            time_slots = [ (50L, 100L) ];
+            buckets = [ (50L, 60L); (60L, 70L) ];
+          };
+      ];
+      [ Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]) ];
+      [ Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]) ];
+      [ Split_and_shift (((0L, 0L, 2L), 15L), [ (50L, 150L) ]) ];
+      [
+        Time_share
+          ([ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ], [ (50L, 200L) ]);
+      ];
+      [ Push_to (`Front, ((0L, 0L, 4L), 10L), [ (0L, 200L) ]) ];
+      [ Push_to (`Back, ((0L, 0L, 5L), 10L), [ (0L, 200L) ]) ];
     ]
   in
   let quota =

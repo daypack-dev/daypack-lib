@@ -13,7 +13,7 @@ type t = {
 }
 
 let time_to_tm (time : int64) : Unix.tm =
-  time *^ 60L |> Int64.to_float |>Unix.gmtime
+  time *^ 60L |> Int64.to_float |> Unix.gmtime
 
 let tm_to_time (tm : Unix.tm) : int64 =
   let time, _ = Unix.mktime tm in
