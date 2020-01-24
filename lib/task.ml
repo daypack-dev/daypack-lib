@@ -346,12 +346,14 @@ module Print = struct
                *           Debug_print.bprintf ~indent_level:(indent_level + 5)
                *             buffer "[%Ld, %Ld)\n" start end_exc)
                *        time_slots) *)
-              (fun x -> Sched_req_data_unit_skeleton.Print.debug_string_of_sched_req_data_unit_skeleton
-                          ~buffer
-              ~indent_level:(indent_level + 3)
-              ~string_of_data:(Int64.to_string)
-              ~string_of_time:(Int64.to_string)
-              ~string_of_time_slot:(Time_slot.to_string) x |> ignore)
+              (fun x ->
+                 Sched_req_data_unit_skeleton.Print
+                 .debug_string_of_sched_req_data_unit_skeleton ~buffer
+                   ~indent_level:(indent_level + 3)
+                   ~string_of_data:Int64.to_string
+                   ~string_of_time:Int64.to_string
+                   ~string_of_time_slot:Time_slot.to_string x
+                 |> ignore)
               sched_req_templates
           | Time_pattern_match _ -> failwith "Unimplemented" ) );
     Buffer.contents buffer

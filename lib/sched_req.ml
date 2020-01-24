@@ -161,8 +161,8 @@ module Print = struct
           Printf.sprintf "id : %s, len : %Ld\n"
             (Task.task_inst_id_to_string id)
             len)
-      ~string_of_time:Int64.to_string
-      ~string_of_time_slot:Time_slot.to_string req_data
+      ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot.to_string
+      req_data
 
   let debug_string_of_sched_req_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data =
@@ -189,8 +189,8 @@ module Print = struct
           Printf.sprintf "id : %s, len : %Ld\n"
             (Task.task_seg_id_to_string id)
             len)
-      ~string_of_time:Int64.to_string
-      ~string_of_time_slot:Time_slot.to_string req_data
+      ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot.to_string
+      req_data
 
   let debug_string_of_sched_req_record_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_record_data_list =

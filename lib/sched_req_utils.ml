@@ -33,8 +33,8 @@ let sched_req_template_matches_sched_req_data_unit
     size1 = size2
     && Time_slot.equal time_slots1 time_slots2
     && Time_slot.equal buckets1 buckets2
-  | Push_toward (size1, dir1, time_slots1), Push_toward ((_id, size2), dir2, time_slots2)
-    ->
+  | ( Push_toward (size1, dir1, time_slots1),
+      Push_toward ((_id, size2), dir2, time_slots2) ) ->
     dir1 = dir2 && size1 = size2 && Time_slot.equal time_slots1 time_slots2
   | _ -> false
 
@@ -85,8 +85,8 @@ let sched_req_template_matches_sched_req_record_data_unit
     size1 = size2
     && Time_slot.equal time_slots1 time_slots2
     && Time_slot.equal buckets1 buckets2
-  | Push_toward (size1, dir1, time_slots1), Push_toward ((_id, size2), dir2, time_slots2)
-    ->
+  | ( Push_toward (size1, dir1, time_slots1),
+      Push_toward ((_id, size2), dir2, time_slots2) ) ->
     dir1 = dir2 && size1 = size2 && Time_slot.equal time_slots1 time_slots2
   | _ -> false
 

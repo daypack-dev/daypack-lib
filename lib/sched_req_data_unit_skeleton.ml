@@ -19,7 +19,8 @@ type ('task_seg_related_data, 'time, 'time_slot) t =
   | Time_share of 'task_seg_related_data list * 'time_slot list
   | Push_toward of 'task_seg_related_data * 'time * 'time_slot list
 
-let shift_time ~offset (t : ('a, int64, Time_slot.t) t) : ('a, int64, Time_slot.t) t =
+let shift_time ~offset (t : ('a, int64, Time_slot.t) t) :
+  ('a, int64, Time_slot.t) t =
   match t with
   | Fixed { task_seg_related_data; start } ->
     Fixed { task_seg_related_data; start = start +^ offset }
@@ -42,11 +43,15 @@ let shift_time_list ~offset (ts : ('a, int64, Time_slot.t) t list) :
   ('a, int64, Time_slot.t) t list =
   List.map (shift_time ~offset) ts
 
-let map (type a b c d e f) ~(f_data : a -> d) ~(f_time : b -> e) ~(f_time_slot : c -> f) (t : (a, b, c) t)
-  : (d, e, f) t =
+let map (type a b c d e f) ~(f_data : a -> d) ~(f_time : b -> e)
+    ~(f_time_slot : c -> f) (t : (a, b, c) t) : (d, e, f) t =
   match t with
   | Fixed { task_seg_related_data; start } ->
-    Fixed { task_seg_related_data = f_data task_seg_related_data; start = f_time start }
+    Fixed
+      {
+        task_seg_related_data = f_data task_seg_related_data;
+        start = f_time start;
+      }
   | Shift (l, time_slots) ->
     Shift (List.map f_data l, List.map f_time_slot time_slots)
   | Split_and_shift (x, time_slots) ->
@@ -63,12 +68,13 @@ let map (type a b c d e f) ~(f_data : a -> d) ~(f_time : b -> e) ~(f_time_slot :
   | Push_toward (x, target, time_slots) ->
     Push_toward (f_data x, f_time target, List.map f_time_slot time_slots)
 
-let map_list ~f_data ~f_time ~f_time_slot ts = List.map (map ~f_data ~f_time ~f_time_slot) ts
+let map_list ~f_data ~f_time ~f_time_slot ts =
+  List.map (map ~f_data ~f_time ~f_time_slot) ts
 
 module Print = struct
-  let debug_string_of_sched_req_data_unit_skeleton (type a b c) ?(indent_level = 0)
-      ?(buffer = Buffer.create 4096) ~(string_of_data : a -> string)
-      ~(string_of_time : b -> string)
+  let debug_string_of_sched_req_data_unit_skeleton (type a b c)
+      ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+      ~(string_of_data : a -> string) ~(string_of_time : b -> string)
       ~(string_of_time_slot : c -> string) (t : (a, b, c) t) =
     ( match t with
       | Fixed { task_seg_related_data; start } ->
@@ -141,8 +147,7 @@ module Print = struct
         Debug_print.bprintf ~indent_level buffer "push toward\n";
         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
           "data = %s\n" (string_of_data x);
-        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
-          "target\n";
+        Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "target\n";
         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
           (string_of_time target);
         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
@@ -156,15 +161,18 @@ module Print = struct
 end
 
 module Serialize = struct
-  let pack (type a b c d e f)
-      ~(pack_data : a -> d)
-      ~(pack_time : b -> e)
+  let pack (type a b c d e f) ~(pack_data : a -> d) ~(pack_time : b -> e)
       ~(pack_time_slot : c -> f) (t : (a, b, c) t) :
     (d, e, f) Sched_req_data_unit_skeleton_t.sched_req_data_unit_skeleton =
     match t with
     | Fixed { task_seg_related_data; start } ->
-      `Fixed { task_seg_related_data = pack_data task_seg_related_data; start = pack_time start}
-    | Shift (l, time_slots) -> `Shift (List.map pack_data l, List.map pack_time_slot time_slots)
+      `Fixed
+        {
+          task_seg_related_data = pack_data task_seg_related_data;
+          start = pack_time start;
+        }
+    | Shift (l, time_slots) ->
+      `Shift (List.map pack_data l, List.map pack_time_slot time_slots)
     | Split_and_shift (x, time_slots) ->
       `Split_and_shift (pack_data x, List.map pack_time_slot time_slots)
     | Split_even { task_seg_related_data; time_slots; buckets } ->
@@ -177,20 +185,25 @@ module Serialize = struct
     | Time_share (l, time_slots) ->
       `Time_share (List.map pack_data l, List.map pack_time_slot time_slots)
     | Push_toward (x, target, time_slots) ->
-      `Push_toward (pack_data x, pack_time target, List.map pack_time_slot time_slots)
+      `Push_toward
+        (pack_data x, pack_time target, List.map pack_time_slot time_slots)
 end
 
 module Deserialize = struct
-  let unpack (type a b c d e f)
-      ~(unpack_data : d -> a)
-      ~(unpack_time : e -> b)
+  let unpack (type a b c d e f) ~(unpack_data : d -> a) ~(unpack_time : e -> b)
       ~(unpack_time_slot : f -> c)
-      (x : (d, e, f) Sched_req_data_unit_skeleton_t.sched_req_data_unit_skeleton)
-    : (a, b, c) t =
+      (x :
+         (d, e, f) Sched_req_data_unit_skeleton_t.sched_req_data_unit_skeleton) :
+    (a, b, c) t =
     match x with
     | `Fixed { task_seg_related_data; start } ->
-      Fixed { task_seg_related_data = unpack_data task_seg_related_data; start = unpack_time start}
-    | `Shift (l, time_slots) -> Shift (List.map unpack_data l, List.map unpack_time_slot time_slots)
+      Fixed
+        {
+          task_seg_related_data = unpack_data task_seg_related_data;
+          start = unpack_time start;
+        }
+    | `Shift (l, time_slots) ->
+      Shift (List.map unpack_data l, List.map unpack_time_slot time_slots)
     | `Split_and_shift (x, time_slots) ->
       Split_and_shift (unpack_data x, List.map unpack_time_slot time_slots)
     | `Split_even { task_seg_related_data; time_slots; buckets } ->
@@ -203,5 +216,8 @@ module Deserialize = struct
     | `Time_share (l, time_slots) ->
       Time_share (List.map unpack_data l, List.map unpack_time_slot time_slots)
     | `Push_toward (x, target, time_slots) ->
-      Push_toward (unpack_data x, unpack_time target, List.map unpack_time_slot time_slots)
+      Push_toward
+        ( unpack_data x,
+          unpack_time target,
+          List.map unpack_time_slot time_slots )
 end

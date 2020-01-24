@@ -63,19 +63,22 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
              ~cur_end_pos_exc:target ~incre:15L ~task_seg usable_time_slots
            |> OSeq.take 1
          in
-         let s = OSeq.append s1 s2 |> OSeq.sort ~cmp:(fun (_id1, start1, end_exc1) (_id2, start2, end_exc2) ->
-             let distance1 =
-               let mid1 = (end_exc1 +^ start1) /^ 2L in
-               Int64.abs (mid1 -^ target) in
-             let distance2 =
-               let mid2 = (end_exc2 +^ start2) /^ 2L in
-               Int64.abs (mid2 -^ target) in
-             compare distance1 distance2
-           )
-                 |> OSeq.take 1
+         let s =
+           OSeq.append s1 s2
+           |> OSeq.sort
+             ~cmp:(fun (_id1, start1, end_exc1) (_id2, start2, end_exc2) ->
+                 let distance1 =
+                   let mid1 = (end_exc1 +^ start1) /^ 2L in
+                   Int64.abs (mid1 -^ target)
+                 in
+                 let distance2 =
+                   let mid2 = (end_exc2 +^ start2) /^ 2L in
+                   Int64.abs (mid2 -^ target)
+                 in
+                 compare distance1 distance2)
+           |> OSeq.take 1
          in
-         Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s)
-    )
+         Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s))
     (sched_req_record_data_list |> List.to_seq)
 
 let backtracking_search_multi ~start ~end_exc ~base
