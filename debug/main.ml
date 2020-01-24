@@ -378,7 +378,8 @@ let debug_sched_backtracking_search_pending () =
     ]
     |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq
   in
-  List.iter Sched_req.Print.debug_print_sched_req_data sched_req_data_list;
+  print_endline "scheduling requests";
+  List.iter (Sched_req.Print.debug_print_sched_req_data ~indent_level:1) sched_req_data_list;
   print_newline ();
   let base =
     Sched.empty
@@ -388,6 +389,7 @@ let debug_sched_backtracking_search_pending () =
   Sched_gens.backtracking_search_pending ~start:0L ~end_exc:50L
     ~include_sched_reqs_partially_within_time_period:true
     ~up_to_sched_req_id_inc:None ~base
+  |> OSeq.take 1
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
 
 let debug_sched_usage_simulation () =
