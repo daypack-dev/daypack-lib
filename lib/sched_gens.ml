@@ -10,6 +10,14 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
     time_slots |> Time_slot.normalize_list_in_seq_out
     |> Time_slot.intersect free_time_slots
   in
+  let add_place_s_if_not_empty s =
+    match s () with
+    | Seq.Nil -> Seq.empty
+    | Seq.Cons (x, rest) ->
+        base |>
+      Sched.Task_seg_place_map.add_task_seg_place x
+    |> Sched.Task_seg_place_map.add_task_seg_place_list rest
+  in
   Seq.flat_map
     (fun sched_req_record_data ->
        match sched_req_record_data with
