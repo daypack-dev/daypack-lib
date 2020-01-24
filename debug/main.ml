@@ -361,8 +361,8 @@ let debug_sched_backtracking_search_pending () =
         Time_share
           ([ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ], [ (50L, 200L) ]);
       ];
-      [ Push_to (`Front, ((0L, 0L, 4L), 10L), [ (0L, 200L) ]) ];
-      [ Push_to (`Back, ((0L, 0L, 5L), 10L), [ (0L, 200L) ]) ];
+      [ Push_toward (((0L, 0L, 4L), 10L), 100L, [ (0L, 200L) ]) ];
+      [ Push_toward (((0L, 0L, 5L), 10L), 75L, [ (0L, 200L) ]) ];
     ]
   in
   let quota =
@@ -504,10 +504,10 @@ let debug_sched_usage_simulation () =
  *   debug_union_time_slots ();
  *   print_newline () *)
 
-(* let () =
- *   debug_sched_backtracking_search_pending ();
- *   print_newline () *)
-
 let () =
-  debug_sched_usage_simulation ();
+  debug_sched_backtracking_search_pending ();
   print_newline ()
+
+(* let () =
+ *   debug_sched_usage_simulation ();
+ *   print_newline () *)
