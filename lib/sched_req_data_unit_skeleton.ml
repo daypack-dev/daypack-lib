@@ -83,14 +83,14 @@ module Print = struct
         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "data\n";
         List.iter
           (fun x ->
-             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
                (string_of_data x))
           l;
         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
           "time slots\n";
         List.iter
           (fun x ->
-             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
                (string_of_time_slot x))
           time_slots
       | Split_and_shift (x, time_slots) ->
@@ -101,7 +101,7 @@ module Print = struct
           "time slots\n";
         List.iter
           (fun x ->
-             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
                (string_of_time_slot x))
           time_slots
       | Split_even { task_seg_related_data; time_slots; buckets } ->
@@ -113,13 +113,13 @@ module Print = struct
           "time slots\n";
         List.iter
           (fun x ->
-             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
                (string_of_time_slot x))
           time_slots;
         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "buckets\n";
         List.iter
           (fun x ->
-             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
                (string_of_time_slot x))
           buckets
       | Time_share (l, time_slots) ->
@@ -127,7 +127,7 @@ module Print = struct
         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "data\n";
         List.iter
           (fun x ->
-             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
                (string_of_data x))
           l;
         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
@@ -149,7 +149,7 @@ module Print = struct
           "time slots\n";
         List.iter
           (fun x ->
-             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
                (string_of_time_slot x))
           time_slots );
     Buffer.contents buffer
