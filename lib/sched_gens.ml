@@ -10,7 +10,7 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
     time_slots |> Time_slot.normalize_list_in_seq_out
     |> Time_slot.intersect free_time_slots
   in
-  OSeq.flat_map
+  Seq.flat_map
     (fun sched_req_record_data ->
        match sched_req_record_data with
        | Sched_req_data_unit_skeleton.Fixed
