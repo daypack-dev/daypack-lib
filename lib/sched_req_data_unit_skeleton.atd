@@ -11,10 +11,16 @@ type ('task_seg_related_data, 'time_slot) shift = {
   incre : int64;
 }
 
+type split_count = [
+  | Max_split of int64
+  | Exact_split of int64
+]
+
 type ('task_seg_related_data, 'time_slot) split_and_shift = {
   task_seg_related_data : 'task_seg_related_data;
   time_slots : 'time_slot list;
   incre : int64;
+  split_count : split_count;
   min_seg_size : int64;
   max_seg_size : int64 option;
 }

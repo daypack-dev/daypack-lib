@@ -22,45 +22,45 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
          |> OSeq.map (fun place_s ->
              base
              |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
-       | Shift (task_segs, time_slots) ->
-         let usable_time_slots = get_usable_time_slots time_slots in
-         Task_seg_place_gens.multi_task_segs_shift ~incre:15L ~task_segs
+       | Shift x ->
+         let usable_time_slots = get_usable_time_slots x.time_slots in
+         Task_seg_place_gens.multi_task_segs_shift ~incre:x.incre ~task_segs:x.task_seg_related_data_list
            usable_time_slots
          |> OSeq.map (fun place_s ->
              base
              |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
-       | Split_and_shift (task_seg, time_slots) ->
-         let usable_time_slots = get_usable_time_slots time_slots in
+       | Split_and_shift x ->
+         let usable_time_slots = get_usable_time_slots x.time_slots in
          Task_seg_place_gens.single_task_seg_multi_splits_max_shift
            ~min_seg_size:5L ~max_seg_size:None ~split_count:4L ~incre:15L
-           ~task_seg usable_time_slots
+           ~task_seg:x.task_seg_related_data usable_time_slots
          |> OSeq.map (fun place_s ->
              base
              |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
-       | Split_even { task_seg_related_data = task_seg; time_slots; buckets } ->
-         let usable_time_slots = get_usable_time_slots time_slots in
-         Task_seg_place_gens.single_task_seg_multi_even_splits ~incre:15L
-           ~task_seg ~buckets ~usable_time_slots
+       | Split_even x ->
+         let usable_time_slots = get_usable_time_slots x.time_slots in
+         Task_seg_place_gens.single_task_seg_multi_even_splits ~incre:x.incre
+           ~task_seg:x.task_seg_related_data ~buckets:x.buckets ~usable_time_slots
          |> OSeq.map (fun place_s ->
              base
              |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
-       | Time_share (task_segs, time_slots) ->
-         let usable_time_slots = get_usable_time_slots time_slots in
+       | Time_share x ->
+         let usable_time_slots = get_usable_time_slots x.time_slots in
          let s =
-           Task_seg_place_gens.multi_task_segs_interleave ~interval_size:15L
-             ~task_segs usable_time_slots
+           Task_seg_place_gens.multi_task_segs_interleave ~interval_size:x.interval_size
+             ~task_segs:x.task_seg_related_data_list usable_time_slots
          in
          Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s)
-       | Push_toward (task_seg, target, time_slots) ->
-         let usable_time_slots = get_usable_time_slots time_slots in
+       | Push_toward x ->
+         let usable_time_slots = get_usable_time_slots x.time_slots in
          let s1 =
-           Task_seg_place_gens.single_task_seg_shift ~cur_pos:target ~incre:15L
-             ~task_seg usable_time_slots
+           Task_seg_place_gens.single_task_seg_shift ~cur_pos:x.target ~incre:15L
+             ~task_seg:x.task_seg_related_data usable_time_slots
            |> OSeq.take 1
          in
          let s2 =
            Task_seg_place_gens.single_task_seg_shift_rev
-             ~cur_end_pos_exc:target ~incre:15L ~task_seg usable_time_slots
+             ~cur_end_pos_exc:x.target ~incre:x.incre ~task_seg:x.task_seg_related_data usable_time_slots
            |> OSeq.take 1
          in
          let s =
@@ -68,11 +68,11 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
              ~cmp:(fun (_id1, start1, end_exc1) (_id2, start2, end_exc2) ->
                  let distance1 =
                    let mid1 = (end_exc1 +^ start1) /^ 2L in
-                   Int64.abs (mid1 -^ target)
+                   Int64.abs (mid1 -^ x.target)
                  in
                  let distance2 =
                    let mid2 = (end_exc2 +^ start2) /^ 2L in
-                   Int64.abs (mid2 -^ target)
+                   Int64.abs (mid2 -^ x.target)
                  in
                  compare distance1 distance2)
              s1 s2

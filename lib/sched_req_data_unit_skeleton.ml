@@ -11,10 +11,15 @@ type ('task_seg_related_data, 'time_slot) shift = {
   incre : int64;
 }
 
+type split_count =
+  | Max_split of int64
+  | Exact_split of int64
+
 type ('task_seg_related_data, 'time_slot) split_and_shift = {
   task_seg_related_data : 'task_seg_related_data;
   time_slots : 'time_slot list;
   incre : int64;
+  split_count : split_count;
   min_seg_size : int64;
   max_seg_size : int64 option;
 }
@@ -218,6 +223,9 @@ module Serialize = struct
         {
           task_seg_related_data = pack_data x.task_seg_related_data;
           incre = x.incre;
+          split_count = (match x.split_count with
+            | Max_split x -> `Max_split x
+            | Exact_split x -> `Exact_split x);
           min_seg_size = x.min_seg_size;
           max_seg_size = x.max_seg_size;
           time_slots = List.map pack_time_slot x.time_slots;
@@ -272,6 +280,9 @@ module Deserialize = struct
           task_seg_related_data = unpack_data x.task_seg_related_data;
           time_slots = List.map unpack_time_slot x.time_slots;
           incre = x.incre;
+          split_count = (match x.split_count with
+            | `Max_split x -> Max_split x
+            | `Exact_split x -> Exact_split x);
           min_seg_size = x.min_seg_size;
           max_seg_size = x.max_seg_size;
         }
