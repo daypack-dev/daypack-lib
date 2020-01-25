@@ -41,7 +41,7 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 #### Constraints (or scheduling strategies) supported
 
-__Note :__ This lists all the constraints supported by the core library,
+__Note:__ The following lists all the constraints supported by the core library,
 but frontends may not expose them completely
 
 - `Fixed`
