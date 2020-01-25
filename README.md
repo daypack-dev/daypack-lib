@@ -70,7 +70,7 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
       buckets with larger even splits
 
   - E.g. "I want to exercise 5 hours, split it evenly across next 7 days, boundaries
-    being 1pm-5pm of each day, and then shift"
+    being 1pm-5pm of each day"
 
     - If one day ends up being too full to be used, then Daypack splits across 6 days instead,
       and so on
