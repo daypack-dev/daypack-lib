@@ -102,10 +102,11 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 ## Architecture and limitations
 
 Daypack does not aim to be a general solver, and only supports a limited set of constraints
-(which are listed above).
-Also Daypack only uses a backtracking search procedure with pruning (implemented using lazy sequences)
+(which are listed above)
+
+Furthermore, Daypack only uses a backtracking search procedure with pruning (implemented using lazy sequences)
 for solving the constraints,
-and does not use any advanced or potentially more efficient constraint solving techniques.
+and does not use any advanced or potentially more efficient constraint solving techniques
 
 It is subsequently inferior to a lot of other automatic task scheduling software,
 and cannot accomodate very complex scheduling scenarios
