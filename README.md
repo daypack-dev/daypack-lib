@@ -45,7 +45,7 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
   - Manual scheduling, specifies a task segment starts at a fixed time point
 
-  - E.g. "Meeting starts at 2pm"
+  - E.g. "Meeting starts at 2pm and last for 1.5 hours"
 
 - `Shift`
 
