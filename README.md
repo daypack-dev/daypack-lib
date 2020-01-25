@@ -41,6 +41,9 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 #### Constraints (or scheduling strategies) supported
 
+__Note :__ This lists all the constraints supported by the core library,
+but frontends may not expose them completely
+
 - `Fixed`
 
   - Manual scheduling, specifies a task segment starts at a fixed time point
@@ -55,8 +58,15 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 - `Split_and_shift`
 
-  - Daypack splits task segment into smaller segments (with some specificed minimum size, and optional maximum size),
-    then shifts them around and tries to find a spot
+  - Daypack splits task segment into smaller segments then shifts them around and tries to find a spot, takes following parameters
+
+    - minimum size
+
+    - maximum size (optional)
+
+    - increment
+
+    - split count (either maximum or exact)
 
   - E.g. "This work takes 5 hours, I need it done by the end of this week,
     split and shift for me across 5pm-10pm of said days, but all split segments must be at least 1 hour long"
