@@ -22,11 +22,16 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 ## Features
 
-Overview
+#### Overview
 
 - Automatic scheduling
 
 - Manual scheduling
+
+- Backup plan
+
+  - You can specify multiple scheduling strategies for a given scheduling request,
+    and Daypack will try them sequentially until one works
 
 - (WIP) Multiple user (supported by library, but frontend adoption is WIP)
 
@@ -34,7 +39,7 @@ Overview
 
 - Strict time preferences to indicate when tasks can be scheduled
 
-Specific types of constraints (or scheduling requests) supported
+#### Constraints (or scheduling strategies) supported
 
 - `Fixed`
 
