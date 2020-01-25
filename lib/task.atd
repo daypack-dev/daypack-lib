@@ -33,9 +33,9 @@ type recur = [
   | Arithmetic_seq of (arith_seq * recur_data)
 ]
 
-type ('a, 'b) sched_req_data_unit_skeleton <ocaml from ="Sched_req_data_unit_skeleton"> = abstract
+type ('a, 'b, 'c) sched_req_data_unit_skeleton <ocaml from ="Sched_req_data_unit_skeleton"> = abstract
 
-type sched_req_template = (task_seg_size, time_slot) sched_req_data_unit_skeleton
+type sched_req_template = (task_seg_size, int64, time_slot) sched_req_data_unit_skeleton
 
 type recur_data = {
   task_inst_data : task_inst_data;

@@ -506,7 +506,7 @@ module Sched_req_store = struct
     let partially_within, leftover =
       Sched_req_id_map.partition
         (fun id req_record_data ->
-           Sched_req.sched_req_fully_within_time_period ~start ~end_exc
+           Sched_req.sched_req_partially_within_time_period ~start ~end_exc
              (id, req_record_data))
         leftover
     in
@@ -551,12 +551,12 @@ module Sched_req_store = struct
                task_seg_alloc_reqs sched
            in
            (Time_share (task_segs, time_slots) :: acc, sched)
-         | Push_to (direction, task_seg_alloc_req, time_slots) ->
+         | Push_toward (task_seg_alloc_req, direction, time_slots) ->
            let task_seg, sched =
              Task_seg_store.add_task_seg_via_task_seg_alloc_req
                task_seg_alloc_req sched
            in
-           (Push_to (direction, task_seg, time_slots) :: acc, sched))
+           (Push_toward (task_seg, direction, time_slots) :: acc, sched))
       ([], sched) sched_req_data
 
   let allocate_task_segs_for_sched_req_list
@@ -707,6 +707,7 @@ module Recur = struct
               let sched_req_data =
                 Sched_req_data_unit_skeleton.map_list
                   ~f_data:(fun task_seg_size -> (task_inst_id, task_seg_size))
+                  ~f_time:(fun x -> x)
                   ~f_time_slot:(fun x -> x)
                   sched_req_templates
               in

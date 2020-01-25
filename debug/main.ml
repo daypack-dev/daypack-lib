@@ -361,8 +361,8 @@ let debug_sched_backtracking_search_pending () =
         Time_share
           ([ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ], [ (50L, 200L) ]);
       ];
-      [ Push_to (`Front, ((0L, 0L, 4L), 10L), [ (0L, 200L) ]) ];
-      [ Push_to (`Back, ((0L, 0L, 5L), 10L), [ (0L, 200L) ]) ];
+      [ Push_toward (((0L, 0L, 4L), 10L), 100L, [ (0L, 200L) ]) ];
+      [ Push_toward (((0L, 0L, 5L), 10L), 75L, [ (0L, 200L) ]) ];
     ]
   in
   let quota =
@@ -378,7 +378,10 @@ let debug_sched_backtracking_search_pending () =
     ]
     |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq
   in
-  List.iter Sched_req.Print.debug_print_sched_req_data sched_req_data_list;
+  print_endline "scheduling requests";
+  List.iter
+    (Sched_req.Print.debug_print_sched_req_data ~indent_level:1)
+    sched_req_data_list;
   print_newline ();
   let base =
     Sched.empty
@@ -388,6 +391,7 @@ let debug_sched_backtracking_search_pending () =
   Sched_gens.backtracking_search_pending ~start:0L ~end_exc:50L
     ~include_sched_reqs_partially_within_time_period:true
     ~up_to_sched_req_id_inc:None ~base
+  |> OSeq.take 1
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
 
 let debug_sched_usage_simulation () =
@@ -504,10 +508,10 @@ let debug_sched_usage_simulation () =
  *   debug_union_time_slots ();
  *   print_newline () *)
 
-(* let () =
- *   debug_sched_backtracking_search_pending ();
- *   print_newline () *)
-
 let () =
-  debug_sched_usage_simulation ();
+  debug_sched_backtracking_search_pending ();
   print_newline ()
+
+(* let () =
+ *   debug_sched_usage_simulation ();
+ *   print_newline () *)

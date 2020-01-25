@@ -33,7 +33,7 @@ and recur =
   | Time_pattern_match of time_pattern * recur_data
 
 and sched_req_template =
-  (task_seg_size, Time_slot.t) Sched_req_data_unit_skeleton.t
+  (task_seg_size, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
 
 and recur_data = {
   task_inst_data : task_inst_data;
@@ -112,6 +112,8 @@ module Serialize = struct
   and pack_sched_req_template (sched_req_template : sched_req_template) :
     Task_t.sched_req_template =
     Sched_req_data_unit_skeleton.Serialize.pack
+      ~pack_data:(fun x -> x)
+      ~pack_time:(fun x -> x)
       ~pack_time_slot:(fun x -> x)
       sched_req_template
 
@@ -176,6 +178,8 @@ module Deserialize = struct
   and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
     : sched_req_template =
     Sched_req_data_unit_skeleton.Deserialize.unpack
+      ~unpack_data:(fun x -> x)
+      ~unpack_time:(fun x -> x)
       ~unpack_time_slot:(fun x -> x)
       sched_req_template
 
@@ -255,93 +259,101 @@ module Print = struct
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "sched req templates :\n";
             List.iter
-              (fun sched_req_template ->
-                 match sched_req_template with
-                 | Sched_req_data_unit_skeleton.Fixed
-                     { task_seg_related_data; start } ->
-                   Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-                     "fixed : size : %Ld, start : %Ld\n" task_seg_related_data
-                     start
-                 | Shift (l, time_slots) ->
-                   Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-                     "shift :\n";
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "sizes :\n";
-                   List.iter
-                     (fun size ->
-                        Debug_print.bprintf ~indent_level:(indent_level + 5)
-                          buffer "%Ld\n" size)
-                     l;
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "time slots :";
-                   List.iter
-                     (fun (start, end_exc) ->
-                        Debug_print.bprintf ~indent_level:(indent_level + 5)
-                          buffer "[%Ld, %Ld)\n" start end_exc)
-                     time_slots
-                 | Split_and_shift (size, time_slots) ->
-                   Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-                     "split and shift :";
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "size : %Ld\n" size;
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "time slots :";
-                   List.iter
-                     (fun (start, end_exc) ->
-                        Debug_print.bprintf ~indent_level:(indent_level + 5)
-                          buffer "[%Ld, %Ld)\n" start end_exc)
-                     time_slots
-                 | Split_even { task_seg_related_data; time_slots; buckets } ->
-                   Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-                     "split even :";
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "size : %Ld\n" task_seg_related_data;
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "time slots :";
-                   List.iter
-                     (fun (start, end_exc) ->
-                        Debug_print.bprintf ~indent_level:(indent_level + 5)
-                          buffer "[%Ld, %Ld)\n" start end_exc)
-                     time_slots;
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "buckets :";
-                   List.iter
-                     (fun (start, end_exc) ->
-                        Debug_print.bprintf ~indent_level:(indent_level + 5)
-                          buffer "[%Ld, %Ld)\n" start end_exc)
-                     buckets
-                 | Time_share (sizes, time_slots) ->
-                   Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-                     "time share :";
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "sizes :";
-                   List.iter
-                     (fun size ->
-                        Debug_print.bprintf ~indent_level:(indent_level + 5)
-                          buffer "%Ld\n" size)
-                     sizes;
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "time slots :";
-                   List.iter
-                     (fun (start, end_exc) ->
-                        Debug_print.bprintf ~indent_level:(indent_level + 5)
-                          buffer "[%Ld, %Ld)\n" start end_exc)
-                     time_slots
-                 | Push_to (dir, size, time_slots) ->
-                   Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-                     "push to :";
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "direction : %s\n"
-                     (match dir with `Front -> "front" | `Back -> "right");
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "size : %Ld\n" size;
-                   Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-                     "time slots :";
-                   List.iter
-                     (fun (start, end_exc) ->
-                        Debug_print.bprintf ~indent_level:(indent_level + 5)
-                          buffer "[%Ld, %Ld)\n" start end_exc)
-                     time_slots)
+              (* (fun sched_req_template ->
+               *    match sched_req_template with
+               *    | Sched_req_data_unit_skeleton.Fixed
+               *        { task_seg_related_data; start } ->
+               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
+               *        "fixed : size : %Ld, start : %Ld\n" task_seg_related_data
+               *        start
+               *    | Shift (l, time_slots) ->
+               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
+               *        "shift :\n";
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "sizes :\n";
+               *      List.iter
+               *        (fun size ->
+               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
+               *             buffer "%Ld\n" size)
+               *        l;
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "time slots :";
+               *      List.iter
+               *        (fun (start, end_exc) ->
+               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
+               *             buffer "[%Ld, %Ld)\n" start end_exc)
+               *        time_slots
+               *    | Split_and_shift (size, time_slots) ->
+               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
+               *        "split and shift :";
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "size : %Ld\n" size;
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "time slots :";
+               *      List.iter
+               *        (fun (start, end_exc) ->
+               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
+               *             buffer "[%Ld, %Ld)\n" start end_exc)
+               *        time_slots
+               *    | Split_even { task_seg_related_data; time_slots; buckets } ->
+               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
+               *        "split even :";
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "size : %Ld\n" task_seg_related_data;
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "time slots :";
+               *      List.iter
+               *        (fun (start, end_exc) ->
+               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
+               *             buffer "[%Ld, %Ld)\n" start end_exc)
+               *        time_slots;
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "buckets :";
+               *      List.iter
+               *        (fun (start, end_exc) ->
+               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
+               *             buffer "[%Ld, %Ld)\n" start end_exc)
+               *        buckets
+               *    | Time_share (sizes, time_slots) ->
+               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
+               *        "time share :";
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "sizes :";
+               *      List.iter
+               *        (fun size ->
+               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
+               *             buffer "%Ld\n" size)
+               *        sizes;
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "time slots :";
+               *      List.iter
+               *        (fun (start, end_exc) ->
+               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
+               *             buffer "[%Ld, %Ld)\n" start end_exc)
+               *        time_slots
+               *    | Push_toward (size, target, time_slots) ->
+               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
+               *        "push to :";
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "direction : %s\n"
+               *        (match dir with `Front -> "front" | `Back -> "right");
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "size : %Ld\n" size;
+               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
+               *        "time slots :";
+               *      List.iter
+               *        (fun (start, end_exc) ->
+               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
+               *             buffer "[%Ld, %Ld)\n" start end_exc)
+               *        time_slots) *)
+              (fun x ->
+                 Sched_req_data_unit_skeleton.Print
+                 .debug_string_of_sched_req_data_unit_skeleton ~buffer
+                   ~indent_level:(indent_level + 3)
+                   ~string_of_data:Int64.to_string
+                   ~string_of_time:Int64.to_string
+                   ~string_of_time_slot:Time_slot.to_string x
+                 |> ignore)
               sched_req_templates
           | Time_pattern_match _ -> failwith "Unimplemented" ) );
     Buffer.contents buffer

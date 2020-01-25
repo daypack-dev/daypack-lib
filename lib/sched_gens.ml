@@ -1,3 +1,5 @@
+open Int64_utils
+
 let backtracking_search ~start ~end_exc ~(base : Sched.sched)
     ((_sched_req_id, sched_req_record_data_list) : Sched_req.sched_req_record) :
   Sched.sched Seq.t =
@@ -8,7 +10,7 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
     time_slots |> Time_slot.normalize_list_in_seq_out
     |> Time_slot.intersect free_time_slots
   in
-  OSeq.flat_map
+  Seq.flat_map
     (fun sched_req_record_data ->
        match sched_req_record_data with
        | Sched_req_data_unit_skeleton.Fixed
@@ -49,19 +51,31 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
              ~task_segs usable_time_slots
          in
          Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s)
-       | Push_to (`Front, task_seg, time_slots) ->
+       | Push_toward (task_seg, target, time_slots) ->
          let usable_time_slots = get_usable_time_slots time_slots in
-         let s =
-           Task_seg_place_gens.single_task_seg_shift ~cur_pos:start ~incre:15L
+         let s1 =
+           Task_seg_place_gens.single_task_seg_shift ~cur_pos:target ~incre:15L
              ~task_seg usable_time_slots
            |> OSeq.take 1
          in
-         Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s)
-       | Push_to (`Back, task_seg, time_slots) ->
-         let usable_time_slots = get_usable_time_slots time_slots in
-         let s =
+         let s2 =
            Task_seg_place_gens.single_task_seg_shift_rev
-             ~cur_end_pos_exc:end_exc ~incre:15L ~task_seg usable_time_slots
+             ~cur_end_pos_exc:target ~incre:15L ~task_seg usable_time_slots
+           |> OSeq.take 1
+         in
+         let s =
+           OSeq.sorted_merge
+             ~cmp:(fun (_id1, start1, end_exc1) (_id2, start2, end_exc2) ->
+                 let distance1 =
+                   let mid1 = (end_exc1 +^ start1) /^ 2L in
+                   Int64.abs (mid1 -^ target)
+                 in
+                 let distance2 =
+                   let mid2 = (end_exc2 +^ start2) /^ 2L in
+                   Int64.abs (mid2 -^ target)
+                 in
+                 compare distance1 distance2)
+             s1 s2
            |> OSeq.take 1
          in
          Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s))

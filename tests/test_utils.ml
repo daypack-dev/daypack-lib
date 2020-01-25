@@ -218,10 +218,10 @@ let sched_req_template_gen =
              (task_segs, time_slots))
         task_seg_sizes_gen tiny_time_slots_gen;
       map3
-        (fun direction task_seg time_slots ->
-           Daypack_lib.Sched_req_data_unit_skeleton.Push_to
-             (direction, task_seg, time_slots))
-        push_direction_gen task_seg_size_gen tiny_time_slots_gen;
+        (fun task_seg target time_slots ->
+           Daypack_lib.Sched_req_data_unit_skeleton.Push_toward
+             (task_seg, target, time_slots))
+        task_seg_size_gen pos_int64_gen tiny_time_slots_gen;
     ]
 
 let sched_req_templates_gen =
@@ -234,6 +234,7 @@ let sched_req_data_unit_gen :
     (fun task_inst_id sched_req_template ->
        Daypack_lib.Sched_req_data_unit_skeleton.map
          ~f_data:(fun task_seg_size -> (task_inst_id, task_seg_size))
+         ~f_time:(fun x -> x)
          ~f_time_slot:(fun x -> x)
          sched_req_template)
     task_inst_id_gen sched_req_template_gen
@@ -253,6 +254,7 @@ let sched_req_record_data_unit_gen :
     (fun task_seg_id sched_req_template ->
        Daypack_lib.Sched_req_data_unit_skeleton.map
          ~f_data:(fun task_seg_size -> (task_seg_id, task_seg_size))
+         ~f_time:(fun x -> x)
          ~f_time_slot:(fun x -> x)
          sched_req_template)
     task_seg_id_gen sched_req_template_gen

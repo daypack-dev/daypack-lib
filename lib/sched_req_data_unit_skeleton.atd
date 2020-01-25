@@ -1,21 +1,21 @@
 type int64 <ocaml from="Int64"> = abstract
 
-type 'a fixed = {
-  task_seg_related_data : 'a;
-  start : int64;
+type ('task_seg_related_data, 'time) fixed = {
+  task_seg_related_data : 'task_seg_related_data;
+  start : 'time;
 }
 
-type ('a, 'b) split_even = {
-  task_seg_related_data : 'a;
-  time_slots : 'b list;
-  buckets : 'b list;
+type ('task_seg_related_data, 'time_slot) split_even = {
+  task_seg_related_data : 'task_seg_related_data;
+  time_slots : 'time_slot list;
+  buckets : 'time_slot list;
 }
 
-type ('a, 'b) sched_req_data_unit_skeleton = [
-  | Fixed of 'a fixed
-  | Shift of ('a list * 'b list)
-  | Split_and_shift of ('a * 'b list)
-  | Split_even of ('a, 'b) split_even
-  | Time_share of ('a list * 'b list)
-  | Push_to of ([Front | Back] * 'a * 'b list)
+type ('task_seg_related_data, 'time, 'time_slot) sched_req_data_unit_skeleton = [
+  | Fixed of ('task_seg_related_data, 'time) fixed
+  | Shift of ('task_seg_related_data list * 'time_slot list)
+  | Split_and_shift of ('task_seg_related_data * 'time_slot list)
+  | Split_even of ('task_seg_related_data, 'time_slot) split_even
+  | Time_share of ('task_seg_related_data list * 'time_slot list)
+  | Push_toward of ('task_seg_related_data * 'time * 'time_slot list)
 ]
