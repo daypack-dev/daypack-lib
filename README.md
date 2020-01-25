@@ -74,7 +74,7 @@ Specific types of constraints (or scheduling requests) supported
 
   - Interleave multiple task segments with some specified interval size
 
-  - E.g. "Interleave task A, B, C across 1pm-4pm with interval size of 30 mins" produces
+  - E.g. "Interleave task A, B, C across 1pm-4:30pm with interval size of 30 mins" produces
     the following agenda
 
     - | Time slots    | Task   |
@@ -85,6 +85,7 @@ Specific types of constraints (or scheduling requests) supported
       | 2:30pm-3:00pm | Task A |
       | 3:00pm-3:30pm | Task B |
       | 3:30pm-4:00pm | Task C |
+      | 4:00pm-4:30pm | Task A |
 
 - `Push_toward`
 
