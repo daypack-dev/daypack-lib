@@ -31,9 +31,17 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
              |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
        | Split_and_shift x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
-         Task_seg_place_gens.single_task_seg_multi_splits_max_shift
-           ~min_seg_size:5L ~max_seg_size:None ~split_count:4L ~incre:15L
+         (
+           match x.split_count with
+           | Max_split split_count ->
+           Task_seg_place_gens.single_task_seg_multi_splits_max_shift
+           ~min_seg_size:x.min_seg_size ~max_seg_size:x.max_seg_size ~split_count ~incre:x.incre
            ~task_seg:x.task_seg_related_data usable_time_slots
+           | Exact_split split_count ->
+           Task_seg_place_gens.single_task_seg_multi_splits_exact_shift
+           ~min_seg_size:x.min_seg_size ~max_seg_size:x.max_seg_size ~split_count ~incre:x.incre
+           ~task_seg:x.task_seg_related_data usable_time_slots
+         )
          |> OSeq.map (fun place_s ->
              base
              |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
@@ -54,7 +62,7 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
        | Push_toward x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          let s1 =
-           Task_seg_place_gens.single_task_seg_shift ~cur_pos:x.target ~incre:15L
+           Task_seg_place_gens.single_task_seg_shift ~cur_pos:x.target ~incre:x.incre
              ~task_seg:x.task_seg_related_data usable_time_slots
            |> OSeq.take 1
          in
