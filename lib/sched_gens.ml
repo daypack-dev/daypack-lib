@@ -64,8 +64,7 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
            |> OSeq.take 1
          in
          let s =
-           OSeq.append s1 s2
-           |> OSeq.sort
+           OSeq.sorted_merge
              ~cmp:(fun (_id1, start1, end_exc1) (_id2, start2, end_exc2) ->
                  let distance1 =
                    let mid1 = (end_exc1 +^ start1) /^ 2L in
@@ -76,6 +75,7 @@ let backtracking_search ~start ~end_exc ~(base : Sched.sched)
                    Int64.abs (mid2 -^ target)
                  in
                  compare distance1 distance2)
+             s1 s2
            |> OSeq.take 1
          in
          Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s))
