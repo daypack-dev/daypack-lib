@@ -5,18 +5,38 @@ type ('task_seg_related_data, 'time) fixed = {
   start : 'time;
 }
 
+type ('task_seg_related_data, 'time_slot) shift = {
+  task_seg_related_data_list : 'task_seg_related_data list;
+  time_slots : 'time_slot list;
+  incre : int64;
+}
+
+type ('task_seg_related_data, 'time_slot) split_and_shift = {
+  task_seg_related_data : 'task_seg_related_data;
+  time_slots : 'time_slot list;
+  incre : int64;
+  min_seg_size : int64;
+  max_seg_size : int64;
+}
+
 type ('task_seg_related_data, 'time_slot) split_even = {
   task_seg_related_data : 'task_seg_related_data;
   time_slots : 'time_slot list;
   buckets : 'time_slot list;
 }
 
+type ('task_seg_related_data, 'time_slot) time_share = {
+  task_seg_related_data_list : 'task_seg_related_data list;
+  time_slots : 'time_slot list;
+  interval : int64;
+}
+
 type ('task_seg_related_data, 'time, 'time_slot) t =
   | Fixed of ('task_seg_related_data, 'time) fixed
-  | Shift of 'task_seg_related_data list * 'time_slot list
-  | Split_and_shift of 'task_seg_related_data * 'time_slot list
+  | Shift of ('task_seg_related_data, 'time_slot) shift
+  | Split_and_shift of ('task_seg_related_data, 'time_slot) split_and_shift
   | Split_even of ('task_seg_related_data, 'time_slot) split_even
-  | Time_share of 'task_seg_related_data list * 'time_slot list
+  | Time_share of ('task_seg_related_data, 'time_slot) time_share
   | Push_toward of 'task_seg_related_data * 'time * 'time_slot list
 
 let shift_time ~offset (t : ('a, int64, Time_slot.t) t) :
