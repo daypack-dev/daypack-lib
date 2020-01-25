@@ -36,7 +36,62 @@ Overview
 
 Specific types of constraints (or scheduling requests) supported
 
--
+- `Fixed`
+
+  - Manual scheduling, specifies a task segment starts at a fixed time point
+
+  - E.g. "Meeting starts at 2pm"
+
+- `Shift`
+
+  - Daypack shifts the task segment(s) around and tries to find a spot
+  
+  - E.g. "Homework takes 2 hours, schedule it for me between 9am-5pm of next 3 days"
+
+- `Split_and_shift`
+
+  - Daypack splits task segment into smaller segments (with some specificed minimum size),
+    then shifts them around and tries to find a spot
+
+  - E.g. "This work needs 5 hours of work, I need it done by the end of this week,
+    split and shift for me, but all split segments must be at least 1 hour"
+
+- `Split_even`
+
+  - Daypack splits a task segment into evenly sized smaller segments across some specified
+    buckets/boundaries with shifting
+
+    - If some buckets are not usable, then Daypack tries to split across remaining
+      buckets with larger even splits
+
+  - E.g. "I want to exercise 5 hours, split it evenly across next 7 days, boundaries
+    being 1pm-5pm of each day, and then shift"
+
+    - If one day ends up being too full to be used, then Daypack splits across 6 days instead,
+      and so on
+
+- `Time_share`
+
+  - Interleave multiple task segments with some specified interval size
+
+  - E.g. "Interleave task A, B, C across 1pm-4pm with interval size of 30 mins" produces
+    the following agenda
+
+    - | Time slots    | Task   |
+      | ---           | ---    |
+      | 1:00pm-1:30pm | Task A |
+      | 1:30pm-2:00pm | Task B |
+      | 2:00pm-2:30pm | Task C |
+      | 2:30pm-3:00pm | Task A |
+      | 3:00pm-3:30pm | Task B |
+      | 3:30pm-4:00pm | Task C |
+
+- `Push_toward`
+
+  - Similar to shifting, but tries positions closest to a specified time first
+
+  - E.g. "I need this done, which takes 15mins, it needs to be done between 4pm-10pm,
+    but I want it as close to 6pm as possible"
 
 ## Architecture and limitations
 
