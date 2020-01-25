@@ -58,8 +58,8 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
   - Daypack splits task segment into smaller segments (with some specificed minimum size),
     then shifts them around and tries to find a spot
 
-  - E.g. "This work needs 5 hours of work, I need it done by the end of this week,
-    split and shift for me, but all split segments must be at least 1 hour"
+  - E.g. "This work takes 5 hours, I need it done by the end of this week,
+    split and shift for me across 5pm-10pm of said days, but all split segments must be at least 1 hour long"
 
 - `Split_even`
 
