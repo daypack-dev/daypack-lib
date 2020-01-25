@@ -20,36 +20,39 @@ let flexibility_score_of_sched_req_record
     ((_id, req_record_data_list) : sched_req_record) : float =
   match List.hd req_record_data_list with
   | Sched_req_data_unit_skeleton.Fixed _ -> 0.0
-  | Shift (task_seg_alloc_reqs, time_slots) ->
+  | Shift x ->
     let task_seg_alloc_req_sum_len =
-      Task.task_seg_alloc_req_sum_length task_seg_alloc_reqs |> Int64.to_float
+      Task.task_seg_alloc_req_sum_length x.task_seg_related_data_list |> Int64.to_float
     in
     let time_slot_sum_len =
-      Time_slot.sum_length_list time_slots |> Int64.to_float
+      Time_slot.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (task_seg_alloc_req_sum_len /. time_slot_sum_len)
-  | Split_and_shift ((_, size), time_slots) ->
+  | Split_and_shift x ->
+    let (_, size) = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slot.sum_length_list time_slots |> Int64.to_float
+      Time_slot.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
-  | Split_even { task_seg_related_data = _, size; time_slots; buckets } ->
+  | Split_even x ->
+    let (_, size) = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slot.intersect (time_slots |> List.to_seq) (buckets |> List.to_seq)
+      Time_slot.intersect (x.time_slots |> List.to_seq) (x.buckets |> List.to_seq)
       |> List.of_seq |> Time_slot.sum_length_list |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
-  | Time_share (task_seg_alloc_reqs, time_slots) ->
+  | Time_share x ->
     let task_seg_alloc_req_sum_len =
-      Task.task_seg_alloc_req_sum_length task_seg_alloc_reqs |> Int64.to_float
+      Task.task_seg_alloc_req_sum_length x.task_seg_related_data_list |> Int64.to_float
     in
     let time_slot_sum_len =
-      Time_slot.sum_length_list time_slots |> Int64.to_float
+      Time_slot.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (task_seg_alloc_req_sum_len /. time_slot_sum_len)
-  | Push_toward ((_, size), _, time_slots) ->
+  | Push_toward x ->
+    let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slot.sum_length_list time_slots |> Int64.to_float
+      Time_slot.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
 
@@ -71,11 +74,11 @@ let sched_req_bound_on_start_and_end_exc
          | Sched_req_data_unit_skeleton.Fixed
              { task_seg_related_data = _, task_seg_size; start } ->
            Some (start, start +^ task_seg_size)
-         | Shift (_, time_slots)
-         | Split_and_shift (_, time_slots)
+         | Shift { time_slots; _ }
+         | Split_and_shift { time_slots; }
          | Split_even { time_slots; _ }
-         | Time_share (_, time_slots)
-         | Push_toward (_, _, time_slots) ->
+         | Time_share { time_slots; _ }
+         | Push_toward { time_slots; _ } ->
            Time_slot.min_start_and_max_end_exc_list time_slots
        in
        match acc with
