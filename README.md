@@ -55,7 +55,7 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 - `Split_and_shift`
 
-  - Daypack splits task segment into smaller segments (with some specificed minimum size),
+  - Daypack splits task segment into smaller segments (with some specificed minimum size, and optional maximum size),
     then shifts them around and tries to find a spot
 
   - E.g. "This work takes 5 hours, I need it done by the end of this week,
