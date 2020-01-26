@@ -356,36 +356,60 @@ let debug_sched_backtracking_search_pending () =
             incre = 1L;
           };
       ];
-      [ Shift {task_seg_related_data_list = [ ((0L, 0L, 0L), 10L) ];
-               time_slots = [ (0L, 50L) ];
-               incre = 1L;
-              } ];
-      [ Shift {task_seg_related_data_list = [ ((0L, 0L, 0L), 10L) ];
-               time_slots = [ (0L, 50L) ];
-               incre = 1L;} ];
-      [ Split_and_shift {
+      [
+        Shift
+          {
+            task_seg_related_data_list = [ ((0L, 0L, 0L), 10L) ];
+            time_slots = [ (0L, 50L) ];
+            incre = 1L;
+          };
+      ];
+      [
+        Shift
+          {
+            task_seg_related_data_list = [ ((0L, 0L, 0L), 10L) ];
+            time_slots = [ (0L, 50L) ];
+            incre = 1L;
+          };
+      ];
+      [
+        Split_and_shift
+          {
             task_seg_related_data = ((0L, 0L, 2L), 15L);
             time_slots = [ (50L, 150L) ];
             split_count = Max_split 5L;
             incre = 1L;
             min_seg_size = 2L;
             max_seg_size = None;
-          } ];
-      [
-        Time_share
-          {task_seg_related_data_list = [ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ];
-           time_slots = [ (50L, 200L) ];
-           interval_size = 30L;
           };
       ];
-      [ Push_toward {task_seg_related_data = ((0L, 0L, 4L), 10L);
-                     target = 100L;
-                     time_slots = [ (0L, 200L) ];
-                    incre = 1L} ];
-      [ Push_toward {task_seg_related_data = ((0L, 0L, 5L), 10L);
-                     target = 75L;
-                     time_slots = [ (0L, 200L) ];
-                    incre = 1L} ];
+      [
+        Time_share
+          {
+            task_seg_related_data_list =
+              [ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ];
+            time_slots = [ (50L, 200L) ];
+            interval_size = 30L;
+          };
+      ];
+      [
+        Push_toward
+          {
+            task_seg_related_data = ((0L, 0L, 4L), 10L);
+            target = 100L;
+            time_slots = [ (0L, 200L) ];
+            incre = 1L;
+          };
+      ];
+      [
+        Push_toward
+          {
+            task_seg_related_data = ((0L, 0L, 5L), 10L);
+            target = 75L;
+            time_slots = [ (0L, 200L) ];
+            incre = 1L;
+          };
+      ];
     ]
   in
   let quota =

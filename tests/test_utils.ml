@@ -187,7 +187,17 @@ let task_inst =
   let open QCheck in
   make ~print:Daypack_lib.Task.Print.debug_string_of_task_inst task_inst_gen
 
-let split_count_gen = QCheck.Gen.(oneof [ map (fun x -> Daypack_lib.Sched_req_data_unit_skeleton.Max_split x) pos_int64_gen; map (fun x -> Daypack_lib.Sched_req_data_unit_skeleton.Exact_split x) pos_int64_gen;])
+let split_count_gen =
+  let open QCheck.Gen in
+  oneof
+    [
+      map
+        (fun x -> Daypack_lib.Sched_req_data_unit_skeleton.Max_split x)
+        pos_int64_gen;
+      map
+        (fun x -> Daypack_lib.Sched_req_data_unit_skeleton.Exact_split x)
+        pos_int64_gen;
+    ]
 
 let sched_req_template_gen =
   let open QCheck.Gen in
@@ -201,48 +211,43 @@ let sched_req_template_gen =
       map3
         (fun task_seg_related_data_list time_slots incre ->
            Daypack_lib.Sched_req_data_unit_skeleton.Shift
-             {
-               task_seg_related_data_list;
-               time_slots;
-               incre;
-             }
-        )
+             { task_seg_related_data_list; time_slots; incre })
         task_seg_sizes_gen tiny_time_slots_gen small_nz_pos_int64_gen;
       map3
-        (fun task_seg_related_data time_slots (incre, split_count, min_seg_size, offset) ->
-           let max_seg_size = Option.map (fun x -> Int64.add min_seg_size x) offset in
-           Daypack_lib.Sched_req_data_unit_skeleton.Split_and_shift
-             {task_seg_related_data;
+        (fun task_seg_related_data time_slots
+          (incre, split_count, min_seg_size, offset) ->
+          let max_seg_size =
+            Option.map (fun x -> Int64.add min_seg_size x) offset
+          in
+          Daypack_lib.Sched_req_data_unit_skeleton.Split_and_shift
+            {
+              task_seg_related_data;
               time_slots;
               incre;
               split_count;
               min_seg_size;
               max_seg_size;
-             }
-        )
-        task_seg_size_gen tiny_time_slots_gen (quad small_nz_pos_int64_gen split_count_gen small_pos_int64_gen (QCheck.Gen.opt small_pos_int64_gen));
+            })
+        task_seg_size_gen tiny_time_slots_gen
+        (quad small_nz_pos_int64_gen split_count_gen small_pos_int64_gen
+           (QCheck.Gen.opt small_pos_int64_gen));
       map3
         (fun task_seg_related_data time_slots (buckets, incre) ->
            Daypack_lib.Sched_req_data_unit_skeleton.Split_even
-             { task_seg_related_data; time_slots; buckets; incre }
-        )
-        task_seg_size_gen tiny_time_slots_gen (pair tiny_time_slots_gen small_pos_int64_gen);
+             { task_seg_related_data; time_slots; buckets; incre })
+        task_seg_size_gen tiny_time_slots_gen
+        (pair tiny_time_slots_gen small_pos_int64_gen);
       map3
         (fun task_seg_related_data_list time_slots interval_size ->
            Daypack_lib.Sched_req_data_unit_skeleton.Time_share
-             {task_seg_related_data_list;
-              time_slots;
-              interval_size;
-             })
+             { task_seg_related_data_list; time_slots; interval_size })
         task_seg_sizes_gen tiny_time_slots_gen small_pos_int64_gen;
       map3
         (fun task_seg_related_data target (time_slots, incre) ->
            Daypack_lib.Sched_req_data_unit_skeleton.Push_toward
-             {task_seg_related_data;
-              target;
-              time_slots;
-        incre})
-        task_seg_size_gen pos_int64_gen (pair tiny_time_slots_gen small_pos_int64_gen);
+             { task_seg_related_data; target; time_slots; incre })
+        task_seg_size_gen pos_int64_gen
+        (pair tiny_time_slots_gen small_pos_int64_gen);
     ]
 
 let sched_req_templates_gen =

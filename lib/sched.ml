@@ -531,32 +531,31 @@ module Sched_req_store = struct
              Task_seg_store.add_task_segs_via_task_seg_alloc_req_list
                x.task_seg_related_data_list sched
            in
-           (Shift {x with task_seg_related_data_list; } :: acc, sched)
+           (Shift { x with task_seg_related_data_list } :: acc, sched)
          | Split_and_shift x ->
            let task_seg_related_data, sched =
              Task_seg_store.add_task_seg_via_task_seg_alloc_req
                x.task_seg_related_data sched
            in
-           (Split_and_shift {x with task_seg_related_data; } :: acc, sched)
+           (Split_and_shift { x with task_seg_related_data } :: acc, sched)
          | Split_even x ->
            let task_seg_related_data, sched =
              Task_seg_store.add_task_seg_via_task_seg_alloc_req
                x.task_seg_related_data sched
            in
-           ( Split_even { x with task_seg_related_data; } :: acc,
-             sched )
+           (Split_even { x with task_seg_related_data } :: acc, sched)
          | Time_share x ->
            let task_seg_related_data_list, sched =
              Task_seg_store.add_task_segs_via_task_seg_alloc_req_list
                x.task_seg_related_data_list sched
            in
-           (Time_share { x with task_seg_related_data_list; } :: acc, sched)
+           (Time_share { x with task_seg_related_data_list } :: acc, sched)
          | Push_toward x ->
            let task_seg_related_data, sched =
              Task_seg_store.add_task_seg_via_task_seg_alloc_req
                x.task_seg_related_data sched
            in
-           (Push_toward { x with task_seg_related_data; } :: acc, sched))
+           (Push_toward { x with task_seg_related_data } :: acc, sched))
       ([], sched) sched_req_data
 
   let allocate_task_segs_for_sched_req_list
