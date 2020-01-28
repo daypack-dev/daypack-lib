@@ -336,7 +336,7 @@ let debug_union_time_slots () =
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_sched_backtracking_search_pending () =
-  print_endline "Debug print for Sched_gens.backtracking_search_pending";
+  print_endline "Debug print for Sched_search.backtracking_search_pending";
   let sched_req_data_list =
     let open Sched_req_data_unit_skeleton in
     [
@@ -435,7 +435,7 @@ let debug_sched_backtracking_search_pending () =
     |> Sched.Quota_store.update_quota quota
     |> Sched.Sched_req_store.queue_sched_req_data_list sched_req_data_list
   in
-  Sched_gens.backtracking_search_pending ~start:0L ~end_exc:50L
+  Sched_search.backtracking_search_pending ~start:0L ~end_exc:50L
     ~include_sched_reqs_partially_within_time_period:true
     ~up_to_sched_req_id_inc:None ~base
   |> OSeq.take 1
