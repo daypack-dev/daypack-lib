@@ -1,6 +1,6 @@
 open Int64_utils
 
-let backtracking_search ~start ~end_exc ~(base : Sched.sched)
+let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     ((_sched_req_id, sched_req_record_data_list) : Sched_req.sched_req_record) :
   Sched.sched Seq.t =
   let free_time_slots =
@@ -99,7 +99,7 @@ let backtracking_search_multi ~start ~end_exc ~base
     (fun sched_seq sched_req ->
        Seq.flat_map
          (fun sched ->
-            backtracking_search ~start ~end_exc ~base:sched sched_req)
+            brute_force_single ~start ~end_exc ~base:sched sched_req)
          sched_seq)
     (Seq.return base)
 
@@ -112,3 +112,16 @@ let backtracking_search_pending ~start ~end_exc
       ~up_to_sched_req_id_inc base
   in
   backtracking_search_multi ~start ~end_exc ~base sched_req_records
+
+(* let branch_and_bound ~start ~end_exc ~f_score:(Sched.sched -> Task.task_seg_place -> float)
+ *     ~base
+ *     ((_sched_req_id, sched_req_record_data_list) : Sched_req.sched_req_record)
+ *   : Sched.sched =
+ *   let free_time_slots =
+ *     Sched.Time_slot.get_free_time_slots ~start ~end_exc base
+ *   in
+ *   let get_usable_time_slots time_slots =
+ *     time_slots |> Time_slot.normalize_list_in_seq_out
+ *     |> Time_slot.intersect free_time_slots
+ *   in
+ *   let rec aux (branch : Sched.sched list)  *)
