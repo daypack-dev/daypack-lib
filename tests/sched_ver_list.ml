@@ -14,3 +14,5 @@ let qc_of_base_and_diffs_is_inverse_of_to_base_and_diffs =
          List.for_all2
            (fun s1 s2 -> Daypack_lib.Sched.Equal.sched_equal s1 s2)
            scheds reconstructed_scheds)
+
+let suite = [ qc_of_base_and_diffs_is_inverse_of_to_base_and_diffs ]
