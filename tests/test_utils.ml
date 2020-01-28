@@ -187,41 +187,67 @@ let task_inst =
   let open QCheck in
   make ~print:Daypack_lib.Task.Print.debug_string_of_task_inst task_inst_gen
 
-let push_direction_gen = QCheck.Gen.(oneof [ return `Front; return `Back ])
+let split_count_gen =
+  let open QCheck.Gen in
+  oneof
+    [
+      map
+        (fun x -> Daypack_lib.Sched_req_data_unit_skeleton.Max_split x)
+        pos_int64_gen;
+      map
+        (fun x -> Daypack_lib.Sched_req_data_unit_skeleton.Exact_split x)
+        pos_int64_gen;
+    ]
 
 let sched_req_template_gen =
   let open QCheck.Gen in
   oneof
     [
       map2
-        (fun task_seg start ->
+        (fun task_seg_related_data start ->
            Daypack_lib.Sched_req_data_unit_skeleton.Fixed
-             { task_seg_related_data = task_seg; start })
+             { task_seg_related_data; start })
         task_seg_size_gen pos_int64_gen;
-      map2
-        (fun task_segs time_slots ->
-           Daypack_lib.Sched_req_data_unit_skeleton.Shift (task_segs, time_slots))
-        task_seg_sizes_gen tiny_time_slots_gen;
-      map2
-        (fun task_seg time_slots ->
-           Daypack_lib.Sched_req_data_unit_skeleton.Split_and_shift
-             (task_seg, time_slots))
-        task_seg_size_gen tiny_time_slots_gen;
       map3
-        (fun task_seg time_slots buckets ->
+        (fun task_seg_related_data_list time_slots incre ->
+           Daypack_lib.Sched_req_data_unit_skeleton.Shift
+             { task_seg_related_data_list; time_slots; incre })
+        task_seg_sizes_gen tiny_time_slots_gen small_nz_pos_int64_gen;
+      map3
+        (fun task_seg_related_data time_slots
+          (incre, split_count, min_seg_size, offset) ->
+          let max_seg_size =
+            Option.map (fun x -> Int64.add min_seg_size x) offset
+          in
+          Daypack_lib.Sched_req_data_unit_skeleton.Split_and_shift
+            {
+              task_seg_related_data;
+              time_slots;
+              incre;
+              split_count;
+              min_seg_size;
+              max_seg_size;
+            })
+        task_seg_size_gen tiny_time_slots_gen
+        (quad small_nz_pos_int64_gen split_count_gen small_pos_int64_gen
+           (QCheck.Gen.opt small_pos_int64_gen));
+      map3
+        (fun task_seg_related_data time_slots (buckets, incre) ->
            Daypack_lib.Sched_req_data_unit_skeleton.Split_even
-             { task_seg_related_data = task_seg; time_slots; buckets })
-        task_seg_size_gen tiny_time_slots_gen tiny_time_slots_gen;
-      map2
-        (fun task_segs time_slots ->
-           Daypack_lib.Sched_req_data_unit_skeleton.Time_share
-             (task_segs, time_slots))
-        task_seg_sizes_gen tiny_time_slots_gen;
+             { task_seg_related_data; time_slots; buckets; incre })
+        task_seg_size_gen tiny_time_slots_gen
+        (pair tiny_time_slots_gen small_pos_int64_gen);
       map3
-        (fun task_seg target time_slots ->
+        (fun task_seg_related_data_list time_slots interval_size ->
+           Daypack_lib.Sched_req_data_unit_skeleton.Time_share
+             { task_seg_related_data_list; time_slots; interval_size })
+        task_seg_sizes_gen tiny_time_slots_gen small_pos_int64_gen;
+      map3
+        (fun task_seg_related_data target (time_slots, incre) ->
            Daypack_lib.Sched_req_data_unit_skeleton.Push_toward
-             (task_seg, target, time_slots))
-        task_seg_size_gen pos_int64_gen tiny_time_slots_gen;
+             { task_seg_related_data; target; time_slots; incre })
+        task_seg_size_gen pos_int64_gen
+        (pair tiny_time_slots_gen small_pos_int64_gen);
     ]
 
 let sched_req_templates_gen =
@@ -357,7 +383,7 @@ let task_seg_places =
     Printf.printf "|> List.to_seq\n";
     Printf.printf "|> %s\n" f_of_seq;
     Printf.printf ")\n";
-    Printf.printf "(list_size (int_bound 100) %s)\n" inner_typ_gen
+    Printf.printf "(list_size (int_bound 20) %s)\n" inner_typ_gen
   in
 
   let print_store_arbitrary ~name ~f_to_seq ~inner_typ_print =
@@ -442,7 +468,7 @@ let task_store_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Task_id_map.of_seq)
-    (list_size (int_bound 100) task_gen)
+    (list_size (int_bound 20) task_gen)
 
 let task_store =
   QCheck.make
@@ -455,7 +481,7 @@ let task_inst_store_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq)
-    (list_size (int_bound 100) task_inst_gen)
+    (list_size (int_bound 20) task_inst_gen)
 
 let task_inst_store =
   QCheck.make
@@ -468,7 +494,7 @@ let task_seg_store_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Task_seg_id_map.of_seq)
-    (list_size (int_bound 100) task_seg_gen)
+    (list_size (int_bound 20) task_seg_gen)
 
 let task_seg_store =
   QCheck.make
@@ -481,7 +507,7 @@ let sched_req_store_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Sched_req_id_map.of_seq)
-    (list_size (int_bound 100) sched_req_gen)
+    (list_size (int_bound 20) sched_req_gen)
 
 let sched_req_store =
   QCheck.make
@@ -494,7 +520,7 @@ let sched_req_record_store_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Sched_req_id_map.of_seq)
-    (list_size (int_bound 100) sched_req_record_gen)
+    (list_size (int_bound 20) sched_req_record_gen)
 
 let sched_req_record_store =
   QCheck.make
@@ -508,7 +534,7 @@ let quota_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq)
-    (list_size (int_bound 100) (pair task_inst_id_gen pos_int64_gen))
+    (list_size (int_bound 20) (pair task_inst_id_gen pos_int64_gen))
 
 let quota =
   QCheck.make
@@ -523,7 +549,7 @@ let user_id_to_task_ids_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.User_id_map.of_seq)
-    (list_size (int_bound 100) (pair pos_int64_gen pos_int64_set_gen))
+    (list_size (int_bound 20) (pair pos_int64_gen pos_int64_set_gen))
 
 let user_id_to_task_ids =
   QCheck.make
@@ -538,7 +564,7 @@ let task_id_to_task_inst_ids_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Task_id_map.of_seq)
-    (list_size (int_bound 100) (pair task_id_gen pos_int64_set_gen))
+    (list_size (int_bound 20) (pair task_id_gen pos_int64_set_gen))
 
 let task_id_to_task_inst_ids =
   QCheck.make
@@ -553,7 +579,7 @@ let task_inst_id_to_task_seg_ids_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq)
-    (list_size (int_bound 100) (pair task_inst_id_gen pos_int64_set_gen))
+    (list_size (int_bound 20) (pair task_inst_id_gen pos_int64_set_gen))
 
 let task_inst_id_to_task_seg_ids =
   QCheck.make
@@ -568,7 +594,7 @@ let indexed_by_start_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Int64_map.of_seq)
-    (list_size (int_bound 100) (pair pos_int64_gen task_seg_places_gen))
+    (list_size (int_bound 20) (pair pos_int64_gen task_seg_places_gen))
 
 let indexed_by_start =
   QCheck.make

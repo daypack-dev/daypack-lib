@@ -41,11 +41,14 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 #### Constraints (or scheduling strategies) supported
 
+__Note:__ The following lists all the constraints supported by the core library,
+but frontends may not expose them completely
+
 - `Fixed`
 
   - Manual scheduling, specifies a task segment starts at a fixed time point
 
-  - E.g. "Meeting starts at 2pm"
+  - E.g. "Meeting starts at 2pm and last for 1.5 hours"
 
 - `Shift`
 
@@ -55,11 +58,18 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 - `Split_and_shift`
 
-  - Daypack splits task segment into smaller segments (with some specificed minimum size),
-    then shifts them around and tries to find a spot
+  - Daypack splits task segment into smaller segments then shifts them around and tries to find a spot, takes following parameters
 
-  - E.g. "This work needs 5 hours of work, I need it done by the end of this week,
-    split and shift for me, but all split segments must be at least 1 hour"
+    - minimum size
+
+    - maximum size (optional)
+
+    - increment
+
+    - split count (either maximum or exact)
+
+  - E.g. "This work takes 5 hours, I need it done by the end of this week,
+    split and shift for me across 5pm-10pm of said days, but all split segments must be at least 1 hour long"
 
 - `Split_even`
 
@@ -70,7 +80,7 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
       buckets with larger even splits
 
   - E.g. "I want to exercise 5 hours, split it evenly across next 7 days, boundaries
-    being 1pm-5pm of each day, and then shift"
+    being 1pm-5pm of each day"
 
     - If one day ends up being too full to be used, then Daypack splits across 6 days instead,
       and so on
@@ -101,13 +111,18 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 ## Architecture and limitations
 
-Daypack only uses a backtracking search procedure with pruning (implemented using lazy sequences),
+Daypack does not aim to be a general solver, and only supports a limited set of constraints
+(which are listed above)
+
+Furthermore, Daypack only uses a backtracking search procedure with pruning (implemented using lazy sequences)
+for solving the constraints,
 and does not use any advanced or potentially more efficient constraint solving techniques
 
 It is subsequently inferior to a lot of other automatic task scheduling software,
 and cannot accomodate very complex scheduling scenarios
 
-Nevertheless, it might still be useful as a simple and standalone personal task scheduler
+Nevertheless, we hope that the supported constraints are powerful enough for a
+simple and standalone personal task scheduler
 
 More detailed docs on the way
 

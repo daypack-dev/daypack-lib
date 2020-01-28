@@ -336,7 +336,7 @@ let debug_union_time_slots () =
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_sched_backtracking_search_pending () =
-  print_endline "Debug print for Sched_gens.backtracking_search_pending";
+  print_endline "Debug print for Sched_search.backtracking_search_pending";
   let sched_req_data_list =
     let open Sched_req_data_unit_skeleton in
     [
@@ -346,23 +346,70 @@ let debug_sched_backtracking_search_pending () =
             task_seg_related_data = ((0L, 0L, 0L), 20L);
             time_slots = [ (0L, 50L) ];
             buckets = [ (0L, 10L); (10L, 20L) ];
+            incre = 1L;
           };
         Split_even
           {
             task_seg_related_data = ((0L, 0L, 0L), 20L);
             time_slots = [ (50L, 100L) ];
             buckets = [ (50L, 60L); (60L, 70L) ];
+            incre = 1L;
           };
       ];
-      [ Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]) ];
-      [ Shift ([ ((0L, 0L, 0L), 10L) ], [ (0L, 50L) ]) ];
-      [ Split_and_shift (((0L, 0L, 2L), 15L), [ (50L, 150L) ]) ];
+      [
+        Shift
+          {
+            task_seg_related_data_list = [ ((0L, 0L, 0L), 10L) ];
+            time_slots = [ (0L, 50L) ];
+            incre = 1L;
+          };
+      ];
+      [
+        Shift
+          {
+            task_seg_related_data_list = [ ((0L, 0L, 0L), 10L) ];
+            time_slots = [ (0L, 50L) ];
+            incre = 1L;
+          };
+      ];
+      [
+        Split_and_shift
+          {
+            task_seg_related_data = ((0L, 0L, 2L), 15L);
+            time_slots = [ (50L, 150L) ];
+            split_count = Max_split 5L;
+            incre = 1L;
+            min_seg_size = 2L;
+            max_seg_size = None;
+          };
+      ];
       [
         Time_share
-          ([ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ], [ (50L, 200L) ]);
+          {
+            task_seg_related_data_list =
+              [ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ];
+            time_slots = [ (50L, 200L) ];
+            interval_size = 30L;
+          };
       ];
-      [ Push_toward (((0L, 0L, 4L), 10L), 100L, [ (0L, 200L) ]) ];
-      [ Push_toward (((0L, 0L, 5L), 10L), 75L, [ (0L, 200L) ]) ];
+      [
+        Push_toward
+          {
+            task_seg_related_data = ((0L, 0L, 4L), 10L);
+            target = 100L;
+            time_slots = [ (0L, 200L) ];
+            incre = 1L;
+          };
+      ];
+      [
+        Push_toward
+          {
+            task_seg_related_data = ((0L, 0L, 5L), 10L);
+            target = 75L;
+            time_slots = [ (0L, 200L) ];
+            incre = 1L;
+          };
+      ];
     ]
   in
   let quota =
@@ -388,7 +435,7 @@ let debug_sched_backtracking_search_pending () =
     |> Sched.Quota_store.update_quota quota
     |> Sched.Sched_req_store.queue_sched_req_data_list sched_req_data_list
   in
-  Sched_gens.backtracking_search_pending ~start:0L ~end_exc:50L
+  Sched_search.backtracking_search_pending ~start:0L ~end_exc:50L
     ~include_sched_reqs_partially_within_time_period:true
     ~up_to_sched_req_id_inc:None ~base
   |> OSeq.take 1
