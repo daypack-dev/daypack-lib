@@ -485,17 +485,21 @@ let debug_time_pattern () =
   print_endline "Debug print for Time_pattern.next_match_tm";
   let tm =
     ref
-    (Some Unix.{
-      tm_sec = 0;
-      tm_min = 0;
-      tm_hour = 0;
-      tm_mday = 0;
-      tm_mon = 0;
-      tm_year = 0;
-      tm_wday = 0;
-      tm_yday = 0;
-      tm_isdst = false;
-    })
+    (* (Some Unix.{
+     *   tm_sec = 0;
+     *   tm_min = 0;
+     *   tm_hour = 0;
+     *   tm_mday = 0;
+     *   tm_mon = 0;
+     *   tm_year = 0;
+     *   tm_wday = 0;
+     *   tm_yday = 0;
+     *   tm_isdst = false;
+     * }) *)
+      ( Unix.time ()
+        |> Unix.gmtime
+        |> Option.some
+      )
   in
   let pattern =
     Daypack_lib.Time_pattern.{
@@ -506,7 +510,7 @@ let debug_time_pattern () =
       min = Some 1;
     }
   in
-  for _ = 0 to 60 do
+  for _ = 0 to 10 do
     match !tm with
     | Some x ->
       print_endline "=====";
