@@ -19,7 +19,7 @@ let tm_to_time (tm : Unix.tm) : int64 =
   let time, _ = Unix.mktime tm in
   (time |> Int64.of_float) /^ 60L
 
-let jump_to_next_match_tm (t : t) (tm : Unix.tm) : Unix.tm =
+let next_match_tm (t : t) (tm : Unix.tm) : Unix.tm =
   let tm_sec = 0 in
   let tm_min = match t.min with Some x -> x | None -> succ tm.tm_min in
   let tm_hour = match t.hour with Some x -> x | None -> succ tm.tm_hour in
@@ -36,9 +36,11 @@ let jump_to_next_match_tm (t : t) (tm : Unix.tm) : Unix.tm =
   let tm_mon = match t.mon with Some x -> x | None -> succ tm.tm_mon in
   let tm_year = match t.year with Some x -> x | None -> succ tm.tm_year in
   { tm with tm_sec; tm_min; tm_hour; tm_mday; tm_mon; tm_year }
+  |> Unix.mktime
+  |> fun (_, tm) -> tm
 
-let jump_to_next_match_int64 (t : t) (time : int64) : int64 =
-  time_to_tm time |> jump_to_next_match_tm t |> tm_to_time
+let next_match_int64 (t : t) (time : int64) : int64 =
+  time_to_tm time |> next_match_tm t |> tm_to_time
 
 (* let time_patches_pattern (t : t) (time : int64) : bool =
  *   let tm =   in *)
