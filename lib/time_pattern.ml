@@ -113,15 +113,19 @@ let next_match_tm (t : t) (tm : Unix.tm) : Unix.tm option =
       if definitely_bump_mon then
         bump tm.tm_mon t.mon 12
       else
-        let already_matches =
-          match t.mon with
-          | Some x -> x = tm.tm_mon
-          | None -> old_tm.tm_mon < tm.tm_mon
-        in
-        if already_matches then
-          (false, tm.tm_mon)
-        else
-          bump tm.tm_mon t.mon 12
+        (* if old_tm.tm_mon < tm.tm_mon || old_tm.tm_year < tm.tm_year then
+         *   (\* month or year already bumped in above *\)
+         *   match t.mon with
+         *   | Some x ->
+         *     if tm.tm_mon < x then (false, x) else (true, x)
+         *   | None -> (false, tm.tm_mon)
+         * else
+         *   match t.mon with
+         *   | Some x -> *)
+        match t.mon with
+        | Some x ->
+         if tm.tm_mon < x then (false, x) else (true, x)
+        | None -> (false, tm.tm_mon)
     in
     let tm_year =
       if bump_year then
@@ -130,6 +134,7 @@ let next_match_tm (t : t) (tm : Unix.tm) : Unix.tm option =
         tm.tm_year
     in
     { tm with tm_mon; tm_year }
+    (* tm *)
     |> normalize_tm
     |> Option.some
 
