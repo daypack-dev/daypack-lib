@@ -484,7 +484,8 @@ let debug_sched_usage_simulation () =
 let debug_time_pattern () =
   print_endline "Debug print for Time_pattern.next_match_tm";
   let tm =
-    Unix.{
+    ref
+    (Some Unix.{
       tm_sec = 0;
       tm_min = 0;
       tm_hour = 0;
@@ -494,7 +495,7 @@ let debug_time_pattern () =
       tm_wday = 0;
       tm_yday = 0;
       tm_isdst = false;
-    }
+    })
   in
   let pattern =
     Daypack_lib.Time_pattern.{
@@ -502,18 +503,25 @@ let debug_time_pattern () =
       mon = None;
       day = None;
       hour = None;
-      min = None;
+      min = Some 1;
     }
   in
-  let tm = Daypack_lib.Time_pattern.next_match_tm pattern tm in
-  Printf.printf "  tm_sec : %d\n" tm.tm_sec;
-  Printf.printf "  tm_min : %d\n" tm.tm_min;
-  Printf.printf "  tm_hour : %d\n" tm.tm_hour;
-  Printf.printf "  tm_mday : %d\n" tm.tm_mday;
-  Printf.printf "  tm_mon : %d\n" tm.tm_mon;
-  Printf.printf "  tm_year : %d\n" tm.tm_year;
-  Printf.printf "  tm_wday : %d\n" tm.tm_wday;
-  Printf.printf "  tm_yday : %d\n" tm.tm_yday
+  for _ = 0 to 60 do
+    match !tm with
+    | Some x ->
+      print_endline "=====";
+      Printf.printf "  tm_sec : %d\n" x.tm_sec;
+      Printf.printf "  tm_min : %d\n" x.tm_min;
+      Printf.printf "  tm_hour : %d\n" x.tm_hour;
+      Printf.printf "  tm_mday : %d\n" x.tm_mday;
+      Printf.printf "  tm_mon : %d\n" x.tm_mon;
+      Printf.printf "  tm_year : %d\n" x.tm_year;
+      Printf.printf "  tm_wday : %d\n" x.tm_wday;
+      Printf.printf "  tm_yday : %d\n" x.tm_yday;
+      tm := Daypack_lib.Time_pattern.next_match_tm pattern x
+    | None ->
+      print_endline "nothing";
+  done
 
 (* let () = debug_single_task_seg_shift (); print_newline () *)
 
