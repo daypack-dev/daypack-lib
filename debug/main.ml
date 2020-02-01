@@ -510,10 +510,11 @@ let debug_time_pattern () =
       min = Some 1;
     }
   in
-  for _ = 0 to 10 do
+  for i = 0 to 60 do
+    Printf.printf "iter : %d\n" i;
     match !tm with
     | Some x ->
-      print_endline "=====";
+      print_endline "  =====";
       Printf.printf "  tm_sec : %d\n" x.tm_sec;
       Printf.printf "  tm_min : %d\n" x.tm_min;
       Printf.printf "  tm_hour : %d\n" x.tm_hour;
