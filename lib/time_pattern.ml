@@ -17,6 +17,8 @@ type normalize_dir = [
   | `End
 ]
 
+let first_mday = 1
+
 let time_to_tm (time : int64) : Unix.tm =
   time *^ 60L |> Int64.to_float |> Unix.gmtime
 
@@ -32,8 +34,8 @@ let normalize_pattern (dir : normalize_dir) t =
   in
   t
   |> (fun t -> { t with mon = map_none t.year t.mon (match dir with `Start -> 0 | `End -> 11) })
-  |> (fun t -> match dir with `Start -> { t with day = map_none t.mon t.day (Month_day 0) }
-                            | `End -> { t with mon = Option.map pred t.mon; day = map_none t.mon t.day (Month_day (-1)) }
+  |> (fun t -> match dir with `Start -> { t with day = map_none t.mon t.day (Month_day first_mday) }
+                            | `End -> { t with mon = Option.map succ t.mon; day = map_none t.mon t.day (Month_day 0) }
     )
   |> (fun t -> { t with hour = map_none t.day t.hour (match dir with `Start -> 0 | `End -> 23) })
   |> fun t -> { t with min = map_none t.hour t.min (match dir with `Start  -> 0 | `End -> 59) }
