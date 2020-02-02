@@ -35,33 +35,6 @@ let normalize_tm tm =
   let _, tm = Unix.mktime tm in
   tm
 
-(* let next_match_tm (t : t) (tm : Unix.tm) : Unix.tm =
- *   let bump cur pat ub_exc =
- *     match pat with
- *     | Some x ->
- *       if cur < x then
- *         x
- *       else
- *         x + ub_exc
- *     | None ->
- *       succ cur
- *   in
- *   let tm_sec = 0 in
- *   { tm with tm_sec }
- *   |> (fun tm ->
- *       let tm_min =
- *         bump tm.tm_min t.min 60
- *       in
- *       { tm with tm_min }
- *     )
- *   |> normalize_tm
- *   |> (fun tm ->
- *       let tm_hour =
- *         bump tm.tm_hour t.hour 24
- *       in
- *       { tm with tm_hour }
- *     ) *)
-
 let next_match_tm (t : t) (tm : Unix.tm) : Unix.tm option =
   let bump cur pat ub_exc =
     match pat with
@@ -107,15 +80,11 @@ let next_match_tm (t : t) (tm : Unix.tm) : Unix.tm option =
     in
     let tm_year = if bump_year then succ tm.tm_year else tm.tm_year in
     { tm with tm_mon; tm_year }
-    (* tm *)
     |> normalize_tm
     |> Option.some
 
 let next_match_int64 (t : t) (time : int64) : int64 option =
   time_to_tm time |> next_match_tm t |> Option.map tm_to_time
-
-(* let time_patches_pattern (t : t) (time : int64) : bool =
- *   let tm =   in *)
 
 (* let matching_time_slots  (t : t) (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
  *   (\* assume 1 time unit in time slot = 1 minute *\)
