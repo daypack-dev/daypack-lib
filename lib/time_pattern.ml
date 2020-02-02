@@ -51,7 +51,7 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
       if next < ub_exc then (false, next) else (true, 0)
   in
   let next_is_in_past =
-    match t.year with Some x -> x < tm.tm_year | None -> false
+    match t.year with Some x -> (x - 1900) < tm.tm_year | None -> false
   in
   if next_is_in_past then None
   else
