@@ -191,7 +191,8 @@ let multi_task_segs_interleave ~interval_size ~(task_segs : Task.task_seg list)
     let task_segs =
       Seq_utils.zero_to_n_exc_int64 max_round_count
       |> Seq.flat_map (fun round ->
-          quota |> Task_seg_id_map.to_seq
+          quota
+          |> Task_seg_id_map.to_seq
           (* get task segments usable in this round *)
           |> Seq.filter (fun (_id, len) ->
               let quota_left = len -^ (round *^ interval_size) in
@@ -241,7 +242,8 @@ let single_task_seg_multi_even_splits ~incre ~(task_seg : Task.task_seg)
   with
   | None, _ -> Seq.empty
   | Some task_seg_part_size, l ->
-    l |> List.to_seq
+    l
+    |> List.to_seq
     |> OSeq.mapi (fun i bucket -> (Int64.of_int i, List.to_seq bucket))
     |> Seq.fold_left
       (fun place_s_seq (bucket_id, bucket) ->

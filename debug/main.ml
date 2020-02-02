@@ -423,7 +423,8 @@ let debug_sched_backtracking_search_pending () =
       ((0L, 0L, 6L), 10L);
       ((0L, 0L, 7L), 10L);
     ]
-    |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq
+    |> List.to_seq
+    |> Daypack_lib.Task_inst_id_map.of_seq
   in
   print_endline "scheduling requests";
   List.iter
@@ -451,31 +452,31 @@ let debug_sched_usage_simulation () =
     Task.Print.debug_print_task ~indent_level:1 task;
     sched
   in
-  ( Sched.empty
-    (* |> add_task ~parent_user_id:0L
-     *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
-     *   Task.[ { task_inst_type = Reminder } ] *)
-    |> add_task ~parent_user_id:0L
-      Task.
-        {
-          splittable = false;
-          parallelizable = false;
-          task_type =
-            Recurring
-              (Arithemtic_seq
-                 ( { start = 0L; end_exc = 200L; diff = 10L },
-                   {
-                     task_inst_data = { task_inst_type = Reminder };
-                     sched_req_templates =
-                       [ Fixed { task_seg_related_data = 6L; start = 0L } ];
-                   } ));
-        }
-      []
-    |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-    |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-    |> fun x ->
-    Sched.Print.debug_print_sched x;
-    x )
+  Sched.empty
+  (* |> add_task ~parent_user_id:0L
+   *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
+   *   Task.[ { task_inst_type = Reminder } ] *)
+  |> add_task ~parent_user_id:0L
+    Task.
+      {
+        splittable = false;
+        parallelizable = false;
+        task_type =
+          Recurring
+            (Arithemtic_seq
+               ( { start = 0L; end_exc = 200L; diff = 10L },
+                 {
+                   task_inst_data = { task_inst_type = Reminder };
+                   sched_req_templates =
+                     [ Fixed { task_seg_related_data = 6L; start = 0L } ];
+                 } ));
+      }
+    []
+  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
+  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
+  |> (fun x ->
+      Sched.Print.debug_print_sched x;
+      x)
   |> fun x ->
   print_newline ();
   print_endline "JSON:";
@@ -485,30 +486,22 @@ let debug_time_pattern () =
   print_endline "Debug print for Time_pattern.next_match_tm";
   let tm =
     ref
-    (* (Some Unix.{
-     *   tm_sec = 0;
-     *   tm_min = 0;
-     *   tm_hour = 0;
-     *   tm_mday = 0;
-     *   tm_mon = 0;
-     *   tm_year = 0;
-     *   tm_wday = 0;
-     *   tm_yday = 0;
-     *   tm_isdst = false;
-     * }) *)
-      ( Unix.time ()
-        |> Unix.gmtime
-        |> Option.some
-      )
+      (* (Some Unix.{
+       *   tm_sec = 0;
+       *   tm_min = 0;
+       *   tm_hour = 0;
+       *   tm_mday = 0;
+       *   tm_mon = 0;
+       *   tm_year = 0;
+       *   tm_wday = 0;
+       *   tm_yday = 0;
+       *   tm_isdst = false;
+       * }) *)
+      (Unix.time () |> Unix.gmtime |> Option.some)
   in
   let pattern =
-    Daypack_lib.Time_pattern.{
-      year = None;
-      mon = None;
-      day = None;
-      hour = Some 2;
-      min = None;
-    }
+    let open Daypack_lib.Time_pattern in
+    { year = None; mon = None; day = None; hour = Some 2; min = None }
   in
   for i = 0 to 60 do
     Printf.printf "iter : %d\n" i;
@@ -524,8 +517,7 @@ let debug_time_pattern () =
       Printf.printf "  tm_wday : %d\n" x.tm_wday;
       Printf.printf "  tm_yday : %d\n" x.tm_yday;
       tm := Daypack_lib.Time_pattern.next_match_tm pattern x
-    | None ->
-      print_endline "nothing";
+    | None -> print_endline "nothing"
   done
 
 (* let () = debug_single_task_seg_shift (); print_newline () *)

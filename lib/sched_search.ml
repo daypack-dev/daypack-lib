@@ -7,7 +7,8 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     Sched.Time_slot.get_free_time_slots ~start ~end_exc base
   in
   let get_usable_time_slots time_slots =
-    time_slots |> Time_slot.normalize_list_in_seq_out
+    time_slots
+    |> Time_slot.normalize_list_in_seq_out
     |> Time_slot.intersect free_time_slots
   in
   Seq.flat_map
@@ -94,7 +95,8 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
 
 let backtracking_search_multi ~start ~end_exc ~base
     (sched_req_records : Sched_req.sched_req_record list) : Sched.sched Seq.t =
-  sched_req_records |> Sched_req.sort_sched_req_record_list_by_flexibility_score
+  sched_req_records
+  |> Sched_req.sort_sched_req_record_list_by_flexibility_score
   |> List.fold_left
     (fun sched_seq sched_req ->
        Seq.flat_map

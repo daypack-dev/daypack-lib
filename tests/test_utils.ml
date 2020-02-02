@@ -17,7 +17,9 @@ module Print_utils = struct
   let task_seg_place = QCheck.Print.triple task_seg_id int64 int64
 
   let task_seg_places s =
-    s |> Daypack_lib.Task_seg_place_set.to_seq |> List.of_seq
+    s
+    |> Daypack_lib.Task_seg_place_set.to_seq
+    |> List.of_seq
     |> QCheck.Print.list task_seg_place
 end
 
@@ -473,7 +475,9 @@ let task_store_gen =
 let task_store =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.Task_id_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.Task_id_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list Daypack_lib.Task.Print.debug_string_of_task)
     task_store_gen
 
@@ -486,7 +490,9 @@ let task_inst_store_gen =
 let task_inst_store =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.Task_inst_id_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.Task_inst_id_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list Daypack_lib.Task.Print.debug_string_of_task_inst)
     task_inst_store_gen
 
@@ -499,7 +505,9 @@ let task_seg_store_gen =
 let task_seg_store =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.Task_seg_id_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.Task_seg_id_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list Daypack_lib.Task.Print.debug_string_of_task_seg)
     task_seg_store_gen
 
@@ -512,7 +520,9 @@ let sched_req_store_gen =
 let sched_req_store =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.Sched_req_id_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.Sched_req_id_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list Daypack_lib.Sched_req.Print.debug_string_of_sched_req)
     sched_req_store_gen
 
@@ -525,7 +535,9 @@ let sched_req_record_store_gen =
 let sched_req_record_store =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.Sched_req_id_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.Sched_req_id_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list
           Daypack_lib.Sched_req.Print.debug_string_of_sched_req_record)
     sched_req_record_store_gen
@@ -539,7 +551,9 @@ let quota_gen =
 let quota =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.Task_inst_id_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.Task_inst_id_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list
           (QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string
              Print_utils.int64))
@@ -554,7 +568,9 @@ let user_id_to_task_ids_gen =
 let user_id_to_task_ids =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.User_id_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.User_id_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list
           (QCheck.Print.pair Daypack_lib.Task.user_id_to_string
              Print_utils.int64_set))
@@ -569,7 +585,9 @@ let task_id_to_task_inst_ids_gen =
 let task_id_to_task_inst_ids =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.Task_id_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.Task_id_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list
           (QCheck.Print.pair Daypack_lib.Task.task_id_to_string
              Print_utils.int64_set))
@@ -584,7 +602,9 @@ let task_inst_id_to_task_seg_ids_gen =
 let task_inst_id_to_task_seg_ids =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.Task_inst_id_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.Task_inst_id_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list
           (QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string
              Print_utils.int64_set))
@@ -599,7 +619,9 @@ let indexed_by_start_gen =
 let indexed_by_start =
   QCheck.make
     ~print:(fun s ->
-        s |> Daypack_lib.Int64_map.to_seq |> List.of_seq
+        s
+        |> Daypack_lib.Int64_map.to_seq
+        |> List.of_seq
         |> QCheck.Print.list
           (QCheck.Print.pair Print_utils.int64 Print_utils.task_seg_places))
     indexed_by_start_gen
