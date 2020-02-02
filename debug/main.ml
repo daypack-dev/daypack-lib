@@ -482,7 +482,17 @@ let debug_sched_usage_simulation () =
   print_endline "JSON:";
   print_endline (Sched.Serialize.json_string_of_sched x)
 
-let debug_time_pattern () =
+let debug_time_pattern_normalize_pattern () =
+  print_endline "Debug print for Time_pattern.normalize_pattern";
+  let dir = `End in
+  let pattern =
+    let open Daypack_lib.Time_pattern in
+    { year = Some 2021; mon = None; day = None; hour = Some 2; min = None }
+    |> normalize_pattern dir
+  in
+  Daypack_lib.Time_pattern.Print.debug_print_pattern pattern
+
+let debug_time_pattern_next_match_tm () =
   print_endline "Debug print for Time_pattern.next_match_tm";
   let tm =
     ref
@@ -501,7 +511,7 @@ let debug_time_pattern () =
   in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    { year = None; mon = None; day = None; hour = Some 2; min = None }
+    { year = Some 2021; mon = None; day = None; hour = Some 2; min = None }
   in
   let normalize_dir = `Start in
   for i = 0 to 60 do
@@ -604,5 +614,9 @@ let debug_time_pattern () =
  *   print_newline () *)
 
 let () =
-  debug_time_pattern ();
+  debug_time_pattern_normalize_pattern ();
   print_newline ()
+
+(* let () =
+ *   debug_time_pattern_next_match_tm ();
+ *   print_newline () *)
