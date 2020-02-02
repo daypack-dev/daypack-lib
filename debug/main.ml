@@ -503,6 +503,7 @@ let debug_time_pattern () =
     let open Daypack_lib.Time_pattern in
     { year = None; mon = None; day = None; hour = Some 2; min = None }
   in
+  let normalize_dir = `Start in
   for i = 0 to 60 do
     Printf.printf "iter : %d\n" i;
     match !tm with
@@ -516,7 +517,7 @@ let debug_time_pattern () =
       Printf.printf "  tm_year : %d\n" x.tm_year;
       Printf.printf "  tm_wday : %d\n" x.tm_wday;
       Printf.printf "  tm_yday : %d\n" x.tm_yday;
-      tm := Daypack_lib.Time_pattern.next_match_tm pattern x
+      tm := Daypack_lib.Time_pattern.next_match_tm ~normalize_dir pattern x
     | None -> print_endline "nothing"
   done
 
