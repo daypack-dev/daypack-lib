@@ -506,8 +506,8 @@ let debug_time_pattern () =
       year = None;
       mon = None;
       day = None;
-      hour = None;
-      min = Some 1;
+      hour = Some 2;
+      min = None;
     }
   in
   for i = 0 to 60 do
