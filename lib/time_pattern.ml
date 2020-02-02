@@ -108,22 +108,22 @@ module Print = struct
       (t : t) : string =
     let aux = Option.fold ~some:string_of_int ~none:"None" in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : %s"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : %s\n"
       (  aux t.year
       );
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "mon : %s"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "mon : %s\n"
       (  aux t.mon
       );
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s\n"
       (  match t.day with
          | Some (Month_day x) -> Printf.sprintf "month day %d" x
          | Some (Weekday x) -> Printf.sprintf "weekday %d" x
          | None -> "None"
       );
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : %s"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : %s\n"
       (  aux t.hour
       );
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : %s"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : %s\n"
       (  aux t.min
       );
     Buffer.contents buffer
