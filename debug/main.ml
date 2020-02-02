@@ -496,17 +496,19 @@ let debug_time_pattern_next_match_tm () =
   print_endline "Debug print for Time_pattern.next_match_tm";
   let tm =
     ref
-      (Some Unix.{
-        tm_sec = 0;
-        tm_min = 0;
-        tm_hour = 0;
-        tm_mday = 1;
-        tm_mon = 0;
-        tm_year = 0;
-        tm_wday = 0;
-        tm_yday = 0;
-        tm_isdst = false;
-      })
+      (Some
+         Unix.
+           {
+             tm_sec = 0;
+             tm_min = 0;
+             tm_hour = 0;
+             tm_mday = 1;
+             tm_mon = 0;
+             tm_year = 0;
+             tm_wday = 0;
+             tm_yday = 0;
+             tm_isdst = false;
+           })
       (* (Unix.time () |> Unix.gmtime |> Option.some) *)
   in
   let normalize_dir = `End in

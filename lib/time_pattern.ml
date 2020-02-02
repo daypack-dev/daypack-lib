@@ -12,10 +12,10 @@ type t = {
   min : int option;
 }
 
-type normalize_dir = [
-  | `Start
+type normalize_dir =
+  [ `Start
   | `End
-]
+  ]
 
 let first_mday = 1
 
@@ -33,12 +33,30 @@ let normalize_pattern (dir : normalize_dir) t =
     | None -> ( match upper with Some _ -> Some default_val | None -> None )
   in
   t
-  |> (fun t -> { t with mon = map_none t.year t.mon (match dir with `Start -> 0 | `End -> 11) })
-  |> (fun t -> match dir with `Start -> { t with day = map_none t.mon t.day (Month_day first_mday) }
-                            | `End -> { t with mon = Option.map succ t.mon; day = map_none t.mon t.day (Month_day 0) }
-    )
-  |> (fun t -> { t with hour = map_none t.day t.hour (match dir with `Start -> 0 | `End -> 23) })
-  |> fun t -> { t with min = map_none t.hour t.min (match dir with `Start  -> 0 | `End -> 59) }
+  |> (fun t ->
+      {
+        t with
+        mon = map_none t.year t.mon (match dir with `Start -> 0 | `End -> 11);
+      })
+  |> (fun t ->
+      match dir with
+      | `Start -> { t with day = map_none t.mon t.day (Month_day first_mday) }
+      | `End ->
+        {
+          t with
+          mon = Option.map succ t.mon;
+          day = map_none t.mon t.day (Month_day 0);
+        })
+  |> (fun t ->
+      {
+        t with
+        hour = map_none t.day t.hour (match dir with `Start -> 0 | `End -> 23);
+      })
+  |> fun t ->
+  {
+    t with
+    min = map_none t.hour t.min (match dir with `Start -> 0 | `End -> 59);
+  }
 
 let normalize_tm tm =
   let _, tm = Unix.mktime tm in
@@ -53,7 +71,7 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
       if next < ub_exc then (false, next) else (true, 0)
   in
   let next_is_in_past =
-    match t.year with Some x -> x < (tm.tm_year + 1900) | None -> false
+    match t.year with Some x -> x < tm.tm_year + 1900 | None -> false
   in
   if next_is_in_past then None
   else
@@ -88,9 +106,7 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
         | None -> (false, tm.tm_mon)
     in
     let tm_year = if bump_year then succ tm.tm_year else tm.tm_year in
-    { tm with tm_mon; tm_year }
-    |> normalize_tm
-    |> Option.some
+    { tm with tm_mon; tm_year } |> normalize_tm |> Option.some
 
 let next_match_int64 ~normalize_dir (t : t) (time : int64) : int64 option =
   time_to_tm time |> next_match_tm ~normalize_dir t |> Option.map tm_to_time
@@ -111,23 +127,18 @@ module Print = struct
     let aux = Option.fold ~some:string_of_int ~none:"None" in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : %s\n"
-      (  aux t.year
-      );
+      (aux t.year);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "mon : %s\n"
-      (  aux t.mon
-      );
+      (aux t.mon);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s\n"
-      (  match t.day with
-         | Some (Month_day x) -> Printf.sprintf "month day %d" x
-         | Some (Weekday x) -> Printf.sprintf "weekday %d" x
-         | None -> "None"
-      );
+      ( match t.day with
+        | Some (Month_day x) -> Printf.sprintf "month day %d" x
+        | Some (Weekday x) -> Printf.sprintf "weekday %d" x
+        | None -> "None" );
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : %s\n"
-      (  aux t.hour
-      );
+      (aux t.hour);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : %s\n"
-      (  aux t.min
-      );
+      (aux t.min);
     Buffer.contents buffer
 
   let debug_print_pattern ?(indent_level = 0) t =
