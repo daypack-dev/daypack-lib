@@ -102,3 +102,32 @@ let next_match_int64 ~normalize_dir (t : t) (time : int64) : int64 option =
  * 
  *   in
  *   aux t time_slots *)
+
+module Print = struct
+  let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+      (t : t) : string =
+    let aux = Option.fold ~some:string_of_int ~none:"None" in
+    Debug_print.bprintf ~indent_level buffer "time pattern :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : %s"
+      (  aux t.year
+      );
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "mon : %s"
+      (  aux t.mon
+      );
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s"
+      (  match t.day with
+         | Some (Month_day x) -> Printf.sprintf "month day %d" x
+         | Some (Weekday x) -> Printf.sprintf "weekday %d" x
+         | None -> "None"
+      );
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : %s"
+      (  aux t.hour
+      );
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : %s"
+      (  aux t.min
+      );
+    Buffer.contents buffer
+
+  let debug_print_pattern ?(indent_level = 0) t =
+    print_string (debug_string_of_pattern ~indent_level t)
+end
