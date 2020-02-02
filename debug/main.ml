@@ -509,7 +509,7 @@ let debug_time_pattern_next_match_tm () =
       })
       (* (Unix.time () |> Unix.gmtime |> Option.some) *)
   in
-  let normalize_dir = `Start in
+  let normalize_dir = `End in
   let pattern =
     let open Daypack_lib.Time_pattern in
     { year = Some 2021; mon = None; day = None; hour = None; min = None }
