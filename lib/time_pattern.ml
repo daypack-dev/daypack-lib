@@ -19,6 +19,37 @@ let tm_to_time (tm : Unix.tm) : int64 =
   let time, _ = Unix.mktime tm in
   (time |> Int64.of_float) /^ 60L
 
+let normalize_pattern t =
+  let map_none upper x default_val =
+    match x with
+    | Some x -> Some x
+    | None ->
+      match upper with
+      | Some _ -> Some default_val
+      | None -> None
+  in
+  t
+  |> (fun t ->
+      { t with
+        mon = map_none t.year t.mon 0
+      }
+    )
+  |> (fun t ->
+      { t with
+        day = map_none t.mon t.day (Month_day 0)
+      }
+    )
+  |> (fun t ->
+      { t with
+        hour = map_none t.day t.hour 0
+      }
+    )
+  |> (fun t ->
+      { t with
+        min = map_none t.hour t.min 0
+      }
+    )
+
 let normalize_tm tm =
   let _, tm = Unix.mktime tm in
   tm
@@ -72,6 +103,7 @@ let next_match_tm (t : t) (tm : Unix.tm) : Unix.tm option =
   in
   if next_is_in_past then None
   else
+    let t = normalize_pattern t in
     let tm_sec = 0 in
     let (bump_hour, tm_min) =
       bump tm.tm_min t.min 60
