@@ -496,24 +496,26 @@ let debug_time_pattern_next_match_tm () =
   print_endline "Debug print for Time_pattern.next_match_tm";
   let tm =
     ref
-      (* (Some Unix.{
-       *   tm_sec = 0;
-       *   tm_min = 0;
-       *   tm_hour = 0;
-       *   tm_mday = 0;
-       *   tm_mon = 0;
-       *   tm_year = 0;
-       *   tm_wday = 0;
-       *   tm_yday = 0;
-       *   tm_isdst = false;
-       * }) *)
-      (Unix.time () |> Unix.gmtime |> Option.some)
-  in
-  let pattern =
-    let open Daypack_lib.Time_pattern in
-    { year = Some 2021; mon = None; day = None; hour = Some 2; min = None }
+      (Some Unix.{
+        tm_sec = 0;
+        tm_min = 0;
+        tm_hour = 0;
+        tm_mday = 1;
+        tm_mon = 0;
+        tm_year = 0;
+        tm_wday = 0;
+        tm_yday = 0;
+        tm_isdst = false;
+      })
+      (* (Unix.time () |> Unix.gmtime |> Option.some) *)
   in
   let normalize_dir = `Start in
+  let pattern =
+    let open Daypack_lib.Time_pattern in
+    { year = Some 2021; mon = None; day = None; hour = None; min = None }
+    |> normalize_pattern normalize_dir
+  in
+  Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   for i = 0 to 60 do
     Printf.printf "iter : %d\n" i;
     match !tm with
@@ -613,10 +615,10 @@ let debug_time_pattern_next_match_tm () =
  *   debug_sched_usage_simulation ();
  *   print_newline () *)
 
-let () =
-  debug_time_pattern_normalize_pattern ();
-  print_newline ()
-
 (* let () =
- *   debug_time_pattern_next_match_tm ();
+ *   debug_time_pattern_normalize_pattern ();
  *   print_newline () *)
+
+let () =
+  debug_time_pattern_next_match_tm ();
+  print_newline ()
