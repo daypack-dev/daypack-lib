@@ -1,5 +1,3 @@
-open Int64_utils
-
 type day =
   | Weekday of int
   | Month_day of int
@@ -18,13 +16,6 @@ type normalize_dir =
   ]
 
 let first_mday = 1
-
-let time_to_tm (time : int64) : Unix.tm =
-  time *^ 60L |> Int64.to_float |> Unix.gmtime
-
-let tm_to_time (tm : Unix.tm) : int64 =
-  let time, _ = Unix.mktime tm in
-  (time |> Int64.of_float) /^ 60L
 
 let normalize_pattern (dir : normalize_dir) t =
   let map_none upper x default_val =
@@ -109,7 +100,7 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
     { tm with tm_mon; tm_year } |> normalize_tm |> Option.some
 
 let next_match_int64 ~normalize_dir (t : t) (time : int64) : int64 option =
-  time_to_tm time |> next_match_tm ~normalize_dir t |> Option.map tm_to_time
+  Time.time_to_tm time |> next_match_tm ~normalize_dir t |> Option.map Time.tm_to_time
 
 (* let matching_time_slots  (t : t) (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
  *   (\* assume 1 time unit in time slot = 1 minute *\)
