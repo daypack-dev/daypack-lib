@@ -540,20 +540,19 @@ let debug_time_pattern_next_match_int64 () =
   let time =
     ref
       (Some
-         (Unix.
-           {
-             tm_sec = 0;
-             tm_min = 0;
-             tm_hour = 0;
-             tm_mday = 1;
-             tm_mon = 0;
-             tm_year = 0;
-             tm_wday = 0;
-             tm_yday = 0;
-             tm_isdst = false;
-           }
-       |> Daypack_lib.Time.tm_to_time)
-      )
+         ( Unix.
+             {
+               tm_sec = 0;
+               tm_min = 0;
+               tm_hour = 0;
+               tm_mday = 1;
+               tm_mon = 0;
+               tm_year = 0;
+               tm_wday = 0;
+               tm_yday = 0;
+               tm_isdst = false;
+             }
+           |> Daypack_lib.Time.tm_to_time ))
       (* (Unix.time () |> Unix.gmtime |> Daypack_lib.Time.tm_to_time |> Option.some) *)
   in
   let normalize_dir = `Start in
@@ -562,11 +561,7 @@ let debug_time_pattern_next_match_int64 () =
     { year = None; mon = Some 1; day = None; hour = None; min = None }
     |> normalize_pattern normalize_dir
   in
-  let time_slots =
-    [
-      (* (0L, 36_347_213L) *)
-    ]
-  in
+  let time_slots = [ (* (0L, 36_347_213L) *) ] in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   for i = 0 to 10 do
     Printf.printf "iter : %d\n" i;
@@ -574,7 +569,9 @@ let debug_time_pattern_next_match_int64 () =
     | Some x ->
       print_endline "  =====";
       Printf.printf "  time : %Ld\n" x;
-      time := Daypack_lib.Time_pattern.next_match_int64 ~time_slots ~normalize_dir pattern x
+      time :=
+        Daypack_lib.Time_pattern.next_match_int64 ~time_slots ~normalize_dir
+          pattern x
     | None -> print_endline "nothing"
   done
 
