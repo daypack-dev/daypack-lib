@@ -103,13 +103,50 @@ let next_match_is_in_past (t : t) (tm : Unix.tm) : bool =
                     days_left_of_year >= days_till_next_occurence
                   else hour_minute_is_in_past_possibly ) )
 
-let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
+let next_match_tm ~normalize_dir ~search_years_ahead (t : t) (tm : Unix.tm) : Unix.tm option =
   let bump cur pat ub_exc =
     match pat with
     | Some x -> if cur < x then (false, x) else (true, x)
     | None ->
       let next = succ cur in
       if next < ub_exc then (false, next) else (true, 0)
+  in
+  let next_matching_min_in_hour ~hour (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
+    match t.min with
+    | None -> (
+      Seq.map (fun tm_min -> { acc with tm_min })
+        (match cur with
+        | None ->
+          (Seq_utils.zero_to_n_exc 60)
+        | Some cur ->
+          OSeq.(cur.tm_min --^ 60))
+      )
+    | Some pat_min ->
+      (match cur with
+       | None -> Seq.return { acc with tm_min = pat_min }
+       | Some cur ->
+         if pat_min <= cur.tm_min then
+           Seq.empty
+         else
+         Seq.return { acc with tm_min = pat_min }
+      )
+  in
+  let next_matching_hour_in_mon ~mon (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
+  in
+  let next_matching_day_in_mon ~year ~mon (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
+    match t.day with
+    | None ->
+      Seq.flat_map (fun tm_day ->
+          let acc = { acc with tm_day } in
+          next_matching_min_in_hour ~
+        ) (match cur with
+          | None -> Seq_utils.zero_to_n_exc 60
+          | Some cur -> OSeq.(cur.tm_day --^ (Time.day_count_of_mon ~year ~mon)))
+  in
+  let next_match_in_year ~year (t : t) (tm : Unix.tm) : int option =
+    Seq.flat_map (fun month ->
+      )
+    (Seq_utils.zero_to_n_exc 12)
   in
   if next_match_is_in_past t tm then None
   else
