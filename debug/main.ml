@@ -511,14 +511,14 @@ let debug_time_pattern_next_match_tm () =
            })
       (* (Unix.time () |> Unix.gmtime |> Option.some) *)
   in
-  let normalize_dir = `End in
+  let normalize_dir = `Start in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    { year = Some 2021; mon = None; day = None; hour = None; min = None }
+    { year = None; mon = Some 1; day = None; hour = None; min = None }
     |> normalize_pattern normalize_dir
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
-  for i = 0 to 60 do
+  for i = 0 to 10 do
     Printf.printf "iter : %d\n" i;
     match !tm with
     | Some x ->
@@ -532,6 +532,49 @@ let debug_time_pattern_next_match_tm () =
       Printf.printf "  tm_wday : %d\n" x.tm_wday;
       Printf.printf "  tm_yday : %d\n" x.tm_yday;
       tm := Daypack_lib.Time_pattern.next_match_tm ~normalize_dir pattern x
+    | None -> print_endline "nothing"
+  done
+
+let debug_time_pattern_next_match_int64 () =
+  print_endline "Debug print for Time_pattern.next_match_int64";
+  let time =
+    ref
+      (Some
+         (Unix.
+           {
+             tm_sec = 0;
+             tm_min = 0;
+             tm_hour = 0;
+             tm_mday = 1;
+             tm_mon = 0;
+             tm_year = 0;
+             tm_wday = 0;
+             tm_yday = 0;
+             tm_isdst = false;
+           }
+       |> Daypack_lib.Time.tm_to_time)
+      )
+      (* (Unix.time () |> Unix.gmtime |> Daypack_lib.Time.tm_to_time |> Option.some) *)
+  in
+  let normalize_dir = `Start in
+  let pattern =
+    let open Daypack_lib.Time_pattern in
+    { year = None; mon = Some 1; day = None; hour = None; min = None }
+    |> normalize_pattern normalize_dir
+  in
+  let time_slots =
+    [
+      (* (0L, 36_347_213L) *)
+    ]
+  in
+  Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
+  for i = 0 to 10 do
+    Printf.printf "iter : %d\n" i;
+    match !time with
+    | Some x ->
+      print_endline "  =====";
+      Printf.printf "  time : %Ld\n" x;
+      time := Daypack_lib.Time_pattern.next_match_int64 ~time_slots ~normalize_dir pattern x
     | None -> print_endline "nothing"
   done
 
@@ -621,6 +664,10 @@ let debug_time_pattern_next_match_tm () =
  *   debug_time_pattern_normalize_pattern ();
  *   print_newline () *)
 
+(* let () =
+ *   debug_time_pattern_next_match_tm ();
+ *   print_newline () *)
+
 let () =
-  debug_time_pattern_next_match_tm ();
+  debug_time_pattern_next_match_int64 ();
   print_newline ()
