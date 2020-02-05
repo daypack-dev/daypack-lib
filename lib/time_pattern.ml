@@ -1,6 +1,7 @@
-type day =
-  | Weekday of int
-  | Month_day of int
+type day = [
+  | `Weekday of int
+  | `Month_day of int
+]
 
 type t = {
   year : int option;
@@ -33,12 +34,12 @@ let normalize_pattern (dir : normalize_dir) t =
       })
   |> (fun t ->
       match dir with
-      | `Start -> { t with day = map_none t.mon t.day (Month_day first_mday) }
+      | `Start -> { t with day = map_none t.mon t.day (`Month_day first_mday) }
       | `End ->
         {
           t with
           mon = Option.map succ t.mon;
-          day = map_none t.mon t.day (Month_day 0);
+          day = map_none t.mon t.day (`Month_day 0);
         })
   |> (fun t ->
       {
@@ -90,11 +91,11 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
                 in
                 match t.day with
                 | None -> false
-                | Some (Month_day pat_mday) ->
+                | Some (`Month_day pat_mday) ->
                   if pat_mday < tm.tm_mday then true
                   else if pat_mday > tm.tm_mday then false
                   else hour_minute_is_in_past_possibly
-                | Some (Weekday pat_wday) ->
+                | Some (`Weekday pat_wday) ->
                   let total_day_count_of_year =
                     Time.day_count_of_year ~year:pat_year
                   in
@@ -123,11 +124,11 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
         match t.day with
         | Some x -> (
             match x with
-            | Weekday x ->
+            | `Weekday x ->
               ( false,
                 if tm.tm_wday < x then tm.tm_mday + (tm.tm_wday - x)
                 else tm.tm_mday + 7 + (x - tm.tm_wday) )
-            | Month_day x -> if tm.tm_mday < x then (false, x) else (true, x) )
+            | `Month_day x -> if tm.tm_mday < x then (false, x) else (true, x) )
         | None -> (false, succ tm.tm_mday)
       else (false, tm.tm_mday)
     in
@@ -193,8 +194,8 @@ module Print = struct
       (aux t.mon);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s\n"
       ( match t.day with
-        | Some (Month_day x) -> Printf.sprintf "month day %d" x
-        | Some (Weekday x) -> Printf.sprintf "weekday %d" x
+        | Some (`Month_day x) -> Printf.sprintf "month day %d" x
+        | Some (`Weekday x) -> Printf.sprintf "weekday %d" x
         | None -> "None" );
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : %s\n"
       (aux t.hour);

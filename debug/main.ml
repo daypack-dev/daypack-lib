@@ -514,7 +514,7 @@ let debug_time_pattern_next_match_tm () =
   let normalize_dir = `Start in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    { year = None; mon = Some 1; day = Some (Weekday 0); hour = None; min = None }
+    { year = None; mon = Some 1; day = Some (`Weekday 0); hour = None; min = None }
     |> normalize_pattern normalize_dir
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
