@@ -102,18 +102,23 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
 let next_match_int64 ?(time_slots : Time_slot.t list = []) ~normalize_dir (t : t) (time : int64) : int64 option =
   Time.time_to_tm time |> next_match_tm ~normalize_dir t
   |> Option.map Time.tm_to_time
-  |> Option.map (fun time ->
-      match time_slots with
-      | [] -> time
-      | l ->
-        let (start, end_exc) =
-          l |> List.to_seq
-          |> (fun s -> match normalize_dir with | `Start -> Time_slot.slice ~start:time s | `End -> Time_slot.slice ~end_exc:time s)
-          |> OSeq.nth 0
-        in
-        match normalize_dir with
-        | `Start -> start
-        | `End -> end_exc
+  |> (fun time ->
+      match time with
+      | None -> None
+      | Some time ->
+        match time_slots with
+        | [] -> Some time
+        | l ->
+          let s =
+            l |> List.to_seq
+            |> (fun s -> match normalize_dir with | `Start -> Time_slot.slice ~start:time s | `End -> Time_slot.slice ~end_exc:time s)
+          in
+          match s () with
+          | Seq.Nil -> None
+          | Seq.Cons ((start, end_exc), _) ->
+            match normalize_dir with
+            | `Start -> Some start
+            | `End -> Some end_exc
     )
 
 (* let matching_time_slots  (t : t) (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
