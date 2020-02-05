@@ -496,25 +496,25 @@ let debug_time_pattern_next_match_tm () =
   print_endline "Debug print for Time_pattern.next_match_tm";
   let tm =
     ref
-      (Some
-         Unix.
-           {
-             tm_sec = 0;
-             tm_min = 0;
-             tm_hour = 0;
-             tm_mday = 1;
-             tm_mon = 0;
-             tm_year = 0;
-             tm_wday = 0;
-             tm_yday = 0;
-             tm_isdst = false;
-           })
-      (* (Unix.time () |> Unix.gmtime |> Option.some) *)
+      (* (Some
+       *    Unix.
+       *      {
+       *        tm_sec = 0;
+       *        tm_min = 0;
+       *        tm_hour = 0;
+       *        tm_mday = 1;
+       *        tm_mon = 0;
+       *        tm_year = 0;
+       *        tm_wday = 0;
+       *        tm_yday = 0;
+       *        tm_isdst = false;
+       *      }) *)
+      (Unix.time () |> Unix.gmtime |> Option.some)
   in
   let normalize_dir = `Start in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    { year = None; mon = Some 1; day = None; hour = None; min = None }
+    { year = None; mon = Some 1; day = Some (Weekday 0); hour = None; min = None }
     |> normalize_pattern normalize_dir
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
@@ -661,10 +661,10 @@ let debug_time_pattern_next_match_int64 () =
  *   debug_time_pattern_normalize_pattern ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_pattern_next_match_tm ();
- *   print_newline () *)
-
 let () =
-  debug_time_pattern_next_match_int64 ();
+  debug_time_pattern_next_match_tm ();
   print_newline ()
+
+(* let () =
+ *   debug_time_pattern_next_match_int64 ();
+ *   print_newline () *)
