@@ -99,8 +99,22 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
     let tm_year = if bump_year then succ tm.tm_year else tm.tm_year in
     { tm with tm_mon; tm_year } |> normalize_tm |> Option.some
 
-let next_match_int64 ~normalize_dir (t : t) (time : int64) : int64 option =
-  Time.time_to_tm time |> next_match_tm ~normalize_dir t |> Option.map Time.tm_to_time
+let next_match_int64 ?(time_slots : Time_slot.t list = []) ~normalize_dir (t : t) (time : int64) : int64 option =
+  Time.time_to_tm time |> next_match_tm ~normalize_dir t
+  |> Option.map Time.tm_to_time
+  |> Option.map (fun time ->
+      match time_slots with
+      | [] -> time
+      | l ->
+        let (start, end_exc) =
+          l |> List.to_seq
+          |> (fun s -> match normalize_dir with | `Start -> Time_slot.slice ~start:time s | `End -> Time_slot.slice ~end_exc:time s)
+          |> OSeq.nth 0
+        in
+        match normalize_dir with
+        | `Start -> start
+        | `End -> end_exc
+    )
 
 (* let matching_time_slots  (t : t) (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
  *   (\* assume 1 time unit in time slot = 1 minute *\)
