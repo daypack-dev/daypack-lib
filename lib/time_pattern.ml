@@ -56,15 +56,7 @@ let normalize_tm tm =
   let _, tm = Unix.mktime tm in
   tm
 
-let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
-  let bump cur pat ub_exc =
-    match pat with
-    | Some x -> if cur < x then (false, x) else (true, x)
-    | None ->
-      let next = succ cur in
-      if next < ub_exc then (false, next) else (true, 0)
-  in
-  let next_is_in_past =
+let next_match_is_in_past (t : t) (tm : Unix.tm) : bool =
     match t.year with
     | None -> false
     | Some pat_year -> (
@@ -110,8 +102,16 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
                     let days_till_next_occurence = pat_wday - tm.tm_wday in
                     days_left_of_year >= days_till_next_occurence
                   else hour_minute_is_in_past_possibly ) )
+
+let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
+  let bump cur pat ub_exc =
+    match pat with
+    | Some x -> if cur < x then (false, x) else (true, x)
+    | None ->
+      let next = succ cur in
+      if next < ub_exc then (false, next) else (true, 0)
   in
-  if next_is_in_past then None
+  if next_match_is_in_past t tm then None
   else
     let t = normalize_pattern normalize_dir t in
     let tm_sec = 0 in
