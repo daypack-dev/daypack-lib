@@ -17,6 +17,8 @@ type normalize_dir =
 
 let first_mday = 1
 
+let tm_year_offset = 1900
+
 let normalize_pattern (dir : normalize_dir) t =
   let map_none upper x default_val =
     match x with
@@ -62,7 +64,63 @@ let next_match_tm ~normalize_dir (t : t) (tm : Unix.tm) : Unix.tm option =
       if next < ub_exc then (false, next) else (true, 0)
   in
   let next_is_in_past =
-    match t.year with Some x -> x < tm.tm_year + 1900 | None -> false
+    match t.year with
+    | None -> false
+    | Some pat_year ->
+      let tm_year = tm.tm_year + tm_year_offset in
+      if pat_year < tm_year then
+        true
+      else if pat_year > tm_year then
+        false
+      else
+        (
+          match t.mon with
+          | None -> false
+          | Some pat_mon ->
+            if pat_mon < tm.tm_mon then
+              true
+            else if pat_mon > tm.tm_mon then
+              false
+            else
+              (
+                let hour_minute_is_in_past_possibly =
+                  match t.hour with
+                  | None -> false
+                  | Some pat_hour ->
+                    if pat_hour < tm.tm_hour then
+                      true
+                    else
+                    if pat_hour > tm.tm_hour then
+                      false
+                    else
+                      match t.min with
+                      | None -> false
+                      | Some pat_min ->
+                        pat_min < tm.tm_min
+                in
+                match t.day with
+                | None -> false
+                | Some (Month_day pat_mday) ->
+                  if pat_mday < tm.tm_mday then
+                    true
+                  else if pat_mday > tm.tm_mday then
+                    false
+                  else
+                    hour_minute_is_in_past_possibly
+                | Some (Weekday pat_wday) ->
+                  let total_day_count_of_year = Time.day_count_of_year ~year:pat_year in
+                  let last_day_of_year = total_day_count_of_year - 1 in
+                  let days_left_of_year = last_day_of_year - tm.tm_yday in
+                  if pat_wday < tm.tm_wday then
+                    let days_till_next_occurence = 7 + (tm.tm_wday - pat_wday) in
+                    days_left_of_year >= days_till_next_occurence
+                  else if pat_wday > tm.tm_wday then
+                    let days_till_next_occurence = pat_wday - tm.tm_wday in
+                    days_left_of_year >= days_till_next_occurence
+                  else
+                    hour_minute_is_in_past_possibly
+              )
+        )
   in
   if next_is_in_past then None
   else
