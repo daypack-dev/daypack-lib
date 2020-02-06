@@ -514,10 +514,10 @@ let debug_time_pattern_matching_tm_seq () =
     let open Daypack_lib.Time_pattern in
     {
       year = None;
-      mon = None;
+      mon = Some 5;
       day = None;
-      hour = None;
-      min = None;
+      hour = Some 11;
+      min = Some 0;
     }
   in
   let search_years_ahead = 100 in
