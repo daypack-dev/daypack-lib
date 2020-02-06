@@ -1,3 +1,5 @@
+open Int64_utils
+
 type day =
   [ `Weekday of int
   | `Month_day of int
@@ -52,14 +54,14 @@ let normalize_pattern (dir : normalize_dir) t =
     min = map_none t.hour t.min (match dir with `Start -> 0 | `End -> 59);
   }
 
-let matching_minutes (t : t) (cur : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
     if
-      acc.tm_year = cur.tm_year
-      && acc.tm_mon = cur.tm_mon
-      && acc.tm_mday = cur.tm_mday
-      && acc.tm_hour = cur.tm_hour
-    then cur.tm_min
+      acc.tm_year = start.tm_year
+      && acc.tm_mon = start.tm_mon
+      && acc.tm_mday = start.tm_mday
+      && acc.tm_hour = start.tm_hour
+    then start.tm_min
     else 0
   in
   match t.min with
@@ -68,13 +70,13 @@ let matching_minutes (t : t) (cur : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     if pat_min < start then Seq.empty
     else Seq.return { acc with tm_min = pat_min }
 
-let matching_hours (t : t) (cur : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+let matching_hours (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
     if
-      acc.tm_year = cur.tm_year
-      && acc.tm_mon = cur.tm_mon
-      && acc.tm_mday = cur.tm_mday
-    then cur.tm_hour
+      acc.tm_year = start.tm_year
+      && acc.tm_mon = start.tm_mon
+      && acc.tm_mday = start.tm_mday
+    then start.tm_hour
     else 0
   in
   match t.hour with
@@ -83,12 +85,12 @@ let matching_hours (t : t) (cur : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     if pat_hour < start then Seq.empty
     else Seq.return { acc with tm_hour = pat_hour }
 
-let matching_days (t : t) (cur : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let year = acc.tm_year + tm_year_offset in
   let month = acc.tm_mon in
   let day_count = Time.day_count_of_month ~year ~month in
   let start =
-    if acc.tm_year = cur.tm_year && acc.tm_mon = cur.tm_mon then cur.tm_mday
+    if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then start.tm_mday
     else 0
   in
   match t.day with
@@ -104,64 +106,81 @@ let matching_days (t : t) (cur : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
          if wday = pat_wday then Some { acc with tm_mday = mday } else None)
       OSeq.(start --^ day_count)
 
-let matching_months (t : t) (cur : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
-  let start = if acc.tm_year = cur.tm_year then cur.tm_mon else 0 in
+let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+  let start = if acc.tm_year = start.tm_year then start.tm_mon else 0 in
   match t.mon with
   | None -> Seq.map (fun tm_mon -> { acc with tm_mon }) OSeq.(start --^ 12)
   | Some pat_mon ->
     if pat_mon < start then Seq.empty
     else Seq.return { acc with tm_mon = pat_mon }
 
-let matching_years ~search_years_ahead (t : t) (cur : Unix.tm) (acc : Unix.tm) :
+let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm) :
   Unix.tm Seq.t =
   match t.year with
   | None ->
     Seq.map
       (fun tm_year -> { acc with tm_year })
-      OSeq.(cur.tm_year --^ (cur.tm_year + search_years_ahead))
+      OSeq.(start.tm_year --^ (start.tm_year + search_years_ahead))
   | Some pat_year ->
-    if pat_year < cur.tm_year then Seq.empty
+    if pat_year < start.tm_year then Seq.empty
     else Seq.return { acc with tm_year = pat_year - tm_year_offset }
 
-let matching_tm_seq ~search_years_ahead (t : t) (cur : Unix.tm) : Unix.tm Seq.t
+let matching_tm_seq ~search_years_ahead (t : t) (start : Unix.tm) : Unix.tm Seq.t
   =
-  matching_years ~search_years_ahead t cur cur
-  |> Seq.flat_map (fun acc -> matching_months t cur acc)
-  |> Seq.flat_map (fun acc -> matching_days t cur acc)
-  |> Seq.flat_map (fun acc -> matching_hours t cur acc)
-  |> Seq.flat_map (fun acc -> matching_minutes t cur acc)
+  matching_years ~search_years_ahead t start start
+  |> Seq.flat_map (fun acc -> matching_months t start acc)
+  |> Seq.flat_map (fun acc -> matching_days t start acc)
+  |> Seq.flat_map (fun acc -> matching_hours t start acc)
+  |> Seq.flat_map (fun acc -> matching_minutes t start acc)
 
-let next_match_tm ~(normalize_dir : normalize_dir) ~search_years_ahead (t : t)
-    (tm : Unix.tm) : Unix.tm option =
-  let s = matching_tm_seq ~search_years_ahead t tm in
-  match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x
+(* let matching_time_seq ~search_years_ahead (t : t) (start : int64) : int64 Seq.t =
+ *   let start_tm = Time.time_to_tm start in
+ *   matching_tm_seq ~search_years_ahead *)
 
-let next_match_int64 ?(time_slots : Time_slot.t list = []) ~normalize_dir
-    ~search_years_ahead (t : t) (time : int64) : int64 option =
-  Time.time_to_tm time
-  |> next_match_tm ~normalize_dir ~search_years_ahead t
-  |> Option.map Time.tm_to_time
-  |> fun time ->
-  match time with
-  | None -> None
-  | Some time -> (
-      match time_slots with
-      | [] -> Some time
-      | l -> (
-          let s =
-            l
-            |> List.to_seq
-            |> fun s ->
-            match normalize_dir with
-            | `Start -> Time_slot.slice ~start:time s
-            | `End -> Time_slot.slice ~end_exc:time s
-          in
-          match s () with
-          | Seq.Nil -> None
-          | Seq.Cons ((start, end_exc), _) -> (
-              match normalize_dir with
-              | `Start -> Some start
-              | `End -> Some end_exc ) ) )
+(* let next_match_tm ~(normalize_dir : normalize_dir) ~search_years_ahead (t : t)
+ *     (tm : Unix.tm) : Unix.tm option =
+ *   let s = matching_tm_seq ~search_years_ahead t tm in
+ *   match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x *)
+
+let matching_time_slots (t : t) (time_slots : Time_slot.t list) : Time_slot.t Seq.t =
+  match Time_slot.min_start_and_max_end_exc_list time_slots with
+  | None -> Seq.empty
+  | Some (start, end_exc) ->
+    let start_tm = Time.time_to_tm start in
+    let end_exc_tm = Time.time_to_tm end_exc in
+    let search_years_ahead = end_exc_tm.tm_year - start_tm.tm_year + 1 in
+    matching_tm_seq ~search_years_ahead t start_tm
+    |> Seq.map Time.tm_to_time
+    |> Seq.map (fun time -> (time, time +^ 1L))
+    |> Time_slot.intersect (List.to_seq time_slots)
+    |> Time_slot.normalize ~skip_filter:false ~skip_sort:false
+
+(* let next_match_int64 ?(time_slots : Time_slot.t list = []) ~normalize_dir
+ *     ~search_years_ahead (t : t) (time : int64) : int64 option =
+ *   Time.time_to_tm time
+ *   |> next_match_tm ~normalize_dir ~search_years_ahead t
+ *   |> Option.map Time.tm_to_time
+ *   |> fun time ->
+ *   match time with
+ *   | None -> None
+ *   | Some time -> (
+ *       match time_slots with
+ *       | [] -> Some time
+ *       | l -> (
+ *           let s =
+ *             l
+ *             |> List.to_seq
+ *             |> fun s ->
+ *             match normalize_dir with
+ *             | `Start -> Time_slot.slice ~start:time s
+ *             | `End -> Time_slot.slice ~end_exc:time s
+ *           in
+ *           match s () with
+ *           | Seq.Nil -> None
+ *           | Seq.Cons ((start, end_exc), _) -> (
+ *               match normalize_dir with
+ *               | `Start -> Some start
+ *               | `End -> Some end_exc ) ) ) *)
 
 module Print = struct
   let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
