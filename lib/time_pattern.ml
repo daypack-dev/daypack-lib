@@ -201,17 +201,17 @@ module Print = struct
       (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : %s\n"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : [%s]\n"
       (aux t.years);
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "mon : %s\n"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "mon : [%s]\n"
       (aux t.months);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s\n"
       ( match t.days with
-        | `Month_days xs -> Printf.sprintf "month day %s" (aux xs)
-        | `Weekdays xs -> Printf.sprintf "weekday %s" (aux xs) );
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : %s\n"
+        | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)
+        | `Weekdays xs -> Printf.sprintf "weekday [%s]" (aux xs) );
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : [%s]\n"
       (aux t.hours);
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : %s\n"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : [%s]\n"
       (aux t.minutes);
     Buffer.contents buffer
 
