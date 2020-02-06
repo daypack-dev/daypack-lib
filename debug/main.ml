@@ -512,7 +512,13 @@ let debug_time_pattern_matching_tm_seq () =
   in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    { years = []; months = [5]; days = `Month_days []; hours = [11]; minutes = [0] }
+    {
+      years = [];
+      months = [ 5 ];
+      days = `Month_days [];
+      hours = [ 11 ];
+      minutes = [ 0 ];
+    }
   in
   let search_years_ahead = 100 in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
@@ -557,7 +563,13 @@ let debug_time_pattern_matching_time_slots () =
   let time_slots = [ (start, end_exc) ] in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    { years = []; months = [5]; days = `Month_days []; hours = [11]; minutes = [] }
+    {
+      years = [];
+      months = [ 5 ];
+      days = `Month_days [];
+      hours = [ 11 ];
+      minutes = [];
+    }
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   let s = Daypack_lib.Time_pattern.matching_time_slots pattern time_slots in
