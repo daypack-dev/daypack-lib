@@ -90,7 +90,8 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let month = acc.tm_mon in
   let day_count = Time.day_count_of_month ~year ~month in
   let start =
-    if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then start.tm_mday
+    if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
+      start.tm_mday
     else 0
   in
   match t.day with
@@ -114,8 +115,8 @@ let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     if pat_mon < start then Seq.empty
     else Seq.return { acc with tm_mon = pat_mon }
 
-let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm) :
-  Unix.tm Seq.t =
+let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
+  : Unix.tm Seq.t =
   match t.year with
   | None ->
     Seq.map
@@ -125,8 +126,8 @@ let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
     if pat_year < start.tm_year then Seq.empty
     else Seq.return { acc with tm_year = pat_year - tm_year_offset }
 
-let matching_tm_seq ~search_years_ahead (t : t) (start : Unix.tm) : Unix.tm Seq.t
-  =
+let matching_tm_seq ~search_years_ahead (t : t) (start : Unix.tm) :
+  Unix.tm Seq.t =
   matching_years ~search_years_ahead t start start
   |> Seq.flat_map (fun acc -> matching_months t start acc)
   |> Seq.flat_map (fun acc -> matching_days t start acc)
@@ -142,7 +143,8 @@ let matching_tm_seq ~search_years_ahead (t : t) (start : Unix.tm) : Unix.tm Seq.
  *   let s = matching_tm_seq ~search_years_ahead t tm in
  *   match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x *)
 
-let matching_time_slots (t : t) (time_slots : Time_slot.t list) : Time_slot.t Seq.t =
+let matching_time_slots (t : t) (time_slots : Time_slot.t list) :
+  Time_slot.t Seq.t =
   match Time_slot.min_start_and_max_end_exc_list time_slots with
   | None -> Seq.empty
   | Some (start, end_exc) ->

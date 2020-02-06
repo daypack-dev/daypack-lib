@@ -554,21 +554,18 @@ let debug_time_pattern_matching_time_slots () =
   in
   let start = Time.tm_to_time tm in
   let end_exc = Time.tm_to_time { tm with tm_year = tm.tm_year + 1 } in
-  let time_slots = [ (start, end_exc)] in
+  let time_slots = [ (start, end_exc) ] in
   let pattern =
     let open Daypack_lib.Time_pattern in
     { year = None; mon = Some 5; day = None; hour = Some 11; min = None }
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
-  let s =
-    Daypack_lib.Time_pattern.matching_time_slots pattern time_slots
-  in
+  let s = Daypack_lib.Time_pattern.matching_time_slots pattern time_slots in
   s
   |> OSeq.take 10
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
-      Printf.printf "  [%Ld, %Ld)\n" start end_exc;
-    )
+      Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";
