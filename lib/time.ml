@@ -39,17 +39,18 @@ let day_count_of_month ~year ~month =
 
 let wday_of_mday ~year ~month ~mday =
   let tm =
-  normalize_tm Unix.
-      {
-        tm_sec = 0;
-        tm_min = 0;
-        tm_hour = 0;
-        tm_mday = mday;
-        tm_mon = month;
-        tm_year = year;
-        tm_wday = 0;
-        tm_yday = 0;
-        tm_isdst = false;
-      }
+    normalize_tm
+      Unix.
+        {
+          tm_sec = 0;
+          tm_min = 0;
+          tm_hour = 0;
+          tm_mday = mday;
+          tm_mon = month;
+          tm_year = year;
+          tm_wday = 0;
+          tm_yday = 0;
+          tm_isdst = false;
+        }
   in
   tm.tm_wday
