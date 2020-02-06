@@ -11,8 +11,7 @@ let normalize_tm tm =
   let _, tm = Unix.mktime tm in
   tm
 
-let zero_tm_sec tm =
-  Unix.{ tm with tm_sec = 0 }
+let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
 
 let is_leap_year ~year =
   assert (year > 0);

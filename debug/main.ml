@@ -495,35 +495,29 @@ let debug_time_pattern_normalize_pattern () =
 let debug_time_pattern_matching_tm_seq () =
   print_endline "Debug print for Time_pattern.match_tm_seq";
   let tm =
-      (* (Some
-       *    Unix.
-       *      {
-       *        tm_sec = 0;
-       *        tm_min = 0;
-       *        tm_hour = 0;
-       *        tm_mday = 1;
-       *        tm_mon = 0;
-       *        tm_year = 0;
-       *        tm_wday = 0;
-       *        tm_yday = 0;
-       *        tm_isdst = false;
-       *      }) *)
-      Unix.time () |> Unix.gmtime
+    (* (Some
+     *    Unix.
+     *      {
+     *        tm_sec = 0;
+     *        tm_min = 0;
+     *        tm_hour = 0;
+     *        tm_mday = 1;
+     *        tm_mon = 0;
+     *        tm_year = 0;
+     *        tm_wday = 0;
+     *        tm_yday = 0;
+     *        tm_isdst = false;
+     *      }) *)
+    Unix.time () |> Unix.gmtime
   in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    {
-      year = None;
-      mon = Some 5;
-      day = None;
-      hour = Some 11;
-      min = Some 0;
-    }
+    { year = None; mon = Some 5; day = None; hour = Some 11; min = Some 0 }
   in
   let search_years_ahead = 100 in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
-  let s = Daypack_lib.Time_pattern.matching_tm_seq ~search_years_ahead pattern
-      tm
+  let s =
+    Daypack_lib.Time_pattern.matching_tm_seq ~search_years_ahead pattern tm
   in
   s
   |> OSeq.take 10
@@ -538,8 +532,7 @@ let debug_time_pattern_matching_tm_seq () =
       Printf.printf "  tm_mon : %d\n" x.tm_mon;
       Printf.printf "  tm_year : %d\n" x.tm_year;
       Printf.printf "  tm_wday : %d\n" x.tm_wday;
-      Printf.printf "  tm_yday : %d\n" x.tm_yday;
-    )
+      Printf.printf "  tm_yday : %d\n" x.tm_yday)
 
 let debug_time_pattern_next_match_tm () =
   print_endline "Debug print for Time_pattern.next_match_tm";
@@ -563,13 +556,7 @@ let debug_time_pattern_next_match_tm () =
   let normalize_dir = `Start in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    {
-      year = None;
-      mon = None;
-      day = None;
-      hour = None;
-      min = None;
-    }
+    { year = None; mon = None; day = None; hour = None; min = None }
     |> normalize_pattern normalize_dir
   in
   let search_years_ahead = 100 in
