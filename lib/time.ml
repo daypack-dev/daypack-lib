@@ -38,7 +38,8 @@ let day_count_of_mon ~year ~mon =
   | _ -> failwith "Unexpected number for mon"
 
 let wday_of_mday ~year ~mon ~mday =
-  let tm = Unix.
+  let tm =
+  normalize_tm Unix.
       {
         tm_sec = 0;
         tm_min = 0;
@@ -51,3 +52,4 @@ let wday_of_mday ~year ~mon ~mday =
         tm_isdst = false;
       }
   in
+  tm.tm_wday

@@ -100,13 +100,6 @@ let next_match_is_in_past (t : t) (tm : Unix.tm) : bool =
                   else hour_minute_is_in_past_possibly ) )
 
 let next_match_tm ~normalize_dir ~search_years_ahead (t : t) (tm : Unix.tm) : Unix.tm option =
-  let bump cur pat ub_exc =
-    match pat with
-    | Some x -> if cur < x then (false, x) else (true, x)
-    | None ->
-      let next = succ cur in
-      if next < ub_exc then (false, next) else (true, 0)
-  in
   let next_matching_min_in_hour ~hour (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
     match t.min with
     | None -> (
@@ -170,7 +163,11 @@ let next_match_tm ~normalize_dir ~search_years_ahead (t : t) (tm : Unix.tm) : Un
     | Some (`Weekday pat_wday) ->
       let day_count = (Time.day_count_of_mon ~year ~mon) in
       Seq.filter_map (fun mday ->
-          if mday
+          let wday = Time.wday_of_mday ~year ~mon ~mday in
+          if wday = pat_wday then
+            Some { acc with tm_mday = mday }
+          else
+            None
         )
       (match cur with
        | None ->
@@ -179,45 +176,66 @@ let next_match_tm ~normalize_dir ~search_years_ahead (t : t) (tm : Unix.tm) : Un
          OSeq.(cur.tm_mday --^ day_count)
       )
   in
-  let next_match_in_year ~year (t : t) (tm : Unix.tm) : int option =
-    Seq.flat_map (fun month ->
+  let next_matching_month_in_year ~year (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
+    match t.mon with
+    | None ->
+      Seq.map (fun tm_mon -> { acc with tm_mon })
+        (match cur with
+         | None -> Seq_utils.zero_to_n_exc 12
+         | Some cur ->
+           OSeq.(cur.tm_mon --^ 12)
+        )
+    | Some pat_mon ->
+      (match cur with
+       | None -> Seq.return { acc with tm_hour = pat_mon }
+       | Some cur ->
+         OSeq.(cur.tm_mon --^ 12)
       )
-    (Seq_utils.zero_to_n_exc 12)
   in
-  if next_match_is_in_past t tm then None
-  else
-    let t = normalize_pattern normalize_dir t in
-    let tm_sec = 0 in
-    let bump_hour, tm_min = bump tm.tm_min t.min 60 in
-    let bump_mday, tm_hour =
-      if bump_hour then bump tm.tm_hour t.hour 24 else (false, tm.tm_hour)
-    in
-    let definitely_bump_mon, tm_mday =
-      if bump_mday then
-        match t.day with
-        | Some x -> (
-            match x with
-            | `Weekday x ->
-              ( false,
-                if tm.tm_wday < x then tm.tm_mday + (tm.tm_wday - x)
-                else tm.tm_mday + 7 + (x - tm.tm_wday) )
-            | `Month_day x -> if tm.tm_mday < x then (false, x) else (true, x) )
-        | None -> (false, succ tm.tm_mday)
-      else (false, tm.tm_mday)
-    in
-    (* normalize calculated item thus far *)
-    let tm = normalize_tm { tm with tm_sec; tm_min; tm_hour; tm_mday } in
-    (* if certain to bump month, then do so,
-       otherwise check if tm_mon in normalized tm already matches pattern *)
-    let bump_year, tm_mon =
-      if definitely_bump_mon then bump tm.tm_mon t.mon 12
-      else
-        match t.mon with
-        | Some x -> if tm.tm_mon < x then (false, x) else (true, x)
-        | None -> (false, tm.tm_mon)
-    in
-    let tm_year = if bump_year then succ tm.tm_year else tm.tm_year in
-    { tm with tm_mon; tm_year } |> normalize_tm |> Option.some
+  None
+
+(* let next_match_tm ~normalize_dir ~search_years_ahead (t : t) (tm : Unix.tm) : Unix.tm option =
+ *   let bump cur pat ub_exc =
+ *     match pat with
+ *     | Some x -> if cur < x then (false, x) else (true, x)
+ *     | None ->
+ *       let next = succ cur in
+ *       if next < ub_exc then (false, next) else (true, 0)
+ *   in
+ *   if next_match_is_in_past t tm then None
+ *   else
+ *     let t = normalize_pattern normalize_dir t in
+ *     let tm_sec = 0 in
+ *     let bump_hour, tm_min = bump tm.tm_min t.min 60 in
+ *     let bump_mday, tm_hour =
+ *       if bump_hour then bump tm.tm_hour t.hour 24 else (false, tm.tm_hour)
+ *     in
+ *     let definitely_bump_mon, tm_mday =
+ *       if bump_mday then
+ *         match t.day with
+ *         | Some x -> (
+ *             match x with
+ *             | `Weekday x ->
+ *               ( false,
+ *                 if tm.tm_wday < x then tm.tm_mday + (tm.tm_wday - x)
+ *                 else tm.tm_mday + 7 + (x - tm.tm_wday) )
+ *             | `Month_day x -> if tm.tm_mday < x then (false, x) else (true, x) )
+ *         | None -> (false, succ tm.tm_mday)
+ *       else (false, tm.tm_mday)
+ *     in
+ *     (\* normalize calculated item thus far *\)
+ *     let tm = normalize_tm { tm with tm_sec; tm_min; tm_hour; tm_mday } in
+ *     (\* if certain to bump month, then do so,
+ *        otherwise check if tm_mon in normalized tm already matches pattern *\)
+ *     let bump_year, tm_mon =
+ *       if definitely_bump_mon then bump tm.tm_mon t.mon 12
+ *       else
+ *         match t.mon with
+ *         | Some x -> if tm.tm_mon < x then (false, x) else (true, x)
+ *         | None -> (false, tm.tm_mon)
+ *     in
+ *     let tm_year = if bump_year then succ tm.tm_year else tm.tm_year in
+ *     { tm with tm_mon; tm_year } |> normalize_tm |> Option.some *)
 
 let next_match_int64 ?(time_slots : Time_slot.t list = []) ~normalize_dir
     (t : t) (time : int64) : int64 option =
