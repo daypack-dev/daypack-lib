@@ -99,7 +99,7 @@ let normalize_pattern (dir : normalize_dir) t =
  *                     days_left_of_year >= days_till_next_occurence
  *                   else hour_minute_is_in_past_possibly ) ) *)
 
-let matching_mins_in_hour ~hour (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
+let matching_minutes (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
   match t.min with
   | None -> (
       let start =
@@ -122,7 +122,7 @@ let matching_mins_in_hour ~hour (t : t) (cur : Unix.tm option) (acc : Unix.tm) :
          Seq.return { acc with tm_min = pat_min }
     )
 
-let matching_hours_in_month ~month (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
+let matching_hours (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
   match t.hour with
   | None -> (
       let start = match cur with
@@ -144,7 +144,7 @@ let matching_hours_in_month ~month (t : t) (cur : Unix.tm option) (acc : Unix.tm
          Seq.return { acc with tm_hour = pat_hour }
     )
 
-  let matching_days_in_month ~year ~month (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
+  let matching_days ~year ~month (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
     match t.day with
     | None ->
       let day_count = (Time.day_count_of_month ~year ~month) in
@@ -182,7 +182,7 @@ let matching_hours_in_month ~month (t : t) (cur : Unix.tm option) (acc : Unix.tm
         )
         OSeq.(start --^ day_count)
 
-  let matching_months_in_year ~year (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
+  let matching_months (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
     match t.mon with
     | None ->
       let start = match cur with
@@ -200,6 +200,17 @@ let matching_hours_in_month ~month (t : t) (cur : Unix.tm option) (acc : Unix.tm
          else
            Seq.return { acc with tm_mon = pat_mon }
       )
+
+let matching_years ~search_years_ahead (t : t) (cur : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+  match t.year with
+  | None ->
+    Seq.map (fun tm_year -> { acc with tm_year })
+      OSeq.(cur.tm_year --^ (cur.tm_year + search_years_ahead))
+  | Some pat_year ->
+    if pat_year < cur.tm_year then
+      Seq.empty
+    else
+      Seq.return { acc with tm_year = pat_year }
 
 let matching_tm_s ~normalize_dir ~search_years_ahead (t : t) (tm : Unix.tm) : Unix.tm Seq.t =
   Seq.empty
