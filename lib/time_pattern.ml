@@ -13,46 +13,46 @@ type t = {
   min : int option;
 }
 
-type normalize_dir =
-  [ `Start
-  | `End
-  ]
+(* type normalize_dir =
+ *   [ `Start
+ *   | `End
+ *   ] *)
 
 let first_mday = 1
 
 let tm_year_offset = 1900
 
-let normalize_pattern (dir : normalize_dir) t =
-  let map_none upper x default_val =
-    match x with
-    | Some x -> Some x
-    | None -> ( match upper with Some _ -> Some default_val | None -> None )
-  in
-  t
-  |> (fun t ->
-      {
-        t with
-        mon = map_none t.year t.mon (match dir with `Start -> 0 | `End -> 11);
-      })
-  |> (fun t ->
-      match dir with
-      | `Start -> { t with day = map_none t.mon t.day (`Month_day first_mday) }
-      | `End ->
-        {
-          t with
-          mon = Option.map succ t.mon;
-          day = map_none t.mon t.day (`Month_day 0);
-        })
-  |> (fun t ->
-      {
-        t with
-        hour = map_none t.day t.hour (match dir with `Start -> 0 | `End -> 23);
-      })
-  |> fun t ->
-  {
-    t with
-    min = map_none t.hour t.min (match dir with `Start -> 0 | `End -> 59);
-  }
+(* let normalize_pattern (dir : normalize_dir) t =
+ *   let map_none upper x default_val =
+ *     match x with
+ *     | Some x -> Some x
+ *     | None -> ( match upper with Some _ -> Some default_val | None -> None )
+ *   in
+ *   t
+ *   |> (fun t ->
+ *       {
+ *         t with
+ *         mon = map_none t.year t.mon (match dir with `Start -> 0 | `End -> 11);
+ *       })
+ *   |> (fun t ->
+ *       match dir with
+ *       | `Start -> { t with day = map_none t.mon t.day (`Month_day first_mday) }
+ *       | `End ->
+ *         {
+ *           t with
+ *           mon = Option.map succ t.mon;
+ *           day = map_none t.mon t.day (`Month_day 0);
+ *         })
+ *   |> (fun t ->
+ *       {
+ *         t with
+ *         hour = map_none t.day t.hour (match dir with `Start -> 0 | `End -> 23);
+ *       })
+ *   |> fun t ->
+ *   {
+ *     t with
+ *     min = map_none t.hour t.min (match dir with `Start -> 0 | `End -> 59);
+ *   } *)
 
 let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
