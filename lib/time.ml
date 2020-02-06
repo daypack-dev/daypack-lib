@@ -11,6 +11,9 @@ let normalize_tm tm =
   let _, tm = Unix.mktime tm in
   tm
 
+let zero_tm_sec tm =
+  Unix.{ tm with tm_sec = 0 }
+
 let is_leap_year ~year =
   assert (year > 0);
   let divisible_by_4 = year mod 4 = 0 in

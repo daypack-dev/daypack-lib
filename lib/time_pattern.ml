@@ -103,7 +103,20 @@ let matching_minutes (t : t) (cur : Unix.tm) (acc : Unix.tm) :
   Unix.tm Seq.t =
   match t.min with
   | None ->
-    Seq.map (fun tm_min -> { acc with tm_min }) OSeq.(cur.tm_min --^ 60)
+    let start =
+      if acc.tm_year = cur.tm_year
+      && acc.tm_mon = cur.tm_mon
+      && acc.tm_mday = cur.tm_mday
+      && acc.tm_hour = cur.tm_hour
+      then
+        cur.tm_min
+      else
+        0
+    in
+    Seq.map (fun tm_min -> { acc with tm_min })
+      (
+        OSeq.(start --^ 60)
+      )
   | Some pat_min -> (
         if pat_min < cur.tm_min then Seq.empty
         else Seq.return { acc with tm_min = pat_min } )
@@ -112,19 +125,36 @@ let matching_hours (t : t) (cur : Unix.tm) (acc : Unix.tm) :
   Unix.tm Seq.t =
   match t.hour with
   | None ->
-    Seq.map (fun tm_hour -> { acc with tm_hour }) OSeq.(cur.tm_hour --^ 24)
+    let start =
+      if acc.tm_year = cur.tm_year
+      && acc.tm_mon = cur.tm_mon
+      && acc.tm_mday = cur.tm_mday
+      then
+        cur.tm_hour
+      else
+        0
+    in
+    Seq.map (fun tm_hour -> { acc with tm_hour }) OSeq.(start --^ 24)
   | Some pat_hour -> (
         if pat_hour < cur.tm_hour then Seq.empty
         else Seq.return { acc with tm_hour = pat_hour } )
 
 let matching_days (t : t) (cur : Unix.tm ) (acc : Unix.tm) :
   Unix.tm Seq.t =
-  let year = cur.tm_year + tm_year_offset in
-  let month = cur.tm_mon in
+  let year = acc.tm_year + tm_year_offset in
+  let month = acc.tm_mon in
   let day_count = Time.day_count_of_month ~year ~month in
+  let start =
+    if acc.tm_year = cur.tm_year
+    && acc.tm_mon = cur.tm_mon
+    then
+      cur.tm_mday
+    else
+      0
+  in
   match t.day with
   | None ->
-    Seq.map (fun tm_mday -> { acc with tm_mday }) OSeq.(cur.tm_mday --^ day_count)
+    Seq.map (fun tm_mday -> { acc with tm_mday }) OSeq.(start --^ day_count)
   | Some (`Month_day pat_mday) -> (
         if pat_mday < cur.tm_mday then Seq.empty
         else Seq.return { acc with tm_mday = pat_mday } )
@@ -133,13 +163,20 @@ let matching_days (t : t) (cur : Unix.tm ) (acc : Unix.tm) :
       (fun mday ->
          let wday = Time.wday_of_mday ~year ~month ~mday in
          if wday = pat_wday then Some { acc with tm_mday = mday } else None)
-      OSeq.(cur.tm_mday --^ day_count)
+      OSeq.(start --^ day_count)
 
 let matching_months (t : t) (cur : Unix.tm ) (acc : Unix.tm) :
   Unix.tm Seq.t =
   match t.mon with
   | None ->
-    Seq.map (fun tm_mon -> { acc with tm_mon }) OSeq.(cur.tm_mon --^ 12)
+    let start =
+      if acc.tm_year = cur.tm_year
+      then
+        cur.tm_mon
+      else
+        0
+    in
+    Seq.map (fun tm_mon -> { acc with tm_mon }) OSeq.(start --^ 12)
   | Some pat_mon -> (
         if pat_mon < cur.tm_mon then Seq.empty
         else Seq.return { acc with tm_mon = pat_mon } )
@@ -153,25 +190,25 @@ let matching_years ~search_years_ahead (t : t) (cur : Unix.tm) (acc : Unix.tm) :
       OSeq.(cur.tm_year --^ (cur.tm_year + search_years_ahead))
   | Some pat_year ->
     if pat_year < cur.tm_year then Seq.empty
-    else Seq.return { acc with tm_year = pat_year }
+    else Seq.return { acc with tm_year = pat_year - tm_year_offset }
 
-let matching_tm_seq ~search_years_ahead (t : t) (tm : Unix.tm) :
+let matching_tm_seq ~search_years_ahead (t : t) (cur : Unix.tm) :
   Unix.tm Seq.t =
-  matching_years ~search_years_ahead t tm tm
+  matching_years ~search_years_ahead t cur cur
   |> Seq.flat_map (fun acc ->
-      matching_months t tm acc
+      matching_months t cur acc
     )
   |> Seq.flat_map (fun acc ->
-      matching_days t tm acc
+      matching_days t cur acc
     )
   |> Seq.flat_map (fun acc ->
-      matching_hours t tm acc
+      matching_hours t cur acc
     )
   |> Seq.flat_map (fun acc ->
-      matching_minutes t tm acc
+      matching_minutes t cur acc
     )
 
-let next_match_tm ~normalize_dir ~search_years_ahead (t : t) (tm : Unix.tm) :
+let next_match_tm ~(normalize_dir : normalize_dir) ~search_years_ahead (t : t) (tm : Unix.tm) :
   Unix.tm option =
   let s = matching_tm_seq ~search_years_ahead t tm in
   match s () with

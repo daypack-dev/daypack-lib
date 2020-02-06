@@ -492,6 +492,55 @@ let debug_time_pattern_normalize_pattern () =
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern
 
+let debug_time_pattern_matching_tm_seq () =
+  print_endline "Debug print for Time_pattern.match_tm_seq";
+  let tm =
+      (* (Some
+       *    Unix.
+       *      {
+       *        tm_sec = 0;
+       *        tm_min = 0;
+       *        tm_hour = 0;
+       *        tm_mday = 1;
+       *        tm_mon = 0;
+       *        tm_year = 0;
+       *        tm_wday = 0;
+       *        tm_yday = 0;
+       *        tm_isdst = false;
+       *      }) *)
+      Unix.time () |> Unix.gmtime
+  in
+  let pattern =
+    let open Daypack_lib.Time_pattern in
+    {
+      year = None;
+      mon = None;
+      day = None;
+      hour = None;
+      min = None;
+    }
+  in
+  let search_years_ahead = 100 in
+  Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
+  let s = Daypack_lib.Time_pattern.matching_tm_seq ~search_years_ahead pattern
+      tm
+  in
+  s
+  |> OSeq.take 10
+  |> OSeq.iteri (fun i x ->
+      let open Unix in
+      Printf.printf "iter : %d\n" i;
+      print_endline "  =====";
+      Printf.printf "  tm_sec : %d\n" x.tm_sec;
+      Printf.printf "  tm_min : %d\n" x.tm_min;
+      Printf.printf "  tm_hour : %d\n" x.tm_hour;
+      Printf.printf "  tm_mday : %d\n" x.tm_mday;
+      Printf.printf "  tm_mon : %d\n" x.tm_mon;
+      Printf.printf "  tm_year : %d\n" x.tm_year;
+      Printf.printf "  tm_wday : %d\n" x.tm_wday;
+      Printf.printf "  tm_yday : %d\n" x.tm_yday;
+    )
+
 let debug_time_pattern_next_match_tm () =
   print_endline "Debug print for Time_pattern.next_match_tm";
   let tm =
@@ -516,14 +565,14 @@ let debug_time_pattern_next_match_tm () =
     let open Daypack_lib.Time_pattern in
     {
       year = None;
-      mon = Some 1;
-      day = Some (`Weekday 0);
+      mon = None;
+      day = None;
       hour = None;
       min = None;
     }
     |> normalize_pattern normalize_dir
   in
-  let search_years_ahead = 2 in
+  let search_years_ahead = 100 in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   for i = 0 to 10 do
     Printf.printf "iter : %d\n" i;
@@ -672,8 +721,12 @@ let debug_time_pattern_next_match_int64 () =
  *   print_newline () *)
 
 let () =
-  debug_time_pattern_next_match_tm ();
+  debug_time_pattern_matching_tm_seq ();
   print_newline ()
+
+(* let () =
+ *   debug_time_pattern_next_match_tm ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_next_match_int64 ();
