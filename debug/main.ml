@@ -567,7 +567,7 @@ let debug_time_pattern_matching_time_slots () =
   |> OSeq.take 10
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
-      Printf.printf "  [%Ld, %Ld)" start end_exc;
+      Printf.printf "  [%Ld, %Ld)\n" start end_exc;
     )
 
 (* let debug_time_pattern_next_match_tm () =
