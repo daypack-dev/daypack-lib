@@ -517,6 +517,7 @@ let debug_time_pattern_next_match_tm () =
     { year = None; mon = Some 1; day = Some (`Weekday 0); hour = None; min = None }
     |> normalize_pattern normalize_dir
   in
+  let search_years_ahead = 2 in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   for i = 0 to 10 do
     Printf.printf "iter : %d\n" i;
@@ -531,7 +532,7 @@ let debug_time_pattern_next_match_tm () =
       Printf.printf "  tm_year : %d\n" x.tm_year;
       Printf.printf "  tm_wday : %d\n" x.tm_wday;
       Printf.printf "  tm_yday : %d\n" x.tm_yday;
-      tm := Daypack_lib.Time_pattern.next_match_tm ~normalize_dir pattern x
+      tm := Daypack_lib.Time_pattern.next_match_tm ~normalize_dir ~search_years_ahead pattern x
     | None -> print_endline "nothing"
   done
 
@@ -561,6 +562,7 @@ let debug_time_pattern_next_match_int64 () =
     { year = None; mon = Some 1; day = None; hour = None; min = None }
     |> normalize_pattern normalize_dir
   in
+  let search_years_ahead = 2 in
   let time_slots = [ (* (0L, 36_347_213L) *) ] in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   for i = 0 to 10 do
@@ -570,7 +572,7 @@ let debug_time_pattern_next_match_int64 () =
       print_endline "  =====";
       Printf.printf "  time : %Ld\n" x;
       time :=
-        Daypack_lib.Time_pattern.next_match_int64 ~time_slots ~normalize_dir
+        Daypack_lib.Time_pattern.next_match_int64 ~time_slots ~normalize_dir ~search_years_ahead
           pattern x
     | None -> print_endline "nothing"
   done
