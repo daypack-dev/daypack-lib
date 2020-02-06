@@ -493,7 +493,7 @@ let debug_sched_usage_simulation () =
  *   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern *)
 
 let debug_time_pattern_matching_tm_seq () =
-  print_endline "Debug print for Time_pattern.match_tm_seq";
+  print_endline "Debug print for Time_pattern.matching_tm_seq";
   let tm =
     (* (Some
      *    Unix.
@@ -533,6 +533,42 @@ let debug_time_pattern_matching_tm_seq () =
       Printf.printf "  tm_year : %d\n" x.tm_year;
       Printf.printf "  tm_wday : %d\n" x.tm_wday;
       Printf.printf "  tm_yday : %d\n" x.tm_yday)
+
+let debug_time_pattern_matching_time_slots () =
+  print_endline "Debug print for Time_pattern.matching_time_slots";
+  let tm =
+    (* (Some
+     *    Unix.
+     *      {
+     *        tm_sec = 0;
+     *        tm_min = 0;
+     *        tm_hour = 0;
+     *        tm_mday = 1;
+     *        tm_mon = 0;
+     *        tm_year = 0;
+     *        tm_wday = 0;
+     *        tm_yday = 0;
+     *        tm_isdst = false;
+     *      }) *)
+    Unix.time () |> Unix.gmtime
+  in
+  let start = Time.tm_to_time tm in
+  let end_exc = Time.tm_to_time { tm with tm_year = tm.tm_year + 1 } in
+  let time_slots = [ (start, end_exc)] in
+  let pattern =
+    let open Daypack_lib.Time_pattern in
+    { year = None; mon = Some 5; day = None; hour = Some 11; min = Some 0 }
+  in
+  Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
+  let s =
+    Daypack_lib.Time_pattern.matching_time_slots pattern time_slots
+  in
+  s
+  |> OSeq.take 10
+  |> OSeq.iteri (fun i (start, end_exc) ->
+      Printf.printf "iter : %d\n" i;
+      Printf.printf "  [%Ld, %Ld)" start end_exc;
+    )
 
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";
@@ -707,8 +743,12 @@ let debug_time_pattern_matching_tm_seq () =
  *   debug_time_pattern_normalize_pattern ();
  *   print_newline () *)
 
+(* let () =
+ *   debug_time_pattern_matching_tm_seq ();
+ *   print_newline () *)
+
 let () =
-  debug_time_pattern_matching_tm_seq ();
+  debug_time_pattern_matching_time_slots ();
   print_newline ()
 
 (* let () =
