@@ -52,10 +52,6 @@ let normalize_pattern (dir : normalize_dir) t =
     min = map_none t.hour t.min (match dir with `Start -> 0 | `End -> 59);
   }
 
-let normalize_tm tm =
-  let _, tm = Unix.mktime tm in
-  tm
-
 let next_match_is_in_past (t : t) (tm : Unix.tm) : bool =
     match t.year with
     | None -> false
@@ -132,16 +128,56 @@ let next_match_tm ~normalize_dir ~search_years_ahead (t : t) (tm : Unix.tm) : Un
       )
   in
   let next_matching_hour_in_mon ~mon (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
+    match t.hour with
+    | None -> (
+        Seq.map (fun tm_hour -> { acc with tm_hour })
+          (match cur with
+           | None ->
+             Seq_utils.zero_to_n_exc 24
+           | Some cur ->
+             OSeq.(cur.tm_hour --^ 24)
+          )
+      )
+    | Some pat_hour ->
+      (match cur with
+       | None -> Seq.return { acc with tm_hour = pat_hour }
+       | Some cur ->
+         if pat_hour <= cur.tm_hour then
+           Seq.empty
+         else
+           Seq.return { acc with tm_hour = pat_hour }
+      )
   in
   let next_matching_day_in_mon ~year ~mon (t : t) (cur : Unix.tm option) (acc : Unix.tm) : Unix.tm Seq.t =
     match t.day with
     | None ->
-      Seq.flat_map (fun tm_day ->
-          let acc = { acc with tm_day } in
-          next_matching_min_in_hour ~
+      let day_count = (Time.day_count_of_mon ~year ~mon) in
+      Seq.map (fun tm_mday ->
+          { acc with tm_mday }
         ) (match cur with
-          | None -> Seq_utils.zero_to_n_exc 60
-          | Some cur -> OSeq.(cur.tm_day --^ (Time.day_count_of_mon ~year ~mon)))
+          | None -> Seq_utils.zero_to_n_exc day_count
+          | Some cur -> OSeq.(cur.tm_mday --^ day_count))
+    | Some (`Month_day pat_mday) ->
+      (match cur with
+       | None ->
+         Seq.return { acc with tm_mday = pat_mday }
+       | Some cur ->
+         if pat_mday <= cur.tm_mday then
+           Seq.empty
+         else
+           Seq.return { acc with tm_mday = pat_mday }
+      )
+    | Some (`Weekday pat_wday) ->
+      let day_count = (Time.day_count_of_mon ~year ~mon) in
+      Seq.filter_map (fun mday ->
+          if mday
+        )
+      (match cur with
+       | None ->
+         Seq_utils.zero_to_n_exc day_count
+       | Some cur ->
+         OSeq.(cur.tm_mday --^ day_count)
+      )
   in
   let next_match_in_year ~year (t : t) (tm : Unix.tm) : int option =
     Seq.flat_map (fun month ->

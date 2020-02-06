@@ -7,6 +7,10 @@ let tm_to_time (tm : Unix.tm) : int64 =
   let time, _ = Unix.mktime tm in
   (time |> Int64.of_float) /^ 60L
 
+let normalize_tm tm =
+  let _, tm = Unix.mktime tm in
+  tm
+
 let is_leap_year ~year =
   assert (year > 0);
   let divisible_by_4 = year mod 4 = 0 in
@@ -32,3 +36,18 @@ let day_count_of_mon ~year ~mon =
   | 11 -> 30
   | 12 -> 31
   | _ -> failwith "Unexpected number for mon"
+
+let wday_of_mday ~year ~mon ~mday =
+  let tm = Unix.
+      {
+        tm_sec = 0;
+        tm_min = 0;
+        tm_hour = 0;
+        tm_mday = mday;
+        tm_mon = mon;
+        tm_year = year;
+        tm_wday = 0;
+        tm_yday = 0;
+        tm_isdst = false;
+      }
+  in
