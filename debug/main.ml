@@ -574,7 +574,7 @@ let debug_time_pattern_matching_time_slots () =
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   let s = Daypack_lib.Time_pattern.matching_time_slots pattern time_slots in
   s
-  |> OSeq.take 10
+  |> OSeq.take 100
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
