@@ -21,8 +21,8 @@ let is_leap_year ~year =
 
 let day_count_of_year ~year = if is_leap_year ~year then 366 else 365
 
-let day_count_of_mon ~year ~mon =
-  match mon + 1 with
+let day_count_of_month ~year ~month =
+  match month + 1 with
   | 1 -> 31
   | 2 -> if is_leap_year ~year then 29 else 28
   | 3 -> 31
@@ -37,7 +37,7 @@ let day_count_of_mon ~year ~mon =
   | 12 -> 31
   | _ -> failwith "Unexpected number for mon"
 
-let wday_of_mday ~year ~mon ~mday =
+let wday_of_mday ~year ~month ~mday =
   let tm =
   normalize_tm Unix.
       {
@@ -45,7 +45,7 @@ let wday_of_mday ~year ~mon ~mday =
         tm_min = 0;
         tm_hour = 0;
         tm_mday = mday;
-        tm_mon = mon;
+        tm_mon = month;
         tm_year = year;
         tm_wday = 0;
         tm_yday = 0;
