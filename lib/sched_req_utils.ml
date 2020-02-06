@@ -52,7 +52,8 @@ let sched_req_template_matches_sched_req_data_unit
           target = target2;
           time_slots = time_slots2;
         } ) ->
-    target1 = target2 && size1 = size2
+    target1 = target2
+    && size1 = size2
     && Time_slot.equal time_slots1 time_slots2
   | _ -> false
 
@@ -121,7 +122,8 @@ let sched_req_template_matches_sched_req_record_data_unit
           target = target2;
           time_slots = time_slots2;
         } ) ->
-    target1 = target2 && size1 = size2
+    target1 = target2
+    && size1 = size2
     && Time_slot.equal time_slots1 time_slots2
   | _ -> false
 

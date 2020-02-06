@@ -262,9 +262,11 @@ end
 module Time_slot = struct
   let get_occupied_time_slots ?start ?end_exc ((_sid, sd) : sched) :
     (int64 * int64) Seq.t =
-    sd.agenda.indexed_by_start |> Int64_map.to_seq
+    sd.agenda.indexed_by_start
+    |> Int64_map.to_seq
     |> Seq.flat_map (fun (_start, bucket) ->
-        bucket |> Task_seg_place_set.to_seq
+        bucket
+        |> Task_seg_place_set.to_seq
         |> Seq.map (fun (_, start, end_exc) -> (start, end_exc)))
     |> (fun l ->
         Option.fold ~none:l ~some:(fun start -> Time_slot.slice ~start l) start)
@@ -729,7 +731,8 @@ module Serialize = struct
     { added = pack_task_store x.added; removed = pack_task_store x.removed }
 
   let pack_task_inst_store (x : task_inst_store) : Sched_t.task_inst list =
-    x |> Task_inst_id_map.to_seq
+    x
+    |> Task_inst_id_map.to_seq
     |> Seq.map Task.Serialize.pack_task_inst
     |> List.of_seq
 
@@ -741,7 +744,8 @@ module Serialize = struct
     }
 
   let pack_task_seg_store (x : task_seg_store) : Sched_t.task_seg list =
-    x |> Task_seg_id_map.to_seq
+    x
+    |> Task_seg_id_map.to_seq
     |> Seq.map Task.Serialize.pack_task_seg
     |> List.of_seq
 
@@ -754,7 +758,8 @@ module Serialize = struct
 
   let pack_sched_req_pending_store (x : sched_req_store) :
     Sched_req_t.sched_req list =
-    x |> Sched_req_id_map.to_seq
+    x
+    |> Sched_req_id_map.to_seq
     |> Seq.map Sched_req.Serialize.pack_sched_req
     |> List.of_seq
 
@@ -767,7 +772,8 @@ module Serialize = struct
 
   let pack_sched_req_record_store (x : sched_req_record_store) :
     Sched_req_t.sched_req_record list =
-    x |> Sched_req_id_map.to_seq
+    x
+    |> Sched_req_id_map.to_seq
     |> Seq.map Sched_req.Serialize.pack_sched_req_record
     |> List.of_seq
 
@@ -797,7 +803,8 @@ module Serialize = struct
 
   let pack_user_id_to_task_ids (x : Int64_set.t User_id_map.t) :
     (Task_t.user_id * int64 list) list =
-    x |> User_id_map.to_seq
+    x
+    |> User_id_map.to_seq
     |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
@@ -811,7 +818,8 @@ module Serialize = struct
 
   let pack_task_id_to_task_inst_ids (x : Int64_set.t Task_id_map.t) :
     (Task_t.task_id * int64 list) list =
-    x |> Task_id_map.to_seq
+    x
+    |> Task_id_map.to_seq
     |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
@@ -825,7 +833,8 @@ module Serialize = struct
 
   let pack_task_inst_id_to_task_seg_ids (x : Int64_set.t Task_inst_id_map.t) :
     (Task_t.task_inst_id * int64 list) list =
-    x |> Task_inst_id_map.to_seq
+    x
+    |> Task_inst_id_map.to_seq
     |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
@@ -839,7 +848,8 @@ module Serialize = struct
 
   let pack_indexed_by_start (x : task_seg_place_map) :
     (int64 * Task_t.task_seg_place list) list =
-    x |> Int64_map.to_seq
+    x
+    |> Int64_map.to_seq
     |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Serialize.pack y))
     |> List.of_seq
 
@@ -959,7 +969,8 @@ module Deserialize = struct
   *)
 
   let unpack_task_list (x : Sched_t.task list) : task_store =
-    x |> List.to_seq
+    x
+    |> List.to_seq
     |> Seq.map Task.Deserialize.unpack_task
     |> Task_id_map.of_seq
 
@@ -969,7 +980,8 @@ module Deserialize = struct
     { added = unpack_task_list x.added; removed = unpack_task_list x.removed }
 
   let unpack_task_inst_list (x : Sched_t.task_inst list) : task_inst_store =
-    x |> List.to_seq
+    x
+    |> List.to_seq
     |> Seq.map Task.Deserialize.unpack_task_inst
     |> Task_inst_id_map.of_seq
 
@@ -982,7 +994,8 @@ module Deserialize = struct
     }
 
   let unpack_task_seg_list (x : Sched_t.task_seg list) : task_seg_store =
-    x |> List.to_seq
+    x
+    |> List.to_seq
     |> Seq.map Task.Deserialize.unpack_task_seg
     |> Task_seg_id_map.of_seq
 
@@ -996,7 +1009,8 @@ module Deserialize = struct
 
   let unpack_sched_req_pending_list (x : Sched_req_t.sched_req list) :
     sched_req_store =
-    x |> List.to_seq
+    x
+    |> List.to_seq
     |> Seq.map Sched_req.Deserialize.unpack_sched_req
     |> Sched_req_id_map.of_seq
 
@@ -1011,7 +1025,8 @@ module Deserialize = struct
 
   let unpack_sched_req_record_list (x : Sched_req_t.sched_req_record list) :
     sched_req_record_store =
-    x |> List.to_seq
+    x
+    |> List.to_seq
     |> Seq.map Sched_req.Deserialize.unpack_sched_req_record
     |> Sched_req_id_map.of_seq
 
@@ -1059,7 +1074,8 @@ module Deserialize = struct
 
   let unpack_user_id_to_task_ids (x : (Task_t.user_id * int64 list) list) :
     Int64_set.t User_id_map.t =
-    x |> List.to_seq
+    x
+    |> List.to_seq
     |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
     |> User_id_map.of_seq
 
@@ -1073,7 +1089,8 @@ module Deserialize = struct
 
   let unpack_task_id_to_task_inst_ids (x : (Task_t.task_id * int64 list) list) :
     Int64_set.t Task_id_map.t =
-    x |> List.to_seq
+    x
+    |> List.to_seq
     |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
     |> Task_id_map.of_seq
 
@@ -1088,7 +1105,8 @@ module Deserialize = struct
   let unpack_task_inst_id_to_task_seg_ids
       (x : (Task_t.task_inst_id * int64 list) list) :
     Int64_set.t Task_inst_id_map.t =
-    x |> List.to_seq
+    x
+    |> List.to_seq
     |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
     |> Task_inst_id_map.of_seq
 
@@ -1102,7 +1120,8 @@ module Deserialize = struct
 
   let unpack_indexed_by_start (x : (int64 * Task_t.task_seg_place list) list) :
     task_seg_place_map =
-    x |> List.to_seq
+    x
+    |> List.to_seq
     |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Deserialize.unpack y))
     |> Int64_map.of_seq
 

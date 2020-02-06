@@ -4,7 +4,8 @@ let qc_slice_start =
   QCheck.Test.make ~count:10_000 ~name:"qc_slice_start"
     QCheck.(pair pos_int64 sorted_time_slots_maybe_gaps)
     (fun (start, l) ->
-       l |> List.to_seq
+       l
+       |> List.to_seq
        |> Daypack_lib.Time_slot.slice ~start
        |> List.of_seq
        |> List.for_all (fun (x, _) -> start <= x))
@@ -13,7 +14,8 @@ let qc_slice_end_exc =
   QCheck.Test.make ~count:10_000 ~name:"qc_slice_end_exc"
     QCheck.(pair pos_int64 sorted_time_slots_maybe_gaps)
     (fun (end_exc, l) ->
-       l |> List.to_seq
+       l
+       |> List.to_seq
        |> Daypack_lib.Time_slot.slice ~end_exc
        |> List.of_seq
        |> List.for_all (fun (_, y) -> y <= end_exc))
@@ -21,13 +23,19 @@ let qc_slice_end_exc =
 let qc_normalize_pairs_are_fine =
   QCheck.Test.make ~count:10_000 ~name:"qc_normalize_pairs_are_fine" time_slots
     (fun l ->
-       l |> List.to_seq |> Daypack_lib.Time_slot.normalize |> List.of_seq
+       l
+       |> List.to_seq
+       |> Daypack_lib.Time_slot.normalize
+       |> List.of_seq
        |> List.for_all (fun (x, y) -> x <= y))
 
 let qc_normalize_time_slots_are_sorted =
   QCheck.Test.make ~count:10_000 ~name:"qc_normalize_time_slots_are_sorted"
     time_slots (fun l ->
-        l |> List.to_seq |> Daypack_lib.Time_slot.normalize |> List.of_seq
+        l
+        |> List.to_seq
+        |> Daypack_lib.Time_slot.normalize
+        |> List.of_seq
         |> List.fold_left
           (fun (res, last) (x, y) ->
              if res then
@@ -50,7 +58,9 @@ let qc_normalize_time_slots_are_unique =
 let qc_normalize_time_slots_are_disjoint_with_gaps =
   QCheck.Test.make ~count:10_000
     ~name:"qc_normalize_time_slots_are_disjoint_with_gaps" time_slots (fun l ->
-        l |> List.to_seq |> Daypack_lib.Time_slot.normalize
+        l
+        |> List.to_seq
+        |> Daypack_lib.Time_slot.normalize
         |> Seq.fold_left
           (fun (res, last) (x, y) ->
              if res then
@@ -73,12 +83,14 @@ let qc_invert_disjoint_from_original =
     (fun (start, end_exc, l) ->
        QCheck.assume (start <= end_exc);
        let sliced =
-         l |> List.to_seq
+         l
+         |> List.to_seq
          |> Daypack_lib.Time_slot.slice ~start ~end_exc
          |> List.of_seq
        in
        let inverted =
-         l |> List.to_seq
+         l
+         |> List.to_seq
          |> Daypack_lib.Time_slot.invert ~start ~end_exc
          |> List.of_seq
        in
@@ -93,14 +105,17 @@ let qc_invert_fit_gaps =
     (fun (start, end_exc, l) ->
        QCheck.assume (start < end_exc);
        let res =
-         l |> List.to_seq
+         l
+         |> List.to_seq
          |> Daypack_lib.Time_slot.invert ~start ~end_exc
          |> List.of_seq
          |> (fun inverted ->
              ( Daypack_lib.Time_slot.slice ~start ~end_exc (List.to_seq l)
                |> List.of_seq )
              @ inverted)
-         |> List.to_seq |> Daypack_lib.Time_slot.normalize |> List.of_seq
+         |> List.to_seq
+         |> Daypack_lib.Time_slot.normalize
+         |> List.of_seq
        in
        (l <> [] && List.for_all (fun (x, y) -> y < start || end_exc < x) l)
        || [ (start, end_exc) ] = res)
@@ -131,14 +146,16 @@ let qc_relatvie_complement_result_subset_of_mem_of =
        in
        let res = res_s |> List.of_seq in
        Daypack_lib.Time_slot.intersect (List.to_seq mem_of) res_s
-       |> List.of_seq = res)
+       |> List.of_seq
+          = res)
 
 let qc_relatvie_complement_self =
   QCheck.Test.make ~count:10_000 ~name:"qc_relatvie_complement_self"
     sorted_time_slots_maybe_gaps (fun l ->
         let s = List.to_seq l in
         Daypack_lib.Time_slot.relative_complement ~mem_of:s ~not_mem_of:s
-        |> List.of_seq = [])
+        |> List.of_seq
+           = [])
 
 let qc_intersect_with_self =
   QCheck.Test.make ~count:10_000 ~name:"qc_intersect_with_self"

@@ -423,7 +423,8 @@ let debug_sched_backtracking_search_pending () =
       ((0L, 0L, 6L), 10L);
       ((0L, 0L, 7L), 10L);
     ]
-    |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq
+    |> List.to_seq
+    |> Daypack_lib.Task_inst_id_map.of_seq
   in
   print_endline "scheduling requests";
   List.iter
@@ -451,35 +452,207 @@ let debug_sched_usage_simulation () =
     Task.Print.debug_print_task ~indent_level:1 task;
     sched
   in
-  ( Sched.empty
-    (* |> add_task ~parent_user_id:0L
-     *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
-     *   Task.[ { task_inst_type = Reminder } ] *)
-    |> add_task ~parent_user_id:0L
-      Task.
-        {
-          splittable = false;
-          parallelizable = false;
-          task_type =
-            Recurring
-              (Arithemtic_seq
-                 ( { start = 0L; end_exc = 200L; diff = 10L },
-                   {
-                     task_inst_data = { task_inst_type = Reminder };
-                     sched_req_templates =
-                       [ Fixed { task_seg_related_data = 6L; start = 0L } ];
-                   } ));
-        }
-      []
-    |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-    |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-    |> fun x ->
-    Sched.Print.debug_print_sched x;
-    x )
+  Sched.empty
+  (* |> add_task ~parent_user_id:0L
+   *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
+   *   Task.[ { task_inst_type = Reminder } ] *)
+  |> add_task ~parent_user_id:0L
+    Task.
+      {
+        splittable = false;
+        parallelizable = false;
+        task_type =
+          Recurring
+            (Arithemtic_seq
+               ( { start = 0L; end_exc = 200L; diff = 10L },
+                 {
+                   task_inst_data = { task_inst_type = Reminder };
+                   sched_req_templates =
+                     [ Fixed { task_seg_related_data = 6L; start = 0L } ];
+                 } ));
+      }
+    []
+  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
+  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
+  |> (fun x ->
+      Sched.Print.debug_print_sched x;
+      x)
   |> fun x ->
   print_newline ();
   print_endline "JSON:";
   print_endline (Sched.Serialize.json_string_of_sched x)
+
+(* let debug_time_pattern_normalize_pattern () =
+ *   print_endline "Debug print for Time_pattern.normalize_pattern";
+ *   let dir = `End in
+ *   let pattern =
+ *     let open Daypack_lib.Time_pattern in
+ *     { year = Some 2021; mon = None; day = None; hour = Some 2; min = None }
+ *     |> normalize_pattern dir
+ *   in
+ *   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern *)
+
+let debug_time_pattern_matching_tm_seq () =
+  print_endline "Debug print for Time_pattern.matching_tm_seq";
+  let tm =
+    (* (Some
+     *    Unix.
+     *      {
+     *        tm_sec = 0;
+     *        tm_min = 0;
+     *        tm_hour = 0;
+     *        tm_mday = 1;
+     *        tm_mon = 0;
+     *        tm_year = 0;
+     *        tm_wday = 0;
+     *        tm_yday = 0;
+     *        tm_isdst = false;
+     *      }) *)
+    Unix.time () |> Unix.gmtime
+  in
+  let pattern =
+    let open Daypack_lib.Time_pattern in
+    { year = None; mon = Some 5; day = None; hour = Some 11; min = Some 0 }
+  in
+  let search_years_ahead = 100 in
+  Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
+  let s =
+    Daypack_lib.Time_pattern.matching_tm_seq ~search_years_ahead pattern tm
+  in
+  s
+  |> OSeq.take 10
+  |> OSeq.iteri (fun i x ->
+      let open Unix in
+      Printf.printf "iter : %d\n" i;
+      print_endline "  =====";
+      Printf.printf "  tm_sec : %d\n" x.tm_sec;
+      Printf.printf "  tm_min : %d\n" x.tm_min;
+      Printf.printf "  tm_hour : %d\n" x.tm_hour;
+      Printf.printf "  tm_mday : %d\n" x.tm_mday;
+      Printf.printf "  tm_mon : %d\n" x.tm_mon;
+      Printf.printf "  tm_year : %d\n" x.tm_year;
+      Printf.printf "  tm_wday : %d\n" x.tm_wday;
+      Printf.printf "  tm_yday : %d\n" x.tm_yday)
+
+let debug_time_pattern_matching_time_slots () =
+  print_endline "Debug print for Time_pattern.matching_time_slots";
+  let tm =
+    (* (Some
+     *    Unix.
+     *      {
+     *        tm_sec = 0;
+     *        tm_min = 0;
+     *        tm_hour = 0;
+     *        tm_mday = 1;
+     *        tm_mon = 0;
+     *        tm_year = 0;
+     *        tm_wday = 0;
+     *        tm_yday = 0;
+     *        tm_isdst = false;
+     *      }) *)
+    Unix.time () |> Unix.gmtime
+  in
+  let start = Time.tm_to_time tm in
+  let end_exc = Time.tm_to_time { tm with tm_year = tm.tm_year + 1 } in
+  let time_slots = [ (start, end_exc) ] in
+  let pattern =
+    let open Daypack_lib.Time_pattern in
+    { year = None; mon = Some 5; day = None; hour = Some 11; min = None }
+  in
+  Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
+  let s = Daypack_lib.Time_pattern.matching_time_slots pattern time_slots in
+  s
+  |> OSeq.take 10
+  |> OSeq.iteri (fun i (start, end_exc) ->
+      Printf.printf "iter : %d\n" i;
+      Printf.printf "  [%Ld, %Ld)\n" start end_exc)
+
+(* let debug_time_pattern_next_match_tm () =
+ *   print_endline "Debug print for Time_pattern.next_match_tm";
+ *   let tm =
+ *     ref
+ *       (\* (Some
+ *        *    Unix.
+ *        *      {
+ *        *        tm_sec = 0;
+ *        *        tm_min = 0;
+ *        *        tm_hour = 0;
+ *        *        tm_mday = 1;
+ *        *        tm_mon = 0;
+ *        *        tm_year = 0;
+ *        *        tm_wday = 0;
+ *        *        tm_yday = 0;
+ *        *        tm_isdst = false;
+ *        *      }) *\)
+ *       (Unix.time () |> Unix.gmtime |> Option.some)
+ *   in
+ *   let normalize_dir = `Start in
+ *   let pattern =
+ *     let open Daypack_lib.Time_pattern in
+ *     { year = None; mon = None; day = None; hour = None; min = None }
+ *     |> normalize_pattern normalize_dir
+ *   in
+ *   let search_years_ahead = 100 in
+ *   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
+ *   for i = 0 to 10 do
+ *     Printf.printf "iter : %d\n" i;
+ *     match !tm with
+ *     | Some x ->
+ *       print_endline "  =====";
+ *       Printf.printf "  tm_sec : %d\n" x.tm_sec;
+ *       Printf.printf "  tm_min : %d\n" x.tm_min;
+ *       Printf.printf "  tm_hour : %d\n" x.tm_hour;
+ *       Printf.printf "  tm_mday : %d\n" x.tm_mday;
+ *       Printf.printf "  tm_mon : %d\n" x.tm_mon;
+ *       Printf.printf "  tm_year : %d\n" x.tm_year;
+ *       Printf.printf "  tm_wday : %d\n" x.tm_wday;
+ *       Printf.printf "  tm_yday : %d\n" x.tm_yday;
+ *       tm :=
+ *         Daypack_lib.Time_pattern.next_match_tm ~normalize_dir
+ *           ~search_years_ahead pattern x
+ *     | None -> print_endline "nothing"
+ *   done *)
+
+(* let debug_time_pattern_next_match_int64 () =
+ *   print_endline "Debug print for Time_pattern.next_match_int64";
+ *   let time =
+ *     ref
+ *       (Some
+ *          ( Unix.
+ *              {
+ *                tm_sec = 0;
+ *                tm_min = 0;
+ *                tm_hour = 0;
+ *                tm_mday = 1;
+ *                tm_mon = 0;
+ *                tm_year = 0;
+ *                tm_wday = 0;
+ *                tm_yday = 0;
+ *                tm_isdst = false;
+ *              }
+ *            |> Daypack_lib.Time.tm_to_time ))
+ *       (\* (Unix.time () |> Unix.gmtime |> Daypack_lib.Time.tm_to_time |> Option.some) *\)
+ *   in
+ *   let normalize_dir = `Start in
+ *   let pattern =
+ *     let open Daypack_lib.Time_pattern in
+ *     { year = None; mon = Some 1; day = None; hour = None; min = None }
+ *     |> normalize_pattern normalize_dir
+ *   in
+ *   let search_years_ahead = 2 in
+ *   let time_slots = [ (\* (0L, 36_347_213L) *\) ] in
+ *   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
+ *   for i = 0 to 10 do
+ *     Printf.printf "iter : %d\n" i;
+ *     match !time with
+ *     | Some x ->
+ *       print_endline "  =====";
+ *       Printf.printf "  time : %Ld\n" x;
+ *       time :=
+ *         Daypack_lib.Time_pattern.next_match_int64 ~time_slots ~normalize_dir
+ *           ~search_years_ahead pattern x
+ *     | None -> print_endline "nothing"
+ *   done *)
 
 (* let () = debug_single_task_seg_shift (); print_newline () *)
 
@@ -555,10 +728,30 @@ let debug_sched_usage_simulation () =
  *   debug_union_time_slots ();
  *   print_newline () *)
 
-let () =
-  debug_sched_backtracking_search_pending ();
-  print_newline ()
+(* let () =
+ *   debug_sched_backtracking_search_pending ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_sched_usage_simulation ();
+ *   print_newline () *)
+
+(* let () =
+ *   debug_time_pattern_normalize_pattern ();
+ *   print_newline () *)
+
+(* let () =
+ *   debug_time_pattern_matching_tm_seq ();
+ *   print_newline () *)
+
+let () =
+  debug_time_pattern_matching_time_slots ();
+  print_newline ()
+
+(* let () =
+ *   debug_time_pattern_next_match_tm ();
+ *   print_newline () *)
+
+(* let () =
+ *   debug_time_pattern_next_match_int64 ();
  *   print_newline () *)

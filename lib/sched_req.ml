@@ -41,7 +41,9 @@ let flexibility_score_of_sched_req_record
       Time_slot.intersect
         (x.time_slots |> List.to_seq)
         (x.buckets |> List.to_seq)
-      |> List.of_seq |> Time_slot.sum_length_list |> Int64.to_float
+      |> List.of_seq
+      |> Time_slot.sum_length_list
+      |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
   | Time_share x ->

@@ -533,7 +533,8 @@ let print_store_equal () =
     (fun (_l, r, equal, _diff, _add_diff, _sub_diff) ->
        Printf.sprintf "(%s store1.%s store2.%s)" equal r r)
     store_fields
-  |> String.concat " && " |> print_string
+  |> String.concat " && "
+  |> print_string
 
 let agenda_fields =
   [
@@ -620,4 +621,5 @@ let print_agenda_equal () =
     (fun (_l, r, equal, _diff, _add_diff, _sub_diff) ->
        Printf.sprintf "(%s agenda1.%s agenda2.%s)" equal r r)
     agenda_fields
-  |> String.concat " && " |> print_string
+  |> String.concat " && "
+  |> print_string

@@ -63,7 +63,8 @@ let normalize_list_in_seq_out ?(skip_filter = false) ?(skip_sort = false)
   |> (fun l ->
       if skip_filter then l else Normalize.filter_invalid_or_empty_list l)
   |> (fun l -> if skip_sort then l else Normalize.sort_uniq_time_slots_list l)
-  |> List.to_seq |> Normalize.defrag_and_join_overlapping
+  |> List.to_seq
+  |> Normalize.defrag_and_join_overlapping
 
 module Slice = struct
   let slice_start ~start (time_slots : t Seq.t) : t Seq.t =
@@ -139,16 +140,20 @@ module Slice_rev = struct
 end
 
 let slice ?start ?end_exc time_slots =
-  ( time_slots |> fun l ->
-    match start with None -> l | Some start -> Slice.slice_start ~start l )
+  time_slots
+  |> (fun l ->
+      match start with None -> l | Some start -> Slice.slice_start ~start l)
   |> fun l ->
   match end_exc with
   | None -> l
   | Some end_exc -> Slice.slice_end_exc ~end_exc l
 
 let slice_rev ?start ?end_exc time_slots =
-  ( time_slots |> fun l ->
-    match start with None -> l | Some start -> Slice_rev.slice_start ~start l )
+  time_slots
+  |> (fun l ->
+      match start with
+      | None -> l
+      | Some start -> Slice_rev.slice_start ~start l)
   |> fun l ->
   match end_exc with
   | None -> l

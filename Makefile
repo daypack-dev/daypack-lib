@@ -4,11 +4,6 @@ CINAPSFILES = lib/*.cinaps tests/*.cinaps
 
 OCAMLFORMAT = ocamlformat \
 	--inplace \
-	--field-space loose \
-	--let-and sparse \
-	--let-open auto \
-	--type-decl sparse \
-	--sequence-style terminator \
 	$(SRCFILES) \
 	$(CINAPSFILES)
 
