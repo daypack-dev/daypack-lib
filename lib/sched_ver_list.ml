@@ -28,4 +28,4 @@ let to_base_and_diffs (l : Sched.sched list) :
           let diff = Sched.Diff.diff_sched ~old:last sched in
           aux (Some (base, sched, diff :: diffs)) rest )
   in
-  aux None l
+  aux None (List.rev l)
