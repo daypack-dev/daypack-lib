@@ -6,7 +6,7 @@ This repo contains the core library of Daypack `daypack_lib`, and the cli fronte
 Other frontends (e.g. Electron, web) are underway.
 
 `daypack_lib` was primarily developed for basic personal task scheduling (or day planning),
-but we are exploring its use in more general scheduling scenarios as well
+but we are open to exploration of its use in more general scheduling scenarios as well
 
 ## Note: Daypack is still WIP
 
