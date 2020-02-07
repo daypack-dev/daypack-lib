@@ -14,10 +14,10 @@ type task_seg_store = Task.task_seg_size Task_seg_id_map.t
 
 type task_seg_store_diff = Task.task_seg_size Task_seg_id_map_utils.diff
 
-type transit_time_slice = {
-  start : int64;
-  len : int64;
-}
+(* type transit_time_slice = {
+ *   start : int64;
+ *   len : int64;
+ * } *)
 
 (* type transit_time_record = transit_time_slice Int64_map.t
  * 
@@ -1052,23 +1052,6 @@ module Deserialize = struct
 
   (*$ #use "lib/sched.cinaps";;
 
-    Set_store.print_unpack_related_functions ()
-  *)
-
-  let unpack_sched_req_ids (x : int64 list) : Int64_set.t =
-    x |> List.to_seq |> Int64_set.of_seq
-
-  let unpack_sched_req_ids_diff (x : int64 Set_utils_t.diff) :
-    Int64_set_utils.diff =
-    {
-      added = unpack_sched_req_ids x.added;
-      removed = unpack_sched_req_ids x.removed;
-    }
-
-  (*$*)
-
-  (*$ #use "lib/sched.cinaps";;
-
     Bucket_store.print_unpack_related_functions ()
   *)
 
@@ -1131,6 +1114,23 @@ module Deserialize = struct
     {
       added = unpack_indexed_by_start x.added;
       removed = unpack_indexed_by_start x.removed;
+    }
+
+  (*$*)
+
+  (*$ #use "lib/sched.cinaps";;
+
+    Set_store.print_unpack_related_functions ()
+  *)
+
+  let unpack_sched_req_ids (x : int64 list) : Int64_set.t =
+    x |> List.to_seq |> Int64_set.of_seq
+
+  let unpack_sched_req_ids_diff (x : int64 Set_utils_t.diff) :
+    Int64_set_utils.diff =
+    {
+      added = unpack_sched_req_ids x.added;
+      removed = unpack_sched_req_ids x.removed;
     }
 
   (*$*)
