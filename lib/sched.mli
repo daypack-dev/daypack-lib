@@ -54,9 +54,7 @@ type store_diff = {
   quota_diff : int64 Task_inst_id_map_utils.diff;
 }
 
-type agenda = {
-  indexed_by_start : task_seg_place_map;
-}
+type agenda = { indexed_by_start : task_seg_place_map }
 
 type agenda_diff = { indexed_by_start_diff : task_seg_place_map_diff }
 
@@ -93,10 +91,13 @@ module Quota_store : sig
 end
 
 module Task_seg_store : sig
-  val add_task_seg : parent_task_inst_id:Task.task_inst_id -> Task.task_seg_size -> sched -> Task.task_seg * sched
+  val add_task_seg :
+    parent_task_inst_id:Task.task_inst_id ->
+    Task.task_seg_size ->
+    sched ->
+    Task.task_seg * sched
 
-  val add_task_seg_via_task_seg_alloc_req
-    :
+  val add_task_seg_via_task_seg_alloc_req :
     Task.task_seg_alloc_req -> sched -> Task.task_seg * sched
 
   val add_task_segs_via_task_seg_alloc_req_list :
@@ -106,13 +107,25 @@ module Task_seg_store : sig
 end
 
 module Task_inst_store : sig
-  val add_task_inst : parent_task_id:Task.task_id -> Task.task_inst_data -> sched -> Task.task_inst * sched
+  val add_task_inst :
+    parent_task_id:Task.task_id ->
+    Task.task_inst_data ->
+    sched ->
+    Task.task_inst * sched
 
-  val add_task_inst_list : parent_task_id:Task.task_id -> Task.task_inst_data list -> sched -> Task.task_inst list * sched
+  val add_task_inst_list :
+    parent_task_id:Task.task_id ->
+    Task.task_inst_data list ->
+    sched ->
+    Task.task_inst list * sched
 end
 
 module Task_store : sig
-  val add_task : parent_user_id:Task.user_id -> Task.task_data -> Task.task_inst_data list -> sched ->
+  val add_task :
+    parent_user_id:Task.user_id ->
+    Task.task_data ->
+    Task.task_inst_data list ->
+    sched ->
     Task.task * Task.task_inst list * sched
 end
 
@@ -128,10 +141,17 @@ end
 
 module Sched_req_store : sig
   val queue_sched_req_data : Sched_req.sched_req_data -> sched -> sched
-  val queue_sched_req_data_list : Sched_req.sched_req_data list -> sched -> sched
-  val allocate_task_segs_for_pending_sched_reqs : start:int64 -> end_exc:int64 ->
-    include_sched_reqs_partially_within_time_period:bool -> up_to_sched_req_id_inc:Sched_req.sched_req_id option
-    -> sched -> Sched_req.sched_req_record list * sched
+
+  val queue_sched_req_data_list :
+    Sched_req.sched_req_data list -> sched -> sched
+
+  val allocate_task_segs_for_pending_sched_reqs :
+    start:int64 ->
+    end_exc:int64 ->
+    include_sched_reqs_partially_within_time_period:bool ->
+    up_to_sched_req_id_inc:Sched_req.sched_req_id option ->
+    sched ->
+    Sched_req.sched_req_record list * sched
 end
 
 module Recur : sig
@@ -145,19 +165,25 @@ module Serialize : sig
 
   val pack_task_seg_store : task_seg_store -> Sched_t.task_seg list
 
-  val pack_sched_req_pending_store : sched_req_store -> Sched_req_t.sched_req list
+  val pack_sched_req_pending_store :
+    sched_req_store -> Sched_req_t.sched_req list
 
-  val pack_sched_req_record_store : sched_req_record_store -> Sched_req_t.sched_req_record list
+  val pack_sched_req_record_store :
+    sched_req_record_store -> Sched_req_t.sched_req_record list
 
   val pack_quota : int64 Task_inst_id_map.t -> (Task.task_inst_id * int64) list
 
-  val pack_user_id_to_task_ids : Int64_set.t User_id_map.t -> (Task_t.user_id * int64 list) list
+  val pack_user_id_to_task_ids :
+    Int64_set.t User_id_map.t -> (Task_t.user_id * int64 list) list
 
-  val pack_task_id_to_task_inst_ids : Int64_set.t Task_id_map.t -> (Task_t.task_id * int64 list) list
+  val pack_task_id_to_task_inst_ids :
+    Int64_set.t Task_id_map.t -> (Task_t.task_id * int64 list) list
 
-  val pack_task_inst_id_to_task_seg_ids : Int64_set.t Task_inst_id_map.t -> (Task_t.task_inst_id * int64 list) list
+  val pack_task_inst_id_to_task_seg_ids :
+    Int64_set.t Task_inst_id_map.t -> (Task_t.task_inst_id * int64 list) list
 
-  val pack_indexed_by_start : task_seg_place_map -> (int64 * Task_t.task_seg_place list) list
+  val pack_indexed_by_start :
+    task_seg_place_map -> (int64 * Task_t.task_seg_place list) list
 
   val pack_sched_req_ids : Int64_set.t -> int64 list
 
@@ -173,19 +199,26 @@ module Deserialize : sig
 
   val unpack_task_seg_list : Sched_t.task_seg list -> task_seg_store
 
-  val unpack_sched_req_pending_list : Sched_req_t.sched_req list -> sched_req_store
+  val unpack_sched_req_pending_list :
+    Sched_req_t.sched_req list -> sched_req_store
 
-  val unpack_sched_req_record_list : Sched_req_t.sched_req_record list -> sched_req_record_store
+  val unpack_sched_req_record_list :
+    Sched_req_t.sched_req_record list -> sched_req_record_store
 
-  val unpack_quota : (Task.task_inst_id * int64) list -> int64 Task_inst_id_map.t
+  val unpack_quota :
+    (Task.task_inst_id * int64) list -> int64 Task_inst_id_map.t
 
-  val unpack_user_id_to_task_ids : (Task_t.user_id * int64 list) list -> Int64_set.t User_id_map.t
+  val unpack_user_id_to_task_ids :
+    (Task_t.user_id * int64 list) list -> Int64_set.t User_id_map.t
 
-  val unpack_task_id_to_task_inst_ids : (Task_t.task_id * int64 list) list -> Int64_set.t Task_id_map.t
+  val unpack_task_id_to_task_inst_ids :
+    (Task_t.task_id * int64 list) list -> Int64_set.t Task_id_map.t
 
-  val unpack_task_inst_id_to_task_seg_ids : (Task_t.task_inst_id * int64 list) list -> Int64_set.t Task_inst_id_map.t
+  val unpack_task_inst_id_to_task_seg_ids :
+    (Task_t.task_inst_id * int64 list) list -> Int64_set.t Task_inst_id_map.t
 
-  val unpack_indexed_by_start : (int64 * Task_t.task_seg_place list) list -> task_seg_place_map
+  val unpack_indexed_by_start :
+    (int64 * Task_t.task_seg_place list) list -> task_seg_place_map
 
   val unpack_sched_req_ids : int64 list -> Int64_set.t
 
@@ -196,6 +229,7 @@ end
 
 module Equal : sig
   val sched_data_equal : sched_data -> sched_data -> bool
+
   val sched_equal : sched -> sched -> bool
 end
 
@@ -214,7 +248,8 @@ module Diff : sig
 end
 
 module Print : sig
-  val debug_string_of_sched : ?indent_level:int -> ?buffer:Buffer.t -> sched -> string
+  val debug_string_of_sched :
+    ?indent_level:int -> ?buffer:Buffer.t -> sched -> string
 
   val debug_print_sched : ?indent_level:int -> sched -> unit
 end
