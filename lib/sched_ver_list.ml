@@ -3,7 +3,7 @@ let of_base_and_diffs (base : Sched.sched) (diffs : Sched.sched_diff list) :
   let rec aux (acc : Sched.sched list) (cur : Sched.sched)
       (diffs : Sched.sched_diff list) : Sched.sched list =
     match diffs with
-    | [] -> List.rev acc
+    | [] -> acc
     | diff :: diffs ->
       let next = Sched.Diff.add_diff_sched diff cur in
       aux (next :: acc) next diffs
