@@ -206,7 +206,7 @@ module Print = struct
           "time slots\n";
         List.iter
           (fun x ->
-             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
                (string_of_time_slot x))
           x.time_slots
       | Push_toward x ->
