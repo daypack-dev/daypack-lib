@@ -488,6 +488,21 @@ module Sched_req_store = struct
           };
       } )
 
+  let unqueue_sched_req (sched_req_id : int64) ((sid, sd) : sched) : sched =
+    match Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store with
+    | None -> (sid, sd)
+    | Some _ ->
+      let (sid, sd) = Id.remove_sched_req_id sched_req_id (sid, sd) in
+      (sid,
+       {
+         sd with store = {
+           sd.store with
+           sched_req_pending_store =
+             Sched_req_id_map.remove sched_req_id sd.store.sched_req_pending_store
+         }
+       }
+      )
+
   let queue_sched_req_data_list
       (sched_req_data_list : Sched_req.sched_req_data list) (sched : sched) :
     sched =
