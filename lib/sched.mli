@@ -103,7 +103,13 @@ module Task_seg_store : sig
   val add_task_segs_via_task_seg_alloc_req_list :
     Task.task_seg_alloc_req list -> sched -> Task.task_seg list * sched
 
+  val find_task_seg_opt : Task.task_seg_id -> sched -> Task.task_seg_size option
+
   val remove_task_seg : Task.task_seg_id -> sched -> sched
+
+  val remove_task_seg_strict : Task.task_seg_id -> sched -> (sched, unit) result
+
+  val remove_task_seg_seq : Task.task_seg_id Seq.t -> sched -> sched
 end
 
 module Task_inst_store : sig
@@ -118,6 +124,14 @@ module Task_inst_store : sig
     Task.task_inst_data list ->
     sched ->
     Task.task_inst list * sched
+
+  val find_task_inst_opt : Task.task_inst_id -> sched -> Task.task_inst_data option
+
+  val remove_task_inst : Task.task_inst_id -> sched -> sched
+
+  val remove_task_inst_strict : Task.task_inst_id -> sched -> (sched, unit) result
+
+  val remove_task_inst_seq : Task.task_inst_id Seq.t -> sched -> sched
 end
 
 module Task_store : sig
@@ -127,6 +141,12 @@ module Task_store : sig
     Task.task_inst_data list ->
     sched ->
     Task.task * Task.task_inst list * sched
+
+  val find_task_opt : Task.task_id -> sched -> Task.task_data option
+
+  val remove_task : Task.task_id -> sched -> sched
+
+  val remove_task_strict : Task.task_id -> sched -> (sched, unit) result
 end
 
 module Task_seg_place_map : sig
