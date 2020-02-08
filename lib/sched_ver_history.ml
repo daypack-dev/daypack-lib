@@ -1,3 +1,27 @@
+type t = { history : Sched.sched list }
+
+let fold_head ~none:(f_none : unit -> Sched.sched)
+    ~some:(f : Sched.sched -> Sched.sched) (t : t) : t =
+  match t.history with
+  | [] -> { history = [ f_none () ] }
+  | hd :: tl ->
+    let hd = f hd in
+    { history = hd :: tl }
+
+module In_place_head = struct
+  let reg_task ~parent_user_id (data : Task.task_data)
+      (task_inst_data_list : Task.task_inst_data list) (t : t) =
+    fold_head
+      ~none:(fun () ->
+          let _, _, sched =
+            Sched.empty
+            |> Sched.Task_store.add_task ~parent_user_id data task_inst_data_list
+          in
+          sched)
+      ~some:(fun sched -> sched)
+      t
+end
+
 module Serialize = struct
   let to_base_and_diffs (l : Sched.sched list) :
     (Sched.sched * Sched.sched_diff list) option =

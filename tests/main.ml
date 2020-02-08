@@ -7,7 +7,7 @@ let () =
       ("Task_seg_gens", Task_seg_place_gens.suite);
       ("Task", Task.suite);
       ("Sched", Sched.suite);
-      ("Sched_ver_list", Sched_ver_list.suite);
+      ("Sched_ver_history", Sched_ver_history.suite);
     ]
     |> List.map (fun (name, suite) ->
         (name, List.map QCheck_alcotest.to_alcotest suite))
