@@ -1,15 +1,4 @@
-let of_base_and_diffs (base : Sched.sched) (diffs : Sched.sched_diff list) :
-  Sched.sched list =
-  let rec aux (acc : Sched.sched list) (cur : Sched.sched)
-      (diffs : Sched.sched_diff list) : Sched.sched list =
-    match diffs with
-    | [] -> acc
-    | diff :: diffs ->
-      let next = Sched.Diff.add_diff_sched diff cur in
-      aux (next :: acc) next diffs
-  in
-  aux [ base ] base diffs
-
+module Serialize = struct
 let to_base_and_diffs (l : Sched.sched list) :
   (Sched.sched * Sched.sched_diff list) option =
   let rec aux
@@ -29,3 +18,19 @@ let to_base_and_diffs (l : Sched.sched list) :
           aux (Some (base, sched, diff :: diffs)) rest )
   in
   aux None (List.rev l)
+end
+
+module Deserialize = struct
+let of_base_and_diffs (base : Sched.sched) (diffs : Sched.sched_diff list) :
+  Sched.sched list =
+  let rec aux (acc : Sched.sched list) (cur : Sched.sched)
+      (diffs : Sched.sched_diff list) : Sched.sched list =
+    match diffs with
+    | [] -> acc
+    | diff :: diffs ->
+      let next = Sched.Diff.add_diff_sched diff cur in
+      aux (next :: acc) next diffs
+  in
+  aux [ base ] base diffs
+end
+
