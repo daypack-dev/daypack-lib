@@ -533,6 +533,29 @@ module Task_seg_place_map = struct
       (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
       sched task_seg_place_s
 
+  let filter_task_seg_place_seq (f : Task.task_seg_place -> bool)
+      ((_, sd) : sched) : Task.task_seg_place Seq.t =
+    sd.agenda.indexed_by_start
+    |> Int64_map.to_seq
+    |> Seq.flat_map (fun (_, s) ->
+        Task_seg_place_set.to_seq s
+      )
+    |> Seq.filter f
+
+  let find_task_seg_place_seq_by_task_id (task_id : Task.task_id)
+      (sched : sched) : Task.task_seg_place Seq.t =
+    filter_task_seg_place_seq
+    (fun ((id1, id2, _id3, _id4, _id5), _, _) ->
+        (id1, id2) = task_id
+      ) sched
+
+  let find_task_seg_place_seq_by_task_inst_id (task_inst_id : Task.task_inst_id)
+      (sched : sched) : Task.task_seg_place Seq.t =
+    filter_task_seg_place_seq
+    (fun ((id1, id2, id3, _id4, _id5), _, _) ->
+        (id1, id2, id3) = task_inst_id
+      ) sched
+
   let find_task_seg_place_seq_by_task_seg_id (task_seg_id : Task.task_seg_id)
       ((_, sd) : sched) : Task.task_seg_place Seq.t =
     sd.agenda.indexed_by_start
@@ -569,6 +592,13 @@ module Task_seg_place_map = struct
         store = { sd.store with quota };
         agenda = { indexed_by_start };
       } )
+
+  let remove_task_seg_place_seq (task_seg_place_seq : Task.task_seg_place Seq.t) (sched : sched) : sched =
+    Seq.fold_left (fun sched task_seg_place ->
+        remove_task_seg_place task_seg_place sched
+      )
+      sched
+      task_seg_place_seq
 end
 
 module Sched_req_store = struct

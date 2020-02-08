@@ -156,7 +156,19 @@ module Task_seg_place_map : sig
 
   val add_task_seg_place_seq : Task.task_seg_place Seq.t -> sched -> sched
 
+  val find_task_seg_place_seq_by_task_seg_id : Task.task_seg_id -> sched -> Task.task_seg_place Seq.t
+
+  val filter_task_seg_place_seq : (Task.task_seg_place -> bool) -> sched -> Task.task_seg_place Seq.t
+
+  val find_task_seg_place_seq_by_task_id : Task.task_id -> sched -> Task.task_seg_place Seq.t
+
+  val find_task_seg_place_seq_by_task_inst_id : Task.task_inst_id -> sched -> Task.task_seg_place Seq.t
+
+  val find_task_seg_place_seq_by_task_seg_id : Task.task_seg_id -> sched -> Task.task_seg_place Seq.t
+
   val remove_task_seg_place : Task.task_seg_place -> sched -> sched
+
+  val remove_task_seg_place_seq : Task.task_seg_place Seq.t -> sched -> sched
 end
 
 module Sched_req_store : sig
