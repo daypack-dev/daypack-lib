@@ -599,6 +599,18 @@ module Task_seg_place_map = struct
       )
       sched
       task_seg_place_seq
+
+  let remove_task_seg_place_by_task_id task_id sched =
+    let s = find_task_seg_place_seq_by_task_id task_id sched in
+    remove_task_seg_place_seq s sched
+
+  let remove_task_seg_place_by_task_inst_id task_inst_id sched =
+    let s = find_task_seg_place_seq_by_task_inst_id task_inst_id sched in
+    remove_task_seg_place_seq s sched
+
+  let remove_task_seg_place_by_task_seg_id task_seg_id sched =
+    let s = find_task_seg_place_seq_by_task_seg_id task_seg_id sched in
+    remove_task_seg_place_seq s sched
 end
 
 module Sched_req_store = struct
