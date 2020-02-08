@@ -8,38 +8,41 @@ type t = { mutable history : Sched.sched list }
  *     let hd = f hd in
  *     t.history <- hd :: tl *)
 
-let map_head (f : Sched.sched -> Sched.sched) (t : t) : unit =
+let map_head (f : Sched.sched -> 'a * Sched.sched) (t : t) : 'a =
   match t.history with
-  | [] -> t.history <- [ f Sched.empty ]
+  | [] -> let ret, sched = f Sched.empty in t.history <- [ sched ]; ret
   | hd :: tl ->
-    let hd = f hd in
-    t.history <- hd :: tl
+    let ret, hd = f hd in
+    t.history <- hd :: tl;
+    ret
 
 module In_place_head = struct
   let add_task ~parent_user_id (data : Task.task_data)
-      (task_inst_data_list : Task.task_inst_data list) (t : t) : unit =
+      (task_inst_data_list : Task.task_inst_data list) (t : t) : Task.task =
     map_head
       (fun sched ->
-          let _, _, sched =
+          let task, _, sched =
             sched |>
             Sched.Task_store.add_task ~parent_user_id data task_inst_data_list
           in
-          sched)
+          task, sched
+      )
       t
 
-  let queue_sched_req (data : Sched_req.sched_req_data) (t : t) : unit =
+  let queue_sched_req (data : Sched_req.sched_req_data) (t : t) : Sched_req.sched_req =
     map_head
       (fun sched ->
-sched |>
-            Sched.Sched_req_store.queue_sched_req_data data
-        )
+         sched |>
+         Sched.Sched_req_store.queue_sched_req_data data
+      )
       t
 end
 
-module Maybe_append_head = struct
+module Maybe_append_to_head = struct
+  (* let remove_task_seg_place_by_ *)
 end
 
-module Append_head = struct
+module Append_to_head = struct
 end
 
 module Serialize = struct
