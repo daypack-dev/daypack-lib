@@ -1,25 +1,45 @@
-type t = { history : Sched.sched list }
+type t = { mutable history : Sched.sched list }
 
-let fold_head ~none:(f_none : unit -> Sched.sched)
-    ~some:(f : Sched.sched -> Sched.sched) (t : t) : t =
+(* let fold_head ~none:(f_none : unit -> Sched.sched)
+ *     ~some:(f : Sched.sched -> Sched.sched) (t : t) : unit =
+ *   match t.history with
+ *   | [] -> t.history <- [ f_none () ]
+ *   | hd :: tl ->
+ *     let hd = f hd in
+ *     t.history <- hd :: tl *)
+
+let map_head (f : Sched.sched -> Sched.sched) (t : t) : unit =
   match t.history with
-  | [] -> { history = [ f_none () ] }
+  | [] -> t.history <- [ f Sched.empty ]
   | hd :: tl ->
     let hd = f hd in
-    { history = hd :: tl }
+    t.history <- hd :: tl
 
 module In_place_head = struct
-  let reg_task ~parent_user_id (data : Task.task_data)
-      (task_inst_data_list : Task.task_inst_data list) (t : t) =
-    fold_head
-      ~none:(fun () ->
+  let add_task ~parent_user_id (data : Task.task_data)
+      (task_inst_data_list : Task.task_inst_data list) (t : t) : unit =
+    map_head
+      (fun sched ->
           let _, _, sched =
-            Sched.empty
-            |> Sched.Task_store.add_task ~parent_user_id data task_inst_data_list
+            sched |>
+            Sched.Task_store.add_task ~parent_user_id data task_inst_data_list
           in
           sched)
-      ~some:(fun sched -> sched)
       t
+
+  let queue_sched_req (data : Sched_req.sched_req_data) (t : t) : unit =
+    map_head
+      (fun sched ->
+sched |>
+            Sched.Sched_req_store.queue_sched_req_data data
+        )
+      t
+end
+
+module Maybe_append_head = struct
+end
+
+module Append_head = struct
 end
 
 module Serialize = struct
