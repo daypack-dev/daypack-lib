@@ -603,8 +603,9 @@ end
 
 module Sched_req_store = struct
   let queue_sched_req_data (sched_req_data : Sched_req.sched_req_data)
-      (sched : sched) : sched =
+      (sched : sched) : Sched_req.sched_req * sched =
     let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
+    (sched_req_id, sched_req_data),
     ( sid,
       {
         sd with
@@ -634,10 +635,14 @@ module Sched_req_store = struct
 
   let queue_sched_req_data_list
       (sched_req_data_list : Sched_req.sched_req_data list) (sched : sched) :
-    sched =
+    Sched_req.sched_req list * sched =
     List.fold_left
-      (fun sched sched_req_data -> queue_sched_req_data sched_req_data sched)
-      sched sched_req_data_list
+      (fun (sched_reqs, sched) sched_req_data ->
+         let sched_req, sched = queue_sched_req_data sched_req_data sched in
+         (sched_req :: sched_reqs, sched)
+      )
+      ([], sched) sched_req_data_list
+    |> fun (l, s) -> List.rev l, s
 
   let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
       ((_sid, sd) : sched) : sched_req_store * sched_req_store * sched_req_store
@@ -856,7 +861,8 @@ module Recur = struct
                   ~f_time_slot:(fun x -> x)
                   sched_req_templates
               in
-              Sched_req_store.queue_sched_req_data sched_req_data sched)
+              let _, sched = Sched_req_store.queue_sched_req_data sched_req_data sched in
+              sched)
            sched)
       sd.store.task_store (sid, sd)
 end

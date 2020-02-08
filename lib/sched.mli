@@ -172,10 +172,10 @@ module Task_seg_place_map : sig
 end
 
 module Sched_req_store : sig
-  val queue_sched_req_data : Sched_req.sched_req_data -> sched -> sched
+  val queue_sched_req_data : Sched_req.sched_req_data -> sched -> Sched_req.sched_req * sched
 
   val queue_sched_req_data_list :
-    Sched_req.sched_req_data list -> sched -> sched
+    Sched_req.sched_req_data list -> sched -> Sched_req.sched_req list * sched
 
   val allocate_task_segs_for_pending_sched_reqs :
     start:int64 ->
