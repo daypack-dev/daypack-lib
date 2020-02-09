@@ -445,9 +445,8 @@ let debug_sched_backtracking_search_pending () =
 let debug_sched_usage_simulation () =
   let add_task ~parent_user_id task_data task_inst_data_list t : unit =
     let task, _task_inst_list =
-      Sched_ver_history.In_place_head.add_task
-      ~parent_user_id task_data task_inst_data_list
-      t
+      Sched_ver_history.In_place_head.add_task ~parent_user_id task_data
+        task_inst_data_list t
     in
     print_endline "Added task";
     Task.Print.debug_print_task ~indent_level:1 task
@@ -456,8 +455,7 @@ let debug_sched_usage_simulation () =
   (* |> add_task ~parent_user_id:0L
    *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
    *   Task.[ { task_inst_type = Reminder } ] *)
-  add_task
-   ~parent_user_id:0L
+  add_task ~parent_user_id:0L
     Task.
       {
         splittable = false;
@@ -472,8 +470,7 @@ let debug_sched_usage_simulation () =
                      [ Fixed { task_seg_related_data = 6L; start = 0L } ];
                  } ));
       }
-    []
-    sched_ver_history;
+    [] sched_ver_history;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_newline ()
 

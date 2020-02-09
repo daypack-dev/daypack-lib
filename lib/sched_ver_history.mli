@@ -51,7 +51,8 @@ module Deserialize : sig
 end
 
 module Print : sig
-  val debug_string_of_sched_ver_history : ?indent_level:int -> ?buffer:Buffer.t -> t -> string
+  val debug_string_of_sched_ver_history :
+    ?indent_level:int -> ?buffer:Buffer.t -> t -> string
 
   val debug_print_sched_ver_history : ?indent_level:int -> t -> unit
 end

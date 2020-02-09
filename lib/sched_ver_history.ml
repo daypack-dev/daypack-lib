@@ -32,7 +32,8 @@ let map_head (f : Sched.sched -> 'a * head_choice * Sched.sched) (t : t) : 'a =
 
 module In_place_head = struct
   let add_task ~parent_user_id (data : Task.task_data)
-      (task_inst_data_list : Task.task_inst_data list) (t : t) : Task.task * Task.task_inst list =
+      (task_inst_data_list : Task.task_inst_data list) (t : t) :
+    Task.task * Task.task_inst list =
     map_head
       (fun sched ->
          let task, task_inst_list, sched =
@@ -117,8 +118,8 @@ module Maybe_append_to_head = struct
         let sched_req_records, hd' =
           hd
           |> Sched.Recur.instantiate ~start ~end_exc
-          |> Sched.Sched_req_store.allocate_task_segs_for_pending_sched_reqs ~start
-            ~end_exc ~include_sched_reqs_partially_within_time_period
+          |> Sched.Sched_req_store.allocate_task_segs_for_pending_sched_reqs
+            ~start ~end_exc ~include_sched_reqs_partially_within_time_period
             ~up_to_sched_req_id_inc
         in
         match sched_req_records with
@@ -186,13 +187,16 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let debug_string_of_sched_ver_history ?(indent_level = 0) ?(buffer = Buffer.create 4096)
-      (t : t) =
+  let debug_string_of_sched_ver_history ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (t : t) =
     Debug_print.bprintf ~indent_level buffer "sched ver history\n";
-    List.iteri (fun i sched ->
-        Debug_print.bprintf ~indent_level buffer "i : %d\n" i |> ignore;
-        Sched.Print.debug_string_of_sched ~indent_level:(indent_level + 1) ~buffer sched |> ignore;
-      ) t.history;
+    List.iteri
+      (fun i sched ->
+         Debug_print.bprintf ~indent_level buffer "i : %d\n" i |> ignore;
+         Sched.Print.debug_string_of_sched ~indent_level:(indent_level + 1)
+           ~buffer sched
+         |> ignore)
+      t.history;
     Buffer.contents buffer
 
   let debug_print_sched_ver_history ?(indent_level = 0) (t : t) =
