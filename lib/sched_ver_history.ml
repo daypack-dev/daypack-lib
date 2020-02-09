@@ -62,16 +62,43 @@ module Maybe_append_to_head = struct
           let hd = Sched.Task_store.remove_task task_id hd in
           t.history <- hd :: tl
         | _ ->
-          let hd =
+          let hd' =
             hd
             |> Sched.Task_store.remove_task task_id
             |> Sched.Task_seg_place_map.remove_task_seg_place_seq
               task_seg_place_seq
           in
-          t.history <- hd :: tl )
+          t.history <- hd' :: hd :: tl )
+
+  let sched ~start ~end_exc
+      ~include_sched_reqs_partially_within_time_period
+      ~up_to_sched_req_id_inc
+      (t : t) : (unit, unit) result =
+    match t.history with
+    | [] -> Ok ()
+    | hd :: tl ->
+      let sched_req_records, hd' =
+        Sched.Sched_req_store.allocate_task_segs_for_pending_sched_reqs
+          ~start ~end_exc ~include_sched_reqs_partially_within_time_period
+          ~up_to_sched_req_id_inc
+          hd
+      in
+      match sched_req_records with
+      | [] -> Ok ()
+      | _ ->
+        let possible_scheds =
+          Sched_search.backtracking_search_multi ~start ~end_exc ~base:hd'
+            sched_req_records
+        in
+        match possible_scheds () with
+        | Seq.Nil -> Error ()
+        | Seq.Cons (hd', _) ->
+          t.history <- hd' :: hd :: tl;
+          Ok ()
 end
 
-module Append_to_head = struct end
+module Append_to_head = struct
+end
 
 module Serialize = struct
   let to_base_and_diffs (l : Sched.sched list) :
