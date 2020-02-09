@@ -179,15 +179,11 @@ module Id = struct
             };
         } ) )
 
-  let get_task_inst_id_seq ((id1, id2) : Task.task_id) ((_, sd) : sched) : Task.task_inst_id Seq.t =
+  let get_task_inst_id_seq ((id1, id2) : Task.task_id) ((_, sd) : sched) :
+    Task.task_inst_id Seq.t =
     match Task_id_map.find_opt (id1, id2) sd.store.task_id_to_task_inst_ids with
     | None -> Seq.empty
-    | Some s ->
-      s |>
-      Int64_set.to_seq
-      |> Seq.map (fun id ->
-          (id1, id2, id)
-        )
+    | Some s -> s |> Int64_set.to_seq |> Seq.map (fun id -> (id1, id2, id))
 
   let remove_task_inst_id
       ((user_id, task_part, task_inst_part) : Task.task_inst_id)
@@ -232,15 +228,15 @@ module Id = struct
             };
         } ) )
 
-  let get_task_seg_id_seq ((id1, id2, id3) : Task.task_inst_id) ((_, sd) : sched) : Task.task_seg_id Seq.t =
-    match Task_inst_id_map.find_opt (id1, id2, id3) sd.store.task_inst_id_to_task_seg_ids with
+  let get_task_seg_id_seq ((id1, id2, id3) : Task.task_inst_id)
+      ((_, sd) : sched) : Task.task_seg_id Seq.t =
+    match
+      Task_inst_id_map.find_opt (id1, id2, id3)
+        sd.store.task_inst_id_to_task_seg_ids
+    with
     | None -> Seq.empty
     | Some s ->
-      s |>
-      Int64_set.to_seq
-      |> Seq.map (fun id ->
-          (id1, id2, id3, id, None)
-        )
+      s |> Int64_set.to_seq |> Seq.map (fun id -> (id1, id2, id3, id, None))
 
   let remove_task_seg_id
       ((user_id, task_part, task_inst_part, task_seg_part, _) :
@@ -357,7 +353,8 @@ module Task_seg_store = struct
       ([], sched) reqs
     |> fun (l, t) -> (List.rev l, t)
 
-  let find_task_seg_opt (task_seg_id : Task.task_seg_id) ((_, sd) : sched) : Task.task_seg_size option =
+  let find_task_seg_opt (task_seg_id : Task.task_seg_id) ((_, sd) : sched) :
+    Task.task_seg_size option =
     Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_store
 
   let remove_task_seg (task_seg_id : Task.task_seg_id) (sched : sched) : sched =
@@ -373,17 +370,17 @@ module Task_seg_store = struct
           };
       } )
 
-  let remove_task_seg_strict (task_seg_id : Task.task_seg_id) (sched : sched) : (sched, unit) result =
+  let remove_task_seg_strict (task_seg_id : Task.task_seg_id) (sched : sched) :
+    (sched, unit) result =
     match find_task_seg_opt task_seg_id sched with
     | None -> Error ()
-    | Some _ ->
-      Ok (remove_task_seg task_seg_id sched)
+    | Some _ -> Ok (remove_task_seg task_seg_id sched)
 
-  let remove_task_seg_seq (task_seg_ids : Task.task_seg_id Seq.t) (sched : sched) : sched =
-    Seq.fold_left (fun sched task_seg_id ->
-        remove_task_seg task_seg_id sched
-      ) sched
-      task_seg_ids
+  let remove_task_seg_seq (task_seg_ids : Task.task_seg_id Seq.t)
+      (sched : sched) : sched =
+    Seq.fold_left
+      (fun sched task_seg_id -> remove_task_seg task_seg_id sched)
+      sched task_seg_ids
 end
 
 module Task_inst_store = struct
@@ -415,39 +412,41 @@ module Task_inst_store = struct
       ([], sched) data_list
     |> fun (l, t) -> (List.rev l, t)
 
-  let find_task_inst_opt (task_inst_id : Task.task_inst_id) ((_, sd) : sched) : Task.task_inst_data option =
+  let find_task_inst_opt (task_inst_id : Task.task_inst_id) ((_, sd) : sched) :
+    Task.task_inst_data option =
     Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_store
 
-  let remove_task_inst (task_inst_id : Task.task_inst_id) (sched : sched) : sched =
-    let children_task_seg_ids =
-      Id.get_task_seg_id_seq task_inst_id sched
-    in
+  let remove_task_inst (task_inst_id : Task.task_inst_id) (sched : sched) :
+    sched =
+    let children_task_seg_ids = Id.get_task_seg_id_seq task_inst_id sched in
     sched
     |> Task_seg_store.remove_task_seg_seq children_task_seg_ids
-    |> (fun (sid, sd) ->
-        (sid,
-         {
-           sd with
-           store =
-             { sd.store with
-               task_inst_store = Task_inst_id_map.remove task_inst_id sd.store.task_inst_store;
-               task_inst_id_to_task_seg_ids = Task_inst_id_map.remove task_inst_id sd.store.task_inst_id_to_task_seg_ids;
-             }
-         })
-      )
+    |> fun (sid, sd) ->
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_store =
+              Task_inst_id_map.remove task_inst_id sd.store.task_inst_store;
+            task_inst_id_to_task_seg_ids =
+              Task_inst_id_map.remove task_inst_id
+                sd.store.task_inst_id_to_task_seg_ids;
+          };
+      } )
 
-  let remove_task_inst_strict (task_inst_id : Task.task_inst_id) (sched : sched) : (sched, unit) result =
+  let remove_task_inst_strict (task_inst_id : Task.task_inst_id) (sched : sched)
+    : (sched, unit) result =
     match find_task_inst_opt task_inst_id sched with
     | None -> Error ()
-    | Some _ ->
-      Ok (remove_task_inst task_inst_id sched)
+    | Some _ -> Ok (remove_task_inst task_inst_id sched)
 
-  let remove_task_inst_seq (task_inst_ids : Task.task_inst_id Seq.t) (sched : sched) : sched =
-    Seq.fold_left (fun sched task_inst_id ->
-        remove_task_inst task_inst_id sched
-      )
-      sched
-      task_inst_ids
+  let remove_task_inst_seq (task_inst_ids : Task.task_inst_id Seq.t)
+      (sched : sched) : sched =
+    Seq.fold_left
+      (fun sched task_inst_id -> remove_task_inst task_inst_id sched)
+      sched task_inst_ids
 end
 
 module Task_store = struct
@@ -473,25 +472,26 @@ module Task_store = struct
     in
     ((parent_task_id, data), inst_list, (sid, sd))
 
-  let find_task_opt (task_id : Task.task_id) ((_, sd) : sched) : Task.task_data option =
+  let find_task_opt (task_id : Task.task_id) ((_, sd) : sched) :
+    Task.task_data option =
     Task_id_map.find_opt task_id sd.store.task_store
 
   let remove_task (task_id : Task.task_id) (sched : sched) : sched =
-    let children_task_inst_ids =
-      Id.get_task_inst_id_seq task_id sched
-    in
+    let children_task_inst_ids = Id.get_task_inst_id_seq task_id sched in
     sched
     |> Task_inst_store.remove_task_inst_seq children_task_inst_ids
     |> fun (sid, sd) ->
-    (sid,
-     { sd with
-       store = {
-         sd.store with task_store = Task_id_map.remove task_id sd.store.task_store;
-                       task_id_to_task_inst_ids = Task_id_map.remove task_id sd.store.task_id_to_task_inst_ids;
-
-       }
-     }
-    )
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_store = Task_id_map.remove task_id sd.store.task_store;
+            task_id_to_task_inst_ids =
+              Task_id_map.remove task_id sd.store.task_id_to_task_inst_ids;
+          };
+      } )
 
   let remove_task_strict task_id sched : (sched, unit) result =
     match find_task_opt task_id sched with
@@ -542,35 +542,28 @@ module Task_seg_place_map = struct
       ((_, sd) : sched) : Task.task_seg_place Seq.t =
     sd.agenda.indexed_by_start
     |> Int64_map.to_seq
-    |> Seq.flat_map (fun (_, s) ->
-        Task_seg_place_set.to_seq s
-      )
+    |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
     |> Seq.filter f
 
   let find_task_seg_place_seq_by_task_id (task_id : Task.task_id)
       (sched : sched) : Task.task_seg_place Seq.t =
     filter_task_seg_place_seq
-    (fun ((id1, id2, _id3, _id4, _id5), _, _) ->
-        (id1, id2) = task_id
-      ) sched
+      (fun ((id1, id2, _id3, _id4, _id5), _, _) -> (id1, id2) = task_id)
+      sched
 
   let find_task_seg_place_seq_by_task_inst_id (task_inst_id : Task.task_inst_id)
       (sched : sched) : Task.task_seg_place Seq.t =
     filter_task_seg_place_seq
-    (fun ((id1, id2, id3, _id4, _id5), _, _) ->
-        (id1, id2, id3) = task_inst_id
-      ) sched
+      (fun ((id1, id2, id3, _id4, _id5), _, _) ->
+         (id1, id2, id3) = task_inst_id)
+      sched
 
   let find_task_seg_place_seq_by_task_seg_id (task_seg_id : Task.task_seg_id)
       ((_, sd) : sched) : Task.task_seg_place Seq.t =
     sd.agenda.indexed_by_start
     |> Int64_map.to_seq
-    |> Seq.flat_map (fun (_, s) ->
-        Task_seg_place_set.to_seq s
-      )
-    |> Seq.filter (fun (id, _, _) ->
-        task_seg_id = id
-      )
+    |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
+    |> Seq.filter (fun (id, _, _) -> task_seg_id = id)
 
   let remove_task_seg_place
       ((task_seg_id, start, end_exc) : Task.task_seg_place) ((sid, sd) : sched)
@@ -592,18 +585,13 @@ module Task_seg_place_map = struct
         (Option.map (fun x -> x +^ (end_exc -^ start)))
         sd.store.quota
     in
-    ( sid,
-      {
-        store = { sd.store with quota };
-        agenda = { indexed_by_start };
-      } )
+    (sid, { store = { sd.store with quota }; agenda = { indexed_by_start } })
 
-  let remove_task_seg_place_seq (task_seg_place_seq : Task.task_seg_place Seq.t) (sched : sched) : sched =
-    Seq.fold_left (fun sched task_seg_place ->
-        remove_task_seg_place task_seg_place sched
-      )
-      sched
-      task_seg_place_seq
+  let remove_task_seg_place_seq (task_seg_place_seq : Task.task_seg_place Seq.t)
+      (sched : sched) : sched =
+    Seq.fold_left
+      (fun sched task_seg_place -> remove_task_seg_place task_seg_place sched)
+      sched task_seg_place_seq
 
   let remove_task_seg_place_by_task_id task_id sched =
     let s = find_task_seg_place_seq_by_task_id task_id sched in
@@ -622,33 +610,37 @@ module Sched_req_store = struct
   let queue_sched_req_data (sched_req_data : Sched_req.sched_req_data)
       (sched : sched) : Sched_req.sched_req * sched =
     let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
-    (sched_req_id, sched_req_data),
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            sched_req_pending_store =
-              Sched_req_id_map.add sched_req_id sched_req_data
-                sd.store.sched_req_pending_store;
-          };
-      } )
+    ( (sched_req_id, sched_req_data),
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              sched_req_pending_store =
+                Sched_req_id_map.add sched_req_id sched_req_data
+                  sd.store.sched_req_pending_store;
+            };
+        } ) )
 
   let unqueue_sched_req (sched_req_id : int64) ((sid, sd) : sched) : sched =
-    match Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store with
+    match
+      Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store
+    with
     | None -> (sid, sd)
     | Some _ ->
-      let (sid, sd) = Id.remove_sched_req_id sched_req_id (sid, sd) in
-      (sid,
-       {
-         sd with store = {
-           sd.store with
-           sched_req_pending_store =
-             Sched_req_id_map.remove sched_req_id sd.store.sched_req_pending_store
-         }
-       }
-      )
+      let sid, sd = Id.remove_sched_req_id sched_req_id (sid, sd) in
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              sched_req_pending_store =
+                Sched_req_id_map.remove sched_req_id
+                  sd.store.sched_req_pending_store;
+            };
+        } )
 
   let queue_sched_req_data_list
       (sched_req_data_list : Sched_req.sched_req_data list) (sched : sched) :
@@ -656,10 +648,9 @@ module Sched_req_store = struct
     List.fold_left
       (fun (sched_reqs, sched) sched_req_data ->
          let sched_req, sched = queue_sched_req_data sched_req_data sched in
-         (sched_req :: sched_reqs, sched)
-      )
+         (sched_req :: sched_reqs, sched))
       ([], sched) sched_req_data_list
-    |> fun (l, s) -> List.rev l, s
+    |> fun (l, s) -> (List.rev l, s)
 
   let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
       ((_sid, sd) : sched) : sched_req_store * sched_req_store * sched_req_store
@@ -878,7 +869,9 @@ module Recur = struct
                   ~f_time_slot:(fun x -> x)
                   sched_req_templates
               in
-              let _, sched = Sched_req_store.queue_sched_req_data sched_req_data sched in
+              let _, sched =
+                Sched_req_store.queue_sched_req_data sched_req_data sched
+              in
               sched)
            sched)
       sd.store.task_store (sid, sd)

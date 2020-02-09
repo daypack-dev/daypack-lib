@@ -125,11 +125,13 @@ module Task_inst_store : sig
     sched ->
     Task.task_inst list * sched
 
-  val find_task_inst_opt : Task.task_inst_id -> sched -> Task.task_inst_data option
+  val find_task_inst_opt :
+    Task.task_inst_id -> sched -> Task.task_inst_data option
 
   val remove_task_inst : Task.task_inst_id -> sched -> sched
 
-  val remove_task_inst_strict : Task.task_inst_id -> sched -> (sched, unit) result
+  val remove_task_inst_strict :
+    Task.task_inst_id -> sched -> (sched, unit) result
 
   val remove_task_inst_seq : Task.task_inst_id Seq.t -> sched -> sched
 end
@@ -156,27 +158,36 @@ module Task_seg_place_map : sig
 
   val add_task_seg_place_seq : Task.task_seg_place Seq.t -> sched -> sched
 
-  val find_task_seg_place_seq_by_task_seg_id : Task.task_seg_id -> sched -> Task.task_seg_place Seq.t
+  val find_task_seg_place_seq_by_task_seg_id :
+    Task.task_seg_id -> sched -> Task.task_seg_place Seq.t
 
-  val filter_task_seg_place_seq : (Task.task_seg_place -> bool) -> sched -> Task.task_seg_place Seq.t
+  val filter_task_seg_place_seq :
+    (Task.task_seg_place -> bool) -> sched -> Task.task_seg_place Seq.t
 
-  val find_task_seg_place_seq_by_task_id : Task.task_id -> sched -> Task.task_seg_place Seq.t
+  val find_task_seg_place_seq_by_task_id :
+    Task.task_id -> sched -> Task.task_seg_place Seq.t
 
-  val find_task_seg_place_seq_by_task_inst_id : Task.task_inst_id -> sched -> Task.task_seg_place Seq.t
+  val find_task_seg_place_seq_by_task_inst_id :
+    Task.task_inst_id -> sched -> Task.task_seg_place Seq.t
 
-  val find_task_seg_place_seq_by_task_seg_id : Task.task_seg_id -> sched -> Task.task_seg_place Seq.t
+  val find_task_seg_place_seq_by_task_seg_id :
+    Task.task_seg_id -> sched -> Task.task_seg_place Seq.t
 
   val remove_task_seg_place : Task.task_seg_place -> sched -> sched
 
   val remove_task_seg_place_seq : Task.task_seg_place Seq.t -> sched -> sched
 
   val remove_task_seg_place_by_task_id : Task.task_id -> sched -> sched
-  val remove_task_seg_place_by_task_inst_id : Task.task_inst_id -> sched -> sched
+
+  val remove_task_seg_place_by_task_inst_id :
+    Task.task_inst_id -> sched -> sched
+
   val remove_task_seg_place_by_task_seg_id : Task.task_seg_id -> sched -> sched
 end
 
 module Sched_req_store : sig
-  val queue_sched_req_data : Sched_req.sched_req_data -> sched -> Sched_req.sched_req * sched
+  val queue_sched_req_data :
+    Sched_req.sched_req_data -> sched -> Sched_req.sched_req * sched
 
   val queue_sched_req_data_list :
     Sched_req.sched_req_data list -> sched -> Sched_req.sched_req list * sched
