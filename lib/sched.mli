@@ -192,6 +192,14 @@ module Sched_req_store : sig
   val queue_sched_req_data_list :
     Sched_req.sched_req_data list -> sched -> Sched_req.sched_req list * sched
 
+  val unqueue_sched_req : Sched_req.sched_req_id -> sched -> sched
+
+  val filter_sched_req_record_seq : (Sched_req.sched_req_record -> bool) -> sched -> Sched_req.sched_req_record Seq.t
+
+  val find_sched_req_record_by_task_id : Task.task_id -> sched -> Sched_req.sched_req_record Seq.t
+  val find_sched_req_record_by_task_inst_id : Task.task_inst_id -> sched -> Sched_req.sched_req_record Seq.t
+  val find_sched_req_record_by_task_seg_id : Task.task_seg_id -> sched -> Sched_req.sched_req_record Seq.t
+
   val allocate_task_segs_for_pending_sched_reqs :
     start:int64 ->
     end_exc:int64 ->
