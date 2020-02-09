@@ -196,7 +196,7 @@ module Print = struct
          Sched.Print.debug_string_of_sched ~indent_level:(indent_level + 1)
            ~buffer sched
          |> ignore)
-      t.history;
+      (List.rev t.history);
     Buffer.contents buffer
 
   let debug_print_sched_ver_history ?(indent_level = 0) (t : t) =
