@@ -2,7 +2,7 @@ open Test_utils
 
 let qc_list_of_base_and_diffs_is_inverse_of_list_to_base_and_diffs =
   QCheck.Test.make ~count:500
-    ~name:"qc_of_base_and_diffs_is_inverse_of_to_base_and_diffs"
+    ~name:"qc_list_of_base_and_diffs_is_inverse_of_list_to_base_and_diffs"
     QCheck.(list_of_size Gen.(int_range 1 10) sched)
     (fun scheds ->
        match
