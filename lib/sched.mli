@@ -194,15 +194,30 @@ module Sched_req_store : sig
 
   val unqueue_sched_req : Sched_req.sched_req_id -> sched -> sched
 
-  val filter_sched_req_record_seq : (Sched_req.sched_req_record -> bool) -> sched -> Sched_req.sched_req_record Seq.t
+  val filter_sched_req_record_seq :
+    (Sched_req.sched_req_record -> bool) ->
+    sched ->
+    Sched_req.sched_req_record Seq.t
 
-  val find_sched_req_record_by_task_id : Task.task_id -> sched -> Sched_req.sched_req_record Seq.t
-  val find_sched_req_record_by_task_inst_id : Task.task_inst_id -> sched -> Sched_req.sched_req_record Seq.t
-  val find_sched_req_record_by_task_seg_id : Task.task_seg_id -> sched -> Sched_req.sched_req_record Seq.t
-  val remove_sched_req_record_if_contains_matching_task_seg : (Task.task_seg -> bool) -> sched -> sched
+  val find_sched_req_record_by_task_id :
+    Task.task_id -> sched -> Sched_req.sched_req_record Seq.t
+
+  val find_sched_req_record_by_task_inst_id :
+    Task.task_inst_id -> sched -> Sched_req.sched_req_record Seq.t
+
+  val find_sched_req_record_by_task_seg_id :
+    Task.task_seg_id -> sched -> Sched_req.sched_req_record Seq.t
+
+  val remove_sched_req_record_if_contains_matching_task_seg :
+    (Task.task_seg -> bool) -> sched -> sched
+
   val remove_sched_req_record_by_task_id : Task.task_id -> sched -> sched
-  val remove_sched_req_record_by_task_inst_id : Task.task_inst_id -> sched -> sched
-  val remove_sched_req_record_by_task_seg_id : Task.task_seg_id -> sched -> sched
+
+  val remove_sched_req_record_by_task_inst_id :
+    Task.task_inst_id -> sched -> sched
+
+  val remove_sched_req_record_by_task_seg_id :
+    Task.task_seg_id -> sched -> sched
 
   val allocate_task_segs_for_pending_sched_reqs :
     start:int64 ->

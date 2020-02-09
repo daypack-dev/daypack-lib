@@ -138,18 +138,12 @@ let map_list ~f_data ~f_time ~f_time_slot ts =
 
 let get_data (type a b c) (t : (a, b, c) t) : a list =
   match t with
-  | Fixed { task_seg_related_data; _ } ->
-    [ task_seg_related_data ]
-  | Shift { task_seg_related_data_list; _ } ->
-    task_seg_related_data_list
-  | Split_and_shift { task_seg_related_data; _ } ->
-    [ task_seg_related_data ]
-  | Split_even { task_seg_related_data } ->
-    [ task_seg_related_data ]
-  | Time_share { task_seg_related_data_list; _} ->
-    task_seg_related_data_list
-  | Push_toward { task_seg_related_data; _ } ->
-    [ task_seg_related_data ]
+  | Fixed { task_seg_related_data; _ } -> [ task_seg_related_data ]
+  | Shift { task_seg_related_data_list; _ } -> task_seg_related_data_list
+  | Split_and_shift { task_seg_related_data; _ } -> [ task_seg_related_data ]
+  | Split_even { task_seg_related_data } -> [ task_seg_related_data ]
+  | Time_share { task_seg_related_data_list; _ } -> task_seg_related_data_list
+  | Push_toward { task_seg_related_data; _ } -> [ task_seg_related_data ]
 
 module Print = struct
   let debug_string_of_sched_req_data_unit_skeleton (type a b c)
