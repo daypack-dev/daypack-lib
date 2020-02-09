@@ -418,20 +418,23 @@ module Task_inst_store = struct
   let find_task_inst_opt (task_inst_id : Task.task_inst_id) ((_, sd) : sched) : Task.task_inst_data option =
     Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_store
 
-  let remove_task_inst (task_inst_id : Task.task_inst_id) ((sid, sd) : sched) : sched =
+  let remove_task_inst (task_inst_id : Task.task_inst_id) (sched : sched) : sched =
     let children_task_seg_ids =
-      Id.get_task_seg_id_seq task_inst_id (sid, sd)
+      Id.get_task_seg_id_seq task_inst_id sched
     in
-    let (sid, sd) = Task_seg_store.remove_task_seg_seq children_task_seg_ids (sid, sd) in
-    (sid,
-     {
-       sd with
-       store =
-         { sd.store with
-           task_inst_store = Task_inst_id_map.remove task_inst_id sd.store.task_inst_store;
-           task_inst_id_to_task_seg_ids = Task_inst_id_map.remove task_inst_id sd.store.task_inst_id_to_task_seg_ids;
-         }
-     })
+    sched
+    |> Task_seg_store.remove_task_seg_seq children_task_seg_ids
+    |> (fun (sid, sd) ->
+        (sid,
+         {
+           sd with
+           store =
+             { sd.store with
+               task_inst_store = Task_inst_id_map.remove task_inst_id sd.store.task_inst_store;
+               task_inst_id_to_task_seg_ids = Task_inst_id_map.remove task_inst_id sd.store.task_inst_id_to_task_seg_ids;
+             }
+         })
+      )
 
   let remove_task_inst_strict (task_inst_id : Task.task_inst_id) (sched : sched) : (sched, unit) result =
     match find_task_inst_opt task_inst_id sched with
@@ -473,11 +476,13 @@ module Task_store = struct
   let find_task_opt (task_id : Task.task_id) ((_, sd) : sched) : Task.task_data option =
     Task_id_map.find_opt task_id sd.store.task_store
 
-  let remove_task (task_id : Task.task_id) ((sid, sd) : sched) : sched =
+  let remove_task (task_id : Task.task_id) (sched : sched) : sched =
     let children_task_inst_ids =
-      Id.get_task_inst_id_seq task_id (sid, sd)
+      Id.get_task_inst_id_seq task_id sched
     in
-    let (sid, sd) = Task_inst_store.remove_task_inst_seq children_task_inst_ids (sid, sd) in
+    sched
+    |> Task_inst_store.remove_task_inst_seq children_task_inst_ids
+    |> fun (sid, sd) ->
     (sid,
      { sd with
        store = {
