@@ -38,14 +38,14 @@ module In_place_head = struct
          (task, `In_place, sched))
       t
 
-  let add_task_inst ~parent_task_id (data : Task.task_inst_data) (t : t) : Task.task_inst =
+  let add_task_inst ~parent_task_id (data : Task.task_inst_data) (t : t) :
+    Task.task_inst =
     map_head
       (fun sched ->
          let task_inst, sched =
            Sched.Task_inst_store.add_task_inst ~parent_task_id data sched
          in
-         (task_inst, `In_place, sched)
-      )
+         (task_inst, `In_place, sched))
       t
 
   let queue_sched_req (data : Sched_req.sched_req_data) (t : t) :
@@ -75,7 +75,8 @@ module Maybe_append_to_head = struct
           let hd' =
             hd
             |> Sched.Task_store.remove_task task_id
-            |> Sched.Sched_req_store.remove_sched_req_record_by_task_id task_id
+            |> Sched.Sched_req_store.remove_sched_req_record_by_task_id
+              task_id
             |> Sched.Task_seg_place_map.remove_task_seg_place_seq
               task_seg_place_seq
           in
@@ -86,7 +87,8 @@ module Maybe_append_to_head = struct
     | [] -> ()
     | hd :: tl -> (
         let task_seg_place_seq =
-          Sched.Task_seg_place_map.find_task_seg_place_seq_by_task_inst_id task_inst_id hd
+          Sched.Task_seg_place_map.find_task_seg_place_seq_by_task_inst_id
+            task_inst_id hd
         in
         match task_seg_place_seq () with
         | Seq.Nil ->
@@ -96,7 +98,8 @@ module Maybe_append_to_head = struct
           let hd' =
             hd
             |> Sched.Task_inst_store.remove_task_inst task_inst_id
-            |> Sched.Sched_req_store.remove_sched_req_record_by_task_inst_id task_inst_id
+            |> Sched.Sched_req_store.remove_sched_req_record_by_task_inst_id
+              task_inst_id
             |> Sched.Task_seg_place_map.remove_task_seg_place_seq
               task_seg_place_seq
           in
@@ -147,14 +150,13 @@ module Serialize = struct
     in
     aux None (List.rev l)
 
-  let to_base_and_diffs (t : t) :
-    (Sched.sched * Sched.sched_diff list) option =
+  let to_base_and_diffs (t : t) : (Sched.sched * Sched.sched_diff list) option =
     list_to_base_and_diffs t.history
 end
 
 module Deserialize = struct
-  let list_of_base_and_diffs (base : Sched.sched) (diffs : Sched.sched_diff list) :
-    Sched.sched list =
+  let list_of_base_and_diffs (base : Sched.sched)
+      (diffs : Sched.sched_diff list) : Sched.sched list =
     let rec aux (acc : Sched.sched list) (cur : Sched.sched)
         (diffs : Sched.sched_diff list) : Sched.sched list =
       match diffs with
