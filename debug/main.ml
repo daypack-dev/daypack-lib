@@ -739,9 +739,9 @@ let debug_time_pattern_matching_time_slots () =
  *   debug_sched_backtracking_search_pending ();
  *   print_newline () *)
 
-(* let () =
- *   debug_sched_usage_simulation ();
- *   print_newline () *)
+let () =
+  debug_sched_usage_simulation ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_normalize_pattern ();
@@ -751,9 +751,9 @@ let debug_time_pattern_matching_time_slots () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
-let () =
-  debug_time_pattern_matching_time_slots ();
-  print_newline ()
+(* let () =
+ *   debug_time_pattern_matching_time_slots ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
