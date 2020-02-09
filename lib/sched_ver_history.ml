@@ -1,5 +1,7 @@
 type t = { mutable history : Sched.sched list }
 
+let of_sched_list history = { history }
+
 type head_choice =
   [ `In_place
   | `New_head
@@ -127,6 +129,13 @@ module Maybe_append_to_head = struct
             | Seq.Cons (hd', _) ->
               t.history <- hd' :: hd :: tl;
               Ok () ) )
+end
+
+module Equal = struct
+  let equal t1 t2 =
+    List.for_all2 (fun s1 s2 ->
+        Sched.Equal.sched_equal s1 s2
+      ) t1.history t2.history
 end
 
 module Serialize = struct

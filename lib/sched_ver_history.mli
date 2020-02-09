@@ -1,5 +1,7 @@
 type t
 
+val of_sched_list : Sched.sched list -> t
+
 module In_place_head : sig
   val add_task :
     parent_user_id:int64 ->
@@ -26,6 +28,10 @@ module Maybe_append_to_head : sig
     up_to_sched_req_id_inc:Sched_req.sched_req_id option ->
     t ->
     (unit, unit) result
+end
+
+module Equal : sig
+  val equal : t -> t -> bool
 end
 
 module Serialize : sig
