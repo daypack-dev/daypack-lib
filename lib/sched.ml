@@ -652,6 +652,29 @@ module Sched_req_store = struct
       ([], sched) sched_req_data_list
     |> fun (l, s) -> (List.rev l, s)
 
+  let filter_sched_req_record_seq
+    (f : Sched_req.sched_req_record -> bool)
+    ((_, sd) : sched) : Sched_req.sched_req_record Seq.t =
+    sd.store.sched_req_record_store
+    |> Sched_req_id_map.to_seq
+    |> Seq.filter f
+
+  (* let find_sched_req_record_by_task_seg_id ((id1, id2, id3, id4, _id5) : Task.task_seg_id)
+   *     (sched : sched) : Sched_req.sched_req_record Seq.t =
+   *   filter_sched_req_record_seq
+   *     (fun (_, x) ->
+   *        Sched_req_data_unit_skeleton.map
+   *          ~f_data:(fun ((id1', id2', id3', id4', _id5'), _) ->
+   *             id1 = id1'
+   *             && id2 = id2'
+   *             && id3 = id3'
+   *             && id4 = id4'
+   *          )
+   *          ~f_time:(fun x -> x)
+   *          ~f_time_slot:(fun x -> x) x
+   *     )
+   *     sched *)
+
   let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
       ((_sid, sd) : sched) : sched_req_store * sched_req_store * sched_req_store
     =
