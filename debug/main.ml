@@ -431,7 +431,7 @@ let debug_sched_backtracking_search_pending () =
     (Sched_req.Print.debug_print_sched_req_data ~indent_level:1)
     sched_req_data_list;
   print_newline ();
-  let base =
+  let _, base =
     Sched.empty
     |> Sched.Quota_store.update_quota quota
     |> Sched.Sched_req_store.queue_sched_req_data_list sched_req_data_list
@@ -512,7 +512,13 @@ let debug_time_pattern_matching_tm_seq () =
   in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    { year = None; mon = Some 5; day = None; hour = Some 11; min = Some 0 }
+    {
+      years = [];
+      months = [ 5 ];
+      days = `Month_days [];
+      hours = [ 11 ];
+      minutes = [ 0 ];
+    }
   in
   let search_years_ahead = 100 in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
@@ -557,12 +563,18 @@ let debug_time_pattern_matching_time_slots () =
   let time_slots = [ (start, end_exc) ] in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    { year = None; mon = Some 5; day = None; hour = Some 11; min = None }
+    {
+      years = [];
+      months = [ 5 ];
+      days = `Month_days [];
+      hours = [ 11 ];
+      minutes = [];
+    }
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   let s = Daypack_lib.Time_pattern.matching_time_slots pattern time_slots in
   s
-  |> OSeq.take 10
+  |> OSeq.take 100
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)

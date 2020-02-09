@@ -136,6 +136,15 @@ let map (type a b c d e f) ~(f_data : a -> d) ~(f_time : b -> e)
 let map_list ~f_data ~f_time ~f_time_slot ts =
   List.map (map ~f_data ~f_time ~f_time_slot) ts
 
+let get_data (type a b c) (t : (a, b, c) t) : a list =
+  match t with
+  | Fixed { task_seg_related_data; _ } -> [ task_seg_related_data ]
+  | Shift { task_seg_related_data_list; _ } -> task_seg_related_data_list
+  | Split_and_shift { task_seg_related_data; _ } -> [ task_seg_related_data ]
+  | Split_even { task_seg_related_data } -> [ task_seg_related_data ]
+  | Time_share { task_seg_related_data_list; _ } -> task_seg_related_data_list
+  | Push_toward { task_seg_related_data; _ } -> [ task_seg_related_data ]
+
 module Print = struct
   let debug_string_of_sched_req_data_unit_skeleton (type a b c)
       ?(indent_level = 0) ?(buffer = Buffer.create 4096)
@@ -206,7 +215,7 @@ module Print = struct
           "time slots\n";
         List.iter
           (fun x ->
-             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s"
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
                (string_of_time_slot x))
           x.time_slots
       | Push_toward x ->
