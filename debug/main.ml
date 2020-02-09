@@ -443,20 +443,21 @@ let debug_sched_backtracking_search_pending () =
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
 
 let debug_sched_usage_simulation () =
-  let add_task ~parent_user_id task_data task_inst_data_list sched =
-    let task, _task_inst_list, sched =
-      Sched.Task_store.add_task ~parent_user_id task_data task_inst_data_list
-        sched
+  let add_task ~parent_user_id task_data task_inst_data_list t : unit =
+    let task, _task_inst_list =
+      Sched_ver_history.In_place_head.add_task
+      ~parent_user_id task_data task_inst_data_list
+      t
     in
     print_endline "Added task";
-    Task.Print.debug_print_task ~indent_level:1 task;
-    sched
+    Task.Print.debug_print_task ~indent_level:1 task
   in
-  Sched.empty
+  let sched_ver_history = Sched_ver_history.make_empty () in
   (* |> add_task ~parent_user_id:0L
    *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
    *   Task.[ { task_inst_type = Reminder } ] *)
-  |> add_task ~parent_user_id:0L
+  add_task
+   ~parent_user_id:0L
     Task.
       {
         splittable = false;
@@ -472,15 +473,9 @@ let debug_sched_usage_simulation () =
                  } ));
       }
     []
-  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-  |> (fun x ->
-      Sched.Print.debug_print_sched x;
-      x)
-  |> fun x ->
-  print_newline ();
-  print_endline "JSON:";
-  print_endline (Sched.Serialize.json_string_of_sched x)
+    sched_ver_history;
+  Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
+  print_newline ()
 
 (* let debug_time_pattern_normalize_pattern () =
  *   print_endline "Debug print for Time_pattern.normalize_pattern";
