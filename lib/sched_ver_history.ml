@@ -133,9 +133,9 @@ end
 
 module Equal = struct
   let equal t1 t2 =
-    List.for_all2 (fun s1 s2 ->
-        Sched.Equal.sched_equal s1 s2
-      ) t1.history t2.history
+    List.for_all2
+      (fun s1 s2 -> Sched.Equal.sched_equal s1 s2)
+      t1.history t2.history
 end
 
 module Serialize = struct
