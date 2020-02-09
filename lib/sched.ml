@@ -710,7 +710,7 @@ module Sched_req_store = struct
       )
       sched
 
-  let remove_sched_req_record_by_task_id ((id1, id2) : Task.task_id)
+  let remove_sched_req_record_if_contains_matching_task_seg (f : Task.task_seg -> bool)
       ((sid, sd) : sched) : sched =
     (sid,
      { sd with
@@ -722,11 +722,8 @@ module Sched_req_store = struct
              |> Sched_req_id_map.to_seq
              |> Seq.filter_map (fun (id, l) ->
                  let l = List.filter (fun sched_req_record ->
-                     List.exists (fun ((id1', id2', _id3', _id4', _id5'), _data) ->
-                         id1 = id1'
-                         && id2 = id2'
-                       )
-                     (Sched_req_data_unit_skeleton.get_data sched_req_record)
+                     not (List.exists f
+                     (Sched_req_data_unit_skeleton.get_data sched_req_record))
                    ) l
                  in
                  match l with
@@ -737,6 +734,33 @@ module Sched_req_store = struct
          }
      }
     )
+
+  let remove_sched_req_record_by_task_id ((id1, id2) : Task.task_id)
+      (sched : sched) : sched =
+    remove_sched_req_record_if_contains_matching_task_seg (fun ((id1', id2', _id3', _id4', _id5'), _data) ->
+                         id1 = id1'
+                         && id2 = id2'
+                       )
+                       sched
+
+  let remove_sched_req_record_by_task_inst_id ((id1, id2, id3) : Task.task_inst_id)
+      (sched : sched) : sched =
+    remove_sched_req_record_if_contains_matching_task_seg (fun ((id1', id2', id3', _id4', _id5'), _data) ->
+                         id1 = id1'
+                         && id2 = id2'
+                            && id3 = id3'
+                       )
+                       sched
+
+  let remove_sched_req_record_by_task_seg_id ((id1, id2, id3, id4, _id5) : Task.task_seg_id)
+      (sched : sched) : sched =
+    remove_sched_req_record_if_contains_matching_task_seg (fun ((id1', id2', id3', id4', _id5'), _data) ->
+                         id1 = id1'
+                         && id2 = id2'
+                            && id3 = id3'
+                               && id4 = id4'
+                       )
+                       sched
 
   let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
       ((_sid, sd) : sched) : sched_req_store * sched_req_store * sched_req_store
