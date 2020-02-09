@@ -38,6 +38,16 @@ module In_place_head = struct
          (task, `In_place, sched))
       t
 
+  let add_task_inst ~parent_task_id (data : Task.task_inst_data) (t : t) : Task.task_inst =
+    map_head
+      (fun sched ->
+         let task_inst, sched =
+           Sched.Task_inst_store.add_task_inst ~parent_task_id data sched
+         in
+         (task_inst, `In_place, sched)
+      )
+      t
+
   let queue_sched_req (data : Sched_req.sched_req_data) (t : t) :
     Sched_req.sched_req =
     map_head
@@ -65,6 +75,7 @@ module Maybe_append_to_head = struct
           let hd' =
             hd
             |> Sched.Task_store.remove_task task_id
+            |> Sched.Sched_req_store.remove_sched_req_record_by_task_id task_id
             |> Sched.Task_seg_place_map.remove_task_seg_place_seq
               task_seg_place_seq
           in
