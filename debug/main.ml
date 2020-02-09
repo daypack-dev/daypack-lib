@@ -452,25 +452,30 @@ let debug_sched_usage_simulation () =
     Task.Print.debug_print_task ~indent_level:1 task
   in
   let sched_ver_history = Sched_ver_history.make_empty () in
-  (* |> add_task ~parent_user_id:0L
-   *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
-   *   Task.[ { task_inst_type = Reminder } ] *)
   add_task ~parent_user_id:0L
-    Task.
-      {
-        splittable = false;
-        parallelizable = false;
-        task_type =
-          Recurring
-            (Arithemtic_seq
-               ( { start = 0L; end_exc = 200L; diff = 10L },
-                 {
-                   task_inst_data = { task_inst_type = Reminder };
-                   sched_req_templates =
-                     [ Fixed { task_seg_related_data = 6L; start = 0L } ];
-                 } ));
-      }
-    [] sched_ver_history;
+    Task.{ splittable = false; parallelizable = false; task_type = One_off }
+    Task.[ { task_inst_type = Reminder } ]
+    sched_ver_history;
+  (* add_task ~parent_user_id:0L
+   *   Task.
+   *     {
+   *       splittable = false;
+   *       parallelizable = false;
+   *       task_type =
+   *         Recurring
+   *           (Arithemtic_seq
+   *              ( { start = 0L; end_exc = 200L; diff = 10L },
+   *                {
+   *                  task_inst_data = { task_inst_type = Reminder };
+   *                  sched_req_templates =
+   *                    [ Fixed { task_seg_related_data = 6L; start = 0L } ];
+   *                } ));
+   *     }
+   *   [] sched_ver_history; *)
+  Sched_ver_history.Maybe_append_to_head.sched ~start:0L ~end_exc:100L
+    ~include_sched_reqs_partially_within_time_period:true
+    ~up_to_sched_req_id_inc:None sched_ver_history
+  |> Result.get_ok;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_newline ()
 
