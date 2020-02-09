@@ -126,10 +126,8 @@ module Maybe_append_to_head = struct
               Ok () ) )
 end
 
-module Append_to_head = struct end
-
 module Serialize = struct
-  let to_base_and_diffs (l : Sched.sched list) :
+  let list_to_base_and_diffs (l : Sched.sched list) :
     (Sched.sched * Sched.sched_diff list) option =
     let rec aux
         (base_and_last_and_diffs :
@@ -148,10 +146,14 @@ module Serialize = struct
             aux (Some (base, sched, diff :: diffs)) rest )
     in
     aux None (List.rev l)
+
+  let to_base_and_diffs (t : t) :
+    (Sched.sched * Sched.sched_diff list) option =
+    list_to_base_and_diffs t.history
 end
 
 module Deserialize = struct
-  let of_base_and_diffs (base : Sched.sched) (diffs : Sched.sched_diff list) :
+  let list_of_base_and_diffs (base : Sched.sched) (diffs : Sched.sched_diff list) :
     Sched.sched list =
     let rec aux (acc : Sched.sched list) (cur : Sched.sched)
         (diffs : Sched.sched_diff list) : Sched.sched list =
@@ -162,4 +164,8 @@ module Deserialize = struct
         aux (next :: acc) next diffs
     in
     aux [ base ] base diffs
+
+  let of_base_and_diffs base diffs : t =
+    let history = list_of_base_and_diffs base diffs in
+    { history }
 end
