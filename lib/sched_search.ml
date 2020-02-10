@@ -19,7 +19,7 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
          let _, size = task_seg in
          Task_seg_place_gens.multi_task_segs_shift ~incre:1L
            ~task_segs:[ task_seg ]
-           (Seq.return (start, size))
+           (Seq.return (start, start +^ size))
          |> OSeq.map (fun place_s ->
              base
              |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
