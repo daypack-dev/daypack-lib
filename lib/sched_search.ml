@@ -17,10 +17,11 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
        | Sched_req_data_unit_skeleton.Fixed
            { task_seg_related_data = task_seg; start } ->
          let _, size = task_seg in
-         let usable_time_slots = get_usable_time_slots [ (start, start +^ size ) ] in
+         let usable_time_slots =
+           get_usable_time_slots [ (start, start +^ size) ]
+         in
          Task_seg_place_gens.multi_task_segs_shift ~incre:1L
-           ~task_segs:[ task_seg ]
-           usable_time_slots
+           ~task_segs:[ task_seg ] usable_time_slots
          |> OSeq.map (fun place_s ->
              base
              |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)

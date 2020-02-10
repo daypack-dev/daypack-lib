@@ -66,11 +66,8 @@ module In_place_head = struct
   let instantiate ~start ~end_exc (t : t) : unit =
     map_head
       (fun sched ->
-        let sched =
-          Sched.Recur.instantiate ~start ~end_exc sched
-        in
-        ((), `In_place, sched)
-      )
+         let sched = Sched.Recur.instantiate ~start ~end_exc sched in
+         ((), `In_place, sched))
       t
 end
 
