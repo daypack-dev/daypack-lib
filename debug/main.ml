@@ -472,9 +472,11 @@ let debug_sched_usage_simulation () =
    *                } ));
    *     }
    *   [] sched_ver_history; *)
-  List.iter (fun sched_req_data ->
-      Sched_ver_history.In_place_head.queue_sched_req sched_req_data sched_ver_history |> ignore;
-    )
+  List.iter
+    (fun sched_req_data ->
+       Sched_ver_history.In_place_head.queue_sched_req sched_req_data
+         sched_ver_history
+       |> ignore)
     [
       [
         Split_even
