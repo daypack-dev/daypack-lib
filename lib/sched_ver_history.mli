@@ -16,6 +16,8 @@ module In_place_head : sig
     parent_task_id:Task.task_id -> Task.task_inst_data -> t -> Task.task_inst
 
   val queue_sched_req : Sched_req.sched_req_data -> t -> Sched_req.sched_req
+
+  val instantiate : start:int64 -> end_exc:int64 -> t -> unit
 end
 
 module Maybe_append_to_head : sig
