@@ -456,22 +456,22 @@ let debug_sched_usage_simulation () =
     Task.{ splittable = false; parallelizable = false; task_type = One_off }
     Task.[ { task_inst_type = Reminder } ]
     sched_ver_history;
-  (* add_task ~parent_user_id:0L
-   *   Task.
-   *     {
-   *       splittable = false;
-   *       parallelizable = false;
-   *       task_type =
-   *         Recurring
-   *           (Arithemtic_seq
-   *              ( { start = 0L; end_exc = 200L; diff = 10L },
-   *                {
-   *                  task_inst_data = { task_inst_type = Reminder };
-   *                  sched_req_templates =
-   *                    [ Fixed { task_seg_related_data = 6L; start = 0L } ];
-   *                } ));
-   *     }
-   *   [] sched_ver_history; *)
+  add_task ~parent_user_id:0L
+    Task.
+      {
+        splittable = false;
+        parallelizable = false;
+        task_type =
+          Recurring
+            (Arithemtic_seq
+               ( { start = 0L; end_exc = 100L; diff = 50L },
+                 {
+                   task_inst_data = { task_inst_type = Reminder };
+                   sched_req_templates =
+                     [ Fixed { task_seg_related_data = 1L; start = 0L } ];
+                 } ));
+      }
+    [] sched_ver_history;
   List.iter
     (fun sched_req_data ->
        Sched_ver_history.In_place_head.queue_sched_req sched_req_data
@@ -549,11 +549,17 @@ let debug_sched_usage_simulation () =
           };
       ];
     ];
-  Sched_ver_history.Maybe_append_to_head.sched ~start:0L ~end_exc:100L
-    ~include_sched_reqs_partially_within_time_period:true
-    ~up_to_sched_req_id_inc:None sched_ver_history
-  |> Result.get_ok;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
+  print_endline "=====";
+  Sched_ver_history.In_place_head.instantiate ~start:0L ~end_exc:100L sched_ver_history;
+  Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
+  print_endline "=====";
+  (match Sched_ver_history.Maybe_append_to_head.sched ~start:0L ~end_exc:100L
+    ~include_sched_reqs_partially_within_time_period:true
+    ~up_to_sched_req_id_inc:None sched_ver_history with
+  | Ok () -> print_endline "Scheduled successfully";
+    Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
+  | Error () -> print_endline "Scheduling failed");
   print_newline ()
 
 (* let debug_time_pattern_normalize_pattern () =
