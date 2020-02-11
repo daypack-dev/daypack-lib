@@ -91,6 +91,7 @@ type store = {
   sched_req_pending_list : sched_req list;
   sched_req_record_list : sched_req_record list;
   quota : (task_inst_id * int64) list;
+  progress_indexed_by_start : (int64 * task_seg_place list) list;
 }
 
 type store_diff = {
@@ -104,6 +105,7 @@ type store_diff = {
   sched_req_pending_list_diff : (sched_req_id, sched_req_data) diff;
   sched_req_record_list_diff : (sched_req_id, sched_req_record_data) diff;
   quota_diff : (task_inst_id, int64) diff;
+  progress_indexed_by_start_diff : (int64, task_seg_place) diff_bucketed;
 }
 
 type agenda = {
