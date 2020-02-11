@@ -674,7 +674,7 @@ let store_gen =
         sched_req_pending_store;
         sched_req_record_store;
         quota;
-        progress_indexed_by_start
+        progress_indexed_by_start;
       })
     (quad task_store_gen task_inst_store_gen task_seg_store_gen
        (quad user_id_to_task_ids_gen task_id_to_task_inst_ids_gen
