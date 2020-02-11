@@ -1788,6 +1788,16 @@ module Print = struct
            (Task.task_inst_id_to_string id)
            quota)
       sd.store.quota;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "progress :\n";
+    Int64_map.iter
+      (fun _start bucket ->
+         Task_seg_place_set.iter
+           (fun (id, start, end_exc) ->
+              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+                "%Ld - %Ld | %s\n" start end_exc
+                (Task.task_seg_id_to_string id))
+           bucket)
+      sd.store.progress_indexed_by_start;
     Buffer.contents buffer
 
   let debug_print_sched ?(indent_level = 0) sched =
