@@ -28,9 +28,14 @@ and task_type =
   | One_off
   | Recurring of recur
 
-and recur =
+and recur_type =
   | Arithemtic_seq of arith_seq * recur_data
   | Time_pattern_match of time_pattern * recur_data
+
+and recur = {
+  excluded_time_slots : Time_slot.t list;
+  recur_type : recur_type;
+}
 
 and sched_req_template =
   (task_seg_size, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
@@ -81,6 +86,31 @@ let task_seg_id_to_string ((id1, id2, id3, id4, id5) : task_seg_id) =
 let task_seg_alloc_req_sum_length reqs =
   List.fold_left (fun acc (_, size) -> acc +^ size) 0L reqs
 
+let sched_req_templates_bound_on_start_and_end_exc
+    (sched_req_templates : sched_req_template list) : (int64 * int64) option =
+  List.fold_left
+    (fun acc sched_req_template ->
+       let cur =
+         match sched_req_template with
+         | Sched_req_data_unit_skeleton.Fixed
+             { task_seg_related_data = task_seg_size; start } ->
+           Some (start, start +^ task_seg_size)
+         | Shift { time_slots; _ }
+         | Split_and_shift { time_slots }
+         | Split_even { time_slots; _ }
+         | Time_share { time_slots; _ }
+         | Push_toward { time_slots; _ } ->
+           Time_slot.min_start_and_max_end_exc_list time_slots
+       in
+       match acc with
+       | None -> cur
+       | Some (start, end_exc) -> (
+           match cur with
+           | None -> acc
+           | Some (cur_start, cur_end_exc) ->
+             Some (min start cur_start, max end_exc cur_end_exc) ))
+    None sched_req_templates
+
 module Serialize = struct
   let pack_arith_seq (arith_seq : arith_seq) : Task_t.arith_seq =
     {
@@ -103,11 +133,17 @@ module Serialize = struct
     | One_off -> `One_off
     | Recurring recur -> `Recurring (pack_recur recur)
 
-  and pack_recur (recur : recur) : Task_t.recur =
-    match recur with
+  and pack_recur_type (recur_type : recur_type) : Task_t.recur_type =
+    match recur_type with
     | Arithemtic_seq (arith_seq, recur_data) ->
       `Arithmetic_seq (pack_arith_seq arith_seq, pack_recur_data recur_data)
     | Time_pattern_match _ -> failwith "Unimplemented"
+
+  and pack_recur (recur : recur) : Task_t.recur =
+    {
+      excluded_time_slots = recur.excluded_time_slots;
+      recur_type = pack_recur_type recur.recur_type;
+    }
 
   and pack_sched_req_template (sched_req_template : sched_req_template) :
     Task_t.sched_req_template =
@@ -170,10 +206,16 @@ module Deserialize = struct
     | `One_off -> One_off
     | `Recurring recur -> Recurring (unpack_recur recur)
 
-  and unpack_recur (recur : Task_t.recur) : recur =
-    match recur with
+  and unpack_recur_type (recur_type : Task_t.recur_type) : recur_type =
+    match recur_type with
     | `Arithmetic_seq (arith_seq, recur_data) ->
       Arithemtic_seq (unpack_arith_seq arith_seq, unpack_recur_data recur_data)
+
+  and unpack_recur (recur : Task_t.recur) : recur =
+    {
+      excluded_time_slots = recur.excluded_time_slots;
+      recur_type = unpack_recur_type recur.recur_type;
+    }
 
   and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
     : sched_req_template =
@@ -244,7 +286,13 @@ module Print = struct
       | Recurring recur -> (
           Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
             "task type : recurring\n";
-          match recur with
+          Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+            "recur excluded time slots :\n";
+          List.iter (fun time_slot ->
+              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+                "%s\n" (Time_slot.to_string time_slot);
+            ) recur.excluded_time_slots;
+          match recur.recur_type with
           | Arithemtic_seq
               ( { start; end_exc; diff },
                 { task_inst_data = _; sched_req_templates } ) ->

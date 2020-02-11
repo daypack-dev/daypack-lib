@@ -1,5 +1,7 @@
 open Int64_utils
 
+module TS = Time_slot
+
 type sched_id = int
 
 type task_store = Task.task_data Task_id_map.t
@@ -288,17 +290,17 @@ module Time_slot = struct
         |> Task_seg_place_set.to_seq
         |> Seq.map (fun (_, start, end_exc) -> (start, end_exc)))
     |> (fun l ->
-        Option.fold ~none:l ~some:(fun start -> Time_slot.slice ~start l) start)
+        Option.fold ~none:l ~some:(fun start -> TS.slice ~start l) start)
     |> (fun l ->
         Option.fold ~none:l
-          ~some:(fun end_exc -> Time_slot.slice ~end_exc l)
+          ~some:(fun end_exc -> TS.slice ~end_exc l)
           end_exc)
-    |> Time_slot.normalize ~skip_sort:true
+    |> TS.normalize ~skip_sort:true
 
   let get_free_time_slots ~start ~end_exc (sched : sched) :
     (int64 * int64) Seq.t =
     get_occupied_time_slots ~start ~end_exc sched
-    |> Time_slot.invert ~start ~end_exc
+    |> TS.invert ~start ~end_exc
 end
 
 module Quota_store = struct
@@ -882,7 +884,8 @@ module Recur = struct
     match task_data.task_type with
     | Task.One_off -> Seq.empty
     | Task.Recurring recur -> (
-        match recur with
+        let usable_time_slots = TS.invert ~start ~end_exc (List.to_seq recur.excluded_time_slots) in
+        match recur.recur_type with
         | Task.Arithemtic_seq
             ( { start = seq_start; end_exc = seq_end_exc; diff },
               { task_inst_data; sched_req_templates } ) ->

@@ -29,9 +29,14 @@ type task_type = [
   | Recurring of recur
 ]
 
-type recur = [
+type recur_type = [
   | Arithmetic_seq of (arith_seq * recur_data)
 ]
+
+type recur = {
+  excluded_time_slots : time_slot list;
+  recur_type : recur_type;
+}
 
 type ('a, 'b, 'c) sched_req_data_unit_skeleton <ocaml from ="Sched_req_data_unit_skeleton"> = abstract
 
