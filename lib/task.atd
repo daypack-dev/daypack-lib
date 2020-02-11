@@ -40,11 +40,13 @@ type recur = {
 
 type ('a, 'b, 'c) sched_req_data_unit_skeleton <ocaml from ="Sched_req_data_unit_skeleton"> = abstract
 
-type sched_req_template = (task_seg_size, int64, time_slot) sched_req_data_unit_skeleton
+type sched_req_template_data_unit = (task_seg_size, int64, time_slot) sched_req_data_unit_skeleton
+
+type sched_req_template = sched_req_template_data_unit list
 
 type recur_data = {
   task_inst_data : task_inst_data;
-  sched_req_templates : sched_req_template list;
+  sched_req_template : sched_req_template;
 }
 
 type task_inst = (task_inst_id * task_inst_data)

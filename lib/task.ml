@@ -37,12 +37,14 @@ and recur = {
   recur_type : recur_type;
 }
 
-and sched_req_template =
+and sched_req_template_data_unit =
   (task_seg_size, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
+
+and sched_req_template = sched_req_template_data_unit list
 
 and recur_data = {
   task_inst_data : task_inst_data;
-  sched_req_templates : sched_req_template list;
+  sched_req_template : sched_req_template;
 }
 
 and task_inst = task_inst_id * task_inst_data
@@ -86,12 +88,12 @@ let task_seg_id_to_string ((id1, id2, id3, id4, id5) : task_seg_id) =
 let task_seg_alloc_req_sum_length reqs =
   List.fold_left (fun acc (_, size) -> acc +^ size) 0L reqs
 
-let sched_req_templates_bound_on_start_and_end_exc
-    (sched_req_templates : sched_req_template list) : (int64 * int64) option =
+let sched_req_template_bound_on_start_and_end_exc
+    (sched_req_template : sched_req_template) : (int64 * int64) option =
   List.fold_left
-    (fun acc sched_req_template ->
+    (fun acc req_template_data_unit ->
        let cur =
-         match sched_req_template with
+         match req_template_data_unit with
          | Sched_req_data_unit_skeleton.Fixed
              { task_seg_related_data = task_seg_size; start } ->
            Some (start, start +^ task_seg_size)
@@ -109,7 +111,7 @@ let sched_req_templates_bound_on_start_and_end_exc
            | None -> acc
            | Some (cur_start, cur_end_exc) ->
              Some (min start cur_start, max end_exc cur_end_exc) ))
-    None sched_req_templates
+    None sched_req_template
 
 module Serialize = struct
   let pack_arith_seq (arith_seq : arith_seq) : Task_t.arith_seq =
@@ -145,19 +147,22 @@ module Serialize = struct
       recur_type = pack_recur_type recur.recur_type;
     }
 
-  and pack_sched_req_template (sched_req_template : sched_req_template) :
-    Task_t.sched_req_template =
+  and pack_sched_req_template_data_unit (sched_req_template_data_unit : sched_req_template_data_unit) :
+    Task_t.sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:(fun x -> x)
       ~pack_time:(fun x -> x)
       ~pack_time_slot:(fun x -> x)
-      sched_req_template
+      sched_req_template_data_unit
+
+  and pack_sched_req_template (sched_req_template : sched_req_template) : Task_t.sched_req_template =
+    List.map pack_sched_req_template_data_unit sched_req_template
 
   and pack_recur_data (recur_data : recur_data) : Task_t.recur_data =
     {
       task_inst_data = pack_task_inst_data recur_data.task_inst_data;
-      sched_req_templates =
-        List.map pack_sched_req_template recur_data.sched_req_templates;
+      sched_req_template =
+        pack_sched_req_template recur_data.sched_req_template;
     }
 
   and pack_task_inst ((id, data) : task_inst) : Task_t.task_inst =
@@ -217,19 +222,22 @@ module Deserialize = struct
       recur_type = unpack_recur_type recur.recur_type;
     }
 
-  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
-    : sched_req_template =
+  and unpack_sched_req_template_data_unit (sched_req_template_data_unit : Task_t.sched_req_template_data_unit)
+    : sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:(fun x -> x)
       ~unpack_time:(fun x -> x)
       ~unpack_time_slot:(fun x -> x)
-      sched_req_template
+      sched_req_template_data_unit
+
+  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template) : sched_req_template =
+    List.map unpack_sched_req_template_data_unit sched_req_template
 
   and unpack_recur_data (recur_data : Task_t.recur_data) : recur_data =
     {
       task_inst_data = unpack_task_inst_data recur_data.task_inst_data;
-      sched_req_templates =
-        List.map unpack_sched_req_template recur_data.sched_req_templates;
+      sched_req_template =
+        unpack_sched_req_template recur_data.sched_req_template;
     }
 
   and unpack_task_inst ((id, data) : Task_t.task_inst) : task_inst =
@@ -295,7 +303,7 @@ module Print = struct
           match recur.recur_type with
           | Arithemtic_seq
               ( { start; end_exc; diff },
-                { task_inst_data = _; sched_req_templates } ) ->
+                { task_inst_data = _; sched_req_template } ) ->
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "recur type : arithmetic sequence\n";
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
@@ -305,7 +313,7 @@ module Print = struct
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "diff : %Ld\n" diff;
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
-              "sched req templates :\n";
+              "sched req template :\n";
             List.iter
               (* (fun sched_req_template ->
                *    match sched_req_template with
@@ -402,7 +410,7 @@ module Print = struct
                    ~string_of_time:Int64.to_string
                    ~string_of_time_slot:Time_slot.to_string x
                  |> ignore)
-              sched_req_templates
+              sched_req_template
           | Time_pattern_match _ -> failwith "Unimplemented" ) );
     Buffer.contents buffer
 

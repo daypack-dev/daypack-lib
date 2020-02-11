@@ -17,8 +17,8 @@ and sched_req_record_data_unit =
 and sched_req_record_data = sched_req_record_data_unit list
 
 let flexibility_score_of_sched_req_record
-    ((_id, req_record_data_list) : sched_req_record) : float =
-  match List.hd req_record_data_list with
+    ((_id, req_record_data_unit_list) : sched_req_record) : float =
+  match List.hd req_record_data_unit_list with
   | Sched_req_data_unit_skeleton.Fixed _ -> 0.0
   | Shift x ->
     let task_seg_alloc_req_sum_len =
@@ -72,11 +72,11 @@ let sort_sched_req_record_list_by_flexibility_score
     reqs
 
 let sched_req_bound_on_start_and_end_exc
-    ((_id, req_record_data_list) : sched_req) : (int64 * int64) option =
+    ((_id, req_record_data_unit_list) : sched_req) : (int64 * int64) option =
   List.fold_left
-    (fun acc req_record_data ->
+    (fun acc req_record_data_unit ->
        let cur =
-         match req_record_data with
+         match req_record_data_unit with
          | Sched_req_data_unit_skeleton.Fixed
              { task_seg_related_data = _, task_seg_size; start } ->
            Some (start, start +^ task_seg_size)
@@ -94,7 +94,7 @@ let sched_req_bound_on_start_and_end_exc
            | None -> acc
            | Some (cur_start, cur_end_exc) ->
              Some (min start cur_start, max end_exc cur_end_exc) ))
-    None req_record_data_list
+    None req_record_data_unit_list
 
 let sched_req_fully_within_time_period ~start ~end_exc (sched_req : sched_req) :
   bool =
