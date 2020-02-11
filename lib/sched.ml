@@ -51,6 +51,7 @@ type store = {
   sched_req_pending_store : sched_req_store;
   sched_req_record_store : sched_req_record_store;
   quota : int64 Task_inst_id_map.t;
+  progress_indexed_by_start : task_seg_place_map;
 }
 
 type store_diff = {
@@ -67,6 +68,7 @@ type store_diff = {
   sched_req_pending_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
   quota_diff : int64 Task_inst_id_map_utils.diff;
+  progress_indexed_by_start_diff : task_seg_place_map_diff;
 }
 
 type agenda = {
@@ -103,6 +105,7 @@ let store_empty =
     sched_req_pending_store = Sched_req_id_map.empty;
     sched_req_record_store = Sched_req_id_map.empty;
     quota = Task_inst_id_map.empty;
+    progress_indexed_by_start = Int64_map.empty;
   }
 
 let agenda_empty =
@@ -1098,6 +1101,20 @@ module Serialize = struct
       removed = pack_task_inst_id_to_task_seg_ids x.removed;
     }
 
+  let pack_progress_indexed_by_start (x : task_seg_place_map) :
+    (int64 * Task_t.task_seg_place list) list =
+    x
+    |> Int64_map.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Serialize.pack y))
+    |> List.of_seq
+
+  let pack_progress_indexed_by_start_diff (x : task_seg_place_map_diff) :
+    (int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed =
+    {
+      added = pack_progress_indexed_by_start x.added;
+      removed = pack_progress_indexed_by_start x.removed;
+    }
+
   let pack_indexed_by_start (x : task_seg_place_map) :
     (int64 * Task_t.task_seg_place list) list =
     x
@@ -1153,6 +1170,8 @@ module Serialize = struct
       sched_req_record_list =
         pack_sched_req_record_store store.sched_req_record_store;
       quota = pack_quota store.quota;
+      progress_indexed_by_start =
+        pack_progress_indexed_by_start store.progress_indexed_by_start;
     }
 
   let pack_store_diff (diff : store_diff) : Sched_t.store_diff =
@@ -1173,6 +1192,8 @@ module Serialize = struct
       sched_req_record_list_diff =
         pack_sched_req_record_store_diff diff.sched_req_record_store_diff;
       quota_diff = pack_quota_diff diff.quota_diff;
+      progress_indexed_by_start_diff =
+        pack_progress_indexed_by_start_diff diff.progress_indexed_by_start_diff;
     }
 
   (*$*)
@@ -1353,6 +1374,21 @@ module Deserialize = struct
       removed = unpack_task_inst_id_to_task_seg_ids x.removed;
     }
 
+  let unpack_progress_indexed_by_start
+      (x : (int64 * Task_t.task_seg_place list) list) : task_seg_place_map =
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Deserialize.unpack y))
+    |> Int64_map.of_seq
+
+  let unpack_progress_indexed_by_start_diff
+      (x : (int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed) :
+    task_seg_place_map_diff =
+    {
+      added = unpack_progress_indexed_by_start x.added;
+      removed = unpack_progress_indexed_by_start x.removed;
+    }
+
   let unpack_indexed_by_start (x : (int64 * Task_t.task_seg_place list) list) :
     task_seg_place_map =
     x
@@ -1409,6 +1445,8 @@ module Deserialize = struct
       sched_req_record_store =
         unpack_sched_req_record_list store.sched_req_record_list;
       quota = unpack_quota store.quota;
+      progress_indexed_by_start =
+        unpack_progress_indexed_by_start store.progress_indexed_by_start;
     }
 
   let unpack_store_diff (diff : Sched_t.store_diff) : store_diff =
@@ -1429,6 +1467,9 @@ module Deserialize = struct
       sched_req_record_store_diff =
         unpack_sched_req_record_list_diff diff.sched_req_record_list_diff;
       quota_diff = unpack_quota_diff diff.quota_diff;
+      progress_indexed_by_start_diff =
+        unpack_progress_indexed_by_start_diff
+          diff.progress_indexed_by_start_diff;
     }
 
   (*$*)
@@ -1502,6 +1543,8 @@ module Equal = struct
     && Task_inst_id_map.equal
       (fun x y -> compare x y = 0)
       store1.quota store2.quota
+    && Int64_map.equal Task_seg_place_set.equal store1.progress_indexed_by_start
+      store2.progress_indexed_by_start
 
   let agenda_equal (agenda1 : agenda) (agenda2 : agenda) : bool =
     Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_start
@@ -1553,6 +1596,9 @@ module Diff = struct
         Sched_req_id_map_utils.diff ~old:store1.sched_req_record_store
           store2.sched_req_record_store;
       quota_diff = Task_inst_id_map_utils.diff ~old:store1.quota store2.quota;
+      progress_indexed_by_start_diff =
+        Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
+          ~old:store1.progress_indexed_by_start store2.progress_indexed_by_start;
     }
 
   let add_diff_store (diff : store_diff) (store : store) : store =
@@ -1584,6 +1630,9 @@ module Diff = struct
         Sched_req_id_map_utils.add_diff diff.sched_req_record_store_diff
           store.sched_req_record_store;
       quota = Task_inst_id_map_utils.add_diff diff.quota_diff store.quota;
+      progress_indexed_by_start =
+        Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed
+          diff.progress_indexed_by_start_diff store.progress_indexed_by_start;
     }
 
   let sub_diff_store (diff : store_diff) (store : store) : store =
@@ -1615,6 +1664,9 @@ module Diff = struct
         Sched_req_id_map_utils.sub_diff diff.sched_req_record_store_diff
           store.sched_req_record_store;
       quota = Task_inst_id_map_utils.sub_diff diff.quota_diff store.quota;
+      progress_indexed_by_start =
+        Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
+          diff.progress_indexed_by_start_diff store.progress_indexed_by_start;
     }
 
   (*$*)
@@ -1736,6 +1788,16 @@ module Print = struct
            (Task.task_inst_id_to_string id)
            quota)
       sd.store.quota;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "progress :\n";
+    Int64_map.iter
+      (fun _start bucket ->
+         Task_seg_place_set.iter
+           (fun (id, start, end_exc) ->
+              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+                "%Ld - %Ld | %s\n" start end_exc
+                (Task.task_seg_id_to_string id))
+           bucket)
+      sd.store.progress_indexed_by_start;
     Buffer.contents buffer
 
   let debug_print_sched ?(indent_level = 0) sched =

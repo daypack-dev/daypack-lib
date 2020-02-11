@@ -1,5 +1,7 @@
 type t = { mutable history : Sched.sched list }
 
+let make_empty () = { history = [] }
+
 let of_sched_list history = { history }
 
 type head_choice =
@@ -30,14 +32,15 @@ let map_head (f : Sched.sched -> 'a * head_choice * Sched.sched) (t : t) : 'a =
 
 module In_place_head = struct
   let add_task ~parent_user_id (data : Task.task_data)
-      (task_inst_data_list : Task.task_inst_data list) (t : t) : Task.task =
+      (task_inst_data_list : Task.task_inst_data list) (t : t) :
+    Task.task * Task.task_inst list =
     map_head
       (fun sched ->
-         let task, _, sched =
+         let task, task_inst_list, sched =
            Sched.Task_store.add_task ~parent_user_id data task_inst_data_list
              sched
          in
-         (task, `In_place, sched))
+         ((task, task_inst_list), `In_place, sched))
       t
 
   let add_task_inst ~parent_task_id (data : Task.task_inst_data) (t : t) :
@@ -58,6 +61,13 @@ module In_place_head = struct
            Sched.Sched_req_store.queue_sched_req_data data sched
          in
          (sched_req, `In_place, sched))
+      t
+
+  let instantiate ~start ~end_exc (t : t) : unit =
+    map_head
+      (fun sched ->
+         let sched = Sched.Recur.instantiate ~start ~end_exc sched in
+         ((), `In_place, sched))
       t
 end
 
@@ -113,9 +123,11 @@ module Maybe_append_to_head = struct
     | [] -> Ok ()
     | hd :: tl -> (
         let sched_req_records, hd' =
-          Sched.Sched_req_store.allocate_task_segs_for_pending_sched_reqs ~start
-            ~end_exc ~include_sched_reqs_partially_within_time_period
-            ~up_to_sched_req_id_inc hd
+          hd
+          |> Sched.Recur.instantiate ~start ~end_exc
+          |> Sched.Sched_req_store.allocate_task_segs_for_pending_sched_reqs
+            ~start ~end_exc ~include_sched_reqs_partially_within_time_period
+            ~up_to_sched_req_id_inc
         in
         match sched_req_records with
         | [] -> Ok ()
@@ -179,4 +191,21 @@ module Deserialize = struct
   let of_base_and_diffs base diffs : t =
     let history = list_of_base_and_diffs base diffs in
     { history }
+end
+
+module Print = struct
+  let debug_string_of_sched_ver_history ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (t : t) =
+    Debug_print.bprintf ~indent_level buffer "sched ver history\n";
+    List.iteri
+      (fun i sched ->
+         Debug_print.bprintf ~indent_level buffer "i : %d\n" i |> ignore;
+         Sched.Print.debug_string_of_sched ~indent_level:(indent_level + 1)
+           ~buffer sched
+         |> ignore)
+      (List.rev t.history);
+    Buffer.contents buffer
+
+  let debug_print_sched_ver_history ?(indent_level = 0) (t : t) =
+    print_string (debug_string_of_sched_ver_history ~indent_level t)
 end

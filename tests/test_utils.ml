@@ -451,6 +451,11 @@ let task_seg_places =
         "(pair task_inst_id_gen pos_int64_set_gen)",
         "(QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string \
          Print_utils.int64_set)" );
+      ( "progress_indexed_by_start",
+        "Daypack_lib.Int64_map.of_seq",
+        "Daypack_lib.Int64_map.to_seq",
+        "(pair pos_int64_gen task_seg_places_gen)",
+        "(QCheck.Print.pair Print_utils.int64 Print_utils.task_seg_places)" );
       ( "indexed_by_start",
         "Daypack_lib.Int64_map.of_seq",
         "Daypack_lib.Int64_map.to_seq",
@@ -610,6 +615,22 @@ let task_inst_id_to_task_seg_ids =
              Print_utils.int64_set))
     task_inst_id_to_task_seg_ids_gen
 
+let progress_indexed_by_start_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Int64_map.of_seq)
+    (list_size (int_bound 20) (pair pos_int64_gen task_seg_places_gen))
+
+let progress_indexed_by_start =
+  QCheck.make
+    ~print:(fun s ->
+        s
+        |> Daypack_lib.Int64_map.to_seq
+        |> List.of_seq
+        |> QCheck.Print.list
+          (QCheck.Print.pair Print_utils.int64 Print_utils.task_seg_places))
+    progress_indexed_by_start_gen
+
 let indexed_by_start_gen =
   let open QCheck.Gen in
   map
@@ -640,7 +661,7 @@ let store_gen =
              ( sched_req_ids,
                sched_req_pending_store,
                sched_req_record_store,
-               quota ) ) ) ->
+               (quota, progress_indexed_by_start) ) ) ) ->
       let open Daypack_lib.Sched in
       {
         task_store;
@@ -653,12 +674,13 @@ let store_gen =
         sched_req_pending_store;
         sched_req_record_store;
         quota;
+        progress_indexed_by_start;
       })
     (quad task_store_gen task_inst_store_gen task_seg_store_gen
        (quad user_id_to_task_ids_gen task_id_to_task_inst_ids_gen
           task_inst_id_to_task_seg_ids_gen
           (quad pos_int64_set_gen sched_req_store_gen sched_req_record_store_gen
-             quota_gen)))
+             (pair quota_gen progress_indexed_by_start_gen))))
 
 let agenda_gen =
   let open QCheck.Gen in

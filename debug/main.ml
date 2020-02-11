@@ -443,20 +443,20 @@ let debug_sched_backtracking_search_pending () =
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
 
 let debug_sched_usage_simulation () =
-  let add_task ~parent_user_id task_data task_inst_data_list sched =
-    let task, _task_inst_list, sched =
-      Sched.Task_store.add_task ~parent_user_id task_data task_inst_data_list
-        sched
+  let add_task ~parent_user_id task_data task_inst_data_list t : unit =
+    let task, _task_inst_list =
+      Sched_ver_history.In_place_head.add_task ~parent_user_id task_data
+        task_inst_data_list t
     in
     print_endline "Added task";
-    Task.Print.debug_print_task ~indent_level:1 task;
-    sched
+    Task.Print.debug_print_task ~indent_level:1 task
   in
-  Sched.empty
-  (* |> add_task ~parent_user_id:0L
-   *   Task.{ splittable = false; parallelizable = false; task_type = One_off }
-   *   Task.[ { task_inst_type = Reminder } ] *)
-  |> add_task ~parent_user_id:0L
+  let sched_ver_history = Sched_ver_history.make_empty () in
+  add_task ~parent_user_id:0L
+    Task.{ splittable = false; parallelizable = false; task_type = One_off }
+    Task.[ { task_inst_type = Reminder } ]
+    sched_ver_history;
+  add_task ~parent_user_id:0L
     Task.
       {
         splittable = false;
@@ -464,23 +464,111 @@ let debug_sched_usage_simulation () =
         task_type =
           Recurring
             (Arithemtic_seq
-               ( { start = 0L; end_exc = 200L; diff = 10L },
+               ( { start = 0L; end_exc = 100L; diff = 50L },
                  {
                    task_inst_data = { task_inst_type = Reminder };
                    sched_req_templates =
-                     [ Fixed { task_seg_related_data = 6L; start = 0L } ];
+                     [ Fixed { task_seg_related_data = 1L; start = 0L } ];
                  } ));
       }
-    []
-  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-  |> Sched.Recur.instantiate ~start:0L ~end_exc:20L
-  |> (fun x ->
-      Sched.Print.debug_print_sched x;
-      x)
-  |> fun x ->
-  print_newline ();
-  print_endline "JSON:";
-  print_endline (Sched.Serialize.json_string_of_sched x)
+    [] sched_ver_history;
+  add_task ~parent_user_id:0L
+    Task.{ splittable = false; parallelizable = false; task_type = One_off }
+    Task.[ { task_inst_type = Reminder } ]
+    sched_ver_history;
+  List.iter
+    (fun sched_req_data ->
+       Sched_ver_history.In_place_head.queue_sched_req sched_req_data
+         sched_ver_history
+       |> ignore)
+    [
+      [
+        Split_even
+          {
+            task_seg_related_data = ((0L, 2L, 0L), 20L);
+            time_slots = [ (0L, 50L) ];
+            buckets = [ (0L, 10L); (10L, 20L) ];
+            incre = 1L;
+          };
+        Split_even
+          {
+            task_seg_related_data = ((0L, 2L, 0L), 20L);
+            time_slots = [ (50L, 100L) ];
+            buckets = [ (50L, 60L); (60L, 70L); (90L, 100L) ];
+            incre = 1L;
+          };
+      ];
+      [
+        Shift
+          {
+            task_seg_related_data_list = [ ((0L, 0L, 0L), 10L) ];
+            time_slots = [ (0L, 50L) ];
+            incre = 1L;
+          };
+      ];
+      [
+        Shift
+          {
+            task_seg_related_data_list = [ ((0L, 0L, 0L), 10L) ];
+            time_slots = [ (0L, 50L) ];
+            incre = 1L;
+          };
+      ];
+      (* [
+       *   Split_and_shift
+       *     {
+       *       task_seg_related_data = ((0L, 0L, 2L), 15L);
+       *       time_slots = [ (50L, 150L) ];
+       *       split_count = Max_split 5L;
+       *       incre = 1L;
+       *       min_seg_size = 2L;
+       *       max_seg_size = None;
+       *     };
+       * ]; *)
+      (* [
+       *   Time_share
+       *     {
+       *       task_seg_related_data_list =
+       *         [ ((0L, 0L, 2L), 30L); ((0L, 0L, 3L), 20L) ];
+       *       time_slots = [ (50L, 200L) ];
+       *       interval_size = 30L;
+       *     };
+       * ]; *)
+      (* [
+       *   Push_toward
+       *     {
+       *       task_seg_related_data = ((0L, 0L, 4L), 10L);
+       *       target = 100L;
+       *       time_slots = [ (0L, 200L) ];
+       *       incre = 1L;
+       *     };
+       * ];
+       * [
+       *   Push_toward
+       *     {
+       *       task_seg_related_data = ((0L, 0L, 5L), 10L);
+       *       target = 75L;
+       *       time_slots = [ (0L, 200L) ];
+       *       incre = 1L;
+       *     };
+       * ]; *)
+    ];
+  Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
+  print_endline "=====";
+  Sched_ver_history.In_place_head.instantiate ~start:0L ~end_exc:100L
+    sched_ver_history;
+  Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
+  print_endline "=====";
+  ( match
+      Sched_ver_history.Maybe_append_to_head.sched ~start:0L ~end_exc:100L
+        ~include_sched_reqs_partially_within_time_period:true
+        ~up_to_sched_req_id_inc:None sched_ver_history
+    with
+    | Ok () ->
+      print_endline "Scheduled successfully";
+      Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history
+    | Error () -> print_endline "Scheduling failed" );
+  print_newline ()
 
 (* let debug_time_pattern_normalize_pattern () =
  *   print_endline "Debug print for Time_pattern.normalize_pattern";
@@ -744,9 +832,9 @@ let debug_time_pattern_matching_time_slots () =
  *   debug_sched_backtracking_search_pending ();
  *   print_newline () *)
 
-(* let () =
- *   debug_sched_usage_simulation ();
- *   print_newline () *)
+let () =
+  debug_sched_usage_simulation ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_normalize_pattern ();
@@ -756,9 +844,9 @@ let debug_time_pattern_matching_time_slots () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
-let () =
-  debug_time_pattern_matching_time_slots ();
-  print_newline ()
+(* let () =
+ *   debug_time_pattern_matching_time_slots ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
