@@ -21,6 +21,13 @@ module Print_utils = struct
     |> Daypack_lib.Task_seg_place_set.to_seq
     |> List.of_seq
     |> QCheck.Print.list task_seg_place
+
+  let task_seg_place_map m =
+    m
+    |> Daypack_lib.Int64_map.to_seq
+    |> List.of_seq
+    |> QCheck.Print.list (fun (start, task_seg_places') ->
+        Printf.sprintf "%Ld, %s" start (task_seg_places task_seg_places'))
 end
 
 let nz_small_nat_gen = QCheck.Gen.(map (( + ) 1) small_nat)
@@ -380,6 +387,17 @@ let task_seg_places_gen =
 
 let task_seg_places =
   QCheck.make ~print:Print_utils.task_seg_places task_seg_places_gen
+
+let task_seg_place_map_gen =
+  let open QCheck.Gen in
+  map
+    (fun l ->
+       ( l |> List.to_seq |> Daypack_lib.Int64_map.of_seq
+         : Daypack_lib.Sched.task_seg_place_map ))
+    (list_size (int_bound 10) (pair small_nz_pos_int64_gen task_seg_places_gen))
+
+let task_seg_place_map =
+  QCheck.make ~print:Print_utils.task_seg_place_map task_seg_place_map_gen
 
 (*$
   let get_gen_name ~name = Printf.sprintf "%s_gen" name in
