@@ -201,7 +201,7 @@ let split_count_gen =
         pos_int64_gen;
     ]
 
-let sched_req_template_gen =
+let sched_req_template_data_unit_gen =
   let open QCheck.Gen in
   oneof
     [
@@ -252,8 +252,8 @@ let sched_req_template_gen =
         (pair tiny_time_slots_gen small_pos_int64_gen);
     ]
 
-let sched_req_templates_gen =
-  QCheck.Gen.(list_size (int_bound 10) sched_req_template_gen)
+let sched_req_template_gen =
+  QCheck.Gen.(list_size (int_bound 10) sched_req_template_data_unit_gen)
 
 let sched_req_data_unit_gen :
   Daypack_lib.Sched_req.sched_req_data_unit QCheck.Gen.t =
@@ -265,7 +265,7 @@ let sched_req_data_unit_gen :
          ~f_time:(fun x -> x)
          ~f_time_slot:(fun x -> x)
          sched_req_template)
-    task_inst_id_gen sched_req_template_gen
+    task_inst_id_gen sched_req_template_data_unit_gen
 
 let sched_req_gen : Daypack_lib.Sched_req.sched_req QCheck.Gen.t =
   let open QCheck.Gen in
@@ -285,7 +285,7 @@ let sched_req_record_data_unit_gen :
          ~f_time:(fun x -> x)
          ~f_time_slot:(fun x -> x)
          sched_req_template)
-    task_seg_id_gen sched_req_template_gen
+    task_seg_id_gen sched_req_template_data_unit_gen
 
 let sched_req_record_gen : Daypack_lib.Sched_req.sched_req_record QCheck.Gen.t =
   let open QCheck.Gen in
@@ -310,16 +310,25 @@ let arith_seq =
 let recur_data_gen =
   let open QCheck.Gen in
   map2
-    (fun task_inst_data sched_req_templates ->
-       Daypack_lib.Task.{ task_inst_data; sched_req_templates })
-    task_inst_data_gen sched_req_templates_gen
+    (fun task_inst_data sched_req_template ->
+       Daypack_lib.Task.{ task_inst_data; sched_req_template })
+    task_inst_data_gen sched_req_template_gen
 
-let recur_gen =
+let recur_type_gen =
   let open QCheck.Gen in
   map2
     (fun arith_seq recur_data ->
        Daypack_lib.Task.Arithemtic_seq (arith_seq, recur_data))
     arith_seq_gen recur_data_gen
+
+let recur_gen =
+  let open QCheck.Gen in
+  map2
+    (fun time_slots recur_type ->
+       Daypack_lib.Task.{ excluded_time_slots = time_slots;
+         recur_type;
+       }
+    ) tiny_sorted_time_slots_gen recur_type_gen
 
 let task_type_gen =
   let open QCheck.Gen in

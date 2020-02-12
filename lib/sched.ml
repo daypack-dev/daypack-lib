@@ -813,16 +813,17 @@ module Sched_req_store = struct
            in
            (Push_toward { x with task_seg_related_data } :: acc, sched))
       ([], sched) sched_req_data
+    |> fun (l, sched) -> (List.rev l, sched)
 
   let allocate_task_segs_for_sched_req_list
       (sched_req_list : Sched_req.sched_req list) (sched : sched) :
     Sched_req.sched_req_record list * sched =
     List.fold_left
       (fun (acc, sched) (sched_req_id, sched_req_data) ->
-         let sched_req_record_data_list, (sid, sd) =
+         let sched_req_record_data_unit_list, (sid, sd) =
            allocate_task_segs_for_sched_req_data sched_req_data sched
          in
-         ( (sched_req_id, sched_req_record_data_list) :: acc,
+         ( (sched_req_id, sched_req_record_data_unit_list) :: acc,
            ( sid,
              {
                sd with
@@ -830,7 +831,7 @@ module Sched_req_store = struct
                  {
                    sd.store with
                    sched_req_record_store =
-                     Sched_req_id_map.add sched_req_id sched_req_record_data_list
+                     Sched_req_id_map.add sched_req_id sched_req_record_data_unit_list
                        sd.store.sched_req_record_store;
                  };
              } ) ))
@@ -925,25 +926,40 @@ module Recur = struct
              Task_inst_id_map.find task_inst_id sd.store.task_inst_store
            in
            task_inst_data = stored_task_inst_data
-           && ( List.exists
-                  (fun sched_req_template_data_unit ->
-                     Sched_req_id_map.exists
-                       (fun _sched_req_id sched_req_record_data ->
-                          Sched_req_utils
-                          .sched_req_template_data_unit_matches_sched_req_record_data
-                            sched_req_template_data_unit sched_req_record_data
-                       )
-                       sd.store.sched_req_record_store)
-                  sched_req_template
-                || List.exists
-                  (fun sched_req_template ->
-                     Sched_req_id_map.exists
-                       (fun _sched_req_id sched_req_data_unit ->
-                          Sched_req_utils
-                          .sched_req_template_matches_sched_req_data
-                            sched_req_template sched_req_data_unit)
-                       sd.store.sched_req_pending_store)
-                  sched_req_template ))
+           && (Sched_req_id_map.exists
+                 (fun _sched_req_id sched_req_record_data ->
+                    Sched_req_utils.sched_req_template_matches_sched_req_record_data
+                      sched_req_template sched_req_record_data
+                 )
+                 sd.store.sched_req_record_store
+               ||
+               Sched_req_id_map.exists
+                 (fun _sched_req_id sched_req_data ->
+                    Sched_req_utils.sched_req_template_matches_sched_req_data
+                      sched_req_template sched_req_data
+                 )
+                 sd.store.sched_req_pending_store
+              )
+           (* && ( List.exists
+            *        (fun sched_req_template_data_unit ->
+            *           Sched_req_id_map.exists
+            *             (fun _sched_req_id sched_req_record_data ->
+            *                Sched_req_utils
+            *                .sched_req_template_data_unit_matches_sched_req_record_data
+            *                  sched_req_template_data_unit sched_req_record_data
+            *             )
+            *             sd.store.sched_req_record_store)
+            *        sched_req_template
+            *      || List.exists
+            *        (fun sched_req_template ->
+            *           Sched_req_id_map.exists
+            *             (fun _sched_req_id sched_req_data_unit ->
+            *                Sched_req_utils
+            *                .sched_req_template_matches_sched_req_data
+            *                  sched_req_template sched_req_data_unit)
+            *             sd.store.sched_req_pending_store)
+            *        sched_req_template ) *)
+        )
         task_inst_ids
 
   let instantiate ~start ~end_exc ((sid, sd) : sched) : sched =
