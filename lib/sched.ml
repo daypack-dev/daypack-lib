@@ -42,6 +42,9 @@ type task_seg_place_map_diff =
 
 type task_inst_progress_map = Task_inst_progress_set.t Int64_map.t
 
+type task_inst_progress_map_diff =
+  Int64_map_utils.Task_inst_progress_bucketed.diff_bucketed
+
 type store = {
   task_store : task_store;
   task_inst_store : task_inst_store;
@@ -71,7 +74,7 @@ type store_diff = {
   sched_req_pending_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
   quota_diff : int64 Task_inst_id_map_utils.diff;
-  progress_indexed_by_start_diff : task_seg_place_map_diff;
+  progress_indexed_by_start_diff : task_inst_progress_map_diff;
 }
 
 type agenda = {
@@ -1131,15 +1134,15 @@ module Serialize = struct
       removed = pack_task_inst_id_to_task_seg_ids x.removed;
     }
 
-  let pack_progress_indexed_by_start (x : task_seg_place_map) :
-    (int64 * Task_t.task_seg_place list) list =
+  let pack_progress_indexed_by_start (x : task_inst_progress_map) :
+    (int64 * Task_t.task_inst_progress list) list =
     x
     |> Int64_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) -> (id, Task_inst_progress_set.Serialize.pack y))
     |> List.of_seq
 
-  let pack_progress_indexed_by_start_diff (x : task_seg_place_map_diff) :
-    (int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed =
+  let pack_progress_indexed_by_start_diff (x : task_inst_progress_map_diff) :
+    (int64, Task_t.task_inst_progress) Map_utils_t.diff_bucketed =
     {
       added = pack_progress_indexed_by_start x.added;
       removed = pack_progress_indexed_by_start x.removed;
@@ -1405,15 +1408,17 @@ module Deserialize = struct
     }
 
   let unpack_progress_indexed_by_start
-      (x : (int64 * Task_t.task_seg_place list) list) : task_seg_place_map =
+      (x : (int64 * Task_t.task_inst_progress list) list) :
+    task_inst_progress_map =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        (id, Task_inst_progress_set.Deserialize.unpack y))
     |> Int64_map.of_seq
 
   let unpack_progress_indexed_by_start_diff
-      (x : (int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed) :
-    task_seg_place_map_diff =
+      (x : (int64, Task_t.task_inst_progress) Map_utils_t.diff_bucketed) :
+    task_inst_progress_map_diff =
     {
       added = unpack_progress_indexed_by_start x.added;
       removed = unpack_progress_indexed_by_start x.removed;
@@ -1573,8 +1578,8 @@ module Equal = struct
     && Task_inst_id_map.equal
       (fun x y -> compare x y = 0)
       store1.quota store2.quota
-    && Int64_map.equal Task_seg_place_set.equal store1.progress_indexed_by_start
-      store2.progress_indexed_by_start
+    && Int64_map.equal Task_inst_progress_set.equal
+      store1.progress_indexed_by_start store2.progress_indexed_by_start
 
   let agenda_equal (agenda1 : agenda) (agenda2 : agenda) : bool =
     Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_start
@@ -1627,7 +1632,7 @@ module Diff = struct
           store2.sched_req_record_store;
       quota_diff = Task_inst_id_map_utils.diff ~old:store1.quota store2.quota;
       progress_indexed_by_start_diff =
-        Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
+        Int64_map_utils.Task_inst_progress_bucketed.diff_bucketed
           ~old:store1.progress_indexed_by_start store2.progress_indexed_by_start;
     }
 
@@ -1661,7 +1666,7 @@ module Diff = struct
           store.sched_req_record_store;
       quota = Task_inst_id_map_utils.add_diff diff.quota_diff store.quota;
       progress_indexed_by_start =
-        Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed
+        Int64_map_utils.Task_inst_progress_bucketed.add_diff_bucketed
           diff.progress_indexed_by_start_diff store.progress_indexed_by_start;
     }
 
@@ -1695,7 +1700,7 @@ module Diff = struct
           store.sched_req_record_store;
       quota = Task_inst_id_map_utils.sub_diff diff.quota_diff store.quota;
       progress_indexed_by_start =
-        Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
+        Int64_map_utils.Task_inst_progress_bucketed.sub_diff_bucketed
           diff.progress_indexed_by_start_diff store.progress_indexed_by_start;
     }
 
@@ -1821,11 +1826,11 @@ module Print = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "progress :\n";
     Int64_map.iter
       (fun _start bucket ->
-         Task_seg_place_set.iter
+         Task_inst_progress_set.iter
            (fun (id, start, end_exc) ->
               Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
                 "%Ld - %Ld | %s\n" start end_exc
-                (Task.task_seg_id_to_string id))
+                (Task.task_inst_id_to_string id))
            bucket)
       sd.store.progress_indexed_by_start;
     Buffer.contents buffer

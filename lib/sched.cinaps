@@ -239,15 +239,15 @@ module Bucket_store = struct
       {
         f_pack_suffix = "progress_indexed_by_start";
         f_unpack_suffix = "progress_indexed_by_start";
-        store_typ = "task_seg_place_map";
-        diff_typ = "task_seg_place_map_diff";
-        ret_typ = "(int64 * Task_t.task_seg_place list) list";
+        store_typ = "task_inst_progress_map";
+        diff_typ = "task_inst_progress_map_diff";
+        ret_typ = "(int64 * Task_t.task_inst_progress list) list";
         diff_ret_typ =
-          "(int64, Task_t.task_seg_place) Map_utils_t.diff_bucketed";
+          "(int64, Task_t.task_inst_progress) Map_utils_t.diff_bucketed";
         f_to_seq = "Int64_map.to_seq";
         f_of_seq = "Int64_map.of_seq";
-        f_inner_pack = Some "Task_seg_place_set.Serialize.pack";
-        f_inner_unpack = Some "Task_seg_place_set.Deserialize.unpack";
+        f_inner_pack = Some "Task_inst_progress_set.Serialize.pack";
+        f_inner_unpack = Some "Task_inst_progress_set.Deserialize.unpack";
       };
       {
         f_pack_suffix = "indexed_by_start";
@@ -472,10 +472,10 @@ let store_fields =
       "Task_inst_id_map_utils.sub_diff" );
     ( "progress_indexed_by_start",
       "progress_indexed_by_start",
-      "Int64_map.equal Task_seg_place_set.equal",
-      "Int64_map_utils.Task_seg_place_bucketed.diff_bucketed",
-      "Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed",
-      "Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed" );
+      "Int64_map.equal Task_inst_progress_set.equal",
+      "Int64_map_utils.Task_inst_progress_bucketed.diff_bucketed",
+      "Int64_map_utils.Task_inst_progress_bucketed.add_diff_bucketed",
+      "Int64_map_utils.Task_inst_progress_bucketed.sub_diff_bucketed" );
   ]
 
 let print_pack_store () =
