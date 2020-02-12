@@ -147,7 +147,8 @@ module Serialize = struct
       recur_type = pack_recur_type recur.recur_type;
     }
 
-  and pack_sched_req_template_data_unit (sched_req_template_data_unit : sched_req_template_data_unit) :
+  and pack_sched_req_template_data_unit
+      (sched_req_template_data_unit : sched_req_template_data_unit) :
     Task_t.sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:(fun x -> x)
@@ -155,14 +156,14 @@ module Serialize = struct
       ~pack_time_slot:(fun x -> x)
       sched_req_template_data_unit
 
-  and pack_sched_req_template (sched_req_template : sched_req_template) : Task_t.sched_req_template =
+  and pack_sched_req_template (sched_req_template : sched_req_template) :
+    Task_t.sched_req_template =
     List.map pack_sched_req_template_data_unit sched_req_template
 
   and pack_recur_data (recur_data : recur_data) : Task_t.recur_data =
     {
       task_inst_data = pack_task_inst_data recur_data.task_inst_data;
-      sched_req_template =
-        pack_sched_req_template recur_data.sched_req_template;
+      sched_req_template = pack_sched_req_template recur_data.sched_req_template;
     }
 
   and pack_task_inst ((id, data) : task_inst) : Task_t.task_inst =
@@ -222,15 +223,17 @@ module Deserialize = struct
       recur_type = unpack_recur_type recur.recur_type;
     }
 
-  and unpack_sched_req_template_data_unit (sched_req_template_data_unit : Task_t.sched_req_template_data_unit)
-    : sched_req_template_data_unit =
+  and unpack_sched_req_template_data_unit
+      (sched_req_template_data_unit : Task_t.sched_req_template_data_unit) :
+    sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:(fun x -> x)
       ~unpack_time:(fun x -> x)
       ~unpack_time_slot:(fun x -> x)
       sched_req_template_data_unit
 
-  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template) : sched_req_template =
+  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
+    : sched_req_template =
     List.map unpack_sched_req_template_data_unit sched_req_template
 
   and unpack_recur_data (recur_data : Task_t.recur_data) : recur_data =
@@ -296,10 +299,11 @@ module Print = struct
             "task type : recurring\n";
           Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
             "recur excluded time slots :\n";
-          List.iter (fun time_slot ->
-              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
-                "%s\n" (Time_slot.to_string time_slot);
-            ) recur.excluded_time_slots;
+          List.iter
+            (fun time_slot ->
+               Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
+                 (Time_slot.to_string time_slot))
+            recur.excluded_time_slots;
           match recur.recur_type with
           | Arithemtic_seq
               ( { start; end_exc; diff },

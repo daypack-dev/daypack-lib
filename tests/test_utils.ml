@@ -325,10 +325,8 @@ let recur_gen =
   let open QCheck.Gen in
   map2
     (fun time_slots recur_type ->
-       Daypack_lib.Task.{ excluded_time_slots = time_slots;
-         recur_type;
-       }
-    ) tiny_sorted_time_slots_gen recur_type_gen
+       Daypack_lib.Task.{ excluded_time_slots = time_slots; recur_type })
+    tiny_sorted_time_slots_gen recur_type_gen
 
 let task_type_gen =
   let open QCheck.Gen in

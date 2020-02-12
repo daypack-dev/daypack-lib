@@ -1,5 +1,4 @@
 open Int64_utils
-
 module TS = Time_slot
 
 type sched_id = int
@@ -292,15 +291,12 @@ module Time_slot = struct
     |> (fun l ->
         Option.fold ~none:l ~some:(fun start -> TS.slice ~start l) start)
     |> (fun l ->
-        Option.fold ~none:l
-          ~some:(fun end_exc -> TS.slice ~end_exc l)
-          end_exc)
+        Option.fold ~none:l ~some:(fun end_exc -> TS.slice ~end_exc l) end_exc)
     |> TS.normalize ~skip_sort:true
 
   let get_free_time_slots ~start ~end_exc (sched : sched) :
     (int64 * int64) Seq.t =
-    get_occupied_time_slots ~start ~end_exc sched
-    |> TS.invert ~start ~end_exc
+    get_occupied_time_slots ~start ~end_exc sched |> TS.invert ~start ~end_exc
 end
 
 module Quota_store = struct
@@ -831,7 +827,8 @@ module Sched_req_store = struct
                  {
                    sd.store with
                    sched_req_record_store =
-                     Sched_req_id_map.add sched_req_id sched_req_record_data_unit_list
+                     Sched_req_id_map.add sched_req_id
+                       sched_req_record_data_unit_list
                        sd.store.sched_req_record_store;
                  };
              } ) ))
@@ -882,11 +879,13 @@ end
 module Recur = struct
   let instantiate_raw_seq ~start ~end_exc (task_data : Task.task_data) :
     (Task.task_inst_data * Task.sched_req_template) Seq.t =
-    (match task_data.task_type with
+    match task_data.task_type with
     | Task.One_off -> Seq.empty
-    | Task.Recurring recur -> (
-        let usable_time_slots = TS.invert ~start ~end_exc (List.to_seq recur.excluded_time_slots) in
-        (match recur.recur_type with
+    | Task.Recurring recur ->
+      let usable_time_slots =
+        TS.invert ~start ~end_exc (List.to_seq recur.excluded_time_slots)
+      in
+      ( match recur.recur_type with
         | Task.Arithemtic_seq
             ( { start = seq_start; end_exc = seq_end_exc; diff },
               { task_inst_data; sched_req_template } ) ->
@@ -909,20 +908,21 @@ module Recur = struct
           in
           let end_exc = min seq_end_exc end_exc in
           aux start end_exc diff task_inst_data sched_req_template
-        | Task.Time_pattern_match _ -> failwith "Unimplemented")
-          |> Seq.filter (fun (_task_inst_data, sched_req_template) ->
-              match Task.sched_req_template_bound_on_start_and_end_exc sched_req_template with
-              | None -> true
-              | Some bound ->
-                TS.a_is_subset_of_b ~a:(Seq.return bound) ~b:usable_time_slots
-            )
-    )
-    )
+        | Task.Time_pattern_match _ -> failwith "Unimplemented" )
+      |> Seq.filter (fun (_task_inst_data, sched_req_template) ->
+          match
+            Task.sched_req_template_bound_on_start_and_end_exc
+              sched_req_template
+          with
+          | None -> true
+          | Some bound ->
+            TS.a_is_subset_of_b ~a:(Seq.return bound)
+              ~b:usable_time_slots)
 
   let instance_recorded_already (task_id : Task.task_id)
       (task_inst_data : Task.task_inst_data)
-      (sched_req_template : Task.sched_req_template)
-      ((_sid, sd) : sched) : bool =
+      (sched_req_template : Task.sched_req_template) ((_sid, sd) : sched) : bool
+    =
     let user_id, task_part = task_id in
     match Task_id_map.find_opt task_id sd.store.task_id_to_task_inst_ids with
     | None -> false
@@ -934,20 +934,17 @@ module Recur = struct
              Task_inst_id_map.find task_inst_id sd.store.task_inst_store
            in
            task_inst_data = stored_task_inst_data
-           && (Sched_req_id_map.exists
-                 (fun _sched_req_id sched_req_record_data ->
-                    Sched_req_utils.sched_req_template_matches_sched_req_record_data
-                      sched_req_template sched_req_record_data
-                 )
-                 sd.store.sched_req_record_store
-               ||
-               Sched_req_id_map.exists
-                 (fun _sched_req_id sched_req_data ->
-                    Sched_req_utils.sched_req_template_matches_sched_req_data
-                      sched_req_template sched_req_data
-                 )
-                 sd.store.sched_req_pending_store
-              )
+           && ( Sched_req_id_map.exists
+                  (fun _sched_req_id sched_req_record_data ->
+                     Sched_req_utils
+                     .sched_req_template_matches_sched_req_record_data
+                       sched_req_template sched_req_record_data)
+                  sd.store.sched_req_record_store
+                || Sched_req_id_map.exists
+                  (fun _sched_req_id sched_req_data ->
+                     Sched_req_utils.sched_req_template_matches_sched_req_data
+                       sched_req_template sched_req_data)
+                  sd.store.sched_req_pending_store )
            (* && ( List.exists
             *        (fun sched_req_template_data_unit ->
             *           Sched_req_id_map.exists
@@ -966,8 +963,7 @@ module Recur = struct
             *                .sched_req_template_matches_sched_req_data
             *                  sched_req_template sched_req_data_unit)
             *             sd.store.sched_req_pending_store)
-            *        sched_req_template ) *)
-        )
+            *        sched_req_template ) *))
         task_inst_ids
 
   let instantiate ~start ~end_exc ((sid, sd) : sched) : sched =

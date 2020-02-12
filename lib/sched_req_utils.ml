@@ -62,11 +62,9 @@ let sched_req_template_matches_sched_req_data
     (sched_req_data : Sched_req.sched_req_data) : bool =
   List.for_all2
     (fun sched_req_template_data_unit sched_req_data_unit ->
-       sched_req_template_data_unit_matches_sched_req_data_unit sched_req_template_data_unit
-         sched_req_data_unit
-    )
-    sched_req_template
-    sched_req_data
+       sched_req_template_data_unit_matches_sched_req_data_unit
+         sched_req_template_data_unit sched_req_data_unit)
+    sched_req_template sched_req_data
 
 let sched_req_template_matches_sched_req
     (sched_req_template : Task.sched_req_template)
@@ -136,10 +134,9 @@ let sched_req_template_matches_sched_req_record_data
     (sched_req_record_data : Sched_req.sched_req_record_data) : bool =
   List.for_all2
     (fun sched_req_template_data_unit sched_req_record_data_unit ->
-       sched_req_template_data_unit_matches_sched_req_record_data_unit sched_req_template_data_unit
-         sched_req_record_data_unit)
-    sched_req_template
-    sched_req_record_data
+       sched_req_template_data_unit_matches_sched_req_record_data_unit
+         sched_req_template_data_unit sched_req_record_data_unit)
+    sched_req_template sched_req_record_data
 
 let sched_req_template_matches_sched_req_record
     (sched_req_template : Task.sched_req_template)
