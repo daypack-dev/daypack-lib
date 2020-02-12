@@ -401,7 +401,7 @@ let task_seg_places_gen =
   let open QCheck.Gen in
   map
     (fun l -> Daypack_lib.Task_seg_place_set.of_list l)
-    (list task_seg_place_gen)
+    (list_size (int_bound 10) task_seg_place_gen)
 
 let task_seg_places =
   QCheck.make ~print:Print_utils.task_seg_places task_seg_places_gen
@@ -432,7 +432,7 @@ let task_inst_progress_set_gen =
   let open QCheck.Gen in
   map
     (fun l -> Daypack_lib.Task_inst_progress_set.of_list l)
-    (list task_inst_progress_gen)
+    (list_size (int_bound 10) task_inst_progress_gen)
 
 let task_inst_progress_set =
   QCheck.make ~print:Print_utils.task_inst_progress_set
