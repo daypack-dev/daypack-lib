@@ -882,25 +882,25 @@ end
 module Recur = struct
   let instantiate_raw_seq ~start ~end_exc (task_data : Task.task_data) :
     (Task.task_inst_data * Task.sched_req_template) Seq.t =
-    match task_data.task_type with
+    (match task_data.task_type with
     | Task.One_off -> Seq.empty
     | Task.Recurring recur -> (
         let usable_time_slots = TS.invert ~start ~end_exc (List.to_seq recur.excluded_time_slots) in
-        match recur.recur_type with
+        (match recur.recur_type with
         | Task.Arithemtic_seq
             ( { start = seq_start; end_exc = seq_end_exc; diff },
               { task_inst_data; sched_req_template } ) ->
-          let rec aux cur end_exc diff task_inst_data sched_req_templates =
+          let rec aux cur end_exc diff task_inst_data sched_req_template =
             if cur < end_exc then
-              let sched_reqs =
+              let sched_req_template_instance =
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:cur
-                  sched_req_templates
+                  sched_req_template
               in
               fun () ->
                 Seq.Cons
-                  ( (task_inst_data, sched_reqs),
+                  ( (task_inst_data, sched_req_template_instance),
                     aux (cur +^ diff) end_exc diff task_inst_data
-                      sched_req_templates )
+                      sched_req_template )
             else Seq.empty
           in
           let start =
@@ -909,7 +909,15 @@ module Recur = struct
           in
           let end_exc = min seq_end_exc end_exc in
           aux start end_exc diff task_inst_data sched_req_template
-        | Task.Time_pattern_match _ -> failwith "Unimplemented" )
+        | Task.Time_pattern_match _ -> failwith "Unimplemented")
+          |> Seq.filter (fun (_task_inst_data, sched_req_template) ->
+              match Task.sched_req_template_bound_on_start_and_end_exc sched_req_template with
+              | None -> true
+              | Some bound ->
+                TS.a_is_subset_of_b ~a:(Seq.return bound) ~b:usable_time_slots
+            )
+    )
+    )
 
   let instance_recorded_already (task_id : Task.task_id)
       (task_inst_data : Task.task_inst_data)
