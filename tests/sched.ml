@@ -76,6 +76,15 @@ open Test_utils
      "Daypack_lib.Task_inst_id_map.equal",
      "Daypack_lib.Int64_set.equal"
     );
+    ("progress_indexed_by_start",
+     "int64",
+     "task_seg_places",
+     "Daypack_lib.Int64_map.of_seq",
+     "Daypack_lib.Sched.Serialize.pack_progress_indexed_by_start",
+     "Daypack_lib.Sched.Deserialize.unpack_progress_indexed_by_start",
+     "Daypack_lib.Int64_map.equal",
+     "Daypack_lib.Task_seg_place_set.equal"
+    );
     ("indexed_by_start",
      "int64",
      "task_seg_places",
@@ -307,6 +316,19 @@ let qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids =
        in
        Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal x y)
 
+let qc_unpack_is_inverse_of_pack_progress_indexed_by_start =
+  QCheck.Test.make ~count:5000
+    ~name:"qc_unpack_is_inverse_of_pack_progress_indexed_by_start"
+    QCheck.(list_of_size Gen.(int_bound 10) (pair int64 task_seg_places))
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Int64_map.of_seq in
+       let y =
+         x
+         |> Daypack_lib.Sched.Serialize.pack_progress_indexed_by_start
+         |> Daypack_lib.Sched.Deserialize.unpack_progress_indexed_by_start
+       in
+       Daypack_lib.Int64_map.equal Daypack_lib.Task_seg_place_set.equal x y)
+
 let qc_unpack_is_inverse_of_pack_indexed_by_start =
   QCheck.Test.make ~count:5000
     ~name:"qc_unpack_is_inverse_of_pack_indexed_by_start"
@@ -381,6 +403,7 @@ let suite =
     qc_unpack_is_inverse_of_pack_user_id_to_task_ids;
     qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids;
     qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids;
+    qc_unpack_is_inverse_of_pack_progress_indexed_by_start;
     qc_unpack_is_inverse_of_pack_indexed_by_start;
     qc_unpack_is_inverse_of_pack_sched_req_ids;
     qc_add_diff_test_sched;
