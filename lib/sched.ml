@@ -40,6 +40,8 @@ type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
+type task_inst_progress_map = Task_inst_progress_set.t Int64_map.t
+
 type store = {
   task_store : task_store;
   task_inst_store : task_inst_store;
@@ -52,7 +54,7 @@ type store = {
   sched_req_pending_store : sched_req_store;
   sched_req_record_store : sched_req_record_store;
   quota : int64 Task_inst_id_map.t;
-  progress_indexed_by_start : task_seg_place_map;
+  progress_indexed_by_start : task_inst_progress_map;
 }
 
 type store_diff = {
@@ -605,6 +607,10 @@ module Agenda = struct
   let remove_task_seg_place_by_task_seg_id task_seg_id sched =
     let s = find_task_seg_place_seq_by_task_seg_id task_seg_id sched in
     remove_task_seg_place_seq s sched
+end
+
+module Progress = struct
+  (* let add_task_seg_place *)
 end
 
 module Sched_req_store = struct
