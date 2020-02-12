@@ -500,7 +500,7 @@ module Task_store = struct
     | Some _ -> Ok (remove_task task_id sched)
 end
 
-module Task_seg_place_map = struct
+module Agenda = struct
   let add_task_seg_place
       (((id1, id2, id3, id4, id5), start, end_exc) : Task.task_seg_place)
       ((sid, sd) : sched) : sched =

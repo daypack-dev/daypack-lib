@@ -77,7 +77,7 @@ module Maybe_append_to_head = struct
     | [] -> ()
     | hd :: tl -> (
         let task_seg_place_seq =
-          Sched.Task_seg_place_map.find_task_seg_place_seq_by_task_id task_id hd
+          Sched.Agenda.find_task_seg_place_seq_by_task_id task_id hd
         in
         match task_seg_place_seq () with
         | Seq.Nil ->
@@ -89,7 +89,7 @@ module Maybe_append_to_head = struct
             |> Sched.Task_store.remove_task task_id
             |> Sched.Sched_req_store.remove_sched_req_record_by_task_id
               task_id
-            |> Sched.Task_seg_place_map.remove_task_seg_place_seq
+            |> Sched.Agenda.remove_task_seg_place_seq
               task_seg_place_seq
           in
           t.history <- hd' :: hd :: tl )
@@ -99,7 +99,7 @@ module Maybe_append_to_head = struct
     | [] -> ()
     | hd :: tl -> (
         let task_seg_place_seq =
-          Sched.Task_seg_place_map.find_task_seg_place_seq_by_task_inst_id
+          Sched.Agenda.find_task_seg_place_seq_by_task_inst_id
             task_inst_id hd
         in
         match task_seg_place_seq () with
@@ -112,7 +112,7 @@ module Maybe_append_to_head = struct
             |> Sched.Task_inst_store.remove_task_inst task_inst_id
             |> Sched.Sched_req_store.remove_sched_req_record_by_task_inst_id
               task_inst_id
-            |> Sched.Task_seg_place_map.remove_task_seg_place_seq
+            |> Sched.Agenda.remove_task_seg_place_seq
               task_seg_place_seq
           in
           t.history <- hd' :: hd :: tl )

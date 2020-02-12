@@ -24,14 +24,14 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
            ~task_segs:[ task_seg ] usable_time_slots
          |> OSeq.map (fun place_s ->
              base
-             |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
+             |> Sched.Agenda.add_task_seg_place_list place_s)
        | Shift x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          Task_seg_place_gens.multi_task_segs_shift ~incre:x.incre
            ~task_segs:x.task_seg_related_data_list usable_time_slots
          |> OSeq.map (fun place_s ->
              base
-             |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
+             |> Sched.Agenda.add_task_seg_place_list place_s)
        | Split_and_shift x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          ( match x.split_count with
@@ -47,7 +47,7 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
                usable_time_slots )
          |> OSeq.map (fun place_s ->
              base
-             |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
+             |> Sched.Agenda.add_task_seg_place_list place_s)
        | Split_even x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          Task_seg_place_gens.single_task_seg_multi_even_splits ~incre:x.incre
@@ -55,7 +55,7 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
            ~usable_time_slots
          |> OSeq.map (fun place_s ->
              base
-             |> Sched.Task_seg_place_map.add_task_seg_place_list place_s)
+             |> Sched.Agenda.add_task_seg_place_list place_s)
        | Time_share x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          let s =
@@ -63,7 +63,7 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
              ~interval_size:x.interval_size
              ~task_segs:x.task_seg_related_data_list usable_time_slots
          in
-         Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s)
+         Seq.return (base |> Sched.Agenda.add_task_seg_place_seq s)
        | Push_toward x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          let s1 =
@@ -92,7 +92,7 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
              s1 s2
            |> OSeq.take 1
          in
-         Seq.return (base |> Sched.Task_seg_place_map.add_task_seg_place_seq s))
+         Seq.return (base |> Sched.Agenda.add_task_seg_place_seq s))
     (sched_req_record_data_list |> List.to_seq)
 
 let backtracking_search_multi ~start ~end_exc ~base

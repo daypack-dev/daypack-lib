@@ -153,7 +153,7 @@ module Task_store : sig
   val remove_task_strict : Task.task_id -> sched -> (sched, unit) result
 end
 
-module Task_seg_place_map : sig
+module Agenda : sig
   val add_task_seg_place : Task.task_seg_place -> sched -> sched
 
   val add_task_seg_place_list : Task.task_seg_place list -> sched -> sched
