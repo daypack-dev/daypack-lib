@@ -79,21 +79,16 @@ module Maybe_append_to_head = struct
         let task_seg_place_seq =
           Sched.Agenda.find_task_seg_place_seq_by_task_id task_id hd
         in
+        let hd =
+          hd
+          |> Sched.Task_store.remove_task task_id
+          |> Sched.Sched_req_store.remove_pending_sched_req_by_task_id task_id
+        in
         match task_seg_place_seq () with
-        | Seq.Nil ->
-          let hd =
-            hd
-            |> Sched.Task_store.remove_task task_id
-            |> Sched.Sched_req_store.remove_pending_sched_req_by_task_id
-              task_id
-          in
-          t.history <- hd :: tl
+        | Seq.Nil -> t.history <- hd :: tl
         | _ ->
           let hd' =
             hd
-            |> Sched.Task_store.remove_task task_id
-            |> Sched.Sched_req_store.remove_pending_sched_req_by_task_id
-              task_id
             |> Sched.Sched_req_store.remove_sched_req_record_by_task_id
               task_id
             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
@@ -107,21 +102,17 @@ module Maybe_append_to_head = struct
         let task_seg_place_seq =
           Sched.Agenda.find_task_seg_place_seq_by_task_inst_id task_inst_id hd
         in
+        let hd =
+          hd
+          |> Sched.Task_inst_store.remove_task_inst task_inst_id
+          |> Sched.Sched_req_store.remove_pending_sched_req_by_task_inst_id
+            task_inst_id
+        in
         match task_seg_place_seq () with
-        | Seq.Nil ->
-          let hd =
-            hd
-            |> Sched.Task_inst_store.remove_task_inst task_inst_id
-            |> Sched.Sched_req_store.remove_pending_sched_req_by_task_inst_id
-              task_inst_id
-          in
-          t.history <- hd :: tl
+        | Seq.Nil -> t.history <- hd :: tl
         | _ ->
           let hd' =
             hd
-            |> Sched.Task_inst_store.remove_task_inst task_inst_id
-            |> Sched.Sched_req_store.remove_pending_sched_req_by_task_inst_id
-              task_inst_id
             |> Sched.Sched_req_store.remove_sched_req_record_by_task_inst_id
               task_inst_id
             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
