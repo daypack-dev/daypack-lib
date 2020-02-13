@@ -707,6 +707,32 @@ module Sched_req_store = struct
            l)
       sched
 
+  let remove_pending_sched_req_if_contains_matching_task_seg
+    (f : Task.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store = {
+          sd.store with
+          sched_req_pending_store =
+            sd.store.sched_req_pending_store
+            |> Sched_req_id_map.to_seq
+            |> Seq.filter (fun (_id, sched_req_data) ->
+                  List.exists
+                    (fun sched_req_data_unit ->
+                       let data =
+                         Sched_req_data_unit_skeleton.get_data
+                           sched_req_data_unit
+                       in
+                       List.exists f data
+                    )
+                    sched_req_data
+              )
+            |> Sched_req_id_map.of_seq
+        }
+      }
+    )
+
   let remove_pending_sched_req_data_unit_if_contains_matching_task_seg
     (f : Task.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
     ( sid,
@@ -737,6 +763,31 @@ module Sched_req_store = struct
         }
       }
     )
+
+  let remove_sched_req_record_if_contains_matching_task_seg
+      (f : Task.task_seg -> bool) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            sched_req_record_store =
+              sd.store.sched_req_record_store
+              |> Sched_req_id_map.to_seq
+              |> Seq.filter (fun (_id, sched_req_record_data) ->
+                    List.exists
+                      (fun sched_req_record_data_unit ->
+                         let data =
+                           Sched_req_data_unit_skeleton.get_data
+                             sched_req_record_data_unit
+                         in
+                         List.exists f data)
+                      sched_req_record_data
+                  )
+              |> Sched_req_id_map.of_seq;
+          };
+      } )
 
   let remove_sched_req_record_data_unit_if_contains_matching_task_seg
       (f : Task.task_seg -> bool) ((sid, sd) : sched) : sched =
