@@ -707,6 +707,22 @@ module Sched_req_store = struct
            l)
       sched
 
+  let remove_pending_sched_req_data_unit_if_contains_matching_task_seg
+    (f : Task.task_seg -> bool) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store = {
+          sd.store with
+          sched_req_pending_store =
+            sd.store.sched_req_pending_store
+            |> Sched_req_id_map.to_seq
+            |> Seq.filter_map (fun (id, sched_req_record_data) ->
+              )
+        }
+      }
+    )
+
   let remove_sched_req_record_data_unit_if_contains_matching_task_seg
       (f : Task.task_seg -> bool) ((sid, sd) : sched) : sched =
     ( sid,
