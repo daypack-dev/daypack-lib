@@ -33,4 +33,6 @@ val shift_list : offset:int64 -> t list -> t list
 
 val equal : t list -> t list -> bool
 
+val a_is_subset_of_b : a:t Seq.t -> b:t Seq.t -> bool
+
 val to_string : t -> string

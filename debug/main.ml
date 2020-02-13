@@ -463,13 +463,17 @@ let debug_sched_usage_simulation () =
         parallelizable = false;
         task_type =
           Recurring
-            (Arithemtic_seq
-               ( { start = 0L; end_exc = 100L; diff = 50L },
-                 {
-                   task_inst_data = { task_inst_type = Reminder };
-                   sched_req_templates =
-                     [ Fixed { task_seg_related_data = 1L; start = 0L } ];
-                 } ));
+            {
+              excluded_time_slots = [];
+              recur_type =
+                Arithemtic_seq
+                  ( { start = 0L; end_exc = 100L; diff = 50L },
+                    {
+                      task_inst_data = { task_inst_type = Reminder };
+                      sched_req_template =
+                        [ Fixed { task_seg_related_data = 1L; start = 0L } ];
+                    } );
+            };
       }
     [] sched_ver_history;
   add_task ~parent_user_id:0L
