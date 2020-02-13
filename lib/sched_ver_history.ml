@@ -87,8 +87,8 @@ module Maybe_append_to_head = struct
           let hd' =
             hd
             |> Sched.Task_store.remove_task task_id
-            |> Sched.Sched_req_store.remove_sched_req_record_data_unit_by_task_id
-              task_id
+            |> Sched.Sched_req_store
+               .remove_sched_req_record_data_unit_by_task_id task_id
             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
           in
           t.history <- hd' :: hd :: tl )
@@ -108,8 +108,8 @@ module Maybe_append_to_head = struct
           let hd' =
             hd
             |> Sched.Task_inst_store.remove_task_inst task_inst_id
-            |> Sched.Sched_req_store.remove_sched_req_record_data_unit_by_task_inst_id
-              task_inst_id
+            |> Sched.Sched_req_store
+               .remove_sched_req_record_data_unit_by_task_inst_id task_inst_id
             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
           in
           t.history <- hd' :: hd :: tl )
