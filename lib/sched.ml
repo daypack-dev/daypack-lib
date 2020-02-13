@@ -707,7 +707,7 @@ module Sched_req_store = struct
            l)
       sched
 
-  let remove_sched_req_record_if_contains_matching_task_seg
+  let remove_sched_req_record_data_unit_if_contains_matching_task_seg
       (f : Task.task_seg -> bool) ((sid, sd) : sched) : sched =
     ( sid,
       {
@@ -718,38 +718,41 @@ module Sched_req_store = struct
             sched_req_record_store =
               sd.store.sched_req_record_store
               |> Sched_req_id_map.to_seq
-              |> Seq.filter_map (fun (id, l) ->
-                  let l =
+              |> Seq.filter_map (fun (id, sched_req_record_data) ->
+                  let sched_req_record_data =
                     List.filter
-                      (fun sched_req_record ->
-                         not
-                           (List.exists f
-                              (Sched_req_data_unit_skeleton.get_data
-                                 sched_req_record)))
-                      l
+                      (fun sched_req_record_data_unit ->
+                         let data =
+                           Sched_req_data_unit_skeleton.get_data
+                             sched_req_record_data_unit
+                         in
+                         not (List.exists f data))
+                      sched_req_record_data
                   in
-                  match l with [] -> None | _ -> Some (id, l))
+                  match sched_req_record_data with
+                  | [] -> None
+                  | _ -> Some (id, sched_req_record_data))
               |> Sched_req_id_map.of_seq;
           };
       } )
 
-  let remove_sched_req_record_by_task_id ((id1, id2) : Task.task_id)
+  let remove_sched_req_record_data_unit_by_task_id ((id1, id2) : Task.task_id)
       (sched : sched) : sched =
-    remove_sched_req_record_if_contains_matching_task_seg
+    remove_sched_req_record_data_unit_if_contains_matching_task_seg
       (fun ((id1', id2', _id3', _id4', _id5'), _data) ->
          id1 = id1' && id2 = id2')
       sched
 
-  let remove_sched_req_record_by_task_inst_id
+  let remove_sched_req_record_data_unit_by_task_inst_id
       ((id1, id2, id3) : Task.task_inst_id) (sched : sched) : sched =
-    remove_sched_req_record_if_contains_matching_task_seg
+    remove_sched_req_record_data_unit_if_contains_matching_task_seg
       (fun ((id1', id2', id3', _id4', _id5'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3')
       sched
 
-  let remove_sched_req_record_by_task_seg_id
+  let remove_sched_req_record_data_unit_by_task_seg_id
       ((id1, id2, id3, id4, _id5) : Task.task_seg_id) (sched : sched) : sched =
-    remove_sched_req_record_if_contains_matching_task_seg
+    remove_sched_req_record_data_unit_if_contains_matching_task_seg
       (fun ((id1', id2', id3', id4', _id5'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')
       sched
