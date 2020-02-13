@@ -708,7 +708,7 @@ module Sched_req_store = struct
       sched
 
   let remove_pending_sched_req_data_unit_if_contains_matching_task_seg
-    (f : Task.task_seg -> bool) ((sid, sd) : sched) : sched =
+    (f : Task.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
     ( sid,
       {
         sd with
@@ -717,8 +717,23 @@ module Sched_req_store = struct
           sched_req_pending_store =
             sd.store.sched_req_pending_store
             |> Sched_req_id_map.to_seq
-            |> Seq.filter_map (fun (id, sched_req_record_data) ->
+            |> Seq.filter_map (fun (id, sched_req_data) ->
+                let sched_req_data =
+                  List.filter
+                    (fun sched_req_data_unit ->
+                       let data =
+                         Sched_req_data_unit_skeleton.get_data
+                           sched_req_data_unit
+                       in
+                       not (List.exists f data)
+                    )
+                    sched_req_data
+                in
+                match sched_req_data with
+                | [] -> None
+                | _ -> Some (id, sched_req_data)
               )
+            |> Sched_req_id_map.of_seq
         }
       }
     )
