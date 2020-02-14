@@ -296,10 +296,12 @@ module Serialize : sig
     Int64_set.t Task_inst_id_map.t -> (Task_t.task_inst_id * int64 list) list
 
   val pack_task_seg_id_to_progress :
-    Task.progress Task_seg_id_map.t -> (Task_t.task_seg_id * Task_t.progress) list
+    Task.progress Task_seg_id_map.t ->
+    (Task_t.task_seg_id * Task_t.progress) list
 
   val pack_task_inst_id_to_progress :
-    Task.progress Task_inst_id_map.t -> (Task_t.task_inst_id * Task_t.progress) list
+    Task.progress Task_inst_id_map.t ->
+    (Task_t.task_inst_id * Task_t.progress) list
 
   val pack_indexed_by_start :
     task_seg_place_map -> (int64 * Task_t.task_seg_place list) list
