@@ -449,6 +449,18 @@ module Print = struct
       size;
     Buffer.contents buffer
 
+  let debug_string_of_progress ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) progress =
+    Debug_print.bprintf ~indent_level buffer "completed : %b\n"
+      progress.completed;
+    Debug_print.bprintf ~indent_level buffer "chunks :\n";
+    List.iter
+      (fun (start, end_exc) ->
+         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+           "[%Ld, %Ld)\n" start end_exc)
+      progress.chunks;
+    Buffer.contents buffer
+
   let debug_print_task ?(indent_level = 0) task =
     print_string (debug_string_of_task ~indent_level task)
 
@@ -457,4 +469,7 @@ module Print = struct
 
   let debug_print_task_seg ?(indent_level = 0) task_seg =
     print_string (debug_string_of_task_seg ~indent_level task_seg)
+
+  let debug_print_progress ?(indent_level = 0) progress =
+    print_string (debug_string_of_progress ~indent_level progress)
 end

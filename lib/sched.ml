@@ -70,8 +70,8 @@ type store_diff = {
   sched_req_pending_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
   quota_diff : int64 Task_inst_id_map_utils.diff;
-  task_seg_id_to_progress : Task.progress Task_seg_id_map.t;
-  task_inst_id_to_progress : Task.progress Task_inst_id_map.t;
+  task_seg_id_to_progress_diff : Task.progress Task_seg_id_map_utils.diff;
+  task_inst_id_to_progress_diff : Task.progress Task_inst_id_map_utils.diff;
 }
 
 type agenda = {
@@ -1306,6 +1306,22 @@ module Serialize = struct
       removed = pack_task_seg_id_to_progress x.removed;
     }
 
+  let pack_task_inst_id_to_progress (x : Task.progress Task_inst_id_map.t) :
+    (Task_t.task_inst_id * Task_t.progress) list =
+    x
+    |> Task_inst_id_map.to_seq
+    |> Seq.map (fun (id, progress) ->
+        (id, Task.Serialize.pack_progress progress))
+    |> List.of_seq
+
+  let pack_task_inst_id_to_progress_diff
+      (x : Task.progress Task_inst_id_map_utils.diff) :
+    (Task_t.task_inst_id, Task_t.progress) Map_utils_t.diff =
+    {
+      added = pack_task_inst_id_to_progress x.added;
+      removed = pack_task_inst_id_to_progress x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -1583,6 +1599,23 @@ module Deserialize = struct
     {
       added = unpack_task_seg_id_to_progress x.added;
       removed = unpack_task_seg_id_to_progress x.removed;
+    }
+
+  let unpack_task_inst_id_to_progress
+      (x : (Task_t.task_inst_id * Task_t.progress) list) :
+    Task.progress Task_inst_id_map.t =
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, progress) ->
+        (id, Task.Deserialize.unpack_progress progress))
+    |> Task_inst_id_map.of_seq
+
+  let unpack_task_inst_id_to_progress_diff
+      (x : (Task_t.task_inst_id, Task_t.progress) Map_utils_t.diff) :
+    Task.progress Task_inst_id_map_utils.diff =
+    {
+      added = unpack_task_inst_id_to_progress x.added;
+      removed = unpack_task_inst_id_to_progress x.removed;
     }
 
   (*$*)
@@ -2054,15 +2087,6 @@ module Print = struct
            quota)
       sd.store.quota;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "progress :\n";
-    Int64_map.iter
-      (fun _start bucket ->
-         Task_inst_progress_set.iter
-           (fun (id, start, end_exc) ->
-              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
-                "%Ld - %Ld | %s\n" start end_exc
-                (Task.task_inst_id_to_string id))
-           bucket)
-      sd.store.progress_indexed_by_start;
     Buffer.contents buffer
 
   let debug_print_sched ?(indent_level = 0) sched =

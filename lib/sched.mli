@@ -54,8 +54,8 @@ type store_diff = {
   sched_req_pending_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
   quota_diff : int64 Task_inst_id_map_utils.diff;
-  task_seg_id_to_progress : Task.progress Task_seg_id_map.t;
-  task_inst_id_to_progress : Task.progress Task_inst_id_map.t;
+  task_seg_id_to_progress_diff : Task.progress Task_seg_id_map_utils.diff;
+  task_inst_id_to_progress_diff : Task.progress Task_inst_id_map_utils.diff;
 }
 
 type agenda = { indexed_by_start : task_seg_place_map }

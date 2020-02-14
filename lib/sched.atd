@@ -108,6 +108,8 @@ type store_diff = {
   sched_req_pending_list_diff : (sched_req_id, sched_req_data) diff;
   sched_req_record_list_diff : (sched_req_id, sched_req_record_data) diff;
   quota_diff : (task_inst_id, int64) diff;
+  task_seg_id_to_progress_diff : (task_seg_id, progress) diff;
+  task_inst_id_to_progress_diff : (task_inst_id, progress) diff;
 }
 
 type agenda = {
