@@ -739,7 +739,8 @@ let store_gen =
        (quad user_id_to_task_ids_gen task_id_to_task_inst_ids_gen
           task_inst_id_to_task_seg_ids_gen
           (quad pos_int64_set_gen sched_req_store_gen sched_req_record_store_gen
-             (triple quota_gen task_seg_id_to_progress_gen task_inst_id_to_progress_gen))))
+             (triple quota_gen task_seg_id_to_progress_gen
+                task_inst_id_to_progress_gen))))
 
 let agenda_gen =
   let open QCheck.Gen in
