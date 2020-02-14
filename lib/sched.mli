@@ -26,11 +26,6 @@ type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
-type task_inst_progress_map = Task_inst_progress_set.t Int64_map.t
-
-type task_inst_progress_map_diff =
-  Int64_map_utils.Task_inst_progress_bucketed.diff_bucketed
-
 type store = {
   task_store : task_store;
   task_inst_store : task_inst_store;
@@ -42,7 +37,8 @@ type store = {
   sched_req_pending_store : sched_req_store;
   sched_req_record_store : sched_req_record_store;
   quota : int64 Task_inst_id_map.t;
-  progress_indexed_by_start : task_inst_progress_map;
+  task_seg_id_to_progress : Task.progress Task_seg_id_map.t;
+  task_inst_id_to_progress : Task.progress Task_inst_id_map.t;
 }
 
 type store_diff = {
@@ -58,7 +54,8 @@ type store_diff = {
   sched_req_pending_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
   quota_diff : int64 Task_inst_id_map_utils.diff;
-  progress_indexed_by_start_diff : task_inst_progress_map_diff;
+  task_seg_id_to_progress : Task.progress Task_seg_id_map.t;
+  task_inst_id_to_progress : Task.progress Task_inst_id_map.t;
 }
 
 type agenda = { indexed_by_start : task_seg_place_map }
@@ -298,9 +295,6 @@ module Serialize : sig
   val pack_task_inst_id_to_task_seg_ids :
     Int64_set.t Task_inst_id_map.t -> (Task_t.task_inst_id * int64 list) list
 
-  val pack_progress_indexed_by_start :
-    task_inst_progress_map -> (int64 * Task_t.task_inst_progress list) list
-
   val pack_indexed_by_start :
     task_seg_place_map -> (int64 * Task_t.task_seg_place list) list
 
@@ -335,9 +329,6 @@ module Deserialize : sig
 
   val unpack_task_inst_id_to_task_seg_ids :
     (Task_t.task_inst_id * int64 list) list -> Int64_set.t Task_inst_id_map.t
-
-  val unpack_progress_indexed_by_start :
-    (int64 * Task_t.task_inst_progress list) list -> task_inst_progress_map
 
   val unpack_indexed_by_start :
     (int64 * Task_t.task_seg_place list) list -> task_seg_place_map

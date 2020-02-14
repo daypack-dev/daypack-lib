@@ -64,7 +64,10 @@ and task_seg_size = int64
 
 and task_seg_place = task_seg_id * int64 * int64
 
-and task_inst_progress = task_inst_id * int64 * int64
+and progress = {
+  completed : bool;
+  chunks : (int64 * int64) list;
+}
 
 let task_seg_id_w_first_sub_id ((id1, id2, id3, id4, id5) : task_seg_id) :
   task_seg_id =
