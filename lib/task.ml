@@ -192,6 +192,9 @@ module Serialize = struct
   and pack_task_seg_size x = x
 
   and pack_task_seg_place x = x
+
+  and pack_progress (x : progress) : Task_t.progress =
+    { completed = x.completed; chunks = x.chunks }
 end
 
 module Deserialize = struct
@@ -269,6 +272,9 @@ module Deserialize = struct
   and unpack_task_seg_size x = x
 
   and unpack_task_seg_place x = x
+
+  and unpack_progress (x : Task_t.progress) : progress =
+    { completed = x.completed; chunks = x.chunks }
 end
 
 module Print = struct

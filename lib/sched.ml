@@ -1290,6 +1290,22 @@ module Serialize = struct
     (Task_t.task_inst_id, int64) Map_utils_t.diff =
     { added = pack_quota x.added; removed = pack_quota x.removed }
 
+  let pack_task_seg_id_to_progress (x : Task.progress Task_seg_id_map.t) :
+    (Task_t.task_seg_id * Task_t.progress) list =
+    x
+    |> Task_seg_id_map.to_seq
+    |> Seq.map (fun (id, progress) ->
+        (id, Task.Serialize.pack_progress progress))
+    |> List.of_seq
+
+  let pack_task_seg_id_to_progress_diff
+      (x : Task.progress Task_seg_id_map_utils.diff) :
+    (Task_t.task_seg_id, Task_t.progress) Map_utils_t.diff =
+    {
+      added = pack_task_seg_id_to_progress x.added;
+      removed = pack_task_seg_id_to_progress x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -1551,6 +1567,23 @@ module Deserialize = struct
   let unpack_quota_diff (x : (Task_t.task_inst_id, int64) Map_utils_t.diff) :
     int64 Task_inst_id_map_utils.diff =
     { added = unpack_quota x.added; removed = unpack_quota x.removed }
+
+  let unpack_task_seg_id_to_progress
+      (x : (Task_t.task_seg_id * Task_t.progress) list) :
+    Task.progress Task_seg_id_map.t =
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, progress) ->
+        (id, Task.Deserialize.unpack_progress progress))
+    |> Task_seg_id_map.of_seq
+
+  let unpack_task_seg_id_to_progress_diff
+      (x : (Task_t.task_seg_id, Task_t.progress) Map_utils_t.diff) :
+    Task.progress Task_seg_id_map_utils.diff =
+    {
+      added = unpack_task_seg_id_to_progress x.added;
+      removed = unpack_task_seg_id_to_progress x.removed;
+    }
 
   (*$*)
 

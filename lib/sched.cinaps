@@ -109,6 +109,26 @@ module Store = struct
         f_inner_unpack = None;
         f_inner_unpack_data = None;
       };
+      {
+        f_pack_suffix = "task_seg_id_to_progress";
+        f_unpack_suffix = "task_seg_id_to_progress";
+        store_typ = "Task.progress Task_seg_id_map.t";
+        diff_typ = "Task.progress Task_seg_id_map_utils.diff";
+        ret_typ = "(Task_t.task_seg_id * Task_t.progress) list";
+        diff_ret_typ = "(Task_t.task_seg_id, Task_t.progress) Map_utils_t.diff";
+        f_to_seq = "Task_seg_id_map.to_seq";
+        f_of_seq = "Task_seg_id_map.of_seq";
+        f_inner_pack =
+          Some
+            "(fun (id, progress) -> (id, Task.Serialize.pack_progress \
+             progress))";
+        f_inner_pack_data = Some "Task.Serialize.pack_progress";
+        f_inner_unpack =
+          Some
+            "(fun (id, progress) -> (id, Task.Deserialize.unpack_progress \
+             progress))";
+        f_inner_unpack_data = Some "Task.Deserialize.unpack_progress";
+      };
     ]
 
   let get_pack_f_name e = Printf.sprintf "pack_%s" e.f_pack_suffix
