@@ -2178,7 +2178,26 @@ module Print = struct
            (Task.task_inst_id_to_string id)
            quota)
       sd.store.quota;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "progress :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task seg progress :\n";
+    Task_seg_id_map.iter
+      (fun id progress ->
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s"
+           (Task.task_seg_id_to_string id);
+         Task.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
+           ~buffer progress
+         |> ignore)
+      sd.store.task_seg_id_to_progress;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task inst progress :\n";
+    Task_inst_id_map.iter
+      (fun id progress ->
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s"
+           (Task.task_inst_id_to_string id);
+         Task.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
+           ~buffer progress
+         |> ignore)
+      sd.store.task_inst_id_to_progress;
     Buffer.contents buffer
 
   let debug_print_sched ?(indent_level = 0) sched =
