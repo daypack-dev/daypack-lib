@@ -27,8 +27,11 @@ module In_place_head : sig
 
   val mark_task_inst_uncompleted : Task.task_inst_id -> t -> unit
 
-  val add_task_seg_progress_chunk : Task.task_seg_id -> int64 * int64 -> t -> unit
-  val add_task_inst_progress_chunk : Task.task_inst_id -> int64 * int64 -> t -> unit
+  val add_task_seg_progress_chunk :
+    Task.task_seg_id -> int64 * int64 -> t -> unit
+
+  val add_task_inst_progress_chunk :
+    Task.task_inst_id -> int64 * int64 -> t -> unit
 end
 
 module Maybe_append_to_head : sig

@@ -190,21 +190,25 @@ module Agenda : sig
 end
 
 module Progress : sig
-  val set_task_seg_completed_flag : Task.task_seg_id -> completed:bool -> sched -> sched
+  val set_task_seg_completed_flag :
+    Task.task_seg_id -> completed:bool -> sched -> sched
 
   val mark_task_seg_completed : Task.task_seg_id -> sched -> sched
 
   val mark_task_seg_uncompleted : Task.task_seg_id -> sched -> sched
 
-  val add_task_seg_progress_chunk : Task.task_seg_id -> int64 * int64 -> sched -> sched
+  val add_task_seg_progress_chunk :
+    Task.task_seg_id -> int64 * int64 -> sched -> sched
 
-  val set_task_inst_completed_flag : Task.task_inst_id -> completed:bool -> sched -> sched
+  val set_task_inst_completed_flag :
+    Task.task_inst_id -> completed:bool -> sched -> sched
 
   val mark_task_inst_completed : Task.task_inst_id -> sched -> sched
 
   val mark_task_inst_uncompleted : Task.task_inst_id -> sched -> sched
 
-  val add_task_inst_progress_chunk : Task.task_inst_id -> int64 * int64 -> sched -> sched
+  val add_task_inst_progress_chunk :
+    Task.task_inst_id -> int64 * int64 -> sched -> sched
 end
 
 module Sched_req_store : sig

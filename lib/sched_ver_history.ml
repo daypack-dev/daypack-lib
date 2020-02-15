@@ -74,48 +74,57 @@ module In_place_head = struct
     map_head
       (fun sched ->
          let sched = Sched.Progress.mark_task_seg_completed task_seg_id sched in
-         ((), `In_place, sched)
-      )
+         ((), `In_place, sched))
       t
 
-  let mark_task_seg_uncompleted (task_seg_id : Task.task_seg_id) (t : t) : unit =
+  let mark_task_seg_uncompleted (task_seg_id : Task.task_seg_id) (t : t) : unit
+    =
     map_head
       (fun sched ->
-         let sched = Sched.Progress.mark_task_seg_uncompleted task_seg_id sched in
-         ((), `In_place, sched)
-      )
+         let sched =
+           Sched.Progress.mark_task_seg_uncompleted task_seg_id sched
+         in
+         ((), `In_place, sched))
       t
 
-  let mark_task_inst_completed (task_inst_id : Task.task_inst_id) (t : t) : unit =
+  let mark_task_inst_completed (task_inst_id : Task.task_inst_id) (t : t) : unit
+    =
     map_head
       (fun sched ->
-         let sched = Sched.Progress.mark_task_inst_completed task_inst_id sched in
-         ((), `In_place, sched)
-      )
+         let sched =
+           Sched.Progress.mark_task_inst_completed task_inst_id sched
+         in
+         ((), `In_place, sched))
       t
 
-  let mark_task_inst_uncompleted (task_inst_id : Task.task_inst_id) (t : t) : unit =
+  let mark_task_inst_uncompleted (task_inst_id : Task.task_inst_id) (t : t) :
+    unit =
     map_head
       (fun sched ->
-         let sched = Sched.Progress.mark_task_inst_uncompleted task_inst_id sched in
-         ((), `In_place, sched)
-      )
+         let sched =
+           Sched.Progress.mark_task_inst_uncompleted task_inst_id sched
+         in
+         ((), `In_place, sched))
       t
 
-  let add_task_seg_progress_chunk (task_seg_id : Task.task_seg_id) (chunk : int64 * int64) (t : t) : unit =
+  let add_task_seg_progress_chunk (task_seg_id : Task.task_seg_id)
+      (chunk : int64 * int64) (t : t) : unit =
     map_head
       (fun sched ->
-         let sched = Sched.Progress.add_task_seg_progress_chunk task_seg_id chunk sched in
-         ((), `In_place, sched)
-      )
+         let sched =
+           Sched.Progress.add_task_seg_progress_chunk task_seg_id chunk sched
+         in
+         ((), `In_place, sched))
       t
 
-  let add_task_inst_progress_chunk (task_inst_id : Task.task_inst_id) (chunk : int64 * int64) (t : t) : unit =
+  let add_task_inst_progress_chunk (task_inst_id : Task.task_inst_id)
+      (chunk : int64 * int64) (t : t) : unit =
     map_head
       (fun sched ->
-         let sched = Sched.Progress.add_task_inst_progress_chunk task_inst_id chunk sched in
-         ((), `In_place, sched)
-      )
+         let sched =
+           Sched.Progress.add_task_inst_progress_chunk task_inst_id chunk sched
+         in
+         ((), `In_place, sched))
       t
 end
 

@@ -611,93 +611,99 @@ module Agenda = struct
 end
 
 module Progress = struct
-  let set_task_seg_completed_flag (task_seg_id : Task.task_seg_id) ~completed ((sid, sd) : sched) : sched =
-    (sid,
-     { sd with
-       store = {
-         sd.store with
-         task_seg_id_to_progress = Task_seg_id_map.update task_seg_id (fun progress ->
-             let open Task in
-             match progress with
-             | None -> Some { completed; chunks = [] }
-             | Some progress ->
-               Some { progress with
-                      completed
-               }
-           )
-             sd.store.task_seg_id_to_progress
-       }
-     }
-    )
+  let set_task_seg_completed_flag (task_seg_id : Task.task_seg_id) ~completed
+      ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_id_to_progress =
+              Task_seg_id_map.update task_seg_id
+                (fun progress ->
+                   let open Task in
+                   match progress with
+                   | None -> Some { completed; chunks = [] }
+                   | Some progress -> Some { progress with completed })
+                sd.store.task_seg_id_to_progress;
+          };
+      } )
 
-  let mark_task_seg_completed (task_seg_id : Task.task_seg_id) (sched : sched) : sched =
+  let mark_task_seg_completed (task_seg_id : Task.task_seg_id) (sched : sched) :
+    sched =
     set_task_seg_completed_flag task_seg_id ~completed:true sched
 
-  let mark_task_seg_uncompleted (task_seg_id : Task.task_seg_id) (sched : sched) : sched =
+  let mark_task_seg_uncompleted (task_seg_id : Task.task_seg_id) (sched : sched)
+    : sched =
     set_task_seg_completed_flag task_seg_id ~completed:false sched
 
-  let add_task_seg_progress_chunk (task_seg_id : Task.task_seg_id) (chunk : int64 * int64) ((sid, sd) : sched) : sched =
-    (sid,
-     { sd with
-       store = {
-         sd.store with
-         task_seg_id_to_progress = Task_seg_id_map.update task_seg_id (fun progress ->
-             let open Task in
-             match progress with
-             | None -> Some { completed = false; chunks = [] }
-             | Some progress ->
-               Some { progress with
-                 chunks = chunk :: progress.chunks
-               }
-           )
-             sd.store.task_seg_id_to_progress
-       }
-     }
-    )
+  let add_task_seg_progress_chunk (task_seg_id : Task.task_seg_id)
+      (chunk : int64 * int64) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_id_to_progress =
+              Task_seg_id_map.update task_seg_id
+                (fun progress ->
+                   let open Task in
+                   match progress with
+                   | None -> Some { completed = false; chunks = [] }
+                   | Some progress ->
+                     Some { progress with chunks = chunk :: progress.chunks })
+                sd.store.task_seg_id_to_progress;
+          };
+      } )
 
-  let set_task_inst_completed_flag (task_inst_id : Task.task_inst_id) ~completed ((sid, sd) : sched) : sched =
-    (sid,
-     { sd with
-       store = {
-         sd.store with
-         task_inst_id_to_progress = Task_inst_id_map.update task_inst_id (fun progress ->
-             let open Task in
-             match progress with
-             | None -> Some { completed; chunks = [] }
-             | Some progress ->
-               Some { progress with
-                      completed
-               }
-           )
-             sd.store.task_inst_id_to_progress
-       }
-     }
-    )
+  let set_task_inst_completed_flag (task_inst_id : Task.task_inst_id) ~completed
+      ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_id_to_progress =
+              Task_inst_id_map.update task_inst_id
+                (fun progress ->
+                   let open Task in
+                   match progress with
+                   | None -> Some { completed; chunks = [] }
+                   | Some progress -> Some { progress with completed })
+                sd.store.task_inst_id_to_progress;
+          };
+      } )
 
-  let mark_task_inst_completed (task_inst_id : Task.task_inst_id) (sched : sched) : sched =
+  let mark_task_inst_completed (task_inst_id : Task.task_inst_id)
+      (sched : sched) : sched =
     set_task_inst_completed_flag task_inst_id ~completed:true sched
 
-  let mark_task_inst_uncompleted (task_inst_id : Task.task_inst_id) (sched : sched) : sched =
+  let mark_task_inst_uncompleted (task_inst_id : Task.task_inst_id)
+      (sched : sched) : sched =
     set_task_inst_completed_flag task_inst_id ~completed:false sched
 
-  let add_task_inst_progress_chunk (task_inst_id : Task.task_inst_id) (chunk : int64 * int64) ((sid, sd) : sched) : sched =
-    (sid,
-     { sd with
-       store = {
-         sd.store with
-         task_inst_id_to_progress = Task_inst_id_map.update task_inst_id (fun progress ->
-             let open Task in
-             match progress with
-             | None -> Some { completed = false; chunks = [] }
-             | Some progress ->
-               Some { progress with
-                 chunks = chunk :: progress.chunks
-               }
-           )
-             sd.store.task_inst_id_to_progress
-       }
-     }
-    )
+  let add_task_inst_progress_chunk (task_inst_id : Task.task_inst_id)
+      (chunk : int64 * int64) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_id_to_progress =
+              Task_inst_id_map.update task_inst_id
+                (fun progress ->
+                   let open Task in
+                   match progress with
+                   | None -> Some { completed = false; chunks = [] }
+                   | Some progress ->
+                     Some { progress with chunks = chunk :: progress.chunks })
+                sd.store.task_inst_id_to_progress;
+          };
+      } )
 end
 
 module Sched_req_store = struct
