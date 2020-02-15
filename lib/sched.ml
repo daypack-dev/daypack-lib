@@ -1257,7 +1257,7 @@ module Recur = struct
                        sched_req_template sched_req_data)
                   sd.store.sched_req_pending_store )
               )
-        task_inst_ids
+              task_inst_ids
 
   let instantiate ~start ~end_exc ((sid, sd) : sched) : sched =
     Task_id_map.fold
@@ -1287,6 +1287,31 @@ module Recur = struct
               sched)
            sched)
       sd.store.task_store (sid, sd)
+end
+
+module Leftover = struct
+  (* let collect_leftover_task_segments ((_sid, sd) : sched) : Task.task_seg_id Seq.t =
+   *   Task_inst_id_map.to_seq sd.store.task_inst_store
+   *   |> Seq.filter_map (fun task_inst_id _ ->
+   *       match Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress with
+   *       | None -> Some task_inst_id
+   *       | Some progress -> if progress.completed then None  else Some task_inst_id
+   *     )
+   *   |> Seq.filter_map (fun (id1, id2, id3) ->
+   *       match Task_inst_id_map.find_opt (id1, id2, id3) sd.store.task_inst_id_to_task_seg_ids with
+   *       | None -> None
+   *       | Some ids ->
+   *         let ids =
+   *           ids
+   *           |> Int64_set.to_seq
+   *           |> Seq.map (fun task_seg_part ->
+   *               (id1, id2, id3, task_seg_part, None)
+   *             )
+   *         Some (Int64_set.to_seq ids |> )
+   *     )
+   *   |> Seq.flat_map (fun task_seg_ids ->
+   * 
+   *     ) *)
 end
 
 module Serialize = struct
