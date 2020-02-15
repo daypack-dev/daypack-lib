@@ -518,16 +518,18 @@ module Agenda = struct
                   | Some s -> s )))
         sd.agenda.indexed_by_start
     in
-    let quota =
-      Task_inst_id_map.update (id1, id2, id3)
-        (Option.map (fun x -> x -^ (end_exc -^ start)))
-        sd.store.quota
-    in
+    (* let quota =
+     *   Task_inst_id_map.update (id1, id2, id3)
+     *     (Option.map (fun x -> x -^ (end_exc -^ start)))
+     *     sd.store.quota
+     * in *)
     ( sid,
       {
-        store = { sd.store with quota };
+        (* store = { sd.store with quota }; *)
         (* agenda = { sd.agenda with indexed_by_start }; *)
-        agenda = { indexed_by_start };
+        sd
+        with
+          agenda = { indexed_by_start };
       } )
 
   let add_task_seg_place_list (task_seg_place_s : Task.task_seg_place list)
