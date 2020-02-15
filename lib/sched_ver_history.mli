@@ -18,6 +18,14 @@ module In_place_head : sig
   val queue_sched_req : Sched_req.sched_req_data -> t -> Sched_req.sched_req
 
   val instantiate : start:int64 -> end_exc:int64 -> t -> unit
+
+  val mark_task_seg_completed : Task.task_seg_id -> t -> unit
+
+  val mark_task_seg_uncompleted : Task.task_seg_id -> t -> unit
+
+  val mark_task_inst_completed : Task.task_inst_id -> t -> unit
+
+  val mark_task_inst_uncompleted : Task.task_inst_id -> t -> unit
 end
 
 module Maybe_append_to_head : sig

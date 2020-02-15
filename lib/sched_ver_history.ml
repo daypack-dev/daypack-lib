@@ -69,6 +69,38 @@ module In_place_head = struct
          let sched = Sched.Recur.instantiate ~start ~end_exc sched in
          ((), `In_place, sched))
       t
+
+  let mark_task_seg_completed (task_seg_id : Task.task_seg_id) (t : t) : unit =
+    map_head
+      (fun sched ->
+         let sched = Sched.Progress.mark_task_seg_completed task_seg_id sched in
+         ((), `In_place, sched)
+      )
+      t
+
+  let mark_task_seg_uncompleted (task_seg_id : Task.task_seg_id) (t : t) : unit =
+    map_head
+      (fun sched ->
+         let sched = Sched.Progress.mark_task_seg_uncompleted task_seg_id sched in
+         ((), `In_place, sched)
+      )
+      t
+
+  let mark_task_inst_completed (task_inst_id : Task.task_inst_id) (t : t) : unit =
+    map_head
+      (fun sched ->
+         let sched = Sched.Progress.mark_task_inst_completed task_inst_id sched in
+         ((), `In_place, sched)
+      )
+      t
+
+  let mark_task_inst_uncompleted (task_inst_id : Task.task_inst_id) (t : t) : unit =
+    map_head
+      (fun sched ->
+         let sched = Sched.Progress.mark_task_inst_uncompleted task_inst_id sched in
+         ((), `In_place, sched)
+      )
+      t
 end
 
 module Maybe_append_to_head = struct
