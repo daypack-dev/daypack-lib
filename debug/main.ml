@@ -576,6 +576,10 @@ let debug_sched_usage_simulation () =
   print_endline "Removing task/task inst";
   Sched_ver_history.Maybe_append_to_head.remove_task (0L, 0L) sched_ver_history;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
+  print_endline "=====";
+  print_endline "Recording prgress";
+  Sched_ver_history.In_place_head.mark_task_inst_completed (0L, 0L, 0L) sched_ver_history;
+  Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_newline ()
 
 (* let debug_time_pattern_normalize_pattern () =

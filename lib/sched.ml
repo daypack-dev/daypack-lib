@@ -2182,7 +2182,7 @@ module Print = struct
       "task seg progress :\n";
     Task_seg_id_map.iter
       (fun id progress ->
-         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s"
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
            (Task.task_seg_id_to_string id);
          Task.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
            ~buffer progress
@@ -2192,7 +2192,7 @@ module Print = struct
       "task inst progress :\n";
     Task_inst_id_map.iter
       (fun id progress ->
-         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s"
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
            (Task.task_inst_id_to_string id);
          Task.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
            ~buffer progress
