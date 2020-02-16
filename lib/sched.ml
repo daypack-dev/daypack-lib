@@ -259,27 +259,32 @@ module Id = struct
       ((sid, sd) : sched) : sched =
     let task_inst_id = (id1, id2, id3) in
     let task_seg_ids =
-      match Task_inst_id_map.find_opt (id1, id2, id3) sd.store.task_inst_id_to_task_seg_ids with
+      match
+        Task_inst_id_map.find_opt (id1, id2, id3)
+          sd.store.task_inst_id_to_task_seg_ids
+      with
       | None ->
         Int64_int64_option_set.empty |> Int64_int64_option_set.add (id4, id5)
       | Some s ->
-        (match id5 with
-         | None -> s
-         | Some _ ->
-           Int64_int64_option_set.filter (fun (id4', id5') ->
-               not (id4' = id4 && id5' = None)
-             ) s
-        )
+        ( match id5 with
+          | None -> s
+          | Some _ ->
+            Int64_int64_option_set.filter
+              (fun (id4', id5') -> not (id4' = id4 && id5' = None))
+              s )
         |> Int64_int64_option_set.add (id4, id5)
     in
-    (sid,
-     { sd with
-       store = {
-         sd.store with
-         task_inst_id_to_task_seg_ids =
-           Task_inst_id_map.add task_inst_id task_seg_ids sd.store.task_inst_id_to_task_seg_ids
-       }
-     })
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_id_to_task_seg_ids =
+              Task_inst_id_map.add task_inst_id task_seg_ids
+                sd.store.task_inst_id_to_task_seg_ids;
+          };
+      } )
 
   let remove_task_seg_id
       ((user_id, task_part, task_inst_part, task_seg_part, task_seg_sub_id) :
@@ -397,28 +402,21 @@ module Task_seg_store = struct
       ([], sched) reqs
     |> fun (l, t) -> (List.rev l, t)
 
-  let add_task_seg_via_task_seg_place
-    ((id, _, _) : Task.task_seg_place)
-    (sched : sched) : sched =
+  let add_task_seg_via_task_seg_place ((id, _, _) : Task.task_seg_place)
+      (sched : sched) : sched =
     Id.add_task_seg_id id sched
 
-  let add_task_segs_via_task_seg_place_list
-      (place_s : Task.task_seg_place list)
+  let add_task_segs_via_task_seg_place_list (place_s : Task.task_seg_place list)
       (sched : sched) : sched =
-    List.fold_left (fun sched place ->
-        add_task_seg_via_task_seg_place place sched
-      )
-      sched
-      place_s
+    List.fold_left
+      (fun sched place -> add_task_seg_via_task_seg_place place sched)
+      sched place_s
 
-  let add_task_segs_via_task_seg_place_seq
-      (place_s : Task.task_seg_place Seq.t)
+  let add_task_segs_via_task_seg_place_seq (place_s : Task.task_seg_place Seq.t)
       (sched : sched) : sched =
-    Seq.fold_left (fun sched place ->
-        add_task_seg_via_task_seg_place place sched
-      )
-      sched
-      place_s
+    Seq.fold_left
+      (fun sched place -> add_task_seg_via_task_seg_place place sched)
+      sched place_s
 
   let find_task_seg_opt (task_seg_id : Task.task_seg_id) ((_, sd) : sched) :
     Task.task_seg_size option =
@@ -568,8 +566,8 @@ end
 
 module Agenda = struct
   let add_task_seg_place
-      (((id1, id2, id3, id4, id5), start, end_exc) as task_seg_place : Task.task_seg_place)
-      ((sid, sd) : sched) : sched =
+      (((id1, id2, id3, id4, id5), start, end_exc) as task_seg_place :
+         Task.task_seg_place) ((sid, sd) : sched) : sched =
     let indexed_by_start =
       Int64_map.update start
         (fun bucket ->
@@ -1357,48 +1355,55 @@ module Leftover = struct
     let before, _, _ = Int64_map.split start sd.agenda.indexed_by_start in
     Int64_map.to_seq before
     |> Seq.flat_map (fun (_, task_seg_place_s) ->
-        Task_seg_place_set.to_seq task_seg_place_s
-      )
+        Task_seg_place_set.to_seq task_seg_place_s)
     |> Seq.filter (fun (task_seg_id, _, _) ->
-        let (id1, id2, id3, _, _) = task_seg_id in
+        let id1, id2, id3, _, _ = task_seg_id in
         let task_inst_id = (id1, id2, id3) in
-        match Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress with
+        match
+          Task_inst_id_map.find_opt task_inst_id
+            sd.store.task_inst_id_to_progress
+        with
         | Some progress -> not progress.completed
-        | None -> true
-      )
+        | None -> true)
     |> Seq.filter_map (fun (task_seg_id, place_start, place_end_exc) ->
-          let task_seg_size = place_end_exc -^ place_start in
-          match Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress with
-          | None -> Some (task_seg_id, task_seg_size)
-          | Some progress ->
-            if progress.completed then None
-            else
-              let progress_made = TS.sum_length_list progress.chunks in
-              if progress_made < task_seg_size then
-                Some (task_seg_id, progress_made -^ task_seg_size)
-              else
-                None
-      )
+        let task_seg_size = place_end_exc -^ place_start in
+        match
+          Task_seg_id_map.find_opt task_seg_id
+            sd.store.task_seg_id_to_progress
+        with
+        | None -> Some (task_seg_id, task_seg_size)
+        | Some progress ->
+          if progress.completed then None
+          else
+            let progress_made = TS.sum_length_list progress.chunks in
+            if progress_made < task_seg_size then
+              Some (task_seg_id, progress_made -^ task_seg_size)
+            else None)
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
     let leftover_task_seg_ids = get_leftover_task_segs sched in
     let sched_req_data_seq =
       leftover_task_seg_ids ~start
-      |> Seq.map (fun ((id1, id2, id3, _, _), task_seg_size) : Sched_req.sched_req_data ->
-          let task_inst_id = (id1, id2, id3) in
-           [Sched_req_data_unit_skeleton.Shift {
-               task_seg_related_data_list = [task_inst_id, task_seg_size];
-               time_slots = [(start, end_exc)];
-               incre = 1L
-             }
-           ]
-        )
+      |> Seq.map (fun ((id1, id2, id3, _, _), task_seg_size) ->
+          ( let task_inst_id = (id1, id2, id3) in
+            [
+              Sched_req_data_unit_skeleton.Shift
+                {
+                  task_seg_related_data_list =
+                    [ (task_inst_id, task_seg_size) ];
+                  time_slots = [ (start, end_exc) ];
+                  incre = 1L;
+                };
+            ]
+            : Sched_req.sched_req_data ))
     in
-    Seq.fold_left (fun sched sched_req_data ->
-        let _, sched = Sched_req_store.queue_sched_req_data sched_req_data sched in
-        sched
-      ) sched
-      sched_req_data_seq
+    Seq.fold_left
+      (fun sched sched_req_data ->
+         let _, sched =
+           Sched_req_store.queue_sched_req_data sched_req_data sched
+         in
+         sched)
+      sched sched_req_data_seq
 end
 
 module Serialize = struct

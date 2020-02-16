@@ -107,8 +107,7 @@ module Task_seg_store : sig
   val add_task_segs_via_task_seg_alloc_req_list :
     Task.task_seg_alloc_req list -> sched -> Task.task_seg list * sched
 
-  val add_task_seg_via_task_seg_place :
-    Task.task_seg_place -> sched -> sched
+  val add_task_seg_via_task_seg_place : Task.task_seg_place -> sched -> sched
 
   val add_task_segs_via_task_seg_place_list :
     Task.task_seg_place list -> sched -> sched
@@ -303,13 +302,10 @@ module Recur : sig
 end
 
 module Leftover : sig
-  val get_leftover_task_segs :
-    start:int64 ->
-    sched -> Task.task_seg Seq.t
+  val get_leftover_task_segs : start:int64 -> sched -> Task.task_seg Seq.t
 
   val sched_for_leftover_task_segs :
-    start:int64 -> end_exc:int64
-                     -> sched -> sched
+    start:int64 -> end_exc:int64 -> sched -> sched
 end
 
 module Serialize : sig
