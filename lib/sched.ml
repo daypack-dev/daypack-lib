@@ -1359,15 +1359,14 @@ module Leftover = struct
     |> Seq.flat_map (fun (_, task_seg_place_s) ->
         Task_seg_place_set.to_seq task_seg_place_s
       )
-    |> Seq.filter_map (fun (task_seg_id, place_start, place_end_exc) ->
+    |> Seq.filter (fun (task_seg_id, _, _) ->
         let (id1, id2, id3, _, _) = task_seg_id in
         let task_inst_id = (id1, id2, id3) in
-        let proceed_to_examine_task_seg =
-          match Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress with
-          | Some progress -> not progress.completed
-          | None -> true
-        in
-        if proceed_to_examine_task_seg then (
+        match Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress with
+        | Some progress -> not progress.completed
+        | None -> true
+      )
+    |> Seq.filter_map (fun (task_seg_id, place_start, place_end_exc) ->
           let task_seg_size = place_end_exc -^ place_start in
           match Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress with
           | None -> Some (task_seg_id, task_seg_size)
@@ -1379,9 +1378,6 @@ module Leftover = struct
                 Some (task_seg_id, progress_made -^ task_seg_size)
               else
                 None
-        )
-        else
-          None
       )
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
