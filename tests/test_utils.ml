@@ -10,7 +10,10 @@ module Print_utils = struct
     QCheck.Print.pair Int64.to_string (QCheck.Print.option Int64.to_string)
 
   let int64_int64_option_set s =
-    s |> Daypack_lib.Int64_int64_option_set.to_seq |> List.of_seq |> QCheck.Print.list int64_int64_option
+    s
+    |> Daypack_lib.Int64_int64_option_set.to_seq
+    |> List.of_seq
+    |> QCheck.Print.list int64_int64_option
 
   let time_slots = QCheck.Print.list (QCheck.Print.pair int64 int64)
 
@@ -70,18 +73,17 @@ let nz_pos_int64_gen =
 let nz_pos_int64 = QCheck.make ~print:Print_utils.int64 nz_pos_int64_gen
 
 let pos_int64_int64_option_bound_gen bound =
-  QCheck.Gen.(pair (pos_int64_bound_gen bound)
-                     (opt (pos_int64_bound_gen bound)))
+  QCheck.Gen.(pair (pos_int64_bound_gen bound) (opt (pos_int64_bound_gen bound)))
 
 let nz_pos_int64_int64_option_bound_gen bound =
-  QCheck.Gen.(pair (nz_pos_int64_bound_gen bound)
-                (opt (nz_pos_int64_bound_gen bound)))
+  let open QCheck.Gen in
+  pair (nz_pos_int64_bound_gen bound) (opt (nz_pos_int64_bound_gen bound))
 
 let small_pos_int64_int64_option_gen =
-  QCheck.Gen.(pair (small_pos_int64_gen) (opt small_pos_int64_gen))
+  QCheck.Gen.(pair small_pos_int64_gen (opt small_pos_int64_gen))
 
 let small_nz_pos_int64_int64_option_gen =
-  QCheck.Gen.(pair (small_nz_pos_int64_gen) (opt small_nz_pos_int64_gen))
+  QCheck.Gen.(pair small_nz_pos_int64_gen (opt small_nz_pos_int64_gen))
 
 let pos_int64_int64_option_gen =
   QCheck.Gen.(pair pos_int64_gen (opt pos_int64_gen))
@@ -90,16 +92,19 @@ let pos_int64_int64_option =
   QCheck.make ~print:Print_utils.int64_int64_option pos_int64_int64_option_gen
 
 let small_pos_int64_int64_option =
-  QCheck.make ~print:Print_utils.int64_int64_option small_pos_int64_int64_option_gen
+  QCheck.make ~print:Print_utils.int64_int64_option
+    small_pos_int64_int64_option_gen
 
 let small_nz_pos_int64_int64_option =
-  QCheck.make ~print:Print_utils.int64_int64_option small_nz_pos_int64_int64_option_gen
+  QCheck.make ~print:Print_utils.int64_int64_option
+    small_nz_pos_int64_int64_option_gen
 
 let nz_pos_int64_int64_option_gen =
-    (nz_pos_int64_int64_option_bound_gen (Int64.sub Int64.max_int 1L))
+  nz_pos_int64_int64_option_bound_gen (Int64.sub Int64.max_int 1L)
 
 let nz_pos_int64_int64_option =
-  QCheck.make ~print:Print_utils.int64_int64_option nz_pos_int64_int64_option_gen
+  QCheck.make ~print:Print_utils.int64_int64_option
+    nz_pos_int64_int64_option_gen
 
 let tiny_sorted_time_slots_gen =
   let open QCheck.Gen in
@@ -410,6 +415,16 @@ let pos_int64_set_gen =
 
 let pos_int64_set = QCheck.make ~print:Print_utils.int64_set pos_int64_set_gen
 
+let pos_int64_int64_option_set_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> Daypack_lib.Int64_int64_option_set.of_list l)
+    (list_size (int_bound 100) pos_int64_int64_option_gen)
+
+let pos_int64_int64_option_set =
+  QCheck.make ~print:Print_utils.int64_int64_option_set
+    pos_int64_int64_option_set_gen
+
 let task_seg_place_gen =
   let open QCheck.Gen in
   map3
@@ -523,9 +538,9 @@ let progress = QCheck.make ~print:Print_utils.progress progress_gen
       ( "task_inst_id_to_task_seg_ids",
         "Daypack_lib.Task_inst_id_map.of_seq",
         "Daypack_lib.Task_inst_id_map.to_seq",
-        "(pair task_inst_id_gen pos_int64_set_gen)",
+        "(pair task_inst_id_gen pos_int64_int64_option_set_gen)",
         "(QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string \
-         Print_utils.int64_set)" );
+         Print_utils.int64_int64_option_set)" );
       ( "indexed_by_start",
         "Daypack_lib.Int64_map.of_seq",
         "Daypack_lib.Int64_map.to_seq",
@@ -682,7 +697,8 @@ let task_inst_id_to_task_seg_ids_gen =
   let open QCheck.Gen in
   map
     (fun l -> l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq)
-    (list_size (int_bound 20) (pair task_inst_id_gen pos_int64_set_gen))
+    (list_size (int_bound 20)
+       (pair task_inst_id_gen pos_int64_int64_option_set_gen))
 
 let task_inst_id_to_task_seg_ids =
   QCheck.make
@@ -692,7 +708,7 @@ let task_inst_id_to_task_seg_ids =
         |> List.of_seq
         |> QCheck.Print.list
           (QCheck.Print.pair Daypack_lib.Task.task_inst_id_to_string
-             Print_utils.int64_set))
+             Print_utils.int64_int64_option_set))
     task_inst_id_to_task_seg_ids_gen
 
 let indexed_by_start_gen =

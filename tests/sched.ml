@@ -76,12 +76,12 @@ open Test_utils
     );
     ("task_inst_id_to_task_seg_ids",
      "task_inst_id",
-     "pos_int64_set",
+     "pos_int64_int64_option_set",
      "Daypack_lib.Task_inst_id_map.of_seq",
      "Daypack_lib.Sched.Serialize.pack_task_inst_id_to_task_seg_ids",
      "Daypack_lib.Sched.Deserialize.unpack_task_inst_id_to_task_seg_ids",
      "Daypack_lib.Task_inst_id_map.equal",
-     "Daypack_lib.Int64_set.equal"
+     "Daypack_lib.Int64_int64_option_set.equal"
     );
     ("indexed_by_start",
      "int64",
@@ -317,7 +317,10 @@ let qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids =
 let qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids =
   QCheck.Test.make ~count:5000
     ~name:"qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids"
-    QCheck.(list_of_size Gen.(int_bound 10) (pair task_inst_id pos_int64_set))
+    QCheck.(
+      list_of_size
+        Gen.(int_bound 10)
+        (pair task_inst_id pos_int64_int64_option_set))
     (fun l ->
        let x = l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq in
        let y =
@@ -325,7 +328,8 @@ let qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids =
          |> Daypack_lib.Sched.Serialize.pack_task_inst_id_to_task_seg_ids
          |> Daypack_lib.Sched.Deserialize.unpack_task_inst_id_to_task_seg_ids
        in
-       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal x y)
+       Daypack_lib.Task_inst_id_map.equal
+         Daypack_lib.Int64_int64_option_set.equal x y)
 
 let qc_unpack_is_inverse_of_pack_indexed_by_start =
   QCheck.Test.make ~count:5000

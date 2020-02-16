@@ -315,7 +315,8 @@ module Serialize : sig
     Int64_set.t Task_id_map.t -> (Task_t.task_id * int64 list) list
 
   val pack_task_inst_id_to_task_seg_ids :
-    Int64_int64_option_set.t Task_inst_id_map.t -> (Task_t.task_inst_id * (int64 * int64 option) list) list
+    Int64_int64_option_set.t Task_inst_id_map.t ->
+    (Task_t.task_inst_id * (int64 * int64 option) list) list
 
   val pack_task_seg_id_to_progress :
     Task.progress Task_seg_id_map.t ->
@@ -358,7 +359,8 @@ module Deserialize : sig
     (Task_t.task_id * int64 list) list -> Int64_set.t Task_id_map.t
 
   val unpack_task_inst_id_to_task_seg_ids :
-    (Task_t.task_inst_id * (int64 * int64 option) list) list -> Int64_int64_option_set.t Task_inst_id_map.t
+    (Task_t.task_inst_id * (int64 * int64 option) list) list ->
+    Int64_int64_option_set.t Task_inst_id_map.t
 
   val unpack_task_seg_id_to_progress :
     (Task_t.task_seg_id * Task_t.progress) list ->

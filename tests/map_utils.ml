@@ -123,11 +123,11 @@ open Test_utils
     );
     ("task_inst_id_to_task_seg_ids",
      "task_inst_id_to_task_seg_ids",
-     "Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed",
-     "Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed",
-     "Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed",
+     "Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed",
+     "Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed.add_diff_bucketed",
+     "Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed.sub_diff_bucketed",
      "Daypack_lib.Task_inst_id_map.equal",
-     "Daypack_lib.Int64_set.equal"
+     "Daypack_lib.Int64_int64_option_set.equal"
     );
     ("indexed_by_start",
      "task_seg_place_map",
@@ -597,11 +597,13 @@ let qc_add_diff_bucketed_test_task_inst_id_to_task_seg_ids =
     QCheck.(pair task_inst_id_to_task_seg_ids task_inst_id_to_task_seg_ids)
     (fun (old, x) ->
        let diff =
-         Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+         Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+         .diff_bucketed ~old x
        in
-       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal
-         (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed
-            diff old)
+       Daypack_lib.Task_inst_id_map.equal
+         Daypack_lib.Int64_int64_option_set.equal
+         (Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+          .add_diff_bucketed diff old)
          x)
 
 let qc_add_diff_bucketed_test_indexed_by_start =
@@ -647,11 +649,13 @@ let qc_sub_diff_bucketed_test_task_inst_id_to_task_seg_ids =
     QCheck.(pair task_inst_id_to_task_seg_ids task_inst_id_to_task_seg_ids)
     (fun (old, x) ->
        let diff =
-         Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+         Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+         .diff_bucketed ~old x
        in
-       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal
-         (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed
-            diff x)
+       Daypack_lib.Task_inst_id_map.equal
+         Daypack_lib.Int64_int64_option_set.equal
+         (Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+          .sub_diff_bucketed diff x)
          old)
 
 let qc_sub_diff_bucketed_test_indexed_by_start =
@@ -707,13 +711,15 @@ let qc_sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_task_inst_id_to_ta
     QCheck.(pair task_inst_id_to_task_seg_ids task_inst_id_to_task_seg_ids)
     (fun (old, x) ->
        let diff =
-         Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+         Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+         .diff_bucketed ~old x
        in
-       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal
-         (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed
-            diff
-            (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed
-               diff old))
+       Daypack_lib.Task_inst_id_map.equal
+         Daypack_lib.Int64_int64_option_set.equal
+         (Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+          .sub_diff_bucketed diff
+            (Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+             .add_diff_bucketed diff old))
          old)
 
 let qc_sub_diff_bucketed_is_inverse_of_add_diff_test_bucketed_indexed_by_start =
@@ -772,13 +778,15 @@ let qc_add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_task_inst_id_to_ta
     QCheck.(pair task_inst_id_to_task_seg_ids task_inst_id_to_task_seg_ids)
     (fun (old, x) ->
        let diff =
-         Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.diff_bucketed ~old x
+         Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+         .diff_bucketed ~old x
        in
-       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal
-         (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed
-            diff
-            (Daypack_lib.Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed
-               diff x))
+       Daypack_lib.Task_inst_id_map.equal
+         Daypack_lib.Int64_int64_option_set.equal
+         (Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+          .add_diff_bucketed diff
+            (Daypack_lib.Task_inst_id_map_utils.Int64_int64_option_bucketed
+             .sub_diff_bucketed diff x))
          x)
 
 let qc_add_diff_bucketed_is_inverse_of_sub_diff_test_bucketed_indexed_by_start =
