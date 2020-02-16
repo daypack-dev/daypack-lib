@@ -302,6 +302,11 @@ module Recur : sig
   val instantiate : start:int64 -> end_exc:int64 -> sched -> sched
 end
 
+module Leftover : sig
+  val get_leftover_task_segment_ids :
+    sched -> Task.task_seg_id Seq.t
+end
+
 module Serialize : sig
   val pack_task_store : task_store -> Sched_t.task list
 
