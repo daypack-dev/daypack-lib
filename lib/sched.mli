@@ -303,7 +303,7 @@ module Recur : sig
 end
 
 module Leftover : sig
-  val get_leftover_task_segment_ids :
+  val get_leftover_task_seg_ids :
     sched -> Task.task_seg_id Seq.t
 end
 

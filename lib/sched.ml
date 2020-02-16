@@ -1353,7 +1353,7 @@ module Recur = struct
 end
 
 module Leftover = struct
-  let get_leftover_task_segment_ids ((_sid, sd) : sched) : Task.task_seg_id Seq.t =
+  let get_leftover_task_seg_ids ~start ~end_exc ((_sid, sd) : sched) : Task.task_seg_id Seq.t =
     Task_inst_id_map.to_seq sd.store.task_inst_store
     |> Seq.filter_map (fun (task_inst_id, _) ->
         match Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress with
@@ -1376,6 +1376,26 @@ module Leftover = struct
         | Some progress ->
           not progress.completed
       )
+
+  let sched_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
+    let leftover_task_seg_ids = get_leftover_task_seg_ids sched in
+    let sched_req_data_seq =
+      leftover_task_seg_ids ~start ~end_exc
+      |> Seq.map (fun (id1, id2, id3, _, _) : Sched_req.sched_req_data ->
+          let task_inst_id = (id1, id2, id3) in
+           [Sched_req_data_unit_skeleton.Shift {
+               task_seg_related_data_list = [task_inst_id, 0L];
+               time_slots = [(start, end_exc)];
+               incre = 1L
+             }
+           ]
+        )
+    in
+    Seq.fold_left (fun sched sched_req_data ->
+        let _, sched = Sched_req_store.queue_sched_req_data sched_req_data sched in
+        sched
+      ) sched
+      sched_req_data_seq
 end
 
 module Serialize = struct
