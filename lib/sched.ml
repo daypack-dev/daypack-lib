@@ -862,7 +862,7 @@ module Sched_req_store = struct
            l)
       sched
 
-  let remove_pending_sched_req_if_contains_matching_task_seg
+  let remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
       (f : Task.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
     ( sid,
       {
@@ -874,19 +874,20 @@ module Sched_req_store = struct
               sd.store.sched_req_pending_store
               |> Sched_req_id_map.to_seq
               |> Seq.filter (fun (_id, sched_req_data) ->
-                  List.exists
-                    (fun sched_req_data_unit ->
-                       let data =
-                         Sched_req_data_unit_skeleton.get_data
-                           sched_req_data_unit
-                       in
-                       List.exists f data)
-                    sched_req_data)
+                  not
+                    (List.exists
+                       (fun sched_req_data_unit ->
+                          let data =
+                            Sched_req_data_unit_skeleton.get_data
+                              sched_req_data_unit
+                          in
+                          List.exists f data)
+                       sched_req_data))
               |> Sched_req_id_map.of_seq;
           };
       } )
 
-  let remove_pending_sched_req_data_unit_if_contains_matching_task_seg
+  let remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
       (f : Task.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
     ( sid,
       {
@@ -927,14 +928,15 @@ module Sched_req_store = struct
               sd.store.sched_req_record_store
               |> Sched_req_id_map.to_seq
               |> Seq.filter (fun (_id, sched_req_record_data) ->
-                  List.exists
-                    (fun sched_req_record_data_unit ->
-                       let data =
-                         Sched_req_data_unit_skeleton.get_data
-                           sched_req_record_data_unit
-                       in
-                       List.exists f data)
-                    sched_req_record_data)
+                  not
+                    (List.exists
+                       (fun sched_req_record_data_unit ->
+                          let data =
+                            Sched_req_data_unit_skeleton.get_data
+                              sched_req_record_data_unit
+                          in
+                          List.exists f data)
+                       sched_req_record_data))
               |> Sched_req_id_map.of_seq;
           };
       } )
@@ -976,7 +978,8 @@ module Sched_req_store = struct
          Printf.printf "let remove_%s_by_task_id\n" typ;
          Printf.printf
            "  ((id1, id2) : Task.task_id) (sched : sched) : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
+         Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
+           typ;
          Printf.printf "  (fun ((id1', id2', _id3'), _data) ->\n";
          Printf.printf "    id1 = id1' && id2 = id2')\n";
          Printf.printf "    sched\n";
@@ -984,7 +987,8 @@ module Sched_req_store = struct
          Printf.printf "let remove_%s_by_task_inst_id\n" typ;
          Printf.printf
            "  ((id1, id2, id3) : Task.task_inst_id) (sched : sched) : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
+         Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
+           typ;
          Printf.printf "  (fun ((id1', id2', id3'), _data) ->\n";
          Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
          Printf.printf "    sched\n";
@@ -993,7 +997,8 @@ module Sched_req_store = struct
          Printf.printf
            "  ((id1, id2, id3, _id4, _id5) : Task.task_seg_id) (sched : sched) \
             : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
+         Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
+           typ;
          Printf.printf "  (fun ((id1', id2', id3'), _data) ->\n";
          Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
          Printf.printf "    sched\n")
@@ -1002,40 +1007,40 @@ module Sched_req_store = struct
 
   let remove_pending_sched_req_by_task_id ((id1, id2) : Task.task_id)
       (sched : sched) : sched =
-    remove_pending_sched_req_if_contains_matching_task_seg
+    remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', _id3'), _data) -> id1 = id1' && id2 = id2')
       sched
 
   let remove_pending_sched_req_by_task_inst_id
       ((id1, id2, id3) : Task.task_inst_id) (sched : sched) : sched =
-    remove_pending_sched_req_if_contains_matching_task_seg
+    remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', id3'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3')
       sched
 
   let remove_pending_sched_req_by_task_seg_id
       ((id1, id2, id3, _id4, _id5) : Task.task_seg_id) (sched : sched) : sched =
-    remove_pending_sched_req_if_contains_matching_task_seg
+    remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', id3'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3')
       sched
 
   let remove_pending_sched_req_data_unit_by_task_id ((id1, id2) : Task.task_id)
       (sched : sched) : sched =
-    remove_pending_sched_req_data_unit_if_contains_matching_task_seg
+    remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', _id3'), _data) -> id1 = id1' && id2 = id2')
       sched
 
   let remove_pending_sched_req_data_unit_by_task_inst_id
       ((id1, id2, id3) : Task.task_inst_id) (sched : sched) : sched =
-    remove_pending_sched_req_data_unit_if_contains_matching_task_seg
+    remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', id3'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3')
       sched
 
   let remove_pending_sched_req_data_unit_by_task_seg_id
       ((id1, id2, id3, _id4, _id5) : Task.task_seg_id) (sched : sched) : sched =
-    remove_pending_sched_req_data_unit_if_contains_matching_task_seg
+    remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', id3'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3')
       sched
@@ -1065,12 +1070,13 @@ module Sched_req_store = struct
 
          Printf.printf "let remove_%s_by_task_seg_id\n" typ;
          Printf.printf
-           "  ((id1, id2, id3, id4, _id5) : Task.task_seg_id) (sched : sched) : \
+           "  ((id1, id2, id3, id4, id5) : Task.task_seg_id) (sched : sched) : \
             sched =\n";
          Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
-         Printf.printf "  (fun ((id1', id2', id3', id4', _id5'), _data) ->\n";
+         Printf.printf "  (fun ((id1', id2', id3', id4', id5'), _data) ->\n";
          Printf.printf
-           "    id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')\n";
+           "    id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = \
+            id5')\n";
          Printf.printf "    sched\n")
       typ_list
   *)
@@ -1090,10 +1096,10 @@ module Sched_req_store = struct
       sched
 
   let remove_sched_req_record_by_task_seg_id
-      ((id1, id2, id3, id4, _id5) : Task.task_seg_id) (sched : sched) : sched =
+      ((id1, id2, id3, id4, id5) : Task.task_seg_id) (sched : sched) : sched =
     remove_sched_req_record_if_contains_matching_task_seg
-      (fun ((id1', id2', id3', id4', _id5'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')
+      (fun ((id1', id2', id3', id4', id5'), _data) ->
+         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = id5')
       sched
 
   let remove_sched_req_record_data_unit_by_task_id ((id1, id2) : Task.task_id)
@@ -1111,10 +1117,10 @@ module Sched_req_store = struct
       sched
 
   let remove_sched_req_record_data_unit_by_task_seg_id
-      ((id1, id2, id3, id4, _id5) : Task.task_seg_id) (sched : sched) : sched =
+      ((id1, id2, id3, id4, id5) : Task.task_seg_id) (sched : sched) : sched =
     remove_sched_req_record_data_unit_if_contains_matching_task_seg
-      (fun ((id1', id2', id3', id4', _id5'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')
+      (fun ((id1', id2', id3', id4', id5'), _data) ->
+         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = id5')
       sched
 
   (*$*)
@@ -2244,6 +2250,14 @@ module Print = struct
            ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.sched_req_pending_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "scheduling request record :\n";
+    Sched_req_id_map.iter
+      (fun id data ->
+         Sched_req.Print.debug_string_of_sched_req_record
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
+         |> ignore)
+      sd.store.sched_req_record_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks :\n";
     Task_id_map.iter
       (fun id data ->

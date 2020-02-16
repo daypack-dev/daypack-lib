@@ -242,10 +242,10 @@ module Sched_req_store : sig
   val find_sched_req_record_by_task_seg_id :
     Task.task_seg_id -> sched -> Sched_req.sched_req_record Seq.t
 
-  val remove_pending_sched_req_if_contains_matching_task_seg :
+  val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
     (Task.task_seg_alloc_req -> bool) -> sched -> sched
 
-  val remove_pending_sched_req_data_unit_if_contains_matching_task_seg :
+  val remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req :
     (Task.task_seg_alloc_req -> bool) -> sched -> sched
 
   val remove_sched_req_record_if_contains_matching_task_seg :
