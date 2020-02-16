@@ -289,7 +289,9 @@ let shift_list ~offset (time_slots : t list) : t list =
     time_slots
 
 let equal (time_slots1 : t list) (time_slots2 : t list) : bool =
-  List.sort_uniq compare time_slots1 = List.sort_uniq compare time_slots2
+  let time_slots1 = time_slots1 |> List.to_seq |> normalize |> List.of_seq in
+  let time_slots2 = time_slots2 |> List.to_seq |> normalize |> List.of_seq in
+  time_slots1 = time_slots2
 
 let a_is_subset_of_b ~(a : t Seq.t) ~(b : t Seq.t) : bool =
   let inter = intersect a b |> List.of_seq in
