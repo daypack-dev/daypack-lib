@@ -47,7 +47,7 @@ type store = {
   (* transit_time_store : transit_time_store; *)
   user_id_to_task_ids : Int64_set.t User_id_map.t;
   task_id_to_task_inst_ids : Int64_set.t Task_id_map.t;
-  task_inst_id_to_task_seg_ids : Int64_set.t Task_inst_id_map.t;
+  task_inst_id_to_task_seg_ids : Int64_int64_option_set.t Task_inst_id_map.t;
   sched_req_ids : Int64_set.t;
   sched_req_pending_store : sched_req_store;
   sched_req_record_store : sched_req_record_store;
@@ -65,7 +65,7 @@ type store_diff = {
   task_id_to_task_inst_ids_diff :
     Task_id_map_utils.Int64_bucketed.diff_bucketed;
   task_inst_id_to_task_seg_ids_diff :
-    Task_inst_id_map_utils.Int64_bucketed.diff_bucketed;
+    Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed;
   sched_req_ids_diff : Int64_set_utils.diff;
   sched_req_pending_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
