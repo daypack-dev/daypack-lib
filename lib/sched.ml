@@ -1353,38 +1353,45 @@ module Recur = struct
 end
 
 module Leftover = struct
-  let get_leftover_task_seg_ids ~start ~end_exc ((_sid, sd) : sched) : Task.task_seg_id Seq.t =
-    Task_inst_id_map.to_seq sd.store.task_inst_store
-    |> Seq.filter_map (fun (task_inst_id, _) ->
-        match Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress with
-        | None -> Some task_inst_id
-        | Some progress -> if progress.completed then None else Some task_inst_id
+  let get_leftover_task_segs ~start ((_sid, sd) : sched) : Task.task_seg Seq.t =
+    let before, _, _ = Int64_map.split start sd.agenda.indexed_by_start in
+    Int64_map.to_seq before
+    |> Seq.flat_map (fun (_, task_seg_place_s) ->
+        Task_seg_place_set.to_seq task_seg_place_s
       )
-    |> Seq.flat_map (fun (id1, id2, id3) ->
-        match Task_inst_id_map.find_opt (id1, id2, id3) sd.store.task_inst_id_to_task_seg_ids with
-        | None -> Seq.empty
-        | Some ids ->
-            ids
-            |> Int64_int64_option_set.to_seq
-            |> Seq.map (fun (task_seg_part, task_seg_sub_id) ->
-                (id1, id2, id3, task_seg_part, task_seg_sub_id)
-              )
-      )
-    |> Seq.filter (fun task_seg_id ->
-        match Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress with
-        | None -> true
-        | Some progress ->
-          not progress.completed
+    |> Seq.filter_map (fun (task_seg_id, place_start, place_end_exc) ->
+        let (id1, id2, id3, _, _) = task_seg_id in
+        let task_inst_id = (id1, id2, id3) in
+        let proceed_to_examine_task_seg =
+          match Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress with
+          | Some progress -> not progress.completed
+          | None -> true
+        in
+        if proceed_to_examine_task_seg then (
+          let task_seg_size = place_end_exc -^ place_start in
+          match Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress with
+          | None -> Some (task_seg_id, task_seg_size)
+          | Some progress ->
+            if progress.completed then None
+            else
+              let progress_made = TS.sum_length_list progress.chunks in
+              if progress_made < task_seg_size then
+                Some (task_seg_id, progress_made -^ task_seg_size)
+              else
+                None
+        )
+        else
+          None
       )
 
-  let sched_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
-    let leftover_task_seg_ids = get_leftover_task_seg_ids sched in
+  let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
+    let leftover_task_seg_ids = get_leftover_task_segs sched in
     let sched_req_data_seq =
-      leftover_task_seg_ids ~start ~end_exc
-      |> Seq.map (fun (id1, id2, id3, _, _) : Sched_req.sched_req_data ->
+      leftover_task_seg_ids ~start
+      |> Seq.map (fun ((id1, id2, id3, _, _), task_seg_size) : Sched_req.sched_req_data ->
           let task_inst_id = (id1, id2, id3) in
            [Sched_req_data_unit_skeleton.Shift {
-               task_seg_related_data_list = [task_inst_id, 0L];
+               task_seg_related_data_list = [task_inst_id, task_seg_size];
                time_slots = [(start, end_exc)];
                incre = 1L
              }

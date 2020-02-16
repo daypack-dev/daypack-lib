@@ -303,8 +303,13 @@ module Recur : sig
 end
 
 module Leftover : sig
-  val get_leftover_task_seg_ids :
-    sched -> Task.task_seg_id Seq.t
+  val get_leftover_task_segs :
+    start:int64 ->
+    sched -> Task.task_seg Seq.t
+
+  val sched_for_leftover_task_segs :
+    start:int64 -> end_exc:int64
+                     -> sched -> sched
 end
 
 module Serialize : sig
