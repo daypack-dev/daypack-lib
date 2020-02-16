@@ -255,6 +255,32 @@ module Id = struct
       |> Int64_int64_option_set.to_seq
       |> Seq.map (fun (id, opt) -> (id1, id2, id3, id, opt))
 
+  let add_task_seg_id ((id1, id2, id3, id4, id5) : Task.task_seg_id)
+      ((sid, sd) : sched) : sched =
+    let task_inst_id = (id1, id2, id3) in
+    let task_seg_ids =
+      match Task_inst_id_map.find_opt (id1, id2, id3) sd.store.task_inst_id_to_task_seg_ids with
+      | None ->
+        Int64_int64_option_set.empty |> Int64_int64_option_set.add (id4, id5)
+      | Some s ->
+        (match id5 with
+         | None -> s
+         | Some _ ->
+           Int64_int64_option_set.filter (fun (id4', id5') ->
+               not (id4' = id4 && id5' = None)
+             ) s
+        )
+        |> Int64_int64_option_set.add (id4, id5)
+    in
+    (sid,
+     { sd with
+       store = {
+         sd.store with
+         task_inst_id_to_task_seg_ids =
+           Task_inst_id_map.add task_inst_id task_seg_ids sd.store.task_inst_id_to_task_seg_ids
+       }
+     })
+
   let remove_task_seg_id
       ((user_id, task_part, task_inst_part, task_seg_part, task_seg_sub_id) :
          Task.task_seg_id) ((sid, sd) : sched) : sched =
