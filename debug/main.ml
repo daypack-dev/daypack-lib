@@ -574,7 +574,8 @@ let debug_sched_usage_simulation () =
     | Error () -> print_endline "Scheduling failed" );
   print_endline "=====";
   print_endline "Removing task/task inst";
-  Sched_ver_history.Maybe_append_to_head.remove_task_inst (0L, 0L, 0L) sched_ver_history;
+  Sched_ver_history.Maybe_append_to_head.remove_task_inst (0L, 0L, 0L)
+    sched_ver_history;
   (* Sched_ver_history.Maybe_append_to_head.remove_task (0L, 0L) sched_ver_history; *)
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
