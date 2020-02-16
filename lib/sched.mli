@@ -32,7 +32,7 @@ type store = {
   task_seg_store : task_seg_store;
   user_id_to_task_ids : Int64_set.t User_id_map.t;
   task_id_to_task_inst_ids : Int64_set.t Task_id_map.t;
-  task_inst_id_to_task_seg_ids : Int64_set.t Task_inst_id_map.t;
+  task_inst_id_to_task_seg_ids : Int64_int64_option_set.t Task_inst_id_map.t;
   sched_req_ids : Int64_set.t;
   sched_req_pending_store : sched_req_store;
   sched_req_record_store : sched_req_record_store;
@@ -49,7 +49,7 @@ type store_diff = {
   task_id_to_task_inst_ids_diff :
     Task_id_map_utils.Int64_bucketed.diff_bucketed;
   task_inst_id_to_task_seg_ids_diff :
-    Task_inst_id_map_utils.Int64_bucketed.diff_bucketed;
+    Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed;
   sched_req_ids_diff : Int64_set_utils.diff;
   sched_req_pending_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
@@ -315,7 +315,7 @@ module Serialize : sig
     Int64_set.t Task_id_map.t -> (Task_t.task_id * int64 list) list
 
   val pack_task_inst_id_to_task_seg_ids :
-    Int64_set.t Task_inst_id_map.t -> (Task_t.task_inst_id * int64 list) list
+    Int64_int64_option_set.t Task_inst_id_map.t -> (Task_t.task_inst_id * (int64 * int64 option) list) list
 
   val pack_task_seg_id_to_progress :
     Task.progress Task_seg_id_map.t ->
@@ -358,7 +358,7 @@ module Deserialize : sig
     (Task_t.task_id * int64 list) list -> Int64_set.t Task_id_map.t
 
   val unpack_task_inst_id_to_task_seg_ids :
-    (Task_t.task_inst_id * int64 list) list -> Int64_set.t Task_inst_id_map.t
+    (Task_t.task_inst_id * (int64 * int64 option) list) list -> Int64_int64_option_set.t Task_inst_id_map.t
 
   val unpack_task_seg_id_to_progress :
     (Task_t.task_seg_id * Task_t.progress) list ->

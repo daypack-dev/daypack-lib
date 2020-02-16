@@ -267,14 +267,17 @@ module Bucket_store = struct
       {
         f_pack_suffix = "task_inst_id_to_task_seg_ids";
         f_unpack_suffix = "task_inst_id_to_task_seg_ids";
-        store_typ = "Int64_set.t Task_inst_id_map.t";
-        diff_typ = "Task_inst_id_map_utils.Int64_bucketed.diff_bucketed";
-        ret_typ = "(Task_t.task_inst_id * int64 list) list";
-        diff_ret_typ = "(Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed";
+        store_typ = "Int64_int64_option_set.t Task_inst_id_map.t";
+        diff_typ =
+          "Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed";
+        ret_typ = "(Task_t.task_inst_id * (int64 * int64 option) list) list";
+        diff_ret_typ =
+          "(Task_t.task_inst_id, int64 * int64 option) \
+           Map_utils_t.diff_bucketed";
         f_to_seq = "Task_inst_id_map.to_seq";
         f_of_seq = "Task_inst_id_map.of_seq";
-        f_inner_pack = Some "Int64_set.Serialize.pack";
-        f_inner_unpack = Some "Int64_set.Deserialize.unpack";
+        f_inner_pack = Some "Int64_int64_option_set.Serialize.pack";
+        f_inner_unpack = Some "Int64_int64_option_set.Deserialize.unpack";
       };
       (* {
        *   f_pack_suffix = "progress_indexed_by_start";
@@ -482,10 +485,10 @@ let store_fields =
       "Task_id_map_utils.Int64_bucketed.sub_diff_bucketed" );
     ( "task_inst_id_to_task_seg_ids",
       "task_inst_id_to_task_seg_ids",
-      "Task_inst_id_map.equal Int64_set.equal",
-      "Task_inst_id_map_utils.Int64_bucketed.diff_bucketed",
-      "Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed",
-      "Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed" );
+      "Task_inst_id_map.equal Int64_int64_option_set.equal",
+      "Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed",
+      "Task_inst_id_map_utils.Int64_int64_option_bucketed.add_diff_bucketed",
+      "Task_inst_id_map_utils.Int64_int64_option_bucketed.sub_diff_bucketed" );
     ( "sched_req_ids",
       "sched_req_ids",
       "Int64_set.equal",

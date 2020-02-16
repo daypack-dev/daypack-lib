@@ -125,6 +125,9 @@ module Id = struct
 
   let incre_int64_id x = match x with None -> 0L | Some x -> Int64.succ x
 
+  let incre_int64_int64_option_id x =
+    match x with None -> (0L, None) | Some (id, _) -> (Int64.succ id, None)
+
   let get_new_task_id (user_id : Task.user_id) ((sid, sd) : sched) :
     Task.task_id * sched =
     let task_ids =
@@ -217,12 +220,17 @@ module Id = struct
     let task_seg_ids =
       Task_inst_id_map.find_opt task_inst_id
         sd.store.task_inst_id_to_task_seg_ids
-      |> Option.value ~default:Int64_set.empty
+      |> Option.value ~default:Int64_int64_option_set.empty
     in
-    let task_seg_part = Int64_set.max_elt_opt task_seg_ids |> incre_int64_id in
-    let task_seg_ids = Int64_set.add task_seg_part task_seg_ids in
+    let task_seg_part, task_seg_sub_id =
+      Int64_int64_option_set.max_elt_opt task_seg_ids
+      |> incre_int64_int64_option_id
+    in
+    let task_seg_ids =
+      Int64_int64_option_set.add (task_seg_part, task_seg_sub_id) task_seg_ids
+    in
     let user_id, task_part, task_inst_part = task_inst_id in
-    ( (user_id, task_part, task_inst_part, task_seg_part, None),
+    ( (user_id, task_part, task_inst_part, task_seg_part, task_seg_sub_id),
       ( sid,
         {
           sd with
@@ -243,10 +251,12 @@ module Id = struct
     with
     | None -> Seq.empty
     | Some s ->
-      s |> Int64_set.to_seq |> Seq.map (fun id -> (id1, id2, id3, id, None))
+      s
+      |> Int64_int64_option_set.to_seq
+      |> Seq.map (fun (id, opt) -> (id1, id2, id3, id, opt))
 
   let remove_task_seg_id
-      ((user_id, task_part, task_inst_part, task_seg_part, _) :
+      ((user_id, task_part, task_inst_part, task_seg_part, task_seg_sub_id) :
          Task.task_seg_id) ((sid, sd) : sched) : sched =
     let task_inst_id = (user_id, task_part, task_inst_part) in
     match
@@ -255,7 +265,11 @@ module Id = struct
     with
     | None -> (sid, sd)
     | Some task_seg_ids ->
-      let task_seg_ids = Int64_set.remove task_seg_part task_seg_ids in
+      let task_seg_ids =
+        Int64_int64_option_set.remove
+          (task_seg_part, task_seg_sub_id)
+          task_seg_ids
+      in
       ( sid,
         {
           sd with
@@ -1255,9 +1269,8 @@ module Recur = struct
                   (fun _sched_req_id sched_req_data ->
                      Sched_req_utils.sched_req_template_matches_sched_req_data
                        sched_req_template sched_req_data)
-                  sd.store.sched_req_pending_store )
-              )
-              task_inst_ids
+                  sd.store.sched_req_pending_store ))
+        task_inst_ids
 
   let instantiate ~start ~end_exc ((sid, sd) : sched) : sched =
     Task_id_map.fold
@@ -1460,16 +1473,17 @@ module Serialize = struct
       removed = pack_task_id_to_task_inst_ids x.removed;
     }
 
-  let pack_task_inst_id_to_task_seg_ids (x : Int64_set.t Task_inst_id_map.t) :
-    (Task_t.task_inst_id * int64 list) list =
+  let pack_task_inst_id_to_task_seg_ids
+      (x : Int64_int64_option_set.t Task_inst_id_map.t) :
+    (Task_t.task_inst_id * (int64 * int64 option) list) list =
     x
     |> Task_inst_id_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) -> (id, Int64_int64_option_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_task_inst_id_to_task_seg_ids_diff
-      (x : Task_inst_id_map_utils.Int64_bucketed.diff_bucketed) :
-    (Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed =
+      (x : Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed) :
+    (Task_t.task_inst_id, int64 * int64 option) Map_utils_t.diff_bucketed =
     {
       added = pack_task_inst_id_to_task_seg_ids x.added;
       removed = pack_task_inst_id_to_task_seg_ids x.removed;
@@ -1757,16 +1771,18 @@ module Deserialize = struct
     }
 
   let unpack_task_inst_id_to_task_seg_ids
-      (x : (Task_t.task_inst_id * int64 list) list) :
-    Int64_set.t Task_inst_id_map.t =
+      (x : (Task_t.task_inst_id * (int64 * int64 option) list) list) :
+    Int64_int64_option_set.t Task_inst_id_map.t =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        (id, Int64_int64_option_set.Deserialize.unpack y))
     |> Task_inst_id_map.of_seq
 
   let unpack_task_inst_id_to_task_seg_ids_diff
-      (x : (Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed) :
-    Task_inst_id_map_utils.Int64_bucketed.diff_bucketed =
+      (x :
+         (Task_t.task_inst_id, int64 * int64 option) Map_utils_t.diff_bucketed) :
+    Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed =
     {
       added = unpack_task_inst_id_to_task_seg_ids x.added;
       removed = unpack_task_inst_id_to_task_seg_ids x.removed;
@@ -1917,7 +1933,7 @@ module Equal = struct
       store2.user_id_to_task_ids
     && Task_id_map.equal Int64_set.equal store1.task_id_to_task_inst_ids
       store2.task_id_to_task_inst_ids
-    && Task_inst_id_map.equal Int64_set.equal
+    && Task_inst_id_map.equal Int64_int64_option_set.equal
       store1.task_inst_id_to_task_seg_ids store2.task_inst_id_to_task_seg_ids
     && Int64_set.equal store1.sched_req_ids store2.sched_req_ids
     && Sched_req_id_map.equal
@@ -1974,7 +1990,7 @@ module Diff = struct
         Task_id_map_utils.Int64_bucketed.diff_bucketed
           ~old:store1.task_id_to_task_inst_ids store2.task_id_to_task_inst_ids;
       task_inst_id_to_task_seg_ids_diff =
-        Task_inst_id_map_utils.Int64_bucketed.diff_bucketed
+        Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed
           ~old:store1.task_inst_id_to_task_seg_ids
           store2.task_inst_id_to_task_seg_ids;
       sched_req_ids_diff =
@@ -2011,7 +2027,7 @@ module Diff = struct
         Task_id_map_utils.Int64_bucketed.add_diff_bucketed
           diff.task_id_to_task_inst_ids_diff store.task_id_to_task_inst_ids;
       task_inst_id_to_task_seg_ids =
-        Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed
+        Task_inst_id_map_utils.Int64_int64_option_bucketed.add_diff_bucketed
           diff.task_inst_id_to_task_seg_ids_diff
           store.task_inst_id_to_task_seg_ids;
       sched_req_ids =
@@ -2048,7 +2064,7 @@ module Diff = struct
         Task_id_map_utils.Int64_bucketed.sub_diff_bucketed
           diff.task_id_to_task_inst_ids_diff store.task_id_to_task_inst_ids;
       task_inst_id_to_task_seg_ids =
-        Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed
+        Task_inst_id_map_utils.Int64_int64_option_bucketed.sub_diff_bucketed
           diff.task_inst_id_to_task_seg_ids_diff
           store.task_inst_id_to_task_seg_ids;
       sched_req_ids =

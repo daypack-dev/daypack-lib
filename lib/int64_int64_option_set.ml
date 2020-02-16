@@ -5,7 +5,8 @@ include Set.Make (struct
   end)
 
 module Serialize = struct
-  let pack (set : t) : (int64 * int64 option) list = set |> to_seq |> List.of_seq
+  let pack (set : t) : (int64 * int64 option) list =
+    set |> to_seq |> List.of_seq
 end
 
 module Deserialize = struct
