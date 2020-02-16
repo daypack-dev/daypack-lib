@@ -397,6 +397,29 @@ module Task_seg_store = struct
       ([], sched) reqs
     |> fun (l, t) -> (List.rev l, t)
 
+  let add_task_seg_via_task_seg_place
+    ((id, _, _) : Task.task_seg_place)
+    (sched : sched) : sched =
+    Id.add_task_seg_id id sched
+
+  let add_task_segs_via_task_seg_place_list
+      (place_s : Task.task_seg_place list)
+      (sched : sched) : sched =
+    List.fold_left (fun sched place ->
+        add_task_seg_via_task_seg_place place sched
+      )
+      sched
+      place_s
+
+  let add_task_segs_via_task_seg_place_seq
+      (place_s : Task.task_seg_place Seq.t)
+      (sched : sched) : sched =
+    Seq.fold_left (fun sched place ->
+        add_task_seg_via_task_seg_place place sched
+      )
+      sched
+      place_s
+
   let find_task_seg_opt (task_seg_id : Task.task_seg_id) ((_, sd) : sched) :
     Task.task_seg_size option =
     Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_store
@@ -545,7 +568,7 @@ end
 
 module Agenda = struct
   let add_task_seg_place
-      (((id1, id2, id3, id4, id5), start, end_exc) : Task.task_seg_place)
+      (((id1, id2, id3, id4, id5), start, end_exc) as task_seg_place : Task.task_seg_place)
       ((sid, sd) : sched) : sched =
     let indexed_by_start =
       Int64_map.update start
@@ -571,6 +594,7 @@ module Agenda = struct
         with
           agenda = { indexed_by_start };
       } )
+    |> Task_seg_store.add_task_seg_via_task_seg_place task_seg_place
 
   let add_task_seg_place_list (task_seg_place_s : Task.task_seg_place list)
       (sched : sched) : sched =

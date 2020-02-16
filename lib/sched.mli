@@ -107,6 +107,15 @@ module Task_seg_store : sig
   val add_task_segs_via_task_seg_alloc_req_list :
     Task.task_seg_alloc_req list -> sched -> Task.task_seg list * sched
 
+  val add_task_seg_via_task_seg_place :
+    Task.task_seg_place -> sched -> sched
+
+  val add_task_segs_via_task_seg_place_list :
+    Task.task_seg_place list -> sched -> sched
+
+  val add_task_segs_via_task_seg_place_seq :
+    Task.task_seg_place Seq.t -> sched -> sched
+
   val find_task_seg_opt : Task.task_seg_id -> sched -> Task.task_seg_size option
 
   val remove_task_seg : Task.task_seg_id -> sched -> sched
