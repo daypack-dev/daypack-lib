@@ -500,6 +500,7 @@ module Task_inst_store = struct
                 sd.store.task_inst_id_to_task_seg_ids;
           };
       } )
+    |> Id.remove_task_inst_id task_inst_id
 
   let remove_task_inst_strict (task_inst_id : Task.task_inst_id) (sched : sched)
     : (sched, unit) result =
