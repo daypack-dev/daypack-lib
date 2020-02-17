@@ -875,14 +875,16 @@ module Sched_req_store = struct
               |> Sched_req_id_map.to_seq
               |> Seq.filter (fun (_id, sched_req_data) ->
                   not
-                    (List.exists
-                       (fun sched_req_data_unit ->
-                          let data =
-                            Sched_req_data_unit_skeleton.get_data
-                              sched_req_data_unit
-                          in
-                          List.exists f data)
-                       sched_req_data))
+                    (Sched_req_data_unit_skeleton.list_contains_matching_data f sched_req_data)
+                    (* (List.exists
+                     *    (fun sched_req_data_unit ->
+                     *       let data =
+                     *         Sched_req_data_unit_skeleton.get_data
+                     *           sched_req_data_unit
+                     *       in
+                     *       List.exists f data)
+                     *    sched_req_data) *)
+                )
               |> Sched_req_id_map.of_seq;
           };
       } )
@@ -929,14 +931,16 @@ module Sched_req_store = struct
               |> Sched_req_id_map.to_seq
               |> Seq.filter (fun (_id, sched_req_record_data) ->
                   not
-                    (List.exists
-                       (fun sched_req_record_data_unit ->
-                          let data =
-                            Sched_req_data_unit_skeleton.get_data
-                              sched_req_record_data_unit
-                          in
-                          List.exists f data)
-                       sched_req_record_data))
+                    (Sched_req_data_unit_skeleton.list_contains_matching_data f sched_req_record_data)
+                    (* (List.exists
+                     *    (fun sched_req_record_data_unit ->
+                     *       let data =
+                     *         Sched_req_data_unit_skeleton.get_data
+                     *           sched_req_record_data_unit
+                     *       in
+                     *       List.exists f data)
+                     *    sched_req_record_data) *)
+                )
               |> Sched_req_id_map.of_seq;
           };
       } )
