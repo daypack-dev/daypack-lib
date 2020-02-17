@@ -30,6 +30,10 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 - Manual scheduling
 
+- Recurrence
+
+  - All automatic scheduling strategies are available for recurring tasks as well
+
 - Backup plan
 
   - You can specify multiple scheduling strategies for a given scheduling request,
