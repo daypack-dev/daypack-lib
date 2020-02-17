@@ -876,14 +876,6 @@ module Sched_req_store = struct
               |> Seq.filter (fun (_id, sched_req_data) ->
                   not
                     (Sched_req_data_unit_skeleton.list_contains_matching_inner_data f sched_req_data)
-                    (* (List.exists
-                     *    (fun sched_req_data_unit ->
-                     *       let data =
-                     *         Sched_req_data_unit_skeleton.get_inner_data
-                     *           sched_req_data_unit
-                     *       in
-                     *       List.exists f data)
-                     *    sched_req_data) *)
                 )
               |> Sched_req_id_map.of_seq;
           };
@@ -901,19 +893,6 @@ module Sched_req_store = struct
               sd.store.sched_req_pending_store
               |> Sched_req_id_map.to_seq
               |> Seq.filter_map (fun (id, sched_req_data) ->
-                  (* let sched_req_data =
-                   *   List.filter
-                   *     (fun sched_req_data_unit ->
-                   *        let data =
-                   *          Sched_req_data_unit_skeleton.get_inner_data
-                   *            sched_req_data_unit
-                   *        in
-                   *        not (List.exists f data))
-                   *     sched_req_data
-                   * in
-                   * match sched_req_data with
-                   * | [] -> None
-                   * | _ -> Some (id, sched_req_data) *)
                   match Sched_req_data_unit_skeleton.remove_data_units_with_matching_inner_data f sched_req_data with
                   | [] -> None
                   | sched_req_data -> Some (id, sched_req_data)
@@ -936,14 +915,6 @@ module Sched_req_store = struct
               |> Seq.filter (fun (_id, sched_req_record_data) ->
                   not
                     (Sched_req_data_unit_skeleton.list_contains_matching_inner_data f sched_req_record_data)
-                    (* (List.exists
-                     *    (fun sched_req_record_data_unit ->
-                     *       let data =
-                     *         Sched_req_data_unit_skeleton.get_inner_data
-                     *           sched_req_record_data_unit
-                     *       in
-                     *       List.exists f data)
-                     *    sched_req_record_data) *)
                 )
               |> Sched_req_id_map.of_seq;
           };
@@ -961,19 +932,6 @@ module Sched_req_store = struct
               sd.store.sched_req_record_store
               |> Sched_req_id_map.to_seq
               |> Seq.filter_map (fun (id, sched_req_record_data) ->
-                  (* let sched_req_record_data =
-                   *   List.filter
-                   *     (fun sched_req_record_data_unit ->
-                   *        let data =
-                   *          Sched_req_data_unit_skeleton.get_inner_data
-                   *            sched_req_record_data_unit
-                   *        in
-                   *        not (List.exists f data))
-                   *     sched_req_record_data
-                   * in
-                   * match sched_req_record_data with
-                   * | [] -> None
-                   * | _ -> Some (id, sched_req_record_data) *)
                   match Sched_req_data_unit_skeleton.remove_data_units_with_matching_inner_data f sched_req_record_data with
                   | [] -> None
                   | sched_req_record_data -> Some (id, sched_req_record_data)
