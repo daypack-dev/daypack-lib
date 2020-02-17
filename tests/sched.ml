@@ -46,6 +46,13 @@ open Test_utils
      "Daypack_lib.Sched.Deserialize.unpack_quota",
      "Daypack_lib.Task_inst_id_map.equal"
     );
+    ("task_seg_id_to_progress",
+     "(pair task_seg_id progress)",
+     "Daypack_lib.Task_seg_id_map.of_seq",
+     "Daypack_lib.Sched.Serialize.pack_task_seg_id_to_progress",
+     "Daypack_lib.Sched.Deserialize.unpack_task_seg_id_to_progress",
+     "Daypack_lib.Task_seg_id_map.equal"
+    );
   ] in
 
   let unpack_pack_bucket_store_list = [
@@ -69,21 +76,12 @@ open Test_utils
     );
     ("task_inst_id_to_task_seg_ids",
      "task_inst_id",
-     "pos_int64_set",
+     "pos_int64_int64_option_set",
      "Daypack_lib.Task_inst_id_map.of_seq",
      "Daypack_lib.Sched.Serialize.pack_task_inst_id_to_task_seg_ids",
      "Daypack_lib.Sched.Deserialize.unpack_task_inst_id_to_task_seg_ids",
      "Daypack_lib.Task_inst_id_map.equal",
-     "Daypack_lib.Int64_set.equal"
-    );
-    ("progress_indexed_by_start",
-     "int64",
-     "task_inst_progress_set",
-     "Daypack_lib.Int64_map.of_seq",
-     "Daypack_lib.Sched.Serialize.pack_progress_indexed_by_start",
-     "Daypack_lib.Sched.Deserialize.unpack_progress_indexed_by_start",
-     "Daypack_lib.Int64_map.equal",
-     "Daypack_lib.Task_inst_progress_set.equal"
+     "Daypack_lib.Int64_int64_option_set.equal"
     );
     ("indexed_by_start",
      "int64",
@@ -277,6 +275,19 @@ let qc_unpack_is_inverse_of_pack_quota =
        in
        Daypack_lib.Task_inst_id_map.equal (fun x y -> compare x y = 0) x y)
 
+let qc_unpack_is_inverse_of_pack_task_seg_id_to_progress =
+  QCheck.Test.make ~count:5000
+    ~name:"qc_unpack_is_inverse_of_pack_task_seg_id_to_progress"
+    QCheck.(list_of_size Gen.(int_bound 100) (pair task_seg_id progress))
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Task_seg_id_map.of_seq in
+       let y =
+         x
+         |> Daypack_lib.Sched.Serialize.pack_task_seg_id_to_progress
+         |> Daypack_lib.Sched.Deserialize.unpack_task_seg_id_to_progress
+       in
+       Daypack_lib.Task_seg_id_map.equal (fun x y -> compare x y = 0) x y)
+
 let qc_unpack_is_inverse_of_pack_user_id_to_task_ids =
   QCheck.Test.make ~count:5000
     ~name:"qc_unpack_is_inverse_of_pack_user_id_to_task_ids"
@@ -306,7 +317,10 @@ let qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids =
 let qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids =
   QCheck.Test.make ~count:5000
     ~name:"qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids"
-    QCheck.(list_of_size Gen.(int_bound 10) (pair task_inst_id pos_int64_set))
+    QCheck.(
+      list_of_size
+        Gen.(int_bound 10)
+        (pair task_inst_id pos_int64_int64_option_set))
     (fun l ->
        let x = l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq in
        let y =
@@ -314,20 +328,8 @@ let qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids =
          |> Daypack_lib.Sched.Serialize.pack_task_inst_id_to_task_seg_ids
          |> Daypack_lib.Sched.Deserialize.unpack_task_inst_id_to_task_seg_ids
        in
-       Daypack_lib.Task_inst_id_map.equal Daypack_lib.Int64_set.equal x y)
-
-let qc_unpack_is_inverse_of_pack_progress_indexed_by_start =
-  QCheck.Test.make ~count:5000
-    ~name:"qc_unpack_is_inverse_of_pack_progress_indexed_by_start"
-    QCheck.(list_of_size Gen.(int_bound 10) (pair int64 task_inst_progress_set))
-    (fun l ->
-       let x = l |> List.to_seq |> Daypack_lib.Int64_map.of_seq in
-       let y =
-         x
-         |> Daypack_lib.Sched.Serialize.pack_progress_indexed_by_start
-         |> Daypack_lib.Sched.Deserialize.unpack_progress_indexed_by_start
-       in
-       Daypack_lib.Int64_map.equal Daypack_lib.Task_inst_progress_set.equal x y)
+       Daypack_lib.Task_inst_id_map.equal
+         Daypack_lib.Int64_int64_option_set.equal x y)
 
 let qc_unpack_is_inverse_of_pack_indexed_by_start =
   QCheck.Test.make ~count:5000
@@ -400,10 +402,10 @@ let suite =
     qc_unpack_is_inverse_of_pack_sched_req_pending_store;
     qc_unpack_is_inverse_of_pack_sched_req_record_store;
     qc_unpack_is_inverse_of_pack_quota;
+    qc_unpack_is_inverse_of_pack_task_seg_id_to_progress;
     qc_unpack_is_inverse_of_pack_user_id_to_task_ids;
     qc_unpack_is_inverse_of_pack_task_id_to_task_inst_ids;
     qc_unpack_is_inverse_of_pack_task_inst_id_to_task_seg_ids;
-    qc_unpack_is_inverse_of_pack_progress_indexed_by_start;
     qc_unpack_is_inverse_of_pack_indexed_by_start;
     qc_unpack_is_inverse_of_pack_sched_req_ids;
     qc_add_diff_test_sched;

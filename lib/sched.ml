@@ -40,11 +40,6 @@ type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
-type task_inst_progress_map = Task_inst_progress_set.t Int64_map.t
-
-type task_inst_progress_map_diff =
-  Int64_map_utils.Task_inst_progress_bucketed.diff_bucketed
-
 type store = {
   task_store : task_store;
   task_inst_store : task_inst_store;
@@ -52,12 +47,13 @@ type store = {
   (* transit_time_store : transit_time_store; *)
   user_id_to_task_ids : Int64_set.t User_id_map.t;
   task_id_to_task_inst_ids : Int64_set.t Task_id_map.t;
-  task_inst_id_to_task_seg_ids : Int64_set.t Task_inst_id_map.t;
+  task_inst_id_to_task_seg_ids : Int64_int64_option_set.t Task_inst_id_map.t;
   sched_req_ids : Int64_set.t;
   sched_req_pending_store : sched_req_store;
   sched_req_record_store : sched_req_record_store;
   quota : int64 Task_inst_id_map.t;
-  progress_indexed_by_start : task_inst_progress_map;
+  task_seg_id_to_progress : Task.progress Task_seg_id_map.t;
+  task_inst_id_to_progress : Task.progress Task_inst_id_map.t;
 }
 
 type store_diff = {
@@ -69,12 +65,13 @@ type store_diff = {
   task_id_to_task_inst_ids_diff :
     Task_id_map_utils.Int64_bucketed.diff_bucketed;
   task_inst_id_to_task_seg_ids_diff :
-    Task_inst_id_map_utils.Int64_bucketed.diff_bucketed;
+    Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed;
   sched_req_ids_diff : Int64_set_utils.diff;
   sched_req_pending_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
   quota_diff : int64 Task_inst_id_map_utils.diff;
-  progress_indexed_by_start_diff : task_inst_progress_map_diff;
+  task_seg_id_to_progress_diff : Task.progress Task_seg_id_map_utils.diff;
+  task_inst_id_to_progress_diff : Task.progress Task_inst_id_map_utils.diff;
 }
 
 type agenda = {
@@ -111,7 +108,8 @@ let store_empty =
     sched_req_pending_store = Sched_req_id_map.empty;
     sched_req_record_store = Sched_req_id_map.empty;
     quota = Task_inst_id_map.empty;
-    progress_indexed_by_start = Int64_map.empty;
+    task_seg_id_to_progress = Task_seg_id_map.empty;
+    task_inst_id_to_progress = Task_inst_id_map.empty;
   }
 
 let agenda_empty =
@@ -126,6 +124,9 @@ module Id = struct
   let sched_id_to_string (id : sched_id) = string_of_int id
 
   let incre_int64_id x = match x with None -> 0L | Some x -> Int64.succ x
+
+  let incre_int64_int64_option_id x =
+    match x with None -> (0L, None) | Some (id, _) -> (Int64.succ id, None)
 
   let get_new_task_id (user_id : Task.user_id) ((sid, sd) : sched) :
     Task.task_id * sched =
@@ -219,12 +220,17 @@ module Id = struct
     let task_seg_ids =
       Task_inst_id_map.find_opt task_inst_id
         sd.store.task_inst_id_to_task_seg_ids
-      |> Option.value ~default:Int64_set.empty
+      |> Option.value ~default:Int64_int64_option_set.empty
     in
-    let task_seg_part = Int64_set.max_elt_opt task_seg_ids |> incre_int64_id in
-    let task_seg_ids = Int64_set.add task_seg_part task_seg_ids in
+    let task_seg_part, task_seg_sub_id =
+      Int64_int64_option_set.max_elt_opt task_seg_ids
+      |> incre_int64_int64_option_id
+    in
+    let task_seg_ids =
+      Int64_int64_option_set.add (task_seg_part, task_seg_sub_id) task_seg_ids
+    in
     let user_id, task_part, task_inst_part = task_inst_id in
-    ( (user_id, task_part, task_inst_part, task_seg_part, None),
+    ( (user_id, task_part, task_inst_part, task_seg_part, task_seg_sub_id),
       ( sid,
         {
           sd with
@@ -245,10 +251,43 @@ module Id = struct
     with
     | None -> Seq.empty
     | Some s ->
-      s |> Int64_set.to_seq |> Seq.map (fun id -> (id1, id2, id3, id, None))
+      s
+      |> Int64_int64_option_set.to_seq
+      |> Seq.map (fun (id, opt) -> (id1, id2, id3, id, opt))
+
+  let add_task_seg_id ((id1, id2, id3, id4, id5) : Task.task_seg_id)
+      ((sid, sd) : sched) : sched =
+    let task_inst_id = (id1, id2, id3) in
+    let task_seg_ids =
+      match
+        Task_inst_id_map.find_opt (id1, id2, id3)
+          sd.store.task_inst_id_to_task_seg_ids
+      with
+      | None ->
+        Int64_int64_option_set.empty |> Int64_int64_option_set.add (id4, id5)
+      | Some s ->
+        ( match id5 with
+          | None -> s
+          | Some _ ->
+            Int64_int64_option_set.filter
+              (fun (id4', id5') -> not (id4' = id4 && id5' = None))
+              s )
+        |> Int64_int64_option_set.add (id4, id5)
+    in
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_id_to_task_seg_ids =
+              Task_inst_id_map.add task_inst_id task_seg_ids
+                sd.store.task_inst_id_to_task_seg_ids;
+          };
+      } )
 
   let remove_task_seg_id
-      ((user_id, task_part, task_inst_part, task_seg_part, _) :
+      ((user_id, task_part, task_inst_part, task_seg_part, task_seg_sub_id) :
          Task.task_seg_id) ((sid, sd) : sched) : sched =
     let task_inst_id = (user_id, task_part, task_inst_part) in
     match
@@ -257,7 +296,11 @@ module Id = struct
     with
     | None -> (sid, sd)
     | Some task_seg_ids ->
-      let task_seg_ids = Int64_set.remove task_seg_part task_seg_ids in
+      let task_seg_ids =
+        Int64_int64_option_set.remove
+          (task_seg_part, task_seg_sub_id)
+          task_seg_ids
+      in
       ( sid,
         {
           sd with
@@ -359,6 +402,22 @@ module Task_seg_store = struct
       ([], sched) reqs
     |> fun (l, t) -> (List.rev l, t)
 
+  let add_task_seg_via_task_seg_place ((id, _, _) : Task.task_seg_place)
+      (sched : sched) : sched =
+    Id.add_task_seg_id id sched
+
+  let add_task_segs_via_task_seg_place_list (place_s : Task.task_seg_place list)
+      (sched : sched) : sched =
+    List.fold_left
+      (fun sched place -> add_task_seg_via_task_seg_place place sched)
+      sched place_s
+
+  let add_task_segs_via_task_seg_place_seq (place_s : Task.task_seg_place Seq.t)
+      (sched : sched) : sched =
+    Seq.fold_left
+      (fun sched place -> add_task_seg_via_task_seg_place place sched)
+      sched place_s
+
   let find_task_seg_opt (task_seg_id : Task.task_seg_id) ((_, sd) : sched) :
     Task.task_seg_size option =
     Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_store
@@ -441,6 +500,7 @@ module Task_inst_store = struct
                 sd.store.task_inst_id_to_task_seg_ids;
           };
       } )
+    |> Id.remove_task_inst_id task_inst_id
 
   let remove_task_inst_strict (task_inst_id : Task.task_inst_id) (sched : sched)
     : (sched, unit) result =
@@ -507,30 +567,26 @@ end
 
 module Agenda = struct
   let add_task_seg_place
-      (((id1, id2, id3, id4, id5), start, end_exc) : Task.task_seg_place)
-      ((sid, sd) : sched) : sched =
+      (((_id1, _id2, _id3, _id4, _id5), start, _end_exc) as task_seg_place :
+         Task.task_seg_place) ((sid, sd) : sched) : sched =
     let indexed_by_start =
       Int64_map.update start
         (fun bucket ->
            Some
              (Task_seg_place_set.add
-                ((id1, id2, id3, id4, id5), start, end_exc)
+                task_seg_place
                 ( match bucket with
                   | None -> Task_seg_place_set.empty
                   | Some s -> s )))
         sd.agenda.indexed_by_start
     in
-    let quota =
-      Task_inst_id_map.update (id1, id2, id3)
-        (Option.map (fun x -> x -^ (end_exc -^ start)))
-        sd.store.quota
-    in
     ( sid,
       {
-        store = { sd.store with quota };
-        (* agenda = { sd.agenda with indexed_by_start }; *)
-        agenda = { indexed_by_start };
+        sd
+        with
+          agenda = { indexed_by_start };
       } )
+    |> Task_seg_store.add_task_seg_via_task_seg_place task_seg_place
 
   let add_task_seg_place_list (task_seg_place_s : Task.task_seg_place list)
       (sched : sched) : sched =
@@ -613,7 +669,99 @@ module Agenda = struct
 end
 
 module Progress = struct
-  (* let add_task_seg_place *)
+  let set_task_seg_completed_flag (task_seg_id : Task.task_seg_id) ~completed
+      ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_id_to_progress =
+              Task_seg_id_map.update task_seg_id
+                (fun progress ->
+                   let open Task in
+                   match progress with
+                   | None -> Some { completed; chunks = [] }
+                   | Some progress -> Some { progress with completed })
+                sd.store.task_seg_id_to_progress;
+          };
+      } )
+
+  let mark_task_seg_completed (task_seg_id : Task.task_seg_id) (sched : sched) :
+    sched =
+    set_task_seg_completed_flag task_seg_id ~completed:true sched
+
+  let mark_task_seg_uncompleted (task_seg_id : Task.task_seg_id) (sched : sched)
+    : sched =
+    set_task_seg_completed_flag task_seg_id ~completed:false sched
+
+  let add_task_seg_progress_chunk (task_seg_id : Task.task_seg_id)
+      (chunk : int64 * int64) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_id_to_progress =
+              Task_seg_id_map.update task_seg_id
+                (fun progress ->
+                   let open Task in
+                   match progress with
+                   | None -> Some { completed = false; chunks = [] }
+                   | Some progress ->
+                     Some { progress with chunks = chunk :: progress.chunks })
+                sd.store.task_seg_id_to_progress;
+          };
+      } )
+
+  let set_task_inst_completed_flag (task_inst_id : Task.task_inst_id) ~completed
+      ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_id_to_progress =
+              Task_inst_id_map.update task_inst_id
+                (fun progress ->
+                   let open Task in
+                   match progress with
+                   | None -> Some { completed; chunks = [] }
+                   | Some progress -> Some { progress with completed })
+                sd.store.task_inst_id_to_progress;
+          };
+      } )
+
+  let mark_task_inst_completed (task_inst_id : Task.task_inst_id)
+      (sched : sched) : sched =
+    set_task_inst_completed_flag task_inst_id ~completed:true sched
+
+  let mark_task_inst_uncompleted (task_inst_id : Task.task_inst_id)
+      (sched : sched) : sched =
+    set_task_inst_completed_flag task_inst_id ~completed:false sched
+
+  let add_task_inst_progress_chunk (task_inst_id : Task.task_inst_id)
+      (chunk : int64 * int64) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_id_to_progress =
+              Task_inst_id_map.update task_inst_id
+                (fun progress ->
+                   let open Task in
+                   match progress with
+                   | None -> Some { completed = false; chunks = [] }
+                   | Some progress ->
+                     Some { progress with chunks = chunk :: progress.chunks })
+                sd.store.task_inst_id_to_progress;
+          };
+      } )
 end
 
 module Sched_req_store = struct
@@ -675,7 +823,7 @@ module Sched_req_store = struct
               List.exists
                 (fun ((id1', id2', _id3', _id4', _id5'), _) ->
                    id1 = id1' && id2 = id2')
-                (Sched_req_data_unit_skeleton.get_data x))
+                (Sched_req_data_unit_skeleton.get_inner_data x))
            l)
       sched
 
@@ -689,7 +837,7 @@ module Sched_req_store = struct
               List.exists
                 (fun ((id1', id2', id3', _id4', _id5'), _) ->
                    id1 = id1' && id2 = id2' && id3 = id3')
-                (Sched_req_data_unit_skeleton.get_data x))
+                (Sched_req_data_unit_skeleton.get_inner_data x))
            l)
       sched
 
@@ -703,11 +851,11 @@ module Sched_req_store = struct
               List.exists
                 (fun ((id1', id2', id3', id4', _id5'), _) ->
                    id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')
-                (Sched_req_data_unit_skeleton.get_data x))
+                (Sched_req_data_unit_skeleton.get_inner_data x))
            l)
       sched
 
-  let remove_pending_sched_req_if_contains_matching_task_seg
+  let remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
       (f : Task.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
     ( sid,
       {
@@ -719,19 +867,14 @@ module Sched_req_store = struct
               sd.store.sched_req_pending_store
               |> Sched_req_id_map.to_seq
               |> Seq.filter (fun (_id, sched_req_data) ->
-                  List.exists
-                    (fun sched_req_data_unit ->
-                       let data =
-                         Sched_req_data_unit_skeleton.get_data
-                           sched_req_data_unit
-                       in
-                       List.exists f data)
-                    sched_req_data)
+                  not
+                    (Sched_req_data_unit_skeleton
+                     .list_contains_matching_inner_data f sched_req_data))
               |> Sched_req_id_map.of_seq;
           };
       } )
 
-  let remove_pending_sched_req_data_unit_if_contains_matching_task_seg
+  let remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
       (f : Task.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
     ( sid,
       {
@@ -743,19 +886,13 @@ module Sched_req_store = struct
               sd.store.sched_req_pending_store
               |> Sched_req_id_map.to_seq
               |> Seq.filter_map (fun (id, sched_req_data) ->
-                  let sched_req_data =
-                    List.filter
-                      (fun sched_req_data_unit ->
-                         let data =
-                           Sched_req_data_unit_skeleton.get_data
-                             sched_req_data_unit
-                         in
-                         not (List.exists f data))
+                  match
+                    Sched_req_data_unit_skeleton
+                    .remove_data_units_with_matching_inner_data f
                       sched_req_data
-                  in
-                  match sched_req_data with
+                  with
                   | [] -> None
-                  | _ -> Some (id, sched_req_data))
+                  | sched_req_data -> Some (id, sched_req_data))
               |> Sched_req_id_map.of_seq;
           };
       } )
@@ -772,14 +909,10 @@ module Sched_req_store = struct
               sd.store.sched_req_record_store
               |> Sched_req_id_map.to_seq
               |> Seq.filter (fun (_id, sched_req_record_data) ->
-                  List.exists
-                    (fun sched_req_record_data_unit ->
-                       let data =
-                         Sched_req_data_unit_skeleton.get_data
-                           sched_req_record_data_unit
-                       in
-                       List.exists f data)
-                    sched_req_record_data)
+                  not
+                    (Sched_req_data_unit_skeleton
+                     .list_contains_matching_inner_data f
+                       sched_req_record_data))
               |> Sched_req_id_map.of_seq;
           };
       } )
@@ -796,19 +929,13 @@ module Sched_req_store = struct
               sd.store.sched_req_record_store
               |> Sched_req_id_map.to_seq
               |> Seq.filter_map (fun (id, sched_req_record_data) ->
-                  let sched_req_record_data =
-                    List.filter
-                      (fun sched_req_record_data_unit ->
-                         let data =
-                           Sched_req_data_unit_skeleton.get_data
-                             sched_req_record_data_unit
-                         in
-                         not (List.exists f data))
+                  match
+                    Sched_req_data_unit_skeleton
+                    .remove_data_units_with_matching_inner_data f
                       sched_req_record_data
-                  in
-                  match sched_req_record_data with
+                  with
                   | [] -> None
-                  | _ -> Some (id, sched_req_record_data))
+                  | sched_req_record_data -> Some (id, sched_req_record_data))
               |> Sched_req_id_map.of_seq;
           };
       } )
@@ -821,7 +948,8 @@ module Sched_req_store = struct
          Printf.printf "let remove_%s_by_task_id\n" typ;
          Printf.printf
            "  ((id1, id2) : Task.task_id) (sched : sched) : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
+         Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
+           typ;
          Printf.printf "  (fun ((id1', id2', _id3'), _data) ->\n";
          Printf.printf "    id1 = id1' && id2 = id2')\n";
          Printf.printf "    sched\n";
@@ -829,7 +957,8 @@ module Sched_req_store = struct
          Printf.printf "let remove_%s_by_task_inst_id\n" typ;
          Printf.printf
            "  ((id1, id2, id3) : Task.task_inst_id) (sched : sched) : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
+         Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
+           typ;
          Printf.printf "  (fun ((id1', id2', id3'), _data) ->\n";
          Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
          Printf.printf "    sched\n";
@@ -838,7 +967,8 @@ module Sched_req_store = struct
          Printf.printf
            "  ((id1, id2, id3, _id4, _id5) : Task.task_seg_id) (sched : sched) \
             : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
+         Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
+           typ;
          Printf.printf "  (fun ((id1', id2', id3'), _data) ->\n";
          Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
          Printf.printf "    sched\n")
@@ -847,40 +977,40 @@ module Sched_req_store = struct
 
   let remove_pending_sched_req_by_task_id ((id1, id2) : Task.task_id)
       (sched : sched) : sched =
-    remove_pending_sched_req_if_contains_matching_task_seg
+    remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', _id3'), _data) -> id1 = id1' && id2 = id2')
       sched
 
   let remove_pending_sched_req_by_task_inst_id
       ((id1, id2, id3) : Task.task_inst_id) (sched : sched) : sched =
-    remove_pending_sched_req_if_contains_matching_task_seg
+    remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', id3'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3')
       sched
 
   let remove_pending_sched_req_by_task_seg_id
       ((id1, id2, id3, _id4, _id5) : Task.task_seg_id) (sched : sched) : sched =
-    remove_pending_sched_req_if_contains_matching_task_seg
+    remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', id3'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3')
       sched
 
   let remove_pending_sched_req_data_unit_by_task_id ((id1, id2) : Task.task_id)
       (sched : sched) : sched =
-    remove_pending_sched_req_data_unit_if_contains_matching_task_seg
+    remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', _id3'), _data) -> id1 = id1' && id2 = id2')
       sched
 
   let remove_pending_sched_req_data_unit_by_task_inst_id
       ((id1, id2, id3) : Task.task_inst_id) (sched : sched) : sched =
-    remove_pending_sched_req_data_unit_if_contains_matching_task_seg
+    remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', id3'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3')
       sched
 
   let remove_pending_sched_req_data_unit_by_task_seg_id
       ((id1, id2, id3, _id4, _id5) : Task.task_seg_id) (sched : sched) : sched =
-    remove_pending_sched_req_data_unit_if_contains_matching_task_seg
+    remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
       (fun ((id1', id2', id3'), _data) ->
          id1 = id1' && id2 = id2' && id3 = id3')
       sched
@@ -910,12 +1040,13 @@ module Sched_req_store = struct
 
          Printf.printf "let remove_%s_by_task_seg_id\n" typ;
          Printf.printf
-           "  ((id1, id2, id3, id4, _id5) : Task.task_seg_id) (sched : sched) : \
+           "  ((id1, id2, id3, id4, id5) : Task.task_seg_id) (sched : sched) : \
             sched =\n";
          Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
-         Printf.printf "  (fun ((id1', id2', id3', id4', _id5'), _data) ->\n";
+         Printf.printf "  (fun ((id1', id2', id3', id4', id5'), _data) ->\n";
          Printf.printf
-           "    id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')\n";
+           "    id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = \
+            id5')\n";
          Printf.printf "    sched\n")
       typ_list
   *)
@@ -935,10 +1066,10 @@ module Sched_req_store = struct
       sched
 
   let remove_sched_req_record_by_task_seg_id
-      ((id1, id2, id3, id4, _id5) : Task.task_seg_id) (sched : sched) : sched =
+      ((id1, id2, id3, id4, id5) : Task.task_seg_id) (sched : sched) : sched =
     remove_sched_req_record_if_contains_matching_task_seg
-      (fun ((id1', id2', id3', id4', _id5'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')
+      (fun ((id1', id2', id3', id4', id5'), _data) ->
+         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = id5')
       sched
 
   let remove_sched_req_record_data_unit_by_task_id ((id1, id2) : Task.task_id)
@@ -956,10 +1087,10 @@ module Sched_req_store = struct
       sched
 
   let remove_sched_req_record_data_unit_by_task_seg_id
-      ((id1, id2, id3, id4, _id5) : Task.task_seg_id) (sched : sched) : sched =
+      ((id1, id2, id3, id4, id5) : Task.task_seg_id) (sched : sched) : sched =
     remove_sched_req_record_data_unit_if_contains_matching_task_seg
-      (fun ((id1', id2', id3', id4', _id5'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')
+      (fun ((id1', id2', id3', id4', id5'), _data) ->
+         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = id5')
       sched
 
   (*$*)
@@ -1163,26 +1294,7 @@ module Recur = struct
                   (fun _sched_req_id sched_req_data ->
                      Sched_req_utils.sched_req_template_matches_sched_req_data
                        sched_req_template sched_req_data)
-                  sd.store.sched_req_pending_store )
-           (* && ( List.exists
-            *        (fun sched_req_template_data_unit ->
-            *           Sched_req_id_map.exists
-            *             (fun _sched_req_id sched_req_record_data ->
-            *                Sched_req_utils
-            *                .sched_req_template_data_unit_matches_sched_req_record_data
-            *                  sched_req_template_data_unit sched_req_record_data
-            *             )
-            *             sd.store.sched_req_record_store)
-            *        sched_req_template
-            *      || List.exists
-            *        (fun sched_req_template ->
-            *           Sched_req_id_map.exists
-            *             (fun _sched_req_id sched_req_data_unit ->
-            *                Sched_req_utils
-            *                .sched_req_template_matches_sched_req_data
-            *                  sched_req_template sched_req_data_unit)
-            *             sd.store.sched_req_pending_store)
-            *        sched_req_template ) *))
+                  sd.store.sched_req_pending_store ))
         task_inst_ids
 
   let instantiate ~start ~end_exc ((sid, sd) : sched) : sched =
@@ -1213,6 +1325,62 @@ module Recur = struct
               sched)
            sched)
       sd.store.task_store (sid, sd)
+end
+
+module Leftover = struct
+  let get_leftover_task_segs ~start ((_sid, sd) : sched) : Task.task_seg Seq.t =
+    let before, _, _ = Int64_map.split start sd.agenda.indexed_by_start in
+    Int64_map.to_seq before
+    |> Seq.flat_map (fun (_, task_seg_place_s) ->
+        Task_seg_place_set.to_seq task_seg_place_s)
+    |> Seq.filter (fun (task_seg_id, _, _) ->
+        let id1, id2, id3, _, _ = task_seg_id in
+        let task_inst_id = (id1, id2, id3) in
+        match
+          Task_inst_id_map.find_opt task_inst_id
+            sd.store.task_inst_id_to_progress
+        with
+        | Some progress -> not progress.completed
+        | None -> true)
+    |> Seq.filter_map (fun (task_seg_id, place_start, place_end_exc) ->
+        let task_seg_size = place_end_exc -^ place_start in
+        match
+          Task_seg_id_map.find_opt task_seg_id
+            sd.store.task_seg_id_to_progress
+        with
+        | None -> Some (task_seg_id, task_seg_size)
+        | Some progress ->
+          if progress.completed then None
+          else
+            let progress_made = TS.sum_length_list progress.chunks in
+            if progress_made < task_seg_size then
+              Some (task_seg_id, progress_made -^ task_seg_size)
+            else None)
+
+  let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
+    let leftover_task_seg_ids = get_leftover_task_segs sched in
+    let sched_req_data_seq =
+      leftover_task_seg_ids ~start
+      |> Seq.map (fun ((id1, id2, id3, _, _), task_seg_size) ->
+          ( let task_inst_id = (id1, id2, id3) in
+            [
+              Sched_req_data_unit_skeleton.Shift
+                {
+                  task_seg_related_data_list =
+                    [ (task_inst_id, task_seg_size) ];
+                  time_slots = [ (start, end_exc) ];
+                  incre = 1L;
+                };
+            ]
+            : Sched_req.sched_req_data ))
+    in
+    Seq.fold_left
+      (fun sched sched_req_data ->
+         let _, sched =
+           Sched_req_store.queue_sched_req_data sched_req_data sched
+         in
+         sched)
+      sched sched_req_data_seq
 end
 
 module Serialize = struct
@@ -1292,6 +1460,38 @@ module Serialize = struct
     (Task_t.task_inst_id, int64) Map_utils_t.diff =
     { added = pack_quota x.added; removed = pack_quota x.removed }
 
+  let pack_task_seg_id_to_progress (x : Task.progress Task_seg_id_map.t) :
+    (Task_t.task_seg_id * Task_t.progress) list =
+    x
+    |> Task_seg_id_map.to_seq
+    |> Seq.map (fun (id, progress) ->
+        (id, Task.Serialize.pack_progress progress))
+    |> List.of_seq
+
+  let pack_task_seg_id_to_progress_diff
+      (x : Task.progress Task_seg_id_map_utils.diff) :
+    (Task_t.task_seg_id, Task_t.progress) Map_utils_t.diff =
+    {
+      added = pack_task_seg_id_to_progress x.added;
+      removed = pack_task_seg_id_to_progress x.removed;
+    }
+
+  let pack_task_inst_id_to_progress (x : Task.progress Task_inst_id_map.t) :
+    (Task_t.task_inst_id * Task_t.progress) list =
+    x
+    |> Task_inst_id_map.to_seq
+    |> Seq.map (fun (id, progress) ->
+        (id, Task.Serialize.pack_progress progress))
+    |> List.of_seq
+
+  let pack_task_inst_id_to_progress_diff
+      (x : Task.progress Task_inst_id_map_utils.diff) :
+    (Task_t.task_inst_id, Task_t.progress) Map_utils_t.diff =
+    {
+      added = pack_task_inst_id_to_progress x.added;
+      removed = pack_task_inst_id_to_progress x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -1329,33 +1529,20 @@ module Serialize = struct
       removed = pack_task_id_to_task_inst_ids x.removed;
     }
 
-  let pack_task_inst_id_to_task_seg_ids (x : Int64_set.t Task_inst_id_map.t) :
-    (Task_t.task_inst_id * int64 list) list =
+  let pack_task_inst_id_to_task_seg_ids
+      (x : Int64_int64_option_set.t Task_inst_id_map.t) :
+    (Task_t.task_inst_id * (int64 * int64 option) list) list =
     x
     |> Task_inst_id_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) -> (id, Int64_int64_option_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_task_inst_id_to_task_seg_ids_diff
-      (x : Task_inst_id_map_utils.Int64_bucketed.diff_bucketed) :
-    (Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed =
+      (x : Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed) :
+    (Task_t.task_inst_id, int64 * int64 option) Map_utils_t.diff_bucketed =
     {
       added = pack_task_inst_id_to_task_seg_ids x.added;
       removed = pack_task_inst_id_to_task_seg_ids x.removed;
-    }
-
-  let pack_progress_indexed_by_start (x : task_inst_progress_map) :
-    (int64 * Task_t.task_inst_progress list) list =
-    x
-    |> Int64_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_inst_progress_set.Serialize.pack y))
-    |> List.of_seq
-
-  let pack_progress_indexed_by_start_diff (x : task_inst_progress_map_diff) :
-    (int64, Task_t.task_inst_progress) Map_utils_t.diff_bucketed =
-    {
-      added = pack_progress_indexed_by_start x.added;
-      removed = pack_progress_indexed_by_start x.removed;
     }
 
   let pack_indexed_by_start (x : task_seg_place_map) :
@@ -1413,8 +1600,10 @@ module Serialize = struct
       sched_req_record_list =
         pack_sched_req_record_store store.sched_req_record_store;
       quota = pack_quota store.quota;
-      progress_indexed_by_start =
-        pack_progress_indexed_by_start store.progress_indexed_by_start;
+      task_seg_id_to_progress =
+        pack_task_seg_id_to_progress store.task_seg_id_to_progress;
+      task_inst_id_to_progress =
+        pack_task_inst_id_to_progress store.task_inst_id_to_progress;
     }
 
   let pack_store_diff (diff : store_diff) : Sched_t.store_diff =
@@ -1435,8 +1624,10 @@ module Serialize = struct
       sched_req_record_list_diff =
         pack_sched_req_record_store_diff diff.sched_req_record_store_diff;
       quota_diff = pack_quota_diff diff.quota_diff;
-      progress_indexed_by_start_diff =
-        pack_progress_indexed_by_start_diff diff.progress_indexed_by_start_diff;
+      task_seg_id_to_progress_diff =
+        pack_task_seg_id_to_progress_diff diff.task_seg_id_to_progress_diff;
+      task_inst_id_to_progress_diff =
+        pack_task_inst_id_to_progress_diff diff.task_inst_id_to_progress_diff;
     }
 
   (*$*)
@@ -1564,6 +1755,40 @@ module Deserialize = struct
     int64 Task_inst_id_map_utils.diff =
     { added = unpack_quota x.added; removed = unpack_quota x.removed }
 
+  let unpack_task_seg_id_to_progress
+      (x : (Task_t.task_seg_id * Task_t.progress) list) :
+    Task.progress Task_seg_id_map.t =
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, progress) ->
+        (id, Task.Deserialize.unpack_progress progress))
+    |> Task_seg_id_map.of_seq
+
+  let unpack_task_seg_id_to_progress_diff
+      (x : (Task_t.task_seg_id, Task_t.progress) Map_utils_t.diff) :
+    Task.progress Task_seg_id_map_utils.diff =
+    {
+      added = unpack_task_seg_id_to_progress x.added;
+      removed = unpack_task_seg_id_to_progress x.removed;
+    }
+
+  let unpack_task_inst_id_to_progress
+      (x : (Task_t.task_inst_id * Task_t.progress) list) :
+    Task.progress Task_inst_id_map.t =
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, progress) ->
+        (id, Task.Deserialize.unpack_progress progress))
+    |> Task_inst_id_map.of_seq
+
+  let unpack_task_inst_id_to_progress_diff
+      (x : (Task_t.task_inst_id, Task_t.progress) Map_utils_t.diff) :
+    Task.progress Task_inst_id_map_utils.diff =
+    {
+      added = unpack_task_inst_id_to_progress x.added;
+      removed = unpack_task_inst_id_to_progress x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -1602,36 +1827,21 @@ module Deserialize = struct
     }
 
   let unpack_task_inst_id_to_task_seg_ids
-      (x : (Task_t.task_inst_id * int64 list) list) :
-    Int64_set.t Task_inst_id_map.t =
-    x
-    |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
-    |> Task_inst_id_map.of_seq
-
-  let unpack_task_inst_id_to_task_seg_ids_diff
-      (x : (Task_t.task_inst_id, int64) Map_utils_t.diff_bucketed) :
-    Task_inst_id_map_utils.Int64_bucketed.diff_bucketed =
-    {
-      added = unpack_task_inst_id_to_task_seg_ids x.added;
-      removed = unpack_task_inst_id_to_task_seg_ids x.removed;
-    }
-
-  let unpack_progress_indexed_by_start
-      (x : (int64 * Task_t.task_inst_progress list) list) :
-    task_inst_progress_map =
+      (x : (Task_t.task_inst_id * (int64 * int64 option) list) list) :
+    Int64_int64_option_set.t Task_inst_id_map.t =
     x
     |> List.to_seq
     |> Seq.map (fun (id, y) ->
-        (id, Task_inst_progress_set.Deserialize.unpack y))
-    |> Int64_map.of_seq
+        (id, Int64_int64_option_set.Deserialize.unpack y))
+    |> Task_inst_id_map.of_seq
 
-  let unpack_progress_indexed_by_start_diff
-      (x : (int64, Task_t.task_inst_progress) Map_utils_t.diff_bucketed) :
-    task_inst_progress_map_diff =
+  let unpack_task_inst_id_to_task_seg_ids_diff
+      (x :
+         (Task_t.task_inst_id, int64 * int64 option) Map_utils_t.diff_bucketed) :
+    Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed =
     {
-      added = unpack_progress_indexed_by_start x.added;
-      removed = unpack_progress_indexed_by_start x.removed;
+      added = unpack_task_inst_id_to_task_seg_ids x.added;
+      removed = unpack_task_inst_id_to_task_seg_ids x.removed;
     }
 
   let unpack_indexed_by_start (x : (int64 * Task_t.task_seg_place list) list) :
@@ -1690,8 +1900,10 @@ module Deserialize = struct
       sched_req_record_store =
         unpack_sched_req_record_list store.sched_req_record_list;
       quota = unpack_quota store.quota;
-      progress_indexed_by_start =
-        unpack_progress_indexed_by_start store.progress_indexed_by_start;
+      task_seg_id_to_progress =
+        unpack_task_seg_id_to_progress store.task_seg_id_to_progress;
+      task_inst_id_to_progress =
+        unpack_task_inst_id_to_progress store.task_inst_id_to_progress;
     }
 
   let unpack_store_diff (diff : Sched_t.store_diff) : store_diff =
@@ -1712,9 +1924,10 @@ module Deserialize = struct
       sched_req_record_store_diff =
         unpack_sched_req_record_list_diff diff.sched_req_record_list_diff;
       quota_diff = unpack_quota_diff diff.quota_diff;
-      progress_indexed_by_start_diff =
-        unpack_progress_indexed_by_start_diff
-          diff.progress_indexed_by_start_diff;
+      task_seg_id_to_progress_diff =
+        unpack_task_seg_id_to_progress_diff diff.task_seg_id_to_progress_diff;
+      task_inst_id_to_progress_diff =
+        unpack_task_inst_id_to_progress_diff diff.task_inst_id_to_progress_diff;
     }
 
   (*$*)
@@ -1776,7 +1989,7 @@ module Equal = struct
       store2.user_id_to_task_ids
     && Task_id_map.equal Int64_set.equal store1.task_id_to_task_inst_ids
       store2.task_id_to_task_inst_ids
-    && Task_inst_id_map.equal Int64_set.equal
+    && Task_inst_id_map.equal Int64_int64_option_set.equal
       store1.task_inst_id_to_task_seg_ids store2.task_inst_id_to_task_seg_ids
     && Int64_set.equal store1.sched_req_ids store2.sched_req_ids
     && Sched_req_id_map.equal
@@ -1788,8 +2001,12 @@ module Equal = struct
     && Task_inst_id_map.equal
       (fun x y -> compare x y = 0)
       store1.quota store2.quota
-    && Int64_map.equal Task_inst_progress_set.equal
-      store1.progress_indexed_by_start store2.progress_indexed_by_start
+    && Task_seg_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_seg_id_to_progress store2.task_seg_id_to_progress
+    && Task_inst_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_inst_id_to_progress store2.task_inst_id_to_progress
 
   let agenda_equal (agenda1 : agenda) (agenda2 : agenda) : bool =
     Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_start
@@ -1829,7 +2046,7 @@ module Diff = struct
         Task_id_map_utils.Int64_bucketed.diff_bucketed
           ~old:store1.task_id_to_task_inst_ids store2.task_id_to_task_inst_ids;
       task_inst_id_to_task_seg_ids_diff =
-        Task_inst_id_map_utils.Int64_bucketed.diff_bucketed
+        Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed
           ~old:store1.task_inst_id_to_task_seg_ids
           store2.task_inst_id_to_task_seg_ids;
       sched_req_ids_diff =
@@ -1841,9 +2058,12 @@ module Diff = struct
         Sched_req_id_map_utils.diff ~old:store1.sched_req_record_store
           store2.sched_req_record_store;
       quota_diff = Task_inst_id_map_utils.diff ~old:store1.quota store2.quota;
-      progress_indexed_by_start_diff =
-        Int64_map_utils.Task_inst_progress_bucketed.diff_bucketed
-          ~old:store1.progress_indexed_by_start store2.progress_indexed_by_start;
+      task_seg_id_to_progress_diff =
+        Task_seg_id_map_utils.diff ~old:store1.task_seg_id_to_progress
+          store2.task_seg_id_to_progress;
+      task_inst_id_to_progress_diff =
+        Task_inst_id_map_utils.diff ~old:store1.task_inst_id_to_progress
+          store2.task_inst_id_to_progress;
     }
 
   let add_diff_store (diff : store_diff) (store : store) : store =
@@ -1863,7 +2083,7 @@ module Diff = struct
         Task_id_map_utils.Int64_bucketed.add_diff_bucketed
           diff.task_id_to_task_inst_ids_diff store.task_id_to_task_inst_ids;
       task_inst_id_to_task_seg_ids =
-        Task_inst_id_map_utils.Int64_bucketed.add_diff_bucketed
+        Task_inst_id_map_utils.Int64_int64_option_bucketed.add_diff_bucketed
           diff.task_inst_id_to_task_seg_ids_diff
           store.task_inst_id_to_task_seg_ids;
       sched_req_ids =
@@ -1875,9 +2095,12 @@ module Diff = struct
         Sched_req_id_map_utils.add_diff diff.sched_req_record_store_diff
           store.sched_req_record_store;
       quota = Task_inst_id_map_utils.add_diff diff.quota_diff store.quota;
-      progress_indexed_by_start =
-        Int64_map_utils.Task_inst_progress_bucketed.add_diff_bucketed
-          diff.progress_indexed_by_start_diff store.progress_indexed_by_start;
+      task_seg_id_to_progress =
+        Task_seg_id_map_utils.add_diff diff.task_seg_id_to_progress_diff
+          store.task_seg_id_to_progress;
+      task_inst_id_to_progress =
+        Task_inst_id_map_utils.add_diff diff.task_inst_id_to_progress_diff
+          store.task_inst_id_to_progress;
     }
 
   let sub_diff_store (diff : store_diff) (store : store) : store =
@@ -1897,7 +2120,7 @@ module Diff = struct
         Task_id_map_utils.Int64_bucketed.sub_diff_bucketed
           diff.task_id_to_task_inst_ids_diff store.task_id_to_task_inst_ids;
       task_inst_id_to_task_seg_ids =
-        Task_inst_id_map_utils.Int64_bucketed.sub_diff_bucketed
+        Task_inst_id_map_utils.Int64_int64_option_bucketed.sub_diff_bucketed
           diff.task_inst_id_to_task_seg_ids_diff
           store.task_inst_id_to_task_seg_ids;
       sched_req_ids =
@@ -1909,9 +2132,12 @@ module Diff = struct
         Sched_req_id_map_utils.sub_diff diff.sched_req_record_store_diff
           store.sched_req_record_store;
       quota = Task_inst_id_map_utils.sub_diff diff.quota_diff store.quota;
-      progress_indexed_by_start =
-        Int64_map_utils.Task_inst_progress_bucketed.sub_diff_bucketed
-          diff.progress_indexed_by_start_diff store.progress_indexed_by_start;
+      task_seg_id_to_progress =
+        Task_seg_id_map_utils.sub_diff diff.task_seg_id_to_progress_diff
+          store.task_seg_id_to_progress;
+      task_inst_id_to_progress =
+        Task_inst_id_map_utils.sub_diff diff.task_inst_id_to_progress_diff
+          store.task_inst_id_to_progress;
     }
 
   (*$*)
@@ -1994,6 +2220,14 @@ module Print = struct
            ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.sched_req_pending_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "scheduling request record :\n";
+    Sched_req_id_map.iter
+      (fun id data ->
+         Sched_req.Print.debug_string_of_sched_req_record
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
+         |> ignore)
+      sd.store.sched_req_record_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks :\n";
     Task_id_map.iter
       (fun id data ->
@@ -2033,16 +2267,26 @@ module Print = struct
            (Task.task_inst_id_to_string id)
            quota)
       sd.store.quota;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "progress :\n";
-    Int64_map.iter
-      (fun _start bucket ->
-         Task_inst_progress_set.iter
-           (fun (id, start, end_exc) ->
-              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
-                "%Ld - %Ld | %s\n" start end_exc
-                (Task.task_inst_id_to_string id))
-           bucket)
-      sd.store.progress_indexed_by_start;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task seg progress :\n";
+    Task_seg_id_map.iter
+      (fun id progress ->
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
+           (Task.task_seg_id_to_string id);
+         Task.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
+           ~buffer progress
+         |> ignore)
+      sd.store.task_seg_id_to_progress;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task inst progress :\n";
+    Task_inst_id_map.iter
+      (fun id progress ->
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
+           (Task.task_inst_id_to_string id);
+         Task.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
+           ~buffer progress
+         |> ignore)
+      sd.store.task_inst_id_to_progress;
     Buffer.contents buffer
 
   let debug_print_sched ?(indent_level = 0) sched =

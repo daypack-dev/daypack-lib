@@ -69,6 +69,63 @@ module In_place_head = struct
          let sched = Sched.Recur.instantiate ~start ~end_exc sched in
          ((), `In_place, sched))
       t
+
+  let mark_task_seg_completed (task_seg_id : Task.task_seg_id) (t : t) : unit =
+    map_head
+      (fun sched ->
+         let sched = Sched.Progress.mark_task_seg_completed task_seg_id sched in
+         ((), `In_place, sched))
+      t
+
+  let mark_task_seg_uncompleted (task_seg_id : Task.task_seg_id) (t : t) : unit
+    =
+    map_head
+      (fun sched ->
+         let sched =
+           Sched.Progress.mark_task_seg_uncompleted task_seg_id sched
+         in
+         ((), `In_place, sched))
+      t
+
+  let mark_task_inst_completed (task_inst_id : Task.task_inst_id) (t : t) : unit
+    =
+    map_head
+      (fun sched ->
+         let sched =
+           Sched.Progress.mark_task_inst_completed task_inst_id sched
+         in
+         ((), `In_place, sched))
+      t
+
+  let mark_task_inst_uncompleted (task_inst_id : Task.task_inst_id) (t : t) :
+    unit =
+    map_head
+      (fun sched ->
+         let sched =
+           Sched.Progress.mark_task_inst_uncompleted task_inst_id sched
+         in
+         ((), `In_place, sched))
+      t
+
+  let add_task_seg_progress_chunk (task_seg_id : Task.task_seg_id)
+      (chunk : int64 * int64) (t : t) : unit =
+    map_head
+      (fun sched ->
+         let sched =
+           Sched.Progress.add_task_seg_progress_chunk task_seg_id chunk sched
+         in
+         ((), `In_place, sched))
+      t
+
+  let add_task_inst_progress_chunk (task_inst_id : Task.task_inst_id)
+      (chunk : int64 * int64) (t : t) : unit =
+    map_head
+      (fun sched ->
+         let sched =
+           Sched.Progress.add_task_inst_progress_chunk task_inst_id chunk sched
+         in
+         ((), `In_place, sched))
+      t
 end
 
 module Maybe_append_to_head = struct
@@ -76,7 +133,7 @@ module Maybe_append_to_head = struct
     match t.history with
     | [] -> ()
     | hd :: tl -> (
-        let hd =
+        let hd' =
           hd
           |> Sched.Task_store.remove_task task_id
           |> Sched.Sched_req_store.remove_pending_sched_req_by_task_id task_id
@@ -85,10 +142,10 @@ module Maybe_append_to_head = struct
           Sched.Agenda.find_task_seg_place_seq_by_task_id task_id hd
         in
         match task_seg_place_seq () with
-        | Seq.Nil -> t.history <- hd :: tl
+        | Seq.Nil -> t.history <- hd' :: tl
         | _ ->
           let hd' =
-            hd
+            hd'
             |> Sched.Sched_req_store.remove_sched_req_record_by_task_id
               task_id
             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
@@ -99,7 +156,7 @@ module Maybe_append_to_head = struct
     match t.history with
     | [] -> ()
     | hd :: tl -> (
-        let hd =
+        let hd' =
           hd
           |> Sched.Task_inst_store.remove_task_inst task_inst_id
           |> Sched.Sched_req_store.remove_pending_sched_req_by_task_inst_id
@@ -109,10 +166,10 @@ module Maybe_append_to_head = struct
           Sched.Agenda.find_task_seg_place_seq_by_task_inst_id task_inst_id hd
         in
         match task_seg_place_seq () with
-        | Seq.Nil -> t.history <- hd :: tl
+        | Seq.Nil -> t.history <- hd' :: tl
         | _ ->
           let hd' =
-            hd
+            hd'
             |> Sched.Sched_req_store.remove_sched_req_record_by_task_inst_id
               task_inst_id
             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
@@ -201,8 +258,10 @@ module Print = struct
     Debug_print.bprintf ~indent_level buffer "sched ver history\n";
     List.iteri
       (fun i sched ->
-         Debug_print.bprintf ~indent_level buffer "i : %d\n" i |> ignore;
-         Sched.Print.debug_string_of_sched ~indent_level:(indent_level + 1)
+         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "ver : %d\n"
+           i
+         |> ignore;
+         Sched.Print.debug_string_of_sched ~indent_level:(indent_level + 2)
            ~buffer sched
          |> ignore)
       (List.rev t.history);

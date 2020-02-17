@@ -136,7 +136,7 @@ let map (type a b c d e f) ~(f_data : a -> d) ~(f_time : b -> e)
 let map_list ~f_data ~f_time ~f_time_slot ts =
   List.map (map ~f_data ~f_time ~f_time_slot) ts
 
-let get_data (type a b c) (t : (a, b, c) t) : a list =
+let get_inner_data (type a b c) (t : (a, b, c) t) : a list =
   match t with
   | Fixed { task_seg_related_data; _ } -> [ task_seg_related_data ]
   | Shift { task_seg_related_data_list; _ } -> task_seg_related_data_list
@@ -144,6 +144,18 @@ let get_data (type a b c) (t : (a, b, c) t) : a list =
   | Split_even { task_seg_related_data } -> [ task_seg_related_data ]
   | Time_share { task_seg_related_data_list; _ } -> task_seg_related_data_list
   | Push_toward { task_seg_related_data; _ } -> [ task_seg_related_data ]
+
+let contains_matching_inner_data (type a b c) (f : a -> bool) (t : (a, b, c) t)
+  : bool =
+  List.exists f (get_inner_data t)
+
+let list_contains_matching_inner_data (type a b c) (f : a -> bool)
+    (ts : (a, b, c) t list) : bool =
+  List.exists (fun t -> contains_matching_inner_data f t) ts
+
+let remove_data_units_with_matching_inner_data (type a b c) (f : a -> bool)
+    (ts : (a, b, c) t list) : (a, b, c) t list =
+  List.filter (fun t -> not (contains_matching_inner_data f t)) ts
 
 module Print = struct
   let debug_string_of_sched_req_data_unit_skeleton (type a b c)

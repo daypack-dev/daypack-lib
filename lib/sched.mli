@@ -26,23 +26,19 @@ type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
-type task_inst_progress_map = Task_inst_progress_set.t Int64_map.t
-
-type task_inst_progress_map_diff =
-  Int64_map_utils.Task_inst_progress_bucketed.diff_bucketed
-
 type store = {
   task_store : task_store;
   task_inst_store : task_inst_store;
   task_seg_store : task_seg_store;
   user_id_to_task_ids : Int64_set.t User_id_map.t;
   task_id_to_task_inst_ids : Int64_set.t Task_id_map.t;
-  task_inst_id_to_task_seg_ids : Int64_set.t Task_inst_id_map.t;
+  task_inst_id_to_task_seg_ids : Int64_int64_option_set.t Task_inst_id_map.t;
   sched_req_ids : Int64_set.t;
   sched_req_pending_store : sched_req_store;
   sched_req_record_store : sched_req_record_store;
   quota : int64 Task_inst_id_map.t;
-  progress_indexed_by_start : task_inst_progress_map;
+  task_seg_id_to_progress : Task.progress Task_seg_id_map.t;
+  task_inst_id_to_progress : Task.progress Task_inst_id_map.t;
 }
 
 type store_diff = {
@@ -53,12 +49,13 @@ type store_diff = {
   task_id_to_task_inst_ids_diff :
     Task_id_map_utils.Int64_bucketed.diff_bucketed;
   task_inst_id_to_task_seg_ids_diff :
-    Task_inst_id_map_utils.Int64_bucketed.diff_bucketed;
+    Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed;
   sched_req_ids_diff : Int64_set_utils.diff;
   sched_req_pending_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
   quota_diff : int64 Task_inst_id_map_utils.diff;
-  progress_indexed_by_start_diff : task_inst_progress_map_diff;
+  task_seg_id_to_progress_diff : Task.progress Task_seg_id_map_utils.diff;
+  task_inst_id_to_progress_diff : Task.progress Task_inst_id_map_utils.diff;
 }
 
 type agenda = { indexed_by_start : task_seg_place_map }
@@ -109,6 +106,14 @@ module Task_seg_store : sig
 
   val add_task_segs_via_task_seg_alloc_req_list :
     Task.task_seg_alloc_req list -> sched -> Task.task_seg list * sched
+
+  val add_task_seg_via_task_seg_place : Task.task_seg_place -> sched -> sched
+
+  val add_task_segs_via_task_seg_place_list :
+    Task.task_seg_place list -> sched -> sched
+
+  val add_task_segs_via_task_seg_place_seq :
+    Task.task_seg_place Seq.t -> sched -> sched
 
   val find_task_seg_opt : Task.task_seg_id -> sched -> Task.task_seg_size option
 
@@ -192,6 +197,28 @@ module Agenda : sig
   val remove_task_seg_place_by_task_seg_id : Task.task_seg_id -> sched -> sched
 end
 
+module Progress : sig
+  val set_task_seg_completed_flag :
+    Task.task_seg_id -> completed:bool -> sched -> sched
+
+  val mark_task_seg_completed : Task.task_seg_id -> sched -> sched
+
+  val mark_task_seg_uncompleted : Task.task_seg_id -> sched -> sched
+
+  val add_task_seg_progress_chunk :
+    Task.task_seg_id -> int64 * int64 -> sched -> sched
+
+  val set_task_inst_completed_flag :
+    Task.task_inst_id -> completed:bool -> sched -> sched
+
+  val mark_task_inst_completed : Task.task_inst_id -> sched -> sched
+
+  val mark_task_inst_uncompleted : Task.task_inst_id -> sched -> sched
+
+  val add_task_inst_progress_chunk :
+    Task.task_inst_id -> int64 * int64 -> sched -> sched
+end
+
 module Sched_req_store : sig
   val queue_sched_req_data :
     Sched_req.sched_req_data -> sched -> Sched_req.sched_req * sched
@@ -215,10 +242,10 @@ module Sched_req_store : sig
   val find_sched_req_record_by_task_seg_id :
     Task.task_seg_id -> sched -> Sched_req.sched_req_record Seq.t
 
-  val remove_pending_sched_req_if_contains_matching_task_seg :
+  val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
     (Task.task_seg_alloc_req -> bool) -> sched -> sched
 
-  val remove_pending_sched_req_data_unit_if_contains_matching_task_seg :
+  val remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req :
     (Task.task_seg_alloc_req -> bool) -> sched -> sched
 
   val remove_sched_req_record_if_contains_matching_task_seg :
@@ -274,6 +301,13 @@ module Recur : sig
   val instantiate : start:int64 -> end_exc:int64 -> sched -> sched
 end
 
+module Leftover : sig
+  val get_leftover_task_segs : start:int64 -> sched -> Task.task_seg Seq.t
+
+  val sched_for_leftover_task_segs :
+    start:int64 -> end_exc:int64 -> sched -> sched
+end
+
 module Serialize : sig
   val pack_task_store : task_store -> Sched_t.task list
 
@@ -296,10 +330,16 @@ module Serialize : sig
     Int64_set.t Task_id_map.t -> (Task_t.task_id * int64 list) list
 
   val pack_task_inst_id_to_task_seg_ids :
-    Int64_set.t Task_inst_id_map.t -> (Task_t.task_inst_id * int64 list) list
+    Int64_int64_option_set.t Task_inst_id_map.t ->
+    (Task_t.task_inst_id * (int64 * int64 option) list) list
 
-  val pack_progress_indexed_by_start :
-    task_inst_progress_map -> (int64 * Task_t.task_inst_progress list) list
+  val pack_task_seg_id_to_progress :
+    Task.progress Task_seg_id_map.t ->
+    (Task_t.task_seg_id * Task_t.progress) list
+
+  val pack_task_inst_id_to_progress :
+    Task.progress Task_inst_id_map.t ->
+    (Task_t.task_inst_id * Task_t.progress) list
 
   val pack_indexed_by_start :
     task_seg_place_map -> (int64 * Task_t.task_seg_place list) list
@@ -334,10 +374,16 @@ module Deserialize : sig
     (Task_t.task_id * int64 list) list -> Int64_set.t Task_id_map.t
 
   val unpack_task_inst_id_to_task_seg_ids :
-    (Task_t.task_inst_id * int64 list) list -> Int64_set.t Task_inst_id_map.t
+    (Task_t.task_inst_id * (int64 * int64 option) list) list ->
+    Int64_int64_option_set.t Task_inst_id_map.t
 
-  val unpack_progress_indexed_by_start :
-    (int64 * Task_t.task_inst_progress list) list -> task_inst_progress_map
+  val unpack_task_seg_id_to_progress :
+    (Task_t.task_seg_id * Task_t.progress) list ->
+    Task.progress Task_seg_id_map.t
+
+  val unpack_task_inst_id_to_progress :
+    (Task_t.task_inst_id * Task_t.progress) list ->
+    Task.progress Task_inst_id_map.t
 
   val unpack_indexed_by_start :
     (int64 * Task_t.task_seg_place list) list -> task_seg_place_map

@@ -572,6 +572,30 @@ let debug_sched_usage_simulation () =
       print_endline "Scheduled successfully";
       Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history
     | Error () -> print_endline "Scheduling failed" );
+  print_endline "=====";
+  print_endline "Removing task/task inst";
+  Sched_ver_history.Maybe_append_to_head.remove_task_inst (0L, 0L, 0L)
+    sched_ver_history;
+  (* Sched_ver_history.Maybe_append_to_head.remove_task (0L, 0L) sched_ver_history; *)
+  Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
+  print_endline "=====";
+  print_endline "Recording prgress";
+  (* Sched_ver_history.In_place_head.mark_task_inst_completed (0L, 0L, 0L)
+   *   sched_ver_history; *)
+  (* Sched_ver_history.In_place_head.add_task_seg_progress_chunk
+   *   (0L, 0L, 1L, 0L, None) (0L, 100L) sched_ver_history; *)
+  (* Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history; *)
+  print_endline "=====";
+  (* Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history; *)
+  ( match
+      Sched_ver_history.Maybe_append_to_head.sched ~start:0L ~end_exc:100L
+        ~include_sched_reqs_partially_within_time_period:true
+        ~up_to_sched_req_id_inc:None sched_ver_history
+    with
+    | Ok () ->
+      print_endline "Scheduled successfully";
+      Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history
+    | Error () -> print_endline "Scheduling failed" );
   print_newline ()
 
 (* let debug_time_pattern_normalize_pattern () =

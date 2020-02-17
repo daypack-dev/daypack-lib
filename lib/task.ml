@@ -64,7 +64,10 @@ and task_seg_size = int64
 
 and task_seg_place = task_seg_id * int64 * int64
 
-and task_inst_progress = task_inst_id * int64 * int64
+and progress = {
+  completed : bool;
+  chunks : (int64 * int64) list;
+}
 
 let task_seg_id_w_first_sub_id ((id1, id2, id3, id4, id5) : task_seg_id) :
   task_seg_id =
@@ -189,6 +192,9 @@ module Serialize = struct
   and pack_task_seg_size x = x
 
   and pack_task_seg_place x = x
+
+  and pack_progress (x : progress) : Task_t.progress =
+    { completed = x.completed; chunks = x.chunks }
 end
 
 module Deserialize = struct
@@ -266,6 +272,9 @@ module Deserialize = struct
   and unpack_task_seg_size x = x
 
   and unpack_task_seg_place x = x
+
+  and unpack_progress (x : Task_t.progress) : progress =
+    { completed = x.completed; chunks = x.chunks }
 end
 
 module Print = struct
@@ -440,6 +449,18 @@ module Print = struct
       size;
     Buffer.contents buffer
 
+  let debug_string_of_progress ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) progress =
+    Debug_print.bprintf ~indent_level buffer "completed : %b\n"
+      progress.completed;
+    Debug_print.bprintf ~indent_level buffer "chunks :\n";
+    List.iter
+      (fun (start, end_exc) ->
+         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+           "[%Ld, %Ld)\n" start end_exc)
+      progress.chunks;
+    Buffer.contents buffer
+
   let debug_print_task ?(indent_level = 0) task =
     print_string (debug_string_of_task ~indent_level task)
 
@@ -448,4 +469,7 @@ module Print = struct
 
   let debug_print_task_seg ?(indent_level = 0) task_seg =
     print_string (debug_string_of_task_seg ~indent_level task_seg)
+
+  let debug_print_progress ?(indent_level = 0) progress =
+    print_string (debug_string_of_progress ~indent_level progress)
 end
