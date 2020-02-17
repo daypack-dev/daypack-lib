@@ -567,14 +567,14 @@ end
 
 module Agenda = struct
   let add_task_seg_place
-      (((id1, id2, id3, id4, id5), start, end_exc) as task_seg_place :
+      (((_id1, _id2, _id3, _id4, _id5), start, _end_exc) as task_seg_place :
          Task.task_seg_place) ((sid, sd) : sched) : sched =
     let indexed_by_start =
       Int64_map.update start
         (fun bucket ->
            Some
              (Task_seg_place_set.add
-                ((id1, id2, id3, id4, id5), start, end_exc)
+                task_seg_place
                 ( match bucket with
                   | None -> Task_seg_place_set.empty
                   | Some s -> s )))
