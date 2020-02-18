@@ -37,8 +37,7 @@ module In_place_head = struct
     map_head
       (fun sched ->
          let task, task_inst_list, sched =
-           Sched.Task.add_task ~parent_user_id data task_inst_data_list
-             sched
+           Sched.Task.add_task ~parent_user_id data task_inst_data_list sched
          in
          ((task, task_inst_list), `In_place, sched))
       t
@@ -147,8 +146,7 @@ module Maybe_append_to_head = struct
         | _ ->
           let hd' =
             hd'
-            |> Sched.Sched_req.remove_sched_req_record_by_task_id
-              task_id
+            |> Sched.Sched_req.remove_sched_req_record_by_task_id task_id
             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
           in
           t.history <- hd' :: hd :: tl )
@@ -185,8 +183,8 @@ module Maybe_append_to_head = struct
         let sched_req_records, hd' =
           hd
           |> Sched.Recur.instantiate ~start ~end_exc
-          |> Sched.Sched_req.allocate_task_segs_for_pending_sched_reqs
-            ~start ~end_exc ~include_sched_reqs_partially_within_time_period
+          |> Sched.Sched_req.allocate_task_segs_for_pending_sched_reqs ~start
+            ~end_exc ~include_sched_reqs_partially_within_time_period
             ~up_to_sched_req_id_inc
         in
         match sched_req_records with

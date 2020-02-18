@@ -541,8 +541,7 @@ module Task = struct
       }
     in
     let inst_list, (sid, sd) =
-      Task_inst.add_task_inst_list ~parent_task_id task_inst_data_list
-        (sid, sd)
+      Task_inst.add_task_inst_list ~parent_task_id task_inst_data_list (sid, sd)
     in
     ((parent_task_id, data), inst_list, (sid, sd))
 
@@ -1130,8 +1129,8 @@ module Sched_req = struct
          match sched_req_data_unit with
          | Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start } ->
            let task_seg_related_data, sched =
-             Task_seg.add_task_seg_via_task_seg_alloc_req
-               task_seg_related_data sched
+             Task_seg.add_task_seg_via_task_seg_alloc_req task_seg_related_data
+               sched
            in
            ( Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start }
              :: acc,
@@ -1318,8 +1317,8 @@ module Recur = struct
          |> Seq.fold_left
            (fun sched (task_inst_data, sched_req_templates) ->
               let (task_inst_id, _), sched =
-                Task_inst.add_task_inst ~parent_task_id:task_id
-                  task_inst_data sched
+                Task_inst.add_task_inst ~parent_task_id:task_id task_inst_data
+                  sched
               in
               let sched_req_data =
                 Sched_req_data_unit_skeleton.map_list
@@ -1388,9 +1387,7 @@ module Leftover = struct
     in
     Seq.fold_left
       (fun sched sched_req_data ->
-         let _, sched =
-           Sched_req.queue_sched_req_data sched_req_data sched
-         in
+         let _, sched = Sched_req.queue_sched_req_data sched_req_data sched in
          sched)
       sched sched_req_data_seq
 end
