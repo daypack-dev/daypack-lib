@@ -12,7 +12,7 @@ type 'a set_diff <ocaml from="Set_utils" t="diff"> = abstract
 
 (* corresponds to Time_slot
 *)
-type time_slot <ocaml from="Time_slot"> = abstract
+type time_slot <ocaml from="Time_slot_ds"> = abstract
 
 (* corresponds to Sched_req_data_unit_skeleton
 *)

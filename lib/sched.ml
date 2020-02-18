@@ -1,5 +1,4 @@
 open Int64_utils
-module TS = Time_slot
 
 type sched_id = int
 
@@ -337,14 +336,14 @@ module Time_slot = struct
         |> Task_seg_place_set.to_seq
         |> Seq.map (fun (_, start, end_exc) -> (start, end_exc)))
     |> (fun l ->
-        Option.fold ~none:l ~some:(fun start -> TS.slice ~start l) start)
+        Option.fold ~none:l ~some:(fun start -> Time_slot_ds.slice ~start l) start)
     |> (fun l ->
-        Option.fold ~none:l ~some:(fun end_exc -> TS.slice ~end_exc l) end_exc)
-    |> TS.normalize ~skip_sort:true
+        Option.fold ~none:l ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l) end_exc)
+    |> Time_slot_ds.normalize ~skip_sort:true
 
   let get_free_time_slots ~start ~end_exc (sched : sched) :
     (int64 * int64) Seq.t =
-    get_occupied_time_slots ~start ~end_exc sched |> TS.invert ~start ~end_exc
+    get_occupied_time_slots ~start ~end_exc sched |> Time_slot_ds.invert ~start ~end_exc
 end
 
 module Quota_store = struct
@@ -1233,7 +1232,7 @@ module Recur = struct
     | Task_ds.One_off -> Seq.empty
     | Task_ds.Recurring recur ->
       let usable_time_slots =
-        TS.invert ~start ~end_exc (List.to_seq recur.excluded_time_slots)
+        Time_slot_ds.invert ~start ~end_exc (List.to_seq recur.excluded_time_slots)
       in
       ( match recur.recur_type with
         | Task_ds.Arithemtic_seq
@@ -1266,7 +1265,7 @@ module Recur = struct
           with
           | None -> true
           | Some bound ->
-            TS.a_is_subset_of_b ~a:(Seq.return bound)
+            Time_slot_ds.a_is_subset_of_b ~a:(Seq.return bound)
               ~b:usable_time_slots)
 
   let instance_recorded_already (task_id : Task_ds.task_id)
@@ -1352,7 +1351,7 @@ module Leftover = struct
         | Some progress ->
           if progress.completed then None
           else
-            let progress_made = TS.sum_length_list progress.chunks in
+            let progress_made = Time_slot_ds.sum_length_list progress.chunks in
             if progress_made < task_seg_size then
               Some (task_seg_id, progress_made -^ task_seg_size)
             else None)

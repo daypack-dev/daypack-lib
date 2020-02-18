@@ -58,15 +58,15 @@
  (action  (run atdgen -t %{deps})))
 
 (rule
- (targets time_slot_j.ml
-          time_slot_j.mli)
- (deps    time_slot.atd)
+ (targets time_slot_ds_j.ml
+          time_slot_ds_j.mli)
+ (deps    time_slot_ds.atd)
  (action  (run atdgen -j -j-std %{deps})))
 
 (rule
- (targets time_slot_t.ml
-          time_slot_t.mli)
- (deps    time_slot.atd)
+ (targets time_slot_ds_t.ml
+          time_slot_ds_t.mli)
+ (deps    time_slot_ds.atd)
  (action  (run atdgen -t %{deps})))
 
 (rule

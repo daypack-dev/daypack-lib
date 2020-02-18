@@ -5,14 +5,14 @@ type sched_req_id = int64
 type sched_req = sched_req_id * sched_req_data
 
 and sched_req_data_unit =
-  (Task_ds.task_seg_alloc_req, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
+  (Task_ds.task_seg_alloc_req, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t
 
 and sched_req_data = sched_req_data_unit list
 
 type sched_req_record = sched_req_id * sched_req_record_data
 
 and sched_req_record_data_unit =
-  (Task_ds.task_seg, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
+  (Task_ds.task_seg, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t
 
 and sched_req_record_data = sched_req_record_data_unit list
 
@@ -26,23 +26,23 @@ let flexibility_score_of_sched_req_record
       |> Int64.to_float
     in
     let time_slot_sum_len =
-      Time_slot.sum_length_list x.time_slots |> Int64.to_float
+      Time_slot_ds.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (task_seg_alloc_req_sum_len /. time_slot_sum_len)
   | Split_and_shift x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slot.sum_length_list x.time_slots |> Int64.to_float
+      Time_slot_ds.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
   | Split_even x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slot.intersect
+      Time_slot_ds.intersect
         (x.time_slots |> List.to_seq)
         (x.buckets |> List.to_seq)
       |> List.of_seq
-      |> Time_slot.sum_length_list
+      |> Time_slot_ds.sum_length_list
       |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
@@ -52,13 +52,13 @@ let flexibility_score_of_sched_req_record
       |> Int64.to_float
     in
     let time_slot_sum_len =
-      Time_slot.sum_length_list x.time_slots |> Int64.to_float
+      Time_slot_ds.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (task_seg_alloc_req_sum_len /. time_slot_sum_len)
   | Push_toward x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slot.sum_length_list x.time_slots |> Int64.to_float
+      Time_slot_ds.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
 
@@ -85,7 +85,7 @@ let sched_req_bound_on_start_and_end_exc
          | Split_even { time_slots; _ }
          | Time_share { time_slots; _ }
          | Push_toward { time_slots; _ } ->
-           Time_slot.min_start_and_max_end_exc_list time_slots
+           Time_slot_ds.min_start_and_max_end_exc_list time_slots
        in
        match acc with
        | None -> cur
@@ -170,7 +170,7 @@ module Print = struct
           Printf.sprintf "id : %s, len : %Ld\n"
             (Task_ds.task_inst_id_to_string id)
             len)
-      ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot.to_string
+      ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot_ds.to_string
       req_data
 
   let debug_string_of_sched_req_data ?(indent_level = 0)
@@ -198,7 +198,7 @@ module Print = struct
           Printf.sprintf "id : %s, len : %Ld\n"
             (Task_ds.task_seg_id_to_string id)
             len)
-      ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot.to_string
+      ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot_ds.to_string
       req_data
 
   let debug_string_of_sched_req_record_data ?(indent_level = 0)
