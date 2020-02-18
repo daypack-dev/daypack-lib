@@ -3,9 +3,9 @@ let () =
     [
       ("Map_utils", Map_utils.suite);
       ("Set_utils", Set_utils.suite);
-      ("Time_slot", Time_slot.suite);
+      ("Time_slot", Time_slot_ds.suite);
       ("Task_seg_place_gens", Task_seg_place_gens.suite);
-      ("Task", Task.suite);
+      ("Task", Task_ds.suite);
       ("Sched", Sched.suite);
       ("Sched_ver_history", Sched_ver_history.suite);
     ]

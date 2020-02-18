@@ -1,18 +1,18 @@
 open Int64_utils
 
 let brute_force_single ~start ~end_exc ~(base : Sched.sched)
-    ((_sched_req_id, sched_req_record_data_list) : Sched_req.sched_req_record) :
-  Sched.sched Seq.t =
+    ((_sched_req_id, sched_req_record_data_list) :
+       Sched_req_ds.sched_req_record) : Sched.sched Seq.t =
   let free_time_slots =
     Sched.Time_slot.get_free_time_slots ~start ~end_exc base
   in
   let get_usable_time_slots time_slots =
     time_slots
-    |> Time_slot.normalize_list_in_seq_out
-    |> Time_slot.intersect free_time_slots
+    |> Time_slot_ds.normalize_list_in_seq_out
+    |> Time_slot_ds.intersect free_time_slots
     |> fun time_slots ->
     Seq.iter
-      (fun time_slot -> Printf.printf "%s\n" (Time_slot.to_string time_slot))
+      (fun time_slot -> Printf.printf "%s\n" (Time_slot_ds.to_string time_slot))
       time_slots;
     time_slots
   in
@@ -97,9 +97,10 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     (sched_req_record_data_list |> List.to_seq)
 
 let backtracking_search_multi ~start ~end_exc ~base
-    (sched_req_records : Sched_req.sched_req_record list) : Sched.sched Seq.t =
+    (sched_req_records : Sched_req_ds.sched_req_record list) : Sched.sched Seq.t
+  =
   sched_req_records
-  |> Sched_req.sort_sched_req_record_list_by_flexibility_score
+  |> Sched_req_ds.sort_sched_req_record_list_by_flexibility_score
   |> List.fold_left
     (fun sched_seq sched_req ->
        Seq.flat_map
@@ -112,8 +113,8 @@ let backtracking_search_pending ~start ~end_exc
     ~include_sched_reqs_partially_within_time_period ~up_to_sched_req_id_inc
     ~base : Sched.sched Seq.t =
   let sched_req_records, base =
-    Sched.Sched_req_store.allocate_task_segs_for_pending_sched_reqs ~start
-      ~end_exc ~include_sched_reqs_partially_within_time_period
-      ~up_to_sched_req_id_inc base
+    Sched.Sched_req.allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
+      ~include_sched_reqs_partially_within_time_period ~up_to_sched_req_id_inc
+      base
   in
   backtracking_search_multi ~start ~end_exc ~base sched_req_records

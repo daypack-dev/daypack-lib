@@ -155,9 +155,9 @@ let matching_tm_seq ~search_years_ahead (t : t) (start : Unix.tm) :
  *   let s = matching_tm_seq ~search_years_ahead t tm in
  *   match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x *)
 
-let matching_time_slots (t : t) (time_slots : Time_slot.t list) :
-  Time_slot.t Seq.t =
-  match Time_slot.min_start_and_max_end_exc_list time_slots with
+let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
+  Time_slot_ds.t Seq.t =
+  match Time_slot_ds.min_start_and_max_end_exc_list time_slots with
   | None -> Seq.empty
   | Some (start, end_exc) ->
     let start_tm = Time.time_to_tm start in
@@ -166,10 +166,10 @@ let matching_time_slots (t : t) (time_slots : Time_slot.t list) :
     matching_tm_seq ~search_years_ahead t start_tm
     |> Seq.map Time.tm_to_time
     |> Seq.map (fun time -> (time, time +^ 1L))
-    |> Time_slot.intersect (List.to_seq time_slots)
-    |> Time_slot.normalize ~skip_filter:false ~skip_sort:false
+    |> Time_slot_ds.intersect (List.to_seq time_slots)
+    |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:false
 
-(* let next_match_int64 ?(time_slots : Time_slot.t list = []) ~normalize_dir
+(* let next_match_int64 ?(time_slots : Time_slot_ds.t list = []) ~normalize_dir
  *     ~search_years_ahead (t : t) (time : int64) : int64 option =
  *   Time.time_to_tm time
  *   |> next_match_tm ~normalize_dir ~search_years_ahead t
@@ -186,8 +186,8 @@ let matching_time_slots (t : t) (time_slots : Time_slot.t list) :
  *             |> List.to_seq
  *             |> fun s ->
  *             match normalize_dir with
- *             | `Start -> Time_slot.slice ~start:time s
- *             | `End -> Time_slot.slice ~end_exc:time s
+ *             | `Start -> Time_slot_ds.slice ~start:time s
+ *             | `End -> Time_slot_ds.slice ~end_exc:time s
  *           in
  *           match s () with
  *           | Seq.Nil -> None

@@ -7,43 +7,47 @@ val of_sched_list : Sched.sched list -> t
 module In_place_head : sig
   val add_task :
     parent_user_id:int64 ->
-    Task.task_data ->
-    Task.task_inst_data list ->
+    Task_ds.task_data ->
+    Task_ds.task_inst_data list ->
     t ->
-    Task.task * Task.task_inst list
+    Task_ds.task * Task_ds.task_inst list
 
   val add_task_inst :
-    parent_task_id:Task.task_id -> Task.task_inst_data -> t -> Task.task_inst
+    parent_task_id:Task_ds.task_id ->
+    Task_ds.task_inst_data ->
+    t ->
+    Task_ds.task_inst
 
-  val queue_sched_req : Sched_req.sched_req_data -> t -> Sched_req.sched_req
+  val queue_sched_req :
+    Sched_req_ds.sched_req_data -> t -> Sched_req_ds.sched_req
 
   val instantiate : start:int64 -> end_exc:int64 -> t -> unit
 
-  val mark_task_seg_completed : Task.task_seg_id -> t -> unit
+  val mark_task_seg_completed : Task_ds.task_seg_id -> t -> unit
 
-  val mark_task_seg_uncompleted : Task.task_seg_id -> t -> unit
+  val mark_task_seg_uncompleted : Task_ds.task_seg_id -> t -> unit
 
-  val mark_task_inst_completed : Task.task_inst_id -> t -> unit
+  val mark_task_inst_completed : Task_ds.task_inst_id -> t -> unit
 
-  val mark_task_inst_uncompleted : Task.task_inst_id -> t -> unit
+  val mark_task_inst_uncompleted : Task_ds.task_inst_id -> t -> unit
 
   val add_task_seg_progress_chunk :
-    Task.task_seg_id -> int64 * int64 -> t -> unit
+    Task_ds.task_seg_id -> int64 * int64 -> t -> unit
 
   val add_task_inst_progress_chunk :
-    Task.task_inst_id -> int64 * int64 -> t -> unit
+    Task_ds.task_inst_id -> int64 * int64 -> t -> unit
 end
 
 module Maybe_append_to_head : sig
-  val remove_task : Task.task_id -> t -> unit
+  val remove_task : Task_ds.task_id -> t -> unit
 
-  val remove_task_inst : Task.task_inst_id -> t -> unit
+  val remove_task_inst : Task_ds.task_inst_id -> t -> unit
 
   val sched :
     start:int64 ->
     end_exc:int64 ->
     include_sched_reqs_partially_within_time_period:bool ->
-    up_to_sched_req_id_inc:Sched_req.sched_req_id option ->
+    up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
     t ->
     (unit, unit) result
 end

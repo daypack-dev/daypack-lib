@@ -1,6 +1,6 @@
 # Daypack
 
-Daypack is a basic automatic personal task scheduler
+Daypack is a basic constraint solving automatic personal task scheduler
 
 This repo contains the core library of Daypack `daypack_lib`, and the cli frontend `daypc`.
 Other frontends (e.g. Electron, web) are underway.
@@ -29,6 +29,10 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
   - See below for strategies supported
 
 - Manual scheduling
+
+- Recurrence
+
+  - All automatic scheduling strategies are available for recurring tasks as well
 
 - Backup plan
 
