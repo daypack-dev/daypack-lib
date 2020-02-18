@@ -126,8 +126,8 @@ let qc_relatvie_complement_result_disjoint_from_not_mem_of =
     QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
     (fun (mem_of, not_mem_of) ->
        let res =
-         Daypack_lib.Time_slot_ds.relative_complement ~mem_of:(List.to_seq mem_of)
-           ~not_mem_of:(List.to_seq not_mem_of)
+         Daypack_lib.Time_slot_ds.relative_complement
+           ~mem_of:(List.to_seq mem_of) ~not_mem_of:(List.to_seq not_mem_of)
          |> List.of_seq
        in
        let not_mem_of_count = List.length not_mem_of in
@@ -141,8 +141,8 @@ let qc_relatvie_complement_result_subset_of_mem_of =
     QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
     (fun (mem_of, not_mem_of) ->
        let res_s =
-         Daypack_lib.Time_slot_ds.relative_complement ~mem_of:(List.to_seq mem_of)
-           ~not_mem_of:(List.to_seq not_mem_of)
+         Daypack_lib.Time_slot_ds.relative_complement
+           ~mem_of:(List.to_seq mem_of) ~not_mem_of:(List.to_seq not_mem_of)
        in
        let res = res_s |> List.of_seq in
        Daypack_lib.Time_slot_ds.intersect (List.to_seq mem_of) res_s

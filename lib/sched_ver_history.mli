@@ -13,9 +13,13 @@ module In_place_head : sig
     Task_ds.task * Task_ds.task_inst list
 
   val add_task_inst :
-    parent_task_id:Task_ds.task_id -> Task_ds.task_inst_data -> t -> Task_ds.task_inst
+    parent_task_id:Task_ds.task_id ->
+    Task_ds.task_inst_data ->
+    t ->
+    Task_ds.task_inst
 
-  val queue_sched_req : Sched_req_ds.sched_req_data -> t -> Sched_req_ds.sched_req
+  val queue_sched_req :
+    Sched_req_ds.sched_req_data -> t -> Sched_req_ds.sched_req
 
   val instantiate : start:int64 -> end_exc:int64 -> t -> unit
 

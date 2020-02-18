@@ -14,9 +14,11 @@ type task_seg_store_diff = Task_ds.task_seg_size Task_seg_id_map_utils.diff
 
 type sched_req_store = Sched_req_ds.sched_req_data Sched_req_id_map.t
 
-type sched_req_store_diff = Sched_req_ds.sched_req_data Sched_req_id_map_utils.diff
+type sched_req_store_diff =
+  Sched_req_ds.sched_req_data Sched_req_id_map_utils.diff
 
-type sched_req_record_store = Sched_req_ds.sched_req_record_data Sched_req_id_map.t
+type sched_req_record_store =
+  Sched_req_ds.sched_req_record_data Sched_req_id_map.t
 
 type sched_req_record_store_diff =
   Sched_req_ds.sched_req_record_data Sched_req_id_map_utils.diff
@@ -115,11 +117,13 @@ module Task_seg_store : sig
   val add_task_segs_via_task_seg_place_seq :
     Task_ds.task_seg_place Seq.t -> sched -> sched
 
-  val find_task_seg_opt : Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
+  val find_task_seg_opt :
+    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
 
   val remove_task_seg : Task_ds.task_seg_id -> sched -> sched
 
-  val remove_task_seg_strict : Task_ds.task_seg_id -> sched -> (sched, unit) result
+  val remove_task_seg_strict :
+    Task_ds.task_seg_id -> sched -> (sched, unit) result
 
   val remove_task_seg_seq : Task_ds.task_seg_id Seq.t -> sched -> sched
 end
@@ -194,7 +198,8 @@ module Agenda : sig
   val remove_task_seg_place_by_task_inst_id :
     Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_seg_place_by_task_seg_id : Task_ds.task_seg_id -> sched -> sched
+  val remove_task_seg_place_by_task_seg_id :
+    Task_ds.task_seg_id -> sched -> sched
 end
 
 module Progress : sig
@@ -224,7 +229,9 @@ module Sched_req_store : sig
     Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
 
   val queue_sched_req_data_list :
-    Sched_req_ds.sched_req_data list -> sched -> Sched_req_ds.sched_req list * sched
+    Sched_req_ds.sched_req_data list ->
+    sched ->
+    Sched_req_ds.sched_req list * sched
 
   val unqueue_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
 
@@ -321,7 +328,8 @@ module Serialize : sig
   val pack_sched_req_record_store :
     sched_req_record_store -> Sched_req_ds_t.sched_req_record list
 
-  val pack_quota : int64 Task_inst_id_map.t -> (Task_ds.task_inst_id * int64) list
+  val pack_quota :
+    int64 Task_inst_id_map.t -> (Task_ds.task_inst_id * int64) list
 
   val pack_user_id_to_task_ids :
     Int64_set.t User_id_map.t -> (Task_ds_t.user_id * int64 list) list

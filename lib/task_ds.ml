@@ -126,7 +126,8 @@ module Serialize = struct
       diff = arith_seq.diff;
     }
 
-  let rec pack_task ((id, data) : task) : Task_ds_t.task = (id, pack_task_data data)
+  let rec pack_task ((id, data) : task) : Task_ds_t.task =
+    (id, pack_task_data data)
 
   and pack_task_data (task_data : task_data) : Task_ds_t.task_data =
     {
@@ -240,8 +241,8 @@ module Deserialize = struct
       ~unpack_time_slot:(fun x -> x)
       sched_req_template_data_unit
 
-  and unpack_sched_req_template (sched_req_template : Task_ds_t.sched_req_template)
-    : sched_req_template =
+  and unpack_sched_req_template
+      (sched_req_template : Task_ds_t.sched_req_template) : sched_req_template =
     List.map unpack_sched_req_template_data_unit sched_req_template
 
   and unpack_recur_data (recur_data : Task_ds_t.recur_data) : recur_data =

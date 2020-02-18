@@ -5,7 +5,10 @@ type sched_req_id = int64
 type sched_req = sched_req_id * sched_req_data
 
 and sched_req_data_unit =
-  (Task_ds.task_seg_alloc_req, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t
+  ( Task_ds.task_seg_alloc_req,
+    int64,
+    Time_slot_ds.t )
+    Sched_req_data_unit_skeleton.t
 
 and sched_req_data = sched_req_data_unit list
 
@@ -122,7 +125,8 @@ module Serialize = struct
       ~pack_time_slot:(fun x -> x)
       sched_req_data_unit
 
-  let rec pack_sched_req_record (id, data_list) : Sched_req_ds_t.sched_req_record =
+  let rec pack_sched_req_record (id, data_list) :
+    Sched_req_ds_t.sched_req_record =
     (id, List.map pack_sched_req_record_data_unit data_list)
 
   and pack_sched_req_record_data_unit
@@ -170,8 +174,8 @@ module Print = struct
           Printf.sprintf "id : %s, len : %Ld\n"
             (Task_ds.task_inst_id_to_string id)
             len)
-      ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot_ds.to_string
-      req_data
+      ~string_of_time:Int64.to_string
+      ~string_of_time_slot:Time_slot_ds.to_string req_data
 
   let debug_string_of_sched_req_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data =
@@ -198,8 +202,8 @@ module Print = struct
           Printf.sprintf "id : %s, len : %Ld\n"
             (Task_ds.task_seg_id_to_string id)
             len)
-      ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot_ds.to_string
-      req_data
+      ~string_of_time:Int64.to_string
+      ~string_of_time_slot:Time_slot_ds.to_string req_data
 
   let debug_string_of_sched_req_record_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_record_data_list =

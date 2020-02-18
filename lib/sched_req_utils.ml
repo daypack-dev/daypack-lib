@@ -73,7 +73,8 @@ let sched_req_template_matches_sched_req
 
 let sched_req_template_data_unit_matches_sched_req_record_data_unit
     (sched_req_template_data_unit : Task_ds.sched_req_template_data_unit)
-    (sched_req_record_data_unit : Sched_req_ds.sched_req_record_data_unit) : bool =
+    (sched_req_record_data_unit : Sched_req_ds.sched_req_record_data_unit) :
+  bool =
   match (sched_req_template_data_unit, sched_req_record_data_unit) with
   | ( Sched_req_data_unit_skeleton.Fixed
         { task_seg_related_data = size1; start = start1 },
@@ -140,7 +141,7 @@ let sched_req_template_matches_sched_req_record_data
 
 let sched_req_template_matches_sched_req_record
     (sched_req_template : Task_ds.sched_req_template)
-    ((_sched_req_record_id, sched_req_record_data) : Sched_req_ds.sched_req_record)
-  : bool =
+    ((_sched_req_record_id, sched_req_record_data) :
+       Sched_req_ds.sched_req_record) : bool =
   sched_req_template_matches_sched_req_record_data sched_req_template
     sched_req_record_data
