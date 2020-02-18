@@ -111,23 +111,23 @@ let sched_req_partially_within_time_period ~start ~end_exc
     || (start' < end_exc && end_exc < end_exc')
 
 module Serialize = struct
-  let rec pack_sched_req (id, data) : Sched_req_t.sched_req =
+  let rec pack_sched_req (id, data) : Sched_req_ds_t.sched_req =
     (id, List.map pack_sched_req_data_unit data)
 
   and pack_sched_req_data_unit (sched_req_data_unit : sched_req_data_unit) :
-    Sched_req_t.sched_req_data_unit =
+    Sched_req_ds_t.sched_req_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:(fun x -> x)
       ~pack_time:(fun x -> x)
       ~pack_time_slot:(fun x -> x)
       sched_req_data_unit
 
-  let rec pack_sched_req_record (id, data_list) : Sched_req_t.sched_req_record =
+  let rec pack_sched_req_record (id, data_list) : Sched_req_ds_t.sched_req_record =
     (id, List.map pack_sched_req_record_data_unit data_list)
 
   and pack_sched_req_record_data_unit
       (sched_req_record_data : sched_req_record_data_unit) :
-    Sched_req_t.sched_req_record_data_unit =
+    Sched_req_ds_t.sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:(fun x -> x)
       ~pack_time:(fun x -> x)
@@ -140,7 +140,7 @@ module Deserialize = struct
     (id, List.map unpack_sched_req_data_unit data)
 
   and unpack_sched_req_data_unit
-      (sched_req_data_unit : Sched_req_t.sched_req_data_unit) :
+      (sched_req_data_unit : Sched_req_ds_t.sched_req_data_unit) :
     sched_req_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:(fun x -> x)
@@ -152,7 +152,7 @@ module Deserialize = struct
     (id, List.map unpack_sched_req_record_data_unit data)
 
   and unpack_sched_req_record_data_unit
-      (sched_req_record_data_unit : Sched_req_t.sched_req_record_data_unit) :
+      (sched_req_record_data_unit : Sched_req_ds_t.sched_req_record_data_unit) :
     sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:(fun x -> x)

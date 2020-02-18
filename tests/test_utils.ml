@@ -310,7 +310,7 @@ let sched_req_template_gen =
   QCheck.Gen.(list_size (int_bound 10) sched_req_template_data_unit_gen)
 
 let sched_req_data_unit_gen :
-  Daypack_lib.Sched_req.sched_req_data_unit QCheck.Gen.t =
+  Daypack_lib.Sched_req_ds.sched_req_data_unit QCheck.Gen.t =
   let open QCheck.Gen in
   map2
     (fun task_inst_id sched_req_template ->
@@ -321,16 +321,16 @@ let sched_req_data_unit_gen :
          sched_req_template)
     task_inst_id_gen sched_req_template_data_unit_gen
 
-let sched_req_gen : Daypack_lib.Sched_req.sched_req QCheck.Gen.t =
+let sched_req_gen : Daypack_lib.Sched_req_ds.sched_req QCheck.Gen.t =
   let open QCheck.Gen in
   pair pos_int64_gen (list_size (int_bound 2) sched_req_data_unit_gen)
 
 let sched_req =
-  QCheck.make ~print:Daypack_lib.Sched_req.Print.debug_string_of_sched_req
+  QCheck.make ~print:Daypack_lib.Sched_req_ds.Print.debug_string_of_sched_req
     sched_req_gen
 
 let sched_req_record_data_unit_gen :
-  Daypack_lib.Sched_req.sched_req_record_data_unit QCheck.Gen.t =
+  Daypack_lib.Sched_req_ds.sched_req_record_data_unit QCheck.Gen.t =
   let open QCheck.Gen in
   map2
     (fun task_seg_id sched_req_template ->
@@ -341,13 +341,13 @@ let sched_req_record_data_unit_gen :
          sched_req_template)
     task_seg_id_gen sched_req_template_data_unit_gen
 
-let sched_req_record_gen : Daypack_lib.Sched_req.sched_req_record QCheck.Gen.t =
+let sched_req_record_gen : Daypack_lib.Sched_req_ds.sched_req_record QCheck.Gen.t =
   let open QCheck.Gen in
   pair pos_int64_gen (list_size (int_bound 2) sched_req_record_data_unit_gen)
 
 let sched_req_record =
   QCheck.make
-    ~print:Daypack_lib.Sched_req.Print.debug_string_of_sched_req_record
+    ~print:Daypack_lib.Sched_req_ds.Print.debug_string_of_sched_req_record
     sched_req_record_gen
 
 let arith_seq_gen =
@@ -511,12 +511,12 @@ let progress = QCheck.make ~print:Print_utils.progress progress_gen
         "Daypack_lib.Sched_req_id_map.of_seq",
         "Daypack_lib.Sched_req_id_map.to_seq",
         "sched_req_gen",
-        "Daypack_lib.Sched_req.Print.debug_string_of_sched_req" );
+        "Daypack_lib.Sched_req_ds.Print.debug_string_of_sched_req" );
       ( "sched_req_record_store",
         "Daypack_lib.Sched_req_id_map.of_seq",
         "Daypack_lib.Sched_req_id_map.to_seq",
         "sched_req_record_gen",
-        "Daypack_lib.Sched_req.Print.debug_string_of_sched_req_record" );
+        "Daypack_lib.Sched_req_ds.Print.debug_string_of_sched_req_record" );
       ( "quota",
         "Daypack_lib.Task_inst_id_map.of_seq",
         "Daypack_lib.Task_inst_id_map.to_seq",
@@ -623,7 +623,7 @@ let sched_req_store =
         s
         |> Daypack_lib.Sched_req_id_map.to_seq
         |> List.of_seq
-        |> QCheck.Print.list Daypack_lib.Sched_req.Print.debug_string_of_sched_req)
+        |> QCheck.Print.list Daypack_lib.Sched_req_ds.Print.debug_string_of_sched_req)
     sched_req_store_gen
 
 let sched_req_record_store_gen =
@@ -639,7 +639,7 @@ let sched_req_record_store =
         |> Daypack_lib.Sched_req_id_map.to_seq
         |> List.of_seq
         |> QCheck.Print.list
-          Daypack_lib.Sched_req.Print.debug_string_of_sched_req_record)
+          Daypack_lib.Sched_req_ds.Print.debug_string_of_sched_req_record)
     sched_req_record_store_gen
 
 let quota_gen =

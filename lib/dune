@@ -94,13 +94,13 @@
  (action  (run atdgen -t %{deps})))
 
 (rule
- (targets sched_req_j.ml
-          sched_req_j.mli)
- (deps    sched_req.atd)
+ (targets sched_req_ds_j.ml
+          sched_req_ds_j.mli)
+ (deps    sched_req_ds.atd)
  (action  (run atdgen -j -j-std %{deps})))
 
 (rule
- (targets sched_req_t.ml
-          sched_req_t.mli)
- (deps    sched_req.atd)
+ (targets sched_req_ds_t.ml
+          sched_req_ds_t.mli)
+ (deps    sched_req_ds.atd)
  (action  (run atdgen -t %{deps})))

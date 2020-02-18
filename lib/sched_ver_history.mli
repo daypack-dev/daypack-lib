@@ -15,7 +15,7 @@ module In_place_head : sig
   val add_task_inst :
     parent_task_id:Task.task_id -> Task.task_inst_data -> t -> Task.task_inst
 
-  val queue_sched_req : Sched_req.sched_req_data -> t -> Sched_req.sched_req
+  val queue_sched_req : Sched_req_ds.sched_req_data -> t -> Sched_req_ds.sched_req
 
   val instantiate : start:int64 -> end_exc:int64 -> t -> unit
 
@@ -43,7 +43,7 @@ module Maybe_append_to_head : sig
     start:int64 ->
     end_exc:int64 ->
     include_sched_reqs_partially_within_time_period:bool ->
-    up_to_sched_req_id_inc:Sched_req.sched_req_id option ->
+    up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
     t ->
     (unit, unit) result
 end

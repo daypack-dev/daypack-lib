@@ -12,14 +12,14 @@ type task_seg_store = Task.task_seg_size Task_seg_id_map.t
 
 type task_seg_store_diff = Task.task_seg_size Task_seg_id_map_utils.diff
 
-type sched_req_store = Sched_req.sched_req_data Sched_req_id_map.t
+type sched_req_store = Sched_req_ds.sched_req_data Sched_req_id_map.t
 
-type sched_req_store_diff = Sched_req.sched_req_data Sched_req_id_map_utils.diff
+type sched_req_store_diff = Sched_req_ds.sched_req_data Sched_req_id_map_utils.diff
 
-type sched_req_record_store = Sched_req.sched_req_record_data Sched_req_id_map.t
+type sched_req_record_store = Sched_req_ds.sched_req_record_data Sched_req_id_map.t
 
 type sched_req_record_store_diff =
-  Sched_req.sched_req_record_data Sched_req_id_map_utils.diff
+  Sched_req_ds.sched_req_record_data Sched_req_id_map_utils.diff
 
 type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 
@@ -221,26 +221,26 @@ end
 
 module Sched_req_store : sig
   val queue_sched_req_data :
-    Sched_req.sched_req_data -> sched -> Sched_req.sched_req * sched
+    Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
 
   val queue_sched_req_data_list :
-    Sched_req.sched_req_data list -> sched -> Sched_req.sched_req list * sched
+    Sched_req_ds.sched_req_data list -> sched -> Sched_req_ds.sched_req list * sched
 
-  val unqueue_sched_req : Sched_req.sched_req_id -> sched -> sched
+  val unqueue_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
 
   val filter_sched_req_record_seq :
-    (Sched_req.sched_req_record -> bool) ->
+    (Sched_req_ds.sched_req_record -> bool) ->
     sched ->
-    Sched_req.sched_req_record Seq.t
+    Sched_req_ds.sched_req_record Seq.t
 
   val find_sched_req_record_by_task_id :
-    Task.task_id -> sched -> Sched_req.sched_req_record Seq.t
+    Task.task_id -> sched -> Sched_req_ds.sched_req_record Seq.t
 
   val find_sched_req_record_by_task_inst_id :
-    Task.task_inst_id -> sched -> Sched_req.sched_req_record Seq.t
+    Task.task_inst_id -> sched -> Sched_req_ds.sched_req_record Seq.t
 
   val find_sched_req_record_by_task_seg_id :
-    Task.task_seg_id -> sched -> Sched_req.sched_req_record Seq.t
+    Task.task_seg_id -> sched -> Sched_req_ds.sched_req_record Seq.t
 
   val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
     (Task.task_seg_alloc_req -> bool) -> sched -> sched
@@ -292,9 +292,9 @@ module Sched_req_store : sig
     start:int64 ->
     end_exc:int64 ->
     include_sched_reqs_partially_within_time_period:bool ->
-    up_to_sched_req_id_inc:Sched_req.sched_req_id option ->
+    up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
     sched ->
-    Sched_req.sched_req_record list * sched
+    Sched_req_ds.sched_req_record list * sched
 end
 
 module Recur : sig
@@ -316,10 +316,10 @@ module Serialize : sig
   val pack_task_seg_store : task_seg_store -> Sched_t.task_seg list
 
   val pack_sched_req_pending_store :
-    sched_req_store -> Sched_req_t.sched_req list
+    sched_req_store -> Sched_req_ds_t.sched_req list
 
   val pack_sched_req_record_store :
-    sched_req_record_store -> Sched_req_t.sched_req_record list
+    sched_req_record_store -> Sched_req_ds_t.sched_req_record list
 
   val pack_quota : int64 Task_inst_id_map.t -> (Task.task_inst_id * int64) list
 
@@ -359,10 +359,10 @@ module Deserialize : sig
   val unpack_task_seg_list : Sched_t.task_seg list -> task_seg_store
 
   val unpack_sched_req_pending_list :
-    Sched_req_t.sched_req list -> sched_req_store
+    Sched_req_ds_t.sched_req list -> sched_req_store
 
   val unpack_sched_req_record_list :
-    Sched_req_t.sched_req_record list -> sched_req_record_store
+    Sched_req_ds_t.sched_req_record list -> sched_req_record_store
 
   val unpack_quota :
     (Task.task_inst_id * int64) list -> int64 Task_inst_id_map.t

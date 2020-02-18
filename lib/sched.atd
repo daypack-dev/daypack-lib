@@ -64,19 +64,19 @@ type progress <ocaml from="Task"> = abstract
 
 (* corresponds to Sched_req
 *)
-type sched_req_id <ocaml from="Sched_req"> = abstract
+type sched_req_id <ocaml from="Sched_req_ds"> = abstract
 
-type sched_req <ocaml from="Sched_req"> = abstract
+type sched_req <ocaml from="Sched_req_ds"> = abstract
 
-type sched_req_data_unit <ocaml from="Sched_req"> = abstract
+type sched_req_data_unit <ocaml from="Sched_req_ds"> = abstract
 
-type sched_req_data <ocaml from="Sched_req"> = abstract
+type sched_req_data <ocaml from="Sched_req_ds"> = abstract
 
-type sched_req_record <ocaml from="Sched_req"> = abstract
+type sched_req_record <ocaml from="Sched_req_ds"> = abstract
 
-type sched_req_record_data_unit <ocaml from="Sched_req"> = abstract
+type sched_req_record_data_unit <ocaml from="Sched_req_ds"> = abstract
 
-type sched_req_record_data <ocaml from="Sched_req"> = abstract
+type sched_req_record_data <ocaml from="Sched_req_ds"> = abstract
 
 (* corresponds to Sched
 *)
