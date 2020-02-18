@@ -119,34 +119,34 @@ let sched_req_template_bound_on_start_and_end_exc
     None sched_req_template
 
 module Serialize = struct
-  let pack_arith_seq (arith_seq : arith_seq) : Task_t.arith_seq =
+  let pack_arith_seq (arith_seq : arith_seq) : Task_ds_t.arith_seq =
     {
       start = arith_seq.start;
       end_exc = arith_seq.end_exc;
       diff = arith_seq.diff;
     }
 
-  let rec pack_task ((id, data) : task) : Task_t.task = (id, pack_task_data data)
+  let rec pack_task ((id, data) : task) : Task_ds_t.task = (id, pack_task_data data)
 
-  and pack_task_data (task_data : task_data) : Task_t.task_data =
+  and pack_task_data (task_data : task_data) : Task_ds_t.task_data =
     {
       splittable = task_data.splittable;
       parallelizable = task_data.parallelizable;
       task_type = pack_task_type task_data.task_type;
     }
 
-  and pack_task_type (task_type : task_type) : Task_t.task_type =
+  and pack_task_type (task_type : task_type) : Task_ds_t.task_type =
     match task_type with
     | One_off -> `One_off
     | Recurring recur -> `Recurring (pack_recur recur)
 
-  and pack_recur_type (recur_type : recur_type) : Task_t.recur_type =
+  and pack_recur_type (recur_type : recur_type) : Task_ds_t.recur_type =
     match recur_type with
     | Arithemtic_seq (arith_seq, recur_data) ->
       `Arithmetic_seq (pack_arith_seq arith_seq, pack_recur_data recur_data)
     | Time_pattern_match _ -> failwith "Unimplemented"
 
-  and pack_recur (recur : recur) : Task_t.recur =
+  and pack_recur (recur : recur) : Task_ds_t.recur =
     {
       excluded_time_slots = recur.excluded_time_slots;
       recur_type = pack_recur_type recur.recur_type;
@@ -154,7 +154,7 @@ module Serialize = struct
 
   and pack_sched_req_template_data_unit
       (sched_req_template_data_unit : sched_req_template_data_unit) :
-    Task_t.sched_req_template_data_unit =
+    Task_ds_t.sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:(fun x -> x)
       ~pack_time:(fun x -> x)
@@ -162,24 +162,24 @@ module Serialize = struct
       sched_req_template_data_unit
 
   and pack_sched_req_template (sched_req_template : sched_req_template) :
-    Task_t.sched_req_template =
+    Task_ds_t.sched_req_template =
     List.map pack_sched_req_template_data_unit sched_req_template
 
-  and pack_recur_data (recur_data : recur_data) : Task_t.recur_data =
+  and pack_recur_data (recur_data : recur_data) : Task_ds_t.recur_data =
     {
       task_inst_data = pack_task_inst_data recur_data.task_inst_data;
       sched_req_template = pack_sched_req_template recur_data.sched_req_template;
     }
 
-  and pack_task_inst ((id, data) : task_inst) : Task_t.task_inst =
+  and pack_task_inst ((id, data) : task_inst) : Task_ds_t.task_inst =
     (id, pack_task_inst_data data)
 
   and pack_task_inst_data (task_inst_data : task_inst_data) :
-    Task_t.task_inst_data =
+    Task_ds_t.task_inst_data =
     { task_inst_type = pack_task_inst_type task_inst_data.task_inst_type }
 
   and pack_task_inst_type (task_inst_type : task_inst_type) :
-    Task_t.task_inst_type =
+    Task_ds_t.task_inst_type =
     match task_inst_type with
     | Reminder -> `Reminder
     | Reminder_quota_counting { quota } -> `Reminder_quota_counting quota
@@ -193,46 +193,46 @@ module Serialize = struct
 
   and pack_task_seg_place x = x
 
-  and pack_progress (x : progress) : Task_t.progress =
+  and pack_progress (x : progress) : Task_ds_t.progress =
     { completed = x.completed; chunks = x.chunks }
 end
 
 module Deserialize = struct
-  let unpack_arith_seq (arith_seq : Task_t.arith_seq) : arith_seq =
+  let unpack_arith_seq (arith_seq : Task_ds_t.arith_seq) : arith_seq =
     {
       start = arith_seq.start;
       end_exc = arith_seq.end_exc;
       diff = arith_seq.diff;
     }
 
-  let rec unpack_task ((id, data) : Task_t.task) : task =
+  let rec unpack_task ((id, data) : Task_ds_t.task) : task =
     (id, unpack_task_data data)
 
-  and unpack_task_data (task_data : Task_t.task_data) : task_data =
+  and unpack_task_data (task_data : Task_ds_t.task_data) : task_data =
     {
       splittable = task_data.splittable;
       parallelizable = task_data.parallelizable;
       task_type = unpack_task_type task_data.task_type;
     }
 
-  and unpack_task_type (task_type : Task_t.task_type) : task_type =
+  and unpack_task_type (task_type : Task_ds_t.task_type) : task_type =
     match task_type with
     | `One_off -> One_off
     | `Recurring recur -> Recurring (unpack_recur recur)
 
-  and unpack_recur_type (recur_type : Task_t.recur_type) : recur_type =
+  and unpack_recur_type (recur_type : Task_ds_t.recur_type) : recur_type =
     match recur_type with
     | `Arithmetic_seq (arith_seq, recur_data) ->
       Arithemtic_seq (unpack_arith_seq arith_seq, unpack_recur_data recur_data)
 
-  and unpack_recur (recur : Task_t.recur) : recur =
+  and unpack_recur (recur : Task_ds_t.recur) : recur =
     {
       excluded_time_slots = recur.excluded_time_slots;
       recur_type = unpack_recur_type recur.recur_type;
     }
 
   and unpack_sched_req_template_data_unit
-      (sched_req_template_data_unit : Task_t.sched_req_template_data_unit) :
+      (sched_req_template_data_unit : Task_ds_t.sched_req_template_data_unit) :
     sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:(fun x -> x)
@@ -240,25 +240,25 @@ module Deserialize = struct
       ~unpack_time_slot:(fun x -> x)
       sched_req_template_data_unit
 
-  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
+  and unpack_sched_req_template (sched_req_template : Task_ds_t.sched_req_template)
     : sched_req_template =
     List.map unpack_sched_req_template_data_unit sched_req_template
 
-  and unpack_recur_data (recur_data : Task_t.recur_data) : recur_data =
+  and unpack_recur_data (recur_data : Task_ds_t.recur_data) : recur_data =
     {
       task_inst_data = unpack_task_inst_data recur_data.task_inst_data;
       sched_req_template =
         unpack_sched_req_template recur_data.sched_req_template;
     }
 
-  and unpack_task_inst ((id, data) : Task_t.task_inst) : task_inst =
+  and unpack_task_inst ((id, data) : Task_ds_t.task_inst) : task_inst =
     (id, unpack_task_inst_data data)
 
-  and unpack_task_inst_data (task_inst_data : Task_t.task_inst_data) :
+  and unpack_task_inst_data (task_inst_data : Task_ds_t.task_inst_data) :
     task_inst_data =
     { task_inst_type = unpack_task_inst_type task_inst_data.task_inst_type }
 
-  and unpack_task_inst_type (task_inst_type : Task_t.task_inst_type) :
+  and unpack_task_inst_type (task_inst_type : Task_ds_t.task_inst_type) :
     task_inst_type =
     match task_inst_type with
     | `Reminder -> Reminder
@@ -273,7 +273,7 @@ module Deserialize = struct
 
   and unpack_task_seg_place x = x
 
-  and unpack_progress (x : Task_t.progress) : progress =
+  and unpack_progress (x : Task_ds_t.progress) : progress =
     { completed = x.completed; chunks = x.chunks }
 end
 

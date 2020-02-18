@@ -31,9 +31,9 @@ let map_head (f : Sched.sched -> 'a * head_choice * Sched.sched) (t : t) : 'a =
     ret
 
 module In_place_head = struct
-  let add_task ~parent_user_id (data : Task.task_data)
-      (task_inst_data_list : Task.task_inst_data list) (t : t) :
-    Task.task * Task.task_inst list =
+  let add_task ~parent_user_id (data : Task_ds.task_data)
+      (task_inst_data_list : Task_ds.task_inst_data list) (t : t) :
+    Task_ds.task * Task_ds.task_inst list =
     map_head
       (fun sched ->
          let task, task_inst_list, sched =
@@ -43,8 +43,8 @@ module In_place_head = struct
          ((task, task_inst_list), `In_place, sched))
       t
 
-  let add_task_inst ~parent_task_id (data : Task.task_inst_data) (t : t) :
-    Task.task_inst =
+  let add_task_inst ~parent_task_id (data : Task_ds.task_inst_data) (t : t) :
+    Task_ds.task_inst =
     map_head
       (fun sched ->
          let task_inst, sched =
@@ -70,14 +70,14 @@ module In_place_head = struct
          ((), `In_place, sched))
       t
 
-  let mark_task_seg_completed (task_seg_id : Task.task_seg_id) (t : t) : unit =
+  let mark_task_seg_completed (task_seg_id : Task_ds.task_seg_id) (t : t) : unit =
     map_head
       (fun sched ->
          let sched = Sched.Progress.mark_task_seg_completed task_seg_id sched in
          ((), `In_place, sched))
       t
 
-  let mark_task_seg_uncompleted (task_seg_id : Task.task_seg_id) (t : t) : unit
+  let mark_task_seg_uncompleted (task_seg_id : Task_ds.task_seg_id) (t : t) : unit
     =
     map_head
       (fun sched ->
@@ -87,7 +87,7 @@ module In_place_head = struct
          ((), `In_place, sched))
       t
 
-  let mark_task_inst_completed (task_inst_id : Task.task_inst_id) (t : t) : unit
+  let mark_task_inst_completed (task_inst_id : Task_ds.task_inst_id) (t : t) : unit
     =
     map_head
       (fun sched ->
@@ -97,7 +97,7 @@ module In_place_head = struct
          ((), `In_place, sched))
       t
 
-  let mark_task_inst_uncompleted (task_inst_id : Task.task_inst_id) (t : t) :
+  let mark_task_inst_uncompleted (task_inst_id : Task_ds.task_inst_id) (t : t) :
     unit =
     map_head
       (fun sched ->
@@ -107,7 +107,7 @@ module In_place_head = struct
          ((), `In_place, sched))
       t
 
-  let add_task_seg_progress_chunk (task_seg_id : Task.task_seg_id)
+  let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
       (chunk : int64 * int64) (t : t) : unit =
     map_head
       (fun sched ->
@@ -117,7 +117,7 @@ module In_place_head = struct
          ((), `In_place, sched))
       t
 
-  let add_task_inst_progress_chunk (task_inst_id : Task.task_inst_id)
+  let add_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
       (chunk : int64 * int64) (t : t) : unit =
     map_head
       (fun sched ->
@@ -129,7 +129,7 @@ module In_place_head = struct
 end
 
 module Maybe_append_to_head = struct
-  let remove_task (task_id : Task.task_id) (t : t) : unit =
+  let remove_task (task_id : Task_ds.task_id) (t : t) : unit =
     match t.history with
     | [] -> ()
     | hd :: tl -> (
@@ -152,7 +152,7 @@ module Maybe_append_to_head = struct
           in
           t.history <- hd' :: hd :: tl )
 
-  let remove_task_inst (task_inst_id : Task.task_inst_id) (t : t) : unit =
+  let remove_task_inst (task_inst_id : Task_ds.task_inst_id) (t : t) : unit =
     match t.history with
     | [] -> ()
     | hd :: tl -> (

@@ -5,14 +5,14 @@ type sched_req_id = int64
 type sched_req = sched_req_id * sched_req_data
 
 and sched_req_data_unit =
-  (Task.task_seg_alloc_req, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
+  (Task_ds.task_seg_alloc_req, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
 
 and sched_req_data = sched_req_data_unit list
 
 type sched_req_record = sched_req_id * sched_req_record_data
 
 and sched_req_record_data_unit =
-  (Task.task_seg, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
+  (Task_ds.task_seg, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
 
 and sched_req_record_data = sched_req_record_data_unit list
 
@@ -22,7 +22,7 @@ let flexibility_score_of_sched_req_record
   | Sched_req_data_unit_skeleton.Fixed _ -> 0.0
   | Shift x ->
     let task_seg_alloc_req_sum_len =
-      Task.task_seg_alloc_req_sum_length x.task_seg_related_data_list
+      Task_ds.task_seg_alloc_req_sum_length x.task_seg_related_data_list
       |> Int64.to_float
     in
     let time_slot_sum_len =
@@ -48,7 +48,7 @@ let flexibility_score_of_sched_req_record
     1. -. (Int64.to_float size /. time_slot_sum_len)
   | Time_share x ->
     let task_seg_alloc_req_sum_len =
-      Task.task_seg_alloc_req_sum_length x.task_seg_related_data_list
+      Task_ds.task_seg_alloc_req_sum_length x.task_seg_related_data_list
       |> Int64.to_float
     in
     let time_slot_sum_len =
@@ -168,7 +168,7 @@ module Print = struct
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
           Printf.sprintf "id : %s, len : %Ld\n"
-            (Task.task_inst_id_to_string id)
+            (Task_ds.task_inst_id_to_string id)
             len)
       ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot.to_string
       req_data
@@ -196,7 +196,7 @@ module Print = struct
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
           Printf.sprintf "id : %s, len : %Ld\n"
-            (Task.task_seg_id_to_string id)
+            (Task_ds.task_seg_id_to_string id)
             len)
       ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot.to_string
       req_data

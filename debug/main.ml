@@ -20,7 +20,7 @@ let debug_single_task_seg_shift () =
   Task_seg_place_gens.single_task_seg_shift ~incre ~cur_pos ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task.task_seg_id_to_string id)
+        (Task_ds.task_seg_id_to_string id)
         start end_exc)
 
 let debug_single_task_seg_shift_rev () =
@@ -44,7 +44,7 @@ let debug_single_task_seg_shift_rev () =
     ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task.task_seg_id_to_string id)
+        (Task_ds.task_seg_id_to_string id)
         start end_exc)
 
 let debug_multi_task_segs_shift () =
@@ -58,7 +58,7 @@ let debug_multi_task_segs_shift () =
   List.iter
     (fun (id, size) ->
        Printf.printf "time seg id : %s size : %Ld\n"
-         (Task.task_seg_id_to_string id)
+         (Task_ds.task_seg_id_to_string id)
          size)
     task_segs;
   List.iteri
@@ -73,7 +73,7 @@ let debug_multi_task_segs_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task.task_seg_id_to_string id)
+             (Task_ds.task_seg_id_to_string id)
              start end_exc)
         pos_s)
 
@@ -110,7 +110,7 @@ let debug_single_task_seg_multi_splits_exact () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n" (Task.task_seg_id_to_string id) x)
+           Printf.printf "  %s - %Ld\n" (Task_ds.task_seg_id_to_string id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_max () =
@@ -131,7 +131,7 @@ let debug_single_task_seg_multi_splits_max () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n" (Task.task_seg_id_to_string id) x)
+           Printf.printf "  %s - %Ld\n" (Task_ds.task_seg_id_to_string id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_exact_shift () =
@@ -161,7 +161,7 @@ let debug_single_task_seg_multi_splits_exact_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task.task_seg_id_to_string id)
+             (Task_ds.task_seg_id_to_string id)
              start end_exc)
         splits)
 
@@ -191,7 +191,7 @@ let debug_single_task_seg_multi_splits_max_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task.task_seg_id_to_string id)
+             (Task_ds.task_seg_id_to_string id)
              start end_exc)
         splits)
 
@@ -214,7 +214,7 @@ let debug_multi_tasks_interleave () =
   Seq.iter
     (fun (id, start, end_exc) ->
        Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-         (Task.task_seg_id_to_string id)
+         (Task_ds.task_seg_id_to_string id)
          start end_exc)
     s
 
@@ -250,7 +250,7 @@ let debug_single_task_seg_multi_even_splits () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task.task_seg_id_to_string id)
+             (Task_ds.task_seg_id_to_string id)
              start end_exc)
         splits)
 
@@ -449,15 +449,15 @@ let debug_sched_usage_simulation () =
         task_inst_data_list t
     in
     print_endline "Added task";
-    Task.Print.debug_print_task ~indent_level:1 task
+    Task_ds.Print.debug_print_task ~indent_level:1 task
   in
   let sched_ver_history = Sched_ver_history.make_empty () in
   add_task ~parent_user_id:0L
-    Task.{ splittable = false; parallelizable = false; task_type = One_off }
-    Task.[ { task_inst_type = Reminder } ]
+    Task_ds.{ splittable = false; parallelizable = false; task_type = One_off }
+    Task_ds.[ { task_inst_type = Reminder } ]
     sched_ver_history;
   add_task ~parent_user_id:0L
-    Task.
+    Task_ds.
       {
         splittable = false;
         parallelizable = false;
@@ -477,8 +477,8 @@ let debug_sched_usage_simulation () =
       }
     [] sched_ver_history;
   add_task ~parent_user_id:0L
-    Task.{ splittable = false; parallelizable = false; task_type = One_off }
-    Task.[ { task_inst_type = Reminder } ]
+    Task_ds.{ splittable = false; parallelizable = false; task_type = One_off }
+    Task_ds.[ { task_inst_type = Reminder } ]
     sched_ver_history;
   List.iter
     (fun sched_req_data ->
