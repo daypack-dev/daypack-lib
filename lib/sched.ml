@@ -353,7 +353,7 @@ module Time_slot = struct
     |> Time_slot_ds.invert ~start ~end_exc
 end
 
-module Quota_store = struct
+module Quota = struct
   let update_quota quota ((sid, sd) : sched) : sched =
     (sid, { sd with store = { sd.store with quota } })
 
@@ -372,7 +372,7 @@ module Quota_store = struct
       } )
 end
 
-module Task_seg_store = struct
+module Task_seg = struct
   let add_task_seg ~(parent_task_inst_id : Task_ds.task_inst_id)
       (size : Task_ds.task_seg_size) ((sid, sd) : sched) :
     Task_ds.task_seg * sched =
@@ -456,7 +456,7 @@ module Task_seg_store = struct
       sched task_seg_ids
 end
 
-module Task_inst_store = struct
+module Task_inst = struct
   let add_task_inst ~(parent_task_id : Task_ds.task_id)
       (data : Task_ds.task_inst_data) ((sid, sd) : sched) :
     Task_ds.task_inst * sched =
@@ -493,7 +493,7 @@ module Task_inst_store = struct
     sched =
     let children_task_seg_ids = Id.get_task_seg_id_seq task_inst_id sched in
     sched
-    |> Task_seg_store.remove_task_seg_seq children_task_seg_ids
+    |> Task_seg.remove_task_seg_seq children_task_seg_ids
     |> fun (sid, sd) ->
     ( sid,
       {
@@ -523,7 +523,7 @@ module Task_inst_store = struct
       sched task_inst_ids
 end
 
-module Task_store = struct
+module Task = struct
   let add_task ~(parent_user_id : Task_ds.user_id) (data : Task_ds.task_data)
       (task_inst_data_list : Task_ds.task_inst_data list) ((sid, sd) : sched) :
     Task_ds.task * Task_ds.task_inst list * sched =
@@ -541,7 +541,7 @@ module Task_store = struct
       }
     in
     let inst_list, (sid, sd) =
-      Task_inst_store.add_task_inst_list ~parent_task_id task_inst_data_list
+      Task_inst.add_task_inst_list ~parent_task_id task_inst_data_list
         (sid, sd)
     in
     ((parent_task_id, data), inst_list, (sid, sd))
@@ -553,7 +553,7 @@ module Task_store = struct
   let remove_task (task_id : Task_ds.task_id) (sched : sched) : sched =
     let children_task_inst_ids = Id.get_task_inst_id_seq task_id sched in
     sched
-    |> Task_inst_store.remove_task_inst_seq children_task_inst_ids
+    |> Task_inst.remove_task_inst_seq children_task_inst_ids
     |> fun (sid, sd) ->
     ( sid,
       {
@@ -588,7 +588,7 @@ module Agenda = struct
         sd.agenda.indexed_by_start
     in
     (sid, { sd with agenda = { indexed_by_start } })
-    |> Task_seg_store.add_task_seg_via_task_seg_place task_seg_place
+    |> Task_seg.add_task_seg_via_task_seg_place task_seg_place
 
   let add_task_seg_place_list (task_seg_place_s : Task_ds.task_seg_place list)
       (sched : sched) : sched =
@@ -768,7 +768,7 @@ module Progress = struct
       } )
 end
 
-module Sched_req_store = struct
+module Sched_req = struct
   let queue_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
       (sched : sched) : Sched_req_ds.sched_req * sched =
     let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
@@ -1130,7 +1130,7 @@ module Sched_req_store = struct
          match sched_req_data_unit with
          | Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start } ->
            let task_seg_related_data, sched =
-             Task_seg_store.add_task_seg_via_task_seg_alloc_req
+             Task_seg.add_task_seg_via_task_seg_alloc_req
                task_seg_related_data sched
            in
            ( Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start }
@@ -1138,31 +1138,31 @@ module Sched_req_store = struct
              sched )
          | Shift x ->
            let task_seg_related_data_list, sched =
-             Task_seg_store.add_task_segs_via_task_seg_alloc_req_list
+             Task_seg.add_task_segs_via_task_seg_alloc_req_list
                x.task_seg_related_data_list sched
            in
            (Shift { x with task_seg_related_data_list } :: acc, sched)
          | Split_and_shift x ->
            let task_seg_related_data, sched =
-             Task_seg_store.add_task_seg_via_task_seg_alloc_req
+             Task_seg.add_task_seg_via_task_seg_alloc_req
                x.task_seg_related_data sched
            in
            (Split_and_shift { x with task_seg_related_data } :: acc, sched)
          | Split_even x ->
            let task_seg_related_data, sched =
-             Task_seg_store.add_task_seg_via_task_seg_alloc_req
+             Task_seg.add_task_seg_via_task_seg_alloc_req
                x.task_seg_related_data sched
            in
            (Split_even { x with task_seg_related_data } :: acc, sched)
          | Time_share x ->
            let task_seg_related_data_list, sched =
-             Task_seg_store.add_task_segs_via_task_seg_alloc_req_list
+             Task_seg.add_task_segs_via_task_seg_alloc_req_list
                x.task_seg_related_data_list sched
            in
            (Time_share { x with task_seg_related_data_list } :: acc, sched)
          | Push_toward x ->
            let task_seg_related_data, sched =
-             Task_seg_store.add_task_seg_via_task_seg_alloc_req
+             Task_seg.add_task_seg_via_task_seg_alloc_req
                x.task_seg_related_data sched
            in
            (Push_toward { x with task_seg_related_data } :: acc, sched))
@@ -1318,7 +1318,7 @@ module Recur = struct
          |> Seq.fold_left
            (fun sched (task_inst_data, sched_req_templates) ->
               let (task_inst_id, _), sched =
-                Task_inst_store.add_task_inst ~parent_task_id:task_id
+                Task_inst.add_task_inst ~parent_task_id:task_id
                   task_inst_data sched
               in
               let sched_req_data =
@@ -1329,7 +1329,7 @@ module Recur = struct
                   sched_req_templates
               in
               let _, sched =
-                Sched_req_store.queue_sched_req_data sched_req_data sched
+                Sched_req.queue_sched_req_data sched_req_data sched
               in
               sched)
            sched)
@@ -1389,7 +1389,7 @@ module Leftover = struct
     Seq.fold_left
       (fun sched sched_req_data ->
          let _, sched =
-           Sched_req_store.queue_sched_req_data sched_req_data sched
+           Sched_req.queue_sched_req_data sched_req_data sched
          in
          sched)
       sched sched_req_data_seq

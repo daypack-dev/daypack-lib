@@ -90,13 +90,13 @@ module Time_slot : sig
     start:int64 -> end_exc:int64 -> sched -> (int64 * int64) Seq.t
 end
 
-module Quota_store : sig
+module Quota : sig
   val update_quota : int64 Task_inst_id_map.t -> sched -> sched
 
   val add_quota : int64 Task_inst_id_map.t -> sched -> sched
 end
 
-module Task_seg_store : sig
+module Task_seg : sig
   val add_task_seg :
     parent_task_inst_id:Task_ds.task_inst_id ->
     Task_ds.task_seg_size ->
@@ -128,7 +128,7 @@ module Task_seg_store : sig
   val remove_task_seg_seq : Task_ds.task_seg_id Seq.t -> sched -> sched
 end
 
-module Task_inst_store : sig
+module Task_inst : sig
   val add_task_inst :
     parent_task_id:Task_ds.task_id ->
     Task_ds.task_inst_data ->
@@ -152,7 +152,7 @@ module Task_inst_store : sig
   val remove_task_inst_seq : Task_ds.task_inst_id Seq.t -> sched -> sched
 end
 
-module Task_store : sig
+module Task : sig
   val add_task :
     parent_user_id:Task_ds.user_id ->
     Task_ds.task_data ->
@@ -224,7 +224,7 @@ module Progress : sig
     Task_ds.task_inst_id -> int64 * int64 -> sched -> sched
 end
 
-module Sched_req_store : sig
+module Sched_req : sig
   val queue_sched_req_data :
     Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
 

@@ -37,7 +37,7 @@ module In_place_head = struct
     map_head
       (fun sched ->
          let task, task_inst_list, sched =
-           Sched.Task_store.add_task ~parent_user_id data task_inst_data_list
+           Sched.Task.add_task ~parent_user_id data task_inst_data_list
              sched
          in
          ((task, task_inst_list), `In_place, sched))
@@ -48,7 +48,7 @@ module In_place_head = struct
     map_head
       (fun sched ->
          let task_inst, sched =
-           Sched.Task_inst_store.add_task_inst ~parent_task_id data sched
+           Sched.Task_inst.add_task_inst ~parent_task_id data sched
          in
          (task_inst, `In_place, sched))
       t
@@ -58,7 +58,7 @@ module In_place_head = struct
     map_head
       (fun sched ->
          let sched_req, sched =
-           Sched.Sched_req_store.queue_sched_req_data data sched
+           Sched.Sched_req.queue_sched_req_data data sched
          in
          (sched_req, `In_place, sched))
       t
@@ -136,8 +136,8 @@ module Maybe_append_to_head = struct
     | hd :: tl -> (
         let hd' =
           hd
-          |> Sched.Task_store.remove_task task_id
-          |> Sched.Sched_req_store.remove_pending_sched_req_by_task_id task_id
+          |> Sched.Task.remove_task task_id
+          |> Sched.Sched_req.remove_pending_sched_req_by_task_id task_id
         in
         let task_seg_place_seq =
           Sched.Agenda.find_task_seg_place_seq_by_task_id task_id hd
@@ -147,7 +147,7 @@ module Maybe_append_to_head = struct
         | _ ->
           let hd' =
             hd'
-            |> Sched.Sched_req_store.remove_sched_req_record_by_task_id
+            |> Sched.Sched_req.remove_sched_req_record_by_task_id
               task_id
             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
           in
@@ -159,8 +159,8 @@ module Maybe_append_to_head = struct
     | hd :: tl -> (
         let hd' =
           hd
-          |> Sched.Task_inst_store.remove_task_inst task_inst_id
-          |> Sched.Sched_req_store.remove_pending_sched_req_by_task_inst_id
+          |> Sched.Task_inst.remove_task_inst task_inst_id
+          |> Sched.Sched_req.remove_pending_sched_req_by_task_inst_id
             task_inst_id
         in
         let task_seg_place_seq =
@@ -171,7 +171,7 @@ module Maybe_append_to_head = struct
         | _ ->
           let hd' =
             hd'
-            |> Sched.Sched_req_store.remove_sched_req_record_by_task_inst_id
+            |> Sched.Sched_req.remove_sched_req_record_by_task_inst_id
               task_inst_id
             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
           in
@@ -185,7 +185,7 @@ module Maybe_append_to_head = struct
         let sched_req_records, hd' =
           hd
           |> Sched.Recur.instantiate ~start ~end_exc
-          |> Sched.Sched_req_store.allocate_task_segs_for_pending_sched_reqs
+          |> Sched.Sched_req.allocate_task_segs_for_pending_sched_reqs
             ~start ~end_exc ~include_sched_reqs_partially_within_time_period
             ~up_to_sched_req_id_inc
         in
