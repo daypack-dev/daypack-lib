@@ -588,7 +588,7 @@ let debug_sched_usage_simulation () =
   print_endline "=====";
   (* Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history; *)
   ( match
-      Sched_ver_history.Maybe_append_to_head.sched ~start:0L ~end_exc:100L
+      Sched_ver_history.Maybe_append_to_head.sched ~start:100L ~end_exc:200L
         ~include_sched_reqs_partially_within_time_period:true
         ~up_to_sched_req_id_inc:None sched_ver_history
     with
