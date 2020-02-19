@@ -137,6 +137,7 @@ module Maybe_append_to_head = struct
           hd
           |> Sched.Task.remove_task task_id
           |> Sched.Sched_req.remove_pending_sched_req_by_task_id task_id
+          |> Sched.Sched_req.remove_sched_req_record_by_task_id task_id
         in
         let task_seg_place_seq =
           Sched.Agenda.find_task_seg_place_seq_by_task_id task_id hd
@@ -159,6 +160,8 @@ module Maybe_append_to_head = struct
           hd
           |> Sched.Task_inst.remove_task_inst task_inst_id
           |> Sched.Sched_req.remove_pending_sched_req_by_task_inst_id
+            task_inst_id
+          |> Sched.Sched_req.remove_sched_req_record_by_task_inst_id
             task_inst_id
         in
         let task_seg_place_seq =
@@ -183,6 +186,7 @@ module Maybe_append_to_head = struct
         let sched_req_records, hd' =
           hd
           |> Sched.Recur.instantiate ~start ~end_exc
+          |> Sched.Leftover.sched_for_leftover_task_segs ~start ~end_exc
           |> Sched.Sched_req.allocate_task_segs_for_pending_sched_reqs ~start
             ~end_exc ~include_sched_reqs_partially_within_time_period
             ~up_to_sched_req_id_inc
@@ -199,6 +203,13 @@ module Maybe_append_to_head = struct
             | Seq.Cons (hd', _) ->
               t.history <- hd' :: hd :: tl;
               Ok () ) )
+end
+
+module Append_to_head = struct
+  let snapshot (t : t) : unit =
+    map_head (fun sched ->
+        ((), `New_head, sched)
+      ) t
 end
 
 module Equal = struct
