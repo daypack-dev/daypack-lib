@@ -775,7 +775,10 @@ let store_gen =
              ( sched_req_ids,
                sched_req_pending_store,
                sched_req_discarded_store,
-               (sched_req_record_store, quota, task_seg_id_to_progress, task_inst_id_to_progress) ) ) ) ->
+               ( sched_req_record_store,
+                 quota,
+                 task_seg_id_to_progress,
+                 task_inst_id_to_progress ) ) ) ) ->
       let open Daypack_lib.Sched in
       {
         task_store;
@@ -796,8 +799,8 @@ let store_gen =
        (quad user_id_to_task_ids_gen task_id_to_task_inst_ids_gen
           task_inst_id_to_task_seg_ids_gen
           (quad pos_int64_set_gen sched_req_store_gen sched_req_store_gen
-             (quad sched_req_record_store_gen quota_gen task_seg_id_to_progress_gen
-                task_inst_id_to_progress_gen))))
+             (quad sched_req_record_store_gen quota_gen
+                task_seg_id_to_progress_gen task_inst_id_to_progress_gen))))
 
 let agenda_gen =
   let open QCheck.Gen in
