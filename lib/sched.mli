@@ -297,6 +297,8 @@ module Sched_req : sig
   val remove_sched_req_record_data_unit_by_task_seg_id :
     Task_ds.task_seg_id -> sched -> sched
 
+  val discard_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+
   val allocate_task_segs_for_pending_sched_reqs :
     start:int64 ->
     end_exc:int64 ->

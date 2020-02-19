@@ -1105,6 +1105,21 @@ module Sched_req = struct
 
   (*$*)
 
+let discard_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id) ((sid, sd) : sched) : sched =
+  match Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store with
+  | None -> (sid, sd)
+  | Some sched_req_data ->
+    (sid,
+     { sd with
+       store = {
+         sd.store with
+         sched_req_pending_store =
+           Sched_req_id_map.remove sched_req_id sd.store.sched_req_pending_store;
+         sched_req_discarded_store =
+           Sched_req_id_map.add sched_req_id sched_req_data sd.store.sched_req_discarded_store;
+       }
+     })
+
   let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
       ((_sid, sd) : sched) : sched_req_store * sched_req_store * sched_req_store
     =
