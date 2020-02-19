@@ -51,6 +51,7 @@ type store = {
   task_inst_id_to_task_seg_ids : Int64_int64_option_set.t Task_inst_id_map.t;
   sched_req_ids : Int64_set.t;
   sched_req_pending_store : sched_req_store;
+  sched_req_discarded_store : sched_req_store;
   sched_req_record_store : sched_req_record_store;
   quota : int64 Task_inst_id_map.t;
   task_seg_id_to_progress : Task_ds.progress Task_seg_id_map.t;
@@ -69,6 +70,7 @@ type store_diff = {
     Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed;
   sched_req_ids_diff : Int64_set_utils.diff;
   sched_req_pending_store_diff : sched_req_store_diff;
+  sched_req_discarded_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
   quota_diff : int64 Task_inst_id_map_utils.diff;
   task_seg_id_to_progress_diff : Task_ds.progress Task_seg_id_map_utils.diff;
@@ -107,6 +109,7 @@ let store_empty =
     task_inst_id_to_task_seg_ids = Task_inst_id_map.empty;
     sched_req_ids = Int64_set.empty;
     sched_req_pending_store = Sched_req_id_map.empty;
+    sched_req_discarded_store = Sched_req_id_map.empty;
     sched_req_record_store = Sched_req_id_map.empty;
     quota = Task_inst_id_map.empty;
     task_seg_id_to_progress = Task_seg_id_map.empty;
@@ -1450,6 +1453,22 @@ module Serialize = struct
       removed = pack_sched_req_pending_store x.removed;
     }
 
+  let pack_sched_req_discarded_store (x : sched_req_store) :
+    Sched_req_ds_t.sched_req list =
+    x
+    |> Sched_req_id_map.to_seq
+    |> Seq.map Sched_req_ds.Serialize.pack_sched_req
+    |> List.of_seq
+
+  let pack_sched_req_discarded_store_diff (x : sched_req_store_diff) :
+    ( Sched_req_ds_t.sched_req_id,
+      Sched_req_ds_t.sched_req_data )
+      Map_utils_t.diff =
+    {
+      added = pack_sched_req_discarded_store x.added;
+      removed = pack_sched_req_discarded_store x.removed;
+    }
+
   let pack_sched_req_record_store (x : sched_req_record_store) :
     Sched_req_ds_t.sched_req_record list =
     x
@@ -1611,6 +1630,8 @@ module Serialize = struct
       sched_req_ids = pack_sched_req_ids store.sched_req_ids;
       sched_req_pending_list =
         pack_sched_req_pending_store store.sched_req_pending_store;
+      sched_req_discarded_list =
+        pack_sched_req_discarded_store store.sched_req_discarded_store;
       sched_req_record_list =
         pack_sched_req_record_store store.sched_req_record_store;
       quota = pack_quota store.quota;
@@ -1635,6 +1656,8 @@ module Serialize = struct
       sched_req_ids_diff = pack_sched_req_ids_diff diff.sched_req_ids_diff;
       sched_req_pending_list_diff =
         pack_sched_req_pending_store_diff diff.sched_req_pending_store_diff;
+      sched_req_discarded_list_diff =
+        pack_sched_req_discarded_store_diff diff.sched_req_discarded_store_diff;
       sched_req_record_list_diff =
         pack_sched_req_record_store_diff diff.sched_req_record_store_diff;
       quota_diff = pack_quota_diff diff.quota_diff;
@@ -1743,6 +1766,23 @@ module Deserialize = struct
     {
       added = unpack_sched_req_pending_list x.added;
       removed = unpack_sched_req_pending_list x.removed;
+    }
+
+  let unpack_sched_req_discarded_list (x : Sched_req_ds_t.sched_req list) :
+    sched_req_store =
+    x
+    |> List.to_seq
+    |> Seq.map Sched_req_ds.Deserialize.unpack_sched_req
+    |> Sched_req_id_map.of_seq
+
+  let unpack_sched_req_discarded_list_diff
+      (x :
+         ( Sched_req_ds_t.sched_req_id,
+           Sched_req_ds_t.sched_req_data )
+           Map_utils_t.diff) : sched_req_store_diff =
+    {
+      added = unpack_sched_req_discarded_list x.added;
+      removed = unpack_sched_req_discarded_list x.removed;
     }
 
   let unpack_sched_req_record_list (x : Sched_req_ds_t.sched_req_record list) :
@@ -1912,6 +1952,8 @@ module Deserialize = struct
       sched_req_ids = unpack_sched_req_ids store.sched_req_ids;
       sched_req_pending_store =
         unpack_sched_req_pending_list store.sched_req_pending_list;
+      sched_req_discarded_store =
+        unpack_sched_req_discarded_list store.sched_req_discarded_list;
       sched_req_record_store =
         unpack_sched_req_record_list store.sched_req_record_list;
       quota = unpack_quota store.quota;
@@ -1936,6 +1978,8 @@ module Deserialize = struct
       sched_req_ids_diff = unpack_sched_req_ids_diff diff.sched_req_ids_diff;
       sched_req_pending_store_diff =
         unpack_sched_req_pending_list_diff diff.sched_req_pending_list_diff;
+      sched_req_discarded_store_diff =
+        unpack_sched_req_discarded_list_diff diff.sched_req_discarded_list_diff;
       sched_req_record_store_diff =
         unpack_sched_req_record_list_diff diff.sched_req_record_list_diff;
       quota_diff = unpack_quota_diff diff.quota_diff;
@@ -2012,6 +2056,9 @@ module Equal = struct
       store1.sched_req_pending_store store2.sched_req_pending_store
     && Sched_req_id_map.equal
       (fun x y -> compare x y = 0)
+      store1.sched_req_discarded_store store2.sched_req_discarded_store
+    && Sched_req_id_map.equal
+      (fun x y -> compare x y = 0)
       store1.sched_req_record_store store2.sched_req_record_store
     && Task_inst_id_map.equal
       (fun x y -> compare x y = 0)
@@ -2069,6 +2116,9 @@ module Diff = struct
       sched_req_pending_store_diff =
         Sched_req_id_map_utils.diff ~old:store1.sched_req_pending_store
           store2.sched_req_pending_store;
+      sched_req_discarded_store_diff =
+        Sched_req_id_map_utils.diff ~old:store1.sched_req_discarded_store
+          store2.sched_req_discarded_store;
       sched_req_record_store_diff =
         Sched_req_id_map_utils.diff ~old:store1.sched_req_record_store
           store2.sched_req_record_store;
@@ -2106,6 +2156,9 @@ module Diff = struct
       sched_req_pending_store =
         Sched_req_id_map_utils.add_diff diff.sched_req_pending_store_diff
           store.sched_req_pending_store;
+      sched_req_discarded_store =
+        Sched_req_id_map_utils.add_diff diff.sched_req_discarded_store_diff
+          store.sched_req_discarded_store;
       sched_req_record_store =
         Sched_req_id_map_utils.add_diff diff.sched_req_record_store_diff
           store.sched_req_record_store;
@@ -2143,6 +2196,9 @@ module Diff = struct
       sched_req_pending_store =
         Sched_req_id_map_utils.sub_diff diff.sched_req_pending_store_diff
           store.sched_req_pending_store;
+      sched_req_discarded_store =
+        Sched_req_id_map_utils.sub_diff diff.sched_req_discarded_store_diff
+          store.sched_req_discarded_store;
       sched_req_record_store =
         Sched_req_id_map_utils.sub_diff diff.sched_req_record_store_diff
           store.sched_req_record_store;

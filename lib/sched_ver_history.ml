@@ -206,10 +206,7 @@ module Maybe_append_to_head = struct
 end
 
 module Append_to_head = struct
-  let snapshot (t : t) : unit =
-    map_head (fun sched ->
-        ((), `New_head, sched)
-      ) t
+  let snapshot (t : t) : unit = map_head (fun sched -> ((), `New_head, sched)) t
 end
 
 module Equal = struct
