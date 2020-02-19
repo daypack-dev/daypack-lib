@@ -1295,17 +1295,24 @@ module Recur = struct
              Task_inst_id_map.find task_inst_id sd.store.task_inst_store
            in
            task_inst_data = stored_task_inst_data
-           && ( Sched_req_id_map.exists
+           && (
+               Sched_req_id_map.exists
+                  (fun _sched_req_id sched_req_data ->
+                     Sched_req_utils.sched_req_template_matches_sched_req_data
+                       sched_req_template sched_req_data)
+                  sd.store.sched_req_pending_store
+                || Sched_req_id_map.exists
+                  (fun _sched_req_id sched_req_data ->
+                     Sched_req_utils.sched_req_template_matches_sched_req_data
+                       sched_req_template sched_req_data)
+                  sd.store.sched_req_discarded_store
+              || Sched_req_id_map.exists
                   (fun _sched_req_id sched_req_record_data ->
                      Sched_req_utils
                      .sched_req_template_matches_sched_req_record_data
                        sched_req_template sched_req_record_data)
                   sd.store.sched_req_record_store
-                || Sched_req_id_map.exists
-                  (fun _sched_req_id sched_req_data ->
-                     Sched_req_utils.sched_req_template_matches_sched_req_data
-                       sched_req_template sched_req_data)
-                  sd.store.sched_req_pending_store ))
+              ))
         task_inst_ids
 
   let instantiate ~start ~end_exc ((sid, sd) : sched) : sched =
