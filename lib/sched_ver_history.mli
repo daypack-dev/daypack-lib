@@ -52,6 +52,10 @@ module Maybe_append_to_head : sig
     (unit, unit) result
 end
 
+module Append_to_head : sig
+  val snapshot : t -> unit
+end
+
 module Equal : sig
   val equal : t -> t -> bool
 end

@@ -205,6 +205,13 @@ module Maybe_append_to_head = struct
               Ok () ) )
 end
 
+module Append_to_head = struct
+  let snapshot (t : t) : unit =
+    map_head (fun sched ->
+        ((), `New_head, sched)
+      ) t
+end
+
 module Equal = struct
   let equal t1 t2 =
     List.for_all2
