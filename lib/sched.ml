@@ -42,9 +42,15 @@ type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
 type store = {
-  task_store : task_store;
-  task_inst_store : task_inst_store;
-  task_seg_store : task_seg_store;
+  task_uncompleted_store : task_store;
+  task_completed_store : task_store;
+  task_discarded_store : task_store;
+  task_inst_uncompleted_store : task_inst_store;
+  task_inst_completed_store : task_inst_store;
+  task_inst_discarded_store : task_inst_store;
+  task_seg_uncompleted_store : task_seg_store;
+  task_seg_completed_store : task_seg_store;
+  task_seg_discarded_store : task_seg_store;
   (* transit_time_store : transit_time_store; *)
   user_id_to_task_ids : Int64_set.t User_id_map.t;
   task_id_to_task_inst_ids : Int64_set.t Task_id_map.t;
@@ -59,9 +65,15 @@ type store = {
 }
 
 type store_diff = {
-  task_store_diff : task_store_diff;
-  task_inst_store_diff : task_inst_store_diff;
-  task_seg_store_diff : task_seg_store_diff;
+  task_uncompleted_store_diff : task_store_diff;
+  task_completed_store_diff : task_store_diff;
+  task_discarded_store_diff : task_store_diff;
+  task_inst_uncompleted_store_diff : task_inst_store_diff;
+  task_inst_completed_store_diff : task_inst_store_diff;
+  task_inst_discarded_store_diff : task_inst_store_diff;
+  task_seg_uncompleted_store_diff : task_seg_store_diff;
+  task_seg_completed_store_diff : task_seg_store_diff;
+  task_seg_discarded_store_diff : task_seg_store_diff;
   (* transit_time_store_diff : transit_time_store_diff; *)
   user_id_to_task_ids_diff : User_id_map_utils.Int64_bucketed.diff_bucketed;
   task_id_to_task_inst_ids_diff :
@@ -100,9 +112,15 @@ type sched_diff = sched_id * sched_id * sched_data_diff
 
 let store_empty =
   {
-    task_store = Task_id_map.empty;
-    task_inst_store = Task_inst_id_map.empty;
-    task_seg_store = Task_seg_id_map.empty;
+    task_uncompleted_store = Task_id_map.empty;
+    task_completed_store = Task_id_map.empty;
+    task_discarded_store = Task_id_map.empty;
+    task_inst_uncompleted_store = Task_inst_id_map.empty;
+    task_inst_completed_store = Task_inst_id_map.empty;
+    task_inst_discarded_store = Task_inst_id_map.empty;
+    task_seg_uncompleted_store = Task_seg_id_map.empty;
+    task_seg_completed_store = Task_seg_id_map.empty;
+    task_seg_discarded_store = Task_seg_id_map.empty;
     (* transit_time_store = Transit_time_map.empty; *)
     user_id_to_task_ids = User_id_map.empty;
     task_id_to_task_inst_ids = Task_id_map.empty;
@@ -389,8 +407,8 @@ module Task_seg = struct
           store =
             {
               sd.store with
-              task_seg_store =
-                Task_seg_id_map.add task_seg_id size sd.store.task_seg_store;
+              task_seg_uncompleted_store =
+                Task_seg_id_map.add task_seg_id size sd.store.task_seg_uncompleted_store;
             };
         } ) )
 
@@ -428,11 +446,27 @@ module Task_seg = struct
       (fun sched place -> add_task_seg_via_task_seg_place place sched)
       sched place_s
 
-  let find_task_seg_opt (task_seg_id : Task_ds.task_seg_id) ((_, sd) : sched) :
-    Task_ds.task_seg_size option =
-    Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_store
+  (*$ List.iter (fun s ->
+         Printf.printf "let find_task_seg_%s_opt (id : Task_ds.task_seg_id) ((_, sd) : sched) : Task_ds.task_seg_size option =\n" s;
+         Printf.printf "Task_seg_id_map.find_opt id sd.store.task_seg_%s_store\n" s;
+       )
+         ["completed"; "uncompleted"; "discarded""]
+  *)
 
-  let remove_task_seg (task_seg_id : Task_ds.task_seg_id) (sched : sched) :
+  let find_task_seg_uncompleted_opt (task_seg_id : Task_ds.task_seg_id) ((_, sd) : sched) :
+    Task_ds.task_seg_size option =
+    Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_uncompleted_store
+
+  let find_task_seg_completed_opt (task_seg_id : Task_ds.task_seg_id) ((_, sd) : sched) :
+    Task_ds.task_seg_size option =
+    Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_completed_store
+
+  let find_task_seg_discarded_opt (task_seg_id : Task_ds.task_seg_id) ((_, sd) : sched) :
+    Task_ds.task_seg_size option =
+    Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_discarded_store
+  (*$*)
+
+  let remove_task_seg_completed (task_seg_id : Task_ds.task_seg_id) (sched : sched) :
     sched =
     let sid, sd = Id.remove_task_seg_id task_seg_id sched in
     ( sid,
@@ -441,12 +475,12 @@ module Task_seg = struct
         store =
           {
             sd.store with
-            task_seg_store =
-              Task_seg_id_map.remove task_seg_id sd.store.task_seg_store;
+            task_seg_completed_store =
+              Task_seg_id_map.remove task_seg_id sd.store.task_seg_completed_store;
           };
       } )
 
-  let remove_task_seg_strict (task_seg_id : Task_ds.task_seg_id) (sched : sched)
+  let remove_task_seg_completed_strict (task_seg_id : Task_ds.task_seg_id) (sched : sched)
     : (sched, unit) result =
     match find_task_seg_opt task_seg_id sched with
     | None -> Error ()
