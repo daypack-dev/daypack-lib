@@ -79,6 +79,23 @@ module Store = struct
           Some "Sched_req_ds.Deserialize.unpack_sched_req_data_unit";
       };
       {
+        f_pack_suffix = "sched_req_discarded_store";
+        f_unpack_suffix = "sched_req_discarded_list";
+        store_typ = "sched_req_store";
+        diff_typ = "sched_req_store_diff";
+        ret_typ = "Sched_req_ds_t.sched_req list";
+        diff_ret_typ =
+          "(Sched_req_ds_t.sched_req_id, Sched_req_ds_t.sched_req_data) \
+           Map_utils_t.diff";
+        f_to_seq = "Sched_req_id_map.to_seq";
+        f_of_seq = "Sched_req_id_map.of_seq";
+        f_inner_pack = Some "Sched_req_ds.Serialize.pack_sched_req";
+        f_inner_pack_data = Some "Sched_req_ds.Serialize.pack_sched_req_data";
+        f_inner_unpack = Some "Sched_req_ds.Deserialize.unpack_sched_req";
+        f_inner_unpack_data =
+          Some "Sched_req_ds.Deserialize.unpack_sched_req_data_unit";
+      };
+      {
         f_pack_suffix = "sched_req_record_store";
         f_unpack_suffix = "sched_req_record_list";
         store_typ = "sched_req_record_store";
@@ -500,6 +517,12 @@ let store_fields =
       "Int64_set_utils.sub_diff" );
     ( "sched_req_pending_list",
       "sched_req_pending_store",
+      "Sched_req_id_map.equal (fun x y -> compare x y = 0)",
+      "Sched_req_id_map_utils.diff",
+      "Sched_req_id_map_utils.add_diff",
+      "Sched_req_id_map_utils.sub_diff" );
+    ( "sched_req_discarded_list",
+      "sched_req_discarded_store",
       "Sched_req_id_map.equal (fun x y -> compare x y = 0)",
       "Sched_req_id_map_utils.diff",
       "Sched_req_id_map_utils.add_diff",

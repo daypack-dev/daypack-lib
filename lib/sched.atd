@@ -93,6 +93,7 @@ type store = {
   task_inst_id_to_task_seg_ids : (task_inst_id * task_seg_part_sub list) list;
   sched_req_ids : sched_req_id list;
   sched_req_pending_list : sched_req list;
+  sched_req_discarded_list : sched_req list;
   sched_req_record_list : sched_req_record list;
   quota : (task_inst_id * int64) list;
   task_seg_id_to_progress : (task_seg_id * progress) list;
@@ -108,6 +109,7 @@ type store_diff = {
   task_inst_id_to_task_seg_ids_diff : (task_inst_id, task_seg_part_sub) diff_bucketed;
   sched_req_ids_diff : int64 set_diff;
   sched_req_pending_list_diff : (sched_req_id, sched_req_data) diff;
+  sched_req_discarded_list_diff : (sched_req_id, sched_req_data) diff;
   sched_req_record_list_diff : (sched_req_id, sched_req_record_data) diff;
   quota_diff : (task_inst_id, int64) diff;
   task_seg_id_to_progress_diff : (task_seg_id, progress) diff;

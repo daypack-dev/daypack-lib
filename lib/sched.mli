@@ -37,6 +37,7 @@ type store = {
   task_inst_id_to_task_seg_ids : Int64_int64_option_set.t Task_inst_id_map.t;
   sched_req_ids : Int64_set.t;
   sched_req_pending_store : sched_req_store;
+  sched_req_discarded_store : sched_req_store;
   sched_req_record_store : sched_req_record_store;
   quota : int64 Task_inst_id_map.t;
   task_seg_id_to_progress : Task_ds.progress Task_seg_id_map.t;
@@ -54,6 +55,7 @@ type store_diff = {
     Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed;
   sched_req_ids_diff : Int64_set_utils.diff;
   sched_req_pending_store_diff : sched_req_store_diff;
+  sched_req_discarded_store_diff : sched_req_store_diff;
   sched_req_record_store_diff : sched_req_record_store_diff;
   quota_diff : int64 Task_inst_id_map_utils.diff;
   task_seg_id_to_progress_diff : Task_ds.progress Task_seg_id_map_utils.diff;
@@ -294,6 +296,8 @@ module Sched_req : sig
 
   val remove_sched_req_record_data_unit_by_task_seg_id :
     Task_ds.task_seg_id -> sched -> sched
+
+  val discard_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
 
   val allocate_task_segs_for_pending_sched_reqs :
     start:int64 ->
