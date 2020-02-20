@@ -447,7 +447,8 @@ module Task_seg = struct
       (fun sched place -> add_task_seg_via_task_seg_place place sched)
       sched place_s
 
-  (*$
+  (*$ #use "lib/sched.cinaps";;
+
     List.iter
       (fun s ->
          Printf.printf
@@ -456,16 +457,16 @@ module Task_seg = struct
            s;
          Printf.printf "Task_seg_id_map.find_opt id sd.store.task_seg_%s_store\n"
            s)
-      [ "completed"; "uncompleted"; "discarded" ]
+      store_types
   *)
-
-  let find_task_seg_completed_opt (id : Task_ds.task_seg_id) ((_, sd) : sched) :
-    Task_ds.task_seg_size option =
-    Task_seg_id_map.find_opt id sd.store.task_seg_completed_store
 
   let find_task_seg_uncompleted_opt (id : Task_ds.task_seg_id) ((_, sd) : sched)
     : Task_ds.task_seg_size option =
     Task_seg_id_map.find_opt id sd.store.task_seg_uncompleted_store
+
+  let find_task_seg_completed_opt (id : Task_ds.task_seg_id) ((_, sd) : sched) :
+    Task_ds.task_seg_size option =
+    Task_seg_id_map.find_opt id sd.store.task_seg_completed_store
 
   let find_task_seg_discarded_opt (id : Task_ds.task_seg_id) ((_, sd) : sched) :
     Task_ds.task_seg_size option =
@@ -473,7 +474,8 @@ module Task_seg = struct
 
   (*$*)
 
-  (*$
+  (*$ #use "lib/sched.cinaps";;
+
     List.iter
       (fun s ->
          Printf.printf
@@ -488,23 +490,8 @@ module Task_seg = struct
 )
 |}
            s s)
-      [ "completed"; "uncompleted"; "discarded" ]
+      store_types
   *)
-
-  let remove_task_seg_completed (id : Task_ds.task_seg_id) (sched : sched) :
-    sched =
-    let sid, sd = Id.remove_task_seg_id id sched in
-
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_completed_store =
-              Task_seg_id_map.remove id sd.store.task_seg_completed_store;
-          };
-      } )
 
   let remove_task_seg_uncompleted (id : Task_ds.task_seg_id) (sched : sched) :
     sched =
@@ -518,6 +505,21 @@ module Task_seg = struct
             sd.store with
             task_seg_uncompleted_store =
               Task_seg_id_map.remove id sd.store.task_seg_uncompleted_store;
+          };
+      } )
+
+  let remove_task_seg_completed (id : Task_ds.task_seg_id) (sched : sched) :
+    sched =
+    let sid, sd = Id.remove_task_seg_id id sched in
+
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_completed_store =
+              Task_seg_id_map.remove id sd.store.task_seg_completed_store;
           };
       } )
 
@@ -538,17 +540,62 @@ module Task_seg = struct
 
   (*$*)
 
-  let remove_task_seg_completed_strict (task_seg_id : Task_ds.task_seg_id)
-      (sched : sched) : (sched, unit) result =
-    match find_task_seg_opt task_seg_id sched with
-    | None -> Error ()
-    | Some _ -> Ok (remove_task_seg task_seg_id sched)
+  (*$ #use "lib/sched.cinaps";;
 
-  let remove_task_seg_seq (task_seg_ids : Task_ds.task_seg_id Seq.t)
+    List.iter (fun s ->
+        Printf.printf "let reove_task_seg_%s_strict (id : Task_ds.task_seg_id) (sched : sched) : (sched, unit) result =\n" s;
+        Printf.printf "match find_task_seg_%s_opt id sched with\n" s;
+        print_endline "| None -> Error ()";
+        Printf.printf "| Some _ -> Ok (remove_task_seg_%s id sched)\n" s;
+      )
+      store_types
+  *)
+
+  let reove_task_seg_uncompleted_strict (id : Task_ds.task_seg_id)
+      (sched : sched) : (sched, unit) result =
+    match find_task_seg_uncompleted_opt id sched with
+    | None -> Error ()
+    | Some _ -> Ok (remove_task_seg_uncompleted id sched)
+
+  let reove_task_seg_completed_strict (id : Task_ds.task_seg_id) (sched : sched)
+    : (sched, unit) result =
+    match find_task_seg_completed_opt id sched with
+    | None -> Error ()
+    | Some _ -> Ok (remove_task_seg_completed id sched)
+
+  let reove_task_seg_discarded_strict (id : Task_ds.task_seg_id) (sched : sched)
+    : (sched, unit) result =
+    match find_task_seg_discarded_opt id sched with
+    | None -> Error ()
+    | Some _ -> Ok (remove_task_seg_discarded id sched)
+
+  (*$*)
+  (*$ #use "lib/sched.cinaps";;
+
+    List.iter (fun s ->
+        Printf.printf "let reove_task_seg_%s_seq (ids : Task_ds.task_seg_id Seq.t) (sched : sched) : sched =\n" s;
+        print_endline "Seq.fold_left";
+        Printf.printf "(fun sched id -> remove_task_seg_%s id sched)\n" s;
+        print_endline "sched ids";
+      )
+      store_types
+  *)
+
+  let reove_task_seg_uncompleted_seq (ids : Task_ds.task_seg_id Seq.t)
       (sched : sched) : sched =
     Seq.fold_left
-      (fun sched task_seg_id -> remove_task_seg task_seg_id sched)
-      sched task_seg_ids
+      (fun sched id -> remove_task_seg_uncompleted id sched)
+      sched ids
+
+  let reove_task_seg_completed_seq (ids : Task_ds.task_seg_id Seq.t)
+      (sched : sched) : sched =
+    Seq.fold_left (fun sched id -> remove_task_seg_completed id sched) sched ids
+
+  let reove_task_seg_discarded_seq (ids : Task_ds.task_seg_id Seq.t)
+      (sched : sched) : sched =
+    Seq.fold_left (fun sched id -> remove_task_seg_discarded id sched) sched ids
+
+  (*$*)
 end
 
 module Task_inst = struct
