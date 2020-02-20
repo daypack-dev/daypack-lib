@@ -459,23 +459,42 @@ module Task_seg = struct
       [ "completed"; "uncompleted"; "discarded" ]
   *)
 
-  let find_task_seg_uncompleted_opt (task_seg_id : Task_ds.task_seg_id)
-      ((_, sd) : sched) : Task_ds.task_seg_size option =
-    Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_uncompleted_store
+  let find_task_seg_completed_opt (id : Task_ds.task_seg_id) ((_, sd) : sched) :
+    Task_ds.task_seg_size option =
+    Task_seg_id_map.find_opt id sd.store.task_seg_completed_store
 
-  let find_task_seg_completed_opt (task_seg_id : Task_ds.task_seg_id)
-      ((_, sd) : sched) : Task_ds.task_seg_size option =
-    Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_completed_store
+  let find_task_seg_uncompleted_opt (id : Task_ds.task_seg_id) ((_, sd) : sched)
+    : Task_ds.task_seg_size option =
+    Task_seg_id_map.find_opt id sd.store.task_seg_uncompleted_store
 
-  let find_task_seg_discarded_opt (task_seg_id : Task_ds.task_seg_id)
-      ((_, sd) : sched) : Task_ds.task_seg_size option =
-    Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_discarded_store
+  let find_task_seg_discarded_opt (id : Task_ds.task_seg_id) ((_, sd) : sched) :
+    Task_ds.task_seg_size option =
+    Task_seg_id_map.find_opt id sd.store.task_seg_discarded_store
 
   (*$*)
 
-  let remove_task_seg_completed (task_seg_id : Task_ds.task_seg_id)
-      (sched : sched) : sched =
-    let sid, sd = Id.remove_task_seg_id task_seg_id sched in
+  (*$
+    List.iter
+      (fun s ->
+         Printf.printf
+           "let remove_task_seg_%s (id : Task_ds.task_seg_id) (sched : sched) : \
+            sched =\n"
+           s;
+         print_endline "let sid, sd = Id.remove_task_seg_id id sched in";
+         Printf.printf
+           {|
+(sid,
+ { sd with store = { sd.store with task_seg_%s_store = Task_seg_id_map.remove id sd.store.task_seg_%s_store } }
+)
+|}
+           s s)
+      [ "completed"; "uncompleted"; "discarded" ]
+  *)
+
+  let remove_task_seg_completed (id : Task_ds.task_seg_id) (sched : sched) :
+    sched =
+    let sid, sd = Id.remove_task_seg_id id sched in
+
     ( sid,
       {
         sd with
@@ -483,10 +502,41 @@ module Task_seg = struct
           {
             sd.store with
             task_seg_completed_store =
-              Task_seg_id_map.remove task_seg_id
-                sd.store.task_seg_completed_store;
+              Task_seg_id_map.remove id sd.store.task_seg_completed_store;
           };
       } )
+
+  let remove_task_seg_uncompleted (id : Task_ds.task_seg_id) (sched : sched) :
+    sched =
+    let sid, sd = Id.remove_task_seg_id id sched in
+
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_uncompleted_store =
+              Task_seg_id_map.remove id sd.store.task_seg_uncompleted_store;
+          };
+      } )
+
+  let remove_task_seg_discarded (id : Task_ds.task_seg_id) (sched : sched) :
+    sched =
+    let sid, sd = Id.remove_task_seg_id id sched in
+
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_discarded_store =
+              Task_seg_id_map.remove id sd.store.task_seg_discarded_store;
+          };
+      } )
+
+  (*$*)
 
   let remove_task_seg_completed_strict (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : (sched, unit) result =
