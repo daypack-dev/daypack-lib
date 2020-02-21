@@ -1594,8 +1594,8 @@ module Recur = struct
 
   let instance_recorded_already (task_id : Task_ds.task_id)
       (task_inst_data : Task_ds.task_inst_data)
-      (sched_req_template : Task_ds.sched_req_template) ((_sid, sd) as sched: sched) :
-    bool =
+      (sched_req_template : Task_ds.sched_req_template)
+      ((_sid, sd) as sched : sched) : bool =
     let user_id, task_part = task_id in
     match Task_id_map.find_opt task_id sd.store.task_id_to_task_inst_ids with
     | None -> false
@@ -1604,8 +1604,7 @@ module Recur = struct
         (fun task_inst_part ->
            let task_inst_id = (user_id, task_part, task_inst_part) in
            let stored_task_inst_data =
-             Task_inst.find_task_inst_any_opt task_inst_id sched
-             |> Option.get
+             Task_inst.find_task_inst_any_opt task_inst_id sched |> Option.get
            in
            task_inst_data = stored_task_inst_data
            && ( Sched_req_id_map.exists
@@ -1937,9 +1936,22 @@ module Serialize = struct
 
   let pack_store (store : store) : Sched_t.store =
     {
-      task_list = pack_task_store store.task_store;
-      task_inst_list = pack_task_inst_store store.task_inst_store;
-      task_seg_list = pack_task_seg_store store.task_seg_store;
+      task_uncompleted_list =
+        pack_task_uncompleted_store store.task_uncompleted_store;
+      task_completed_list = pack_task_completed_store store.task_completed_store;
+      task_discarded_list = pack_task_discarded_store store.task_discarded_store;
+      task_inst_uncompleted_list =
+        pack_task_inst_uncompleted_store store.task_inst_uncompleted_store;
+      task_inst_completed_list =
+        pack_task_inst_completed_store store.task_inst_completed_store;
+      task_inst_discarded_list =
+        pack_task_inst_discarded_store store.task_inst_discarded_store;
+      task_seg_uncompleted_list =
+        pack_task_seg_uncompleted_store store.task_seg_uncompleted_store;
+      task_seg_completed_list =
+        pack_task_seg_completed_store store.task_seg_completed_store;
+      task_seg_discarded_list =
+        pack_task_seg_discarded_store store.task_seg_discarded_store;
       user_id_to_task_ids = pack_user_id_to_task_ids store.user_id_to_task_ids;
       task_id_to_task_inst_ids =
         pack_task_id_to_task_inst_ids store.task_id_to_task_inst_ids;
@@ -1961,9 +1973,26 @@ module Serialize = struct
 
   let pack_store_diff (diff : store_diff) : Sched_t.store_diff =
     {
-      task_list_diff = pack_task_store_diff diff.task_store_diff;
-      task_inst_list_diff = pack_task_inst_store_diff diff.task_inst_store_diff;
-      task_seg_list_diff = pack_task_seg_store_diff diff.task_seg_store_diff;
+      task_uncompleted_list_diff =
+        pack_task_uncompleted_store_diff diff.task_uncompleted_store_diff;
+      task_completed_list_diff =
+        pack_task_completed_store_diff diff.task_completed_store_diff;
+      task_discarded_list_diff =
+        pack_task_discarded_store_diff diff.task_discarded_store_diff;
+      task_inst_uncompleted_list_diff =
+        pack_task_inst_uncompleted_store_diff
+          diff.task_inst_uncompleted_store_diff;
+      task_inst_completed_list_diff =
+        pack_task_inst_completed_store_diff diff.task_inst_completed_store_diff;
+      task_inst_discarded_list_diff =
+        pack_task_inst_discarded_store_diff diff.task_inst_discarded_store_diff;
+      task_seg_uncompleted_list_diff =
+        pack_task_seg_uncompleted_store_diff
+          diff.task_seg_uncompleted_store_diff;
+      task_seg_completed_list_diff =
+        pack_task_seg_completed_store_diff diff.task_seg_completed_store_diff;
+      task_seg_discarded_list_diff =
+        pack_task_seg_discarded_store_diff diff.task_seg_discarded_store_diff;
       user_id_to_task_ids_diff =
         pack_user_id_to_task_ids_diff diff.user_id_to_task_ids_diff;
       task_id_to_task_inst_ids_diff =
@@ -2259,9 +2288,24 @@ module Deserialize = struct
 
   let unpack_store (store : Sched_t.store) : store =
     {
-      task_store = unpack_task_list store.task_list;
-      task_inst_store = unpack_task_inst_list store.task_inst_list;
-      task_seg_store = unpack_task_seg_list store.task_seg_list;
+      task_uncompleted_store =
+        unpack_task_uncompleted_list store.task_uncompleted_list;
+      task_completed_store =
+        unpack_task_completed_list store.task_completed_list;
+      task_discarded_store =
+        unpack_task_discarded_list store.task_discarded_list;
+      task_inst_uncompleted_store =
+        unpack_task_inst_uncompleted_list store.task_inst_uncompleted_list;
+      task_inst_completed_store =
+        unpack_task_inst_completed_list store.task_inst_completed_list;
+      task_inst_discarded_store =
+        unpack_task_inst_discarded_list store.task_inst_discarded_list;
+      task_seg_uncompleted_store =
+        unpack_task_seg_uncompleted_list store.task_seg_uncompleted_list;
+      task_seg_completed_store =
+        unpack_task_seg_completed_list store.task_seg_completed_list;
+      task_seg_discarded_store =
+        unpack_task_seg_discarded_list store.task_seg_discarded_list;
       user_id_to_task_ids = unpack_user_id_to_task_ids store.user_id_to_task_ids;
       task_id_to_task_inst_ids =
         unpack_task_id_to_task_inst_ids store.task_id_to_task_inst_ids;
@@ -2283,9 +2327,26 @@ module Deserialize = struct
 
   let unpack_store_diff (diff : Sched_t.store_diff) : store_diff =
     {
-      task_store_diff = unpack_task_list_diff diff.task_list_diff;
-      task_inst_store_diff = unpack_task_inst_list_diff diff.task_inst_list_diff;
-      task_seg_store_diff = unpack_task_seg_list_diff diff.task_seg_list_diff;
+      task_uncompleted_store_diff =
+        unpack_task_uncompleted_list_diff diff.task_uncompleted_list_diff;
+      task_completed_store_diff =
+        unpack_task_completed_list_diff diff.task_completed_list_diff;
+      task_discarded_store_diff =
+        unpack_task_discarded_list_diff diff.task_discarded_list_diff;
+      task_inst_uncompleted_store_diff =
+        unpack_task_inst_uncompleted_list_diff
+          diff.task_inst_uncompleted_list_diff;
+      task_inst_completed_store_diff =
+        unpack_task_inst_completed_list_diff diff.task_inst_completed_list_diff;
+      task_inst_discarded_store_diff =
+        unpack_task_inst_discarded_list_diff diff.task_inst_discarded_list_diff;
+      task_seg_uncompleted_store_diff =
+        unpack_task_seg_uncompleted_list_diff
+          diff.task_seg_uncompleted_list_diff;
+      task_seg_completed_store_diff =
+        unpack_task_seg_completed_list_diff diff.task_seg_completed_list_diff;
+      task_seg_discarded_store_diff =
+        unpack_task_seg_discarded_list_diff diff.task_seg_discarded_list_diff;
       user_id_to_task_ids_diff =
         unpack_user_id_to_task_ids_diff diff.user_id_to_task_ids_diff;
       task_id_to_task_inst_ids_diff =
@@ -2355,13 +2416,31 @@ module Equal = struct
   let store_equal (store1 : store) (store2 : store) : bool =
     Task_id_map.equal
       (fun x y -> compare x y = 0)
-      store1.task_store store2.task_store
+      store1.task_uncompleted_store store2.task_uncompleted_store
+    && Task_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_completed_store store2.task_completed_store
+    && Task_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_discarded_store store2.task_discarded_store
     && Task_inst_id_map.equal
       (fun x y -> compare x y = 0)
-      store1.task_inst_store store2.task_inst_store
+      store1.task_inst_uncompleted_store store2.task_inst_uncompleted_store
+    && Task_inst_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_inst_completed_store store2.task_inst_completed_store
+    && Task_inst_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_inst_discarded_store store2.task_inst_discarded_store
     && Task_seg_id_map.equal
       (fun x y -> compare x y = 0)
-      store1.task_seg_store store2.task_seg_store
+      store1.task_seg_uncompleted_store store2.task_seg_uncompleted_store
+    && Task_seg_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_seg_completed_store store2.task_seg_completed_store
+    && Task_seg_id_map.equal
+      (fun x y -> compare x y = 0)
+      store1.task_seg_discarded_store store2.task_seg_discarded_store
     && User_id_map.equal Int64_set.equal store1.user_id_to_task_ids
       store2.user_id_to_task_ids
     && Task_id_map.equal Int64_set.equal store1.task_id_to_task_inst_ids
@@ -2411,14 +2490,33 @@ module Diff = struct
 
   let diff_store (store1 : store) (store2 : store) : store_diff =
     {
-      task_store_diff =
-        Task_id_map_utils.diff ~old:store1.task_store store2.task_store;
-      task_inst_store_diff =
-        Task_inst_id_map_utils.diff ~old:store1.task_inst_store
-          store2.task_inst_store;
-      task_seg_store_diff =
-        Task_seg_id_map_utils.diff ~old:store1.task_seg_store
-          store2.task_seg_store;
+      task_uncompleted_store_diff =
+        Task_id_map_utils.diff ~old:store1.task_uncompleted_store
+          store2.task_uncompleted_store;
+      task_completed_store_diff =
+        Task_id_map_utils.diff ~old:store1.task_completed_store
+          store2.task_completed_store;
+      task_discarded_store_diff =
+        Task_id_map_utils.diff ~old:store1.task_discarded_store
+          store2.task_discarded_store;
+      task_inst_uncompleted_store_diff =
+        Task_inst_id_map_utils.diff ~old:store1.task_inst_uncompleted_store
+          store2.task_inst_uncompleted_store;
+      task_inst_completed_store_diff =
+        Task_inst_id_map_utils.diff ~old:store1.task_inst_completed_store
+          store2.task_inst_completed_store;
+      task_inst_discarded_store_diff =
+        Task_inst_id_map_utils.diff ~old:store1.task_inst_discarded_store
+          store2.task_inst_discarded_store;
+      task_seg_uncompleted_store_diff =
+        Task_seg_id_map_utils.diff ~old:store1.task_seg_uncompleted_store
+          store2.task_seg_uncompleted_store;
+      task_seg_completed_store_diff =
+        Task_seg_id_map_utils.diff ~old:store1.task_seg_completed_store
+          store2.task_seg_completed_store;
+      task_seg_discarded_store_diff =
+        Task_seg_id_map_utils.diff ~old:store1.task_seg_discarded_store
+          store2.task_seg_discarded_store;
       user_id_to_task_ids_diff =
         User_id_map_utils.Int64_bucketed.diff_bucketed
           ~old:store1.user_id_to_task_ids store2.user_id_to_task_ids;
@@ -2451,14 +2549,33 @@ module Diff = struct
 
   let add_diff_store (diff : store_diff) (store : store) : store =
     {
-      task_store =
-        Task_id_map_utils.add_diff diff.task_store_diff store.task_store;
-      task_inst_store =
-        Task_inst_id_map_utils.add_diff diff.task_inst_store_diff
-          store.task_inst_store;
-      task_seg_store =
-        Task_seg_id_map_utils.add_diff diff.task_seg_store_diff
-          store.task_seg_store;
+      task_uncompleted_store =
+        Task_id_map_utils.add_diff diff.task_uncompleted_store_diff
+          store.task_uncompleted_store;
+      task_completed_store =
+        Task_id_map_utils.add_diff diff.task_completed_store_diff
+          store.task_completed_store;
+      task_discarded_store =
+        Task_id_map_utils.add_diff diff.task_discarded_store_diff
+          store.task_discarded_store;
+      task_inst_uncompleted_store =
+        Task_inst_id_map_utils.add_diff diff.task_inst_uncompleted_store_diff
+          store.task_inst_uncompleted_store;
+      task_inst_completed_store =
+        Task_inst_id_map_utils.add_diff diff.task_inst_completed_store_diff
+          store.task_inst_completed_store;
+      task_inst_discarded_store =
+        Task_inst_id_map_utils.add_diff diff.task_inst_discarded_store_diff
+          store.task_inst_discarded_store;
+      task_seg_uncompleted_store =
+        Task_seg_id_map_utils.add_diff diff.task_seg_uncompleted_store_diff
+          store.task_seg_uncompleted_store;
+      task_seg_completed_store =
+        Task_seg_id_map_utils.add_diff diff.task_seg_completed_store_diff
+          store.task_seg_completed_store;
+      task_seg_discarded_store =
+        Task_seg_id_map_utils.add_diff diff.task_seg_discarded_store_diff
+          store.task_seg_discarded_store;
       user_id_to_task_ids =
         User_id_map_utils.Int64_bucketed.add_diff_bucketed
           diff.user_id_to_task_ids_diff store.user_id_to_task_ids;
@@ -2491,14 +2608,33 @@ module Diff = struct
 
   let sub_diff_store (diff : store_diff) (store : store) : store =
     {
-      task_store =
-        Task_id_map_utils.sub_diff diff.task_store_diff store.task_store;
-      task_inst_store =
-        Task_inst_id_map_utils.sub_diff diff.task_inst_store_diff
-          store.task_inst_store;
-      task_seg_store =
-        Task_seg_id_map_utils.sub_diff diff.task_seg_store_diff
-          store.task_seg_store;
+      task_uncompleted_store =
+        Task_id_map_utils.sub_diff diff.task_uncompleted_store_diff
+          store.task_uncompleted_store;
+      task_completed_store =
+        Task_id_map_utils.sub_diff diff.task_completed_store_diff
+          store.task_completed_store;
+      task_discarded_store =
+        Task_id_map_utils.sub_diff diff.task_discarded_store_diff
+          store.task_discarded_store;
+      task_inst_uncompleted_store =
+        Task_inst_id_map_utils.sub_diff diff.task_inst_uncompleted_store_diff
+          store.task_inst_uncompleted_store;
+      task_inst_completed_store =
+        Task_inst_id_map_utils.sub_diff diff.task_inst_completed_store_diff
+          store.task_inst_completed_store;
+      task_inst_discarded_store =
+        Task_inst_id_map_utils.sub_diff diff.task_inst_discarded_store_diff
+          store.task_inst_discarded_store;
+      task_seg_uncompleted_store =
+        Task_seg_id_map_utils.sub_diff diff.task_seg_uncompleted_store_diff
+          store.task_seg_uncompleted_store;
+      task_seg_completed_store =
+        Task_seg_id_map_utils.sub_diff diff.task_seg_completed_store_diff
+          store.task_seg_completed_store;
+      task_seg_discarded_store =
+        Task_seg_id_map_utils.sub_diff diff.task_seg_discarded_store_diff
+          store.task_seg_discarded_store;
       user_id_to_task_ids =
         User_id_map_utils.Int64_bucketed.sub_diff_bucketed
           diff.user_id_to_task_ids_diff store.user_id_to_task_ids;

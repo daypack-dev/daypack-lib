@@ -473,20 +473,56 @@ end
 
 let store_fields =
   [
-    ( "task_list",
-      "task_store",
+    ( "task_uncompleted_list",
+      "task_uncompleted_store",
       "Task_id_map.equal (fun x y -> compare x y = 0)",
       "Task_id_map_utils.diff",
       "Task_id_map_utils.add_diff",
       "Task_id_map_utils.sub_diff" );
-    ( "task_inst_list",
-      "task_inst_store",
+    ( "task_completed_list",
+      "task_completed_store",
+      "Task_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_id_map_utils.diff",
+      "Task_id_map_utils.add_diff",
+      "Task_id_map_utils.sub_diff" );
+    ( "task_discarded_list",
+      "task_discarded_store",
+      "Task_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_id_map_utils.diff",
+      "Task_id_map_utils.add_diff",
+      "Task_id_map_utils.sub_diff" );
+    ( "task_inst_uncompleted_list",
+      "task_inst_uncompleted_store",
       "Task_inst_id_map.equal (fun x y -> compare x y = 0)",
       "Task_inst_id_map_utils.diff",
       "Task_inst_id_map_utils.add_diff",
       "Task_inst_id_map_utils.sub_diff" );
-    ( "task_seg_list",
-      "task_seg_store",
+    ( "task_inst_completed_list",
+      "task_inst_completed_store",
+      "Task_inst_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_inst_id_map_utils.diff",
+      "Task_inst_id_map_utils.add_diff",
+      "Task_inst_id_map_utils.sub_diff" );
+    ( "task_inst_discarded_list",
+      "task_inst_discarded_store",
+      "Task_inst_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_inst_id_map_utils.diff",
+      "Task_inst_id_map_utils.add_diff",
+      "Task_inst_id_map_utils.sub_diff" );
+    ( "task_seg_uncompleted_list",
+      "task_seg_uncompleted_store",
+      "Task_seg_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_seg_id_map_utils.diff",
+      "Task_seg_id_map_utils.add_diff",
+      "Task_seg_id_map_utils.sub_diff" );
+    ( "task_seg_completed_list",
+      "task_seg_completed_store",
+      "Task_seg_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_seg_id_map_utils.diff",
+      "Task_seg_id_map_utils.add_diff",
+      "Task_seg_id_map_utils.sub_diff" );
+    ( "task_seg_discarded_list",
+      "task_seg_discarded_store",
       "Task_seg_id_map.equal (fun x y -> compare x y = 0)",
       "Task_seg_id_map_utils.diff",
       "Task_seg_id_map_utils.add_diff",

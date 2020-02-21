@@ -85,9 +85,15 @@ type sched_id = int
 type task_seg_part_sub = (int64 * int64 option)
 
 type store = {
-  task_list : task list;
-  task_inst_list : task_inst list;
-  task_seg_list : task_seg list;
+  task_uncompleted_list : task list;
+  task_completed_list : task list;
+  task_discarded_list : task list;
+  task_uncompleted_inst_list : task_inst list;
+  task_completed_inst_list : task_inst list;
+  task_discarded_inst_list : task_inst list;
+  task_uncompleted_seg_list : task_seg list;
+  task_completed_seg_list : task_seg list;
+  task_discarded_seg_list : task_seg list;
   user_id_to_task_ids : (user_id * int64 list) list;
   task_id_to_task_inst_ids : (task_id * int64 list) list;
   task_inst_id_to_task_seg_ids : (task_inst_id * task_seg_part_sub list) list;
