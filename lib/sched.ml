@@ -606,7 +606,9 @@ module Task_inst = struct
 
   (*$ #use "lib/sched.cinaps";;
 
-    print_task_inst_remove ()
+    print_task_inst_remove ();
+    print_task_inst_remove_strict ();
+    print_task_inst_remove_seq ();
   *)
 
   let remove_task_inst_uncompleted (id : Task_ds.task_inst_id) (sched : sched) :
@@ -673,19 +675,43 @@ module Task_inst = struct
           } ))
     |> Id.remove_task_inst_id id
 
-  (*$*)
-
-  let remove_task_inst_strict (task_inst_id : Task_ds.task_inst_id)
+  let reove_task_inst_uncompleted_strict (id : Task_ds.task_inst_id)
       (sched : sched) : (sched, unit) result =
-    match find_task_inst_opt task_inst_id sched with
+    match find_task_inst_uncompleted_opt id sched with
     | None -> Error ()
-    | Some _ -> Ok (remove_task_inst task_inst_id sched)
+    | Some _ -> Ok (remove_task_inst_uncompleted id sched)
 
-  let remove_task_inst_seq (task_inst_ids : Task_ds.task_inst_id Seq.t)
+  let reove_task_inst_completed_strict (id : Task_ds.task_inst_id)
+      (sched : sched) : (sched, unit) result =
+    match find_task_inst_completed_opt id sched with
+    | None -> Error ()
+    | Some _ -> Ok (remove_task_inst_completed id sched)
+
+  let reove_task_inst_discarded_strict (id : Task_ds.task_inst_id)
+      (sched : sched) : (sched, unit) result =
+    match find_task_inst_discarded_opt id sched with
+    | None -> Error ()
+    | Some _ -> Ok (remove_task_inst_discarded id sched)
+
+  let remove_task_inst_uncompleted_seq (ids : Task_ds.task_inst_id Seq.t)
       (sched : sched) : sched =
     Seq.fold_left
-      (fun sched task_inst_id -> remove_task_inst task_inst_id sched)
-      sched task_inst_ids
+      (fun sched id -> remove_task_inst_uncompleted id sched)
+      sched ids
+
+  let remove_task_inst_completed_seq (ids : Task_ds.task_inst_id Seq.t)
+      (sched : sched) : sched =
+    Seq.fold_left
+      (fun sched id -> remove_task_inst_completed id sched)
+      sched ids
+
+  let remove_task_inst_discarded_seq (ids : Task_ds.task_inst_id Seq.t)
+      (sched : sched) : sched =
+    Seq.fold_left
+      (fun sched id -> remove_task_inst_discarded id sched)
+      sched ids
+
+  (*$*)
 end
 
 module Task = struct

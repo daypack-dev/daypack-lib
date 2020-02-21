@@ -812,3 +812,27 @@ let print_task_inst_remove () =
        print_endline "}}))";
        Printf.printf "|> Id.remove_task_inst_id id\n")
     store_types
+
+let print_task_inst_remove_strict () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let reove_task_inst_%s_strict (id : Task_ds.task_inst_id) (sched : \
+          sched) : (sched, unit) result =\n"
+         s;
+       Printf.printf "match find_task_inst_%s_opt id sched with\n" s;
+       print_endline "| None -> Error ()";
+       Printf.printf "| Some _ -> Ok (remove_task_inst_%s id sched)\n" s)
+    store_types
+
+let print_task_inst_remove_seq () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_inst_%s_seq (ids : Task_ds.task_inst_id Seq.t) (sched \
+          : sched) : sched =\n"
+         s;
+       print_endline "Seq.fold_left";
+       Printf.printf "(fun sched id -> remove_task_inst_%s id sched)\n" s;
+       print_endline "sched ids")
+    store_types
