@@ -727,7 +727,9 @@ module Task = struct
         store =
           {
             sd.store with
-            task_store = Task_id_map.add parent_task_id data sd.store.task_store;
+            task_uncompleted_store =
+              Task_id_map.add parent_task_id data
+                sd.store.task_uncompleted_store;
           };
       }
     in
@@ -736,31 +738,107 @@ module Task = struct
     in
     ((parent_task_id, data), inst_list, (sid, sd))
 
-  let find_task_opt (task_id : Task_ds.task_id) ((_, sd) : sched) :
+  (*$ #use "lib/sched.cinaps";;
+
+    print_task_find ()
+  *)
+
+  let find_task_uncompleted_opt (id : Task_ds.task_id) ((_, sd) : sched) :
     Task_ds.task_data option =
-    Task_id_map.find_opt task_id sd.store.task_store
+    Task_id_map.find_opt id sd.store.task_uncompleted_store
 
-  let remove_task (task_id : Task_ds.task_id) (sched : sched) : sched =
-    let children_task_inst_ids = Id.get_task_inst_id_seq task_id sched in
+  let find_task_completed_opt (id : Task_ds.task_id) ((_, sd) : sched) :
+    Task_ds.task_data option =
+    Task_id_map.find_opt id sd.store.task_completed_store
+
+  let find_task_discarded_opt (id : Task_ds.task_id) ((_, sd) : sched) :
+    Task_ds.task_data option =
+    Task_id_map.find_opt id sd.store.task_discarded_store
+
+  (*$*)
+
+  (*$ #use "lib/sched.cinaps";;
+
+    print_task_remove ();
+    print_task_remove_strict ();
+  *)
+
+  let remove_task_uncompleted (id : Task_ds.task_id) (sched : sched) : sched =
+    let children_task_inst_ids = Id.get_task_inst_id_seq id sched in
     sched
-    |> Task_inst.remove_task_inst_seq children_task_inst_ids
-    |> fun (sid, sd) ->
-    ( sid,
-      {
-        sd with
-        store =
+    |> Task_inst.remove_task_inst_uncompleted_seq children_task_inst_ids
+    |> (fun (sid, sd) ->
+        ( sid,
           {
-            sd.store with
-            task_store = Task_id_map.remove task_id sd.store.task_store;
-            task_id_to_task_inst_ids =
-              Task_id_map.remove task_id sd.store.task_id_to_task_inst_ids;
-          };
-      } )
+            sd with
+            store =
+              {
+                sd.store with
+                task_uncompleted_store =
+                  Task_id_map.remove id sd.store.task_uncompleted_store;
+                task_id_to_task_inst_ids =
+                  Task_id_map.remove id sd.store.task_id_to_task_inst_ids;
+              };
+          } ))
+    |> Id.remove_task_id id
 
-  let remove_task_strict task_id sched : (sched, unit) result =
-    match find_task_opt task_id sched with
+  let remove_task_completed (id : Task_ds.task_id) (sched : sched) : sched =
+    let children_task_inst_ids = Id.get_task_inst_id_seq id sched in
+    sched
+    |> Task_inst.remove_task_inst_completed_seq children_task_inst_ids
+    |> (fun (sid, sd) ->
+        ( sid,
+          {
+            sd with
+            store =
+              {
+                sd.store with
+                task_completed_store =
+                  Task_id_map.remove id sd.store.task_completed_store;
+                task_id_to_task_inst_ids =
+                  Task_id_map.remove id sd.store.task_id_to_task_inst_ids;
+              };
+          } ))
+    |> Id.remove_task_id id
+
+  let remove_task_discarded (id : Task_ds.task_id) (sched : sched) : sched =
+    let children_task_inst_ids = Id.get_task_inst_id_seq id sched in
+    sched
+    |> Task_inst.remove_task_inst_discarded_seq children_task_inst_ids
+    |> (fun (sid, sd) ->
+        ( sid,
+          {
+            sd with
+            store =
+              {
+                sd.store with
+                task_discarded_store =
+                  Task_id_map.remove id sd.store.task_discarded_store;
+                task_id_to_task_inst_ids =
+                  Task_id_map.remove id sd.store.task_id_to_task_inst_ids;
+              };
+          } ))
+    |> Id.remove_task_id id
+
+  let reove_task_uncompleted_strict (id : Task_ds.task_id) (sched : sched) :
+    (sched, unit) result =
+    match find_task_uncompleted_opt id sched with
     | None -> Error ()
-    | Some _ -> Ok (remove_task task_id sched)
+    | Some _ -> Ok (remove_task_uncompleted id sched)
+
+  let reove_task_completed_strict (id : Task_ds.task_id) (sched : sched) :
+    (sched, unit) result =
+    match find_task_completed_opt id sched with
+    | None -> Error ()
+    | Some _ -> Ok (remove_task_completed id sched)
+
+  let reove_task_discarded_strict (id : Task_ds.task_id) (sched : sched) :
+    (sched, unit) result =
+    match find_task_discarded_opt id sched with
+    | None -> Error ()
+    | Some _ -> Ok (remove_task_discarded id sched)
+
+  (*$*)
 end
 
 module Agenda = struct

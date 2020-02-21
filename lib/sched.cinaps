@@ -836,3 +836,47 @@ let print_task_inst_remove_seq () =
        Printf.printf "(fun sched id -> remove_task_inst_%s id sched)\n" s;
        print_endline "sched ids")
     store_types
+
+let print_task_find () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let find_task_%s_opt (id : Task_ds.task_id) ((_, sd) : sched) : \
+          Task_ds.task_data option =\n"
+         s;
+       Printf.printf "Task_id_map.find_opt id sd.store.task_%s_store\n" s)
+    store_types
+
+let print_task_remove () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_%s (id : Task_ds.task_id) (sched : sched) : sched =\n"
+         s;
+       Printf.printf
+         "let children_task_inst_ids = Id.get_task_inst_id_seq id sched in\n";
+       print_endline "sched";
+       Printf.printf
+         "|> Task_inst.remove_task_inst_%s_seq children_task_inst_ids\n" s;
+       print_endline
+         "|> (fun (sid, sd) -> ( sid, { sd with store = { sd.store with";
+       Printf.printf
+         "task_%s_store = Task_id_map.remove id sd.store.task_%s_store;\n" s s;
+       Printf.printf
+         "task_id_to_task_inst_ids = Task_id_map.remove id \
+          sd.store.task_id_to_task_inst_ids;\n";
+       print_endline "}}))";
+       Printf.printf "|> Id.remove_task_id id\n")
+    store_types
+
+let print_task_remove_strict () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let reove_task_%s_strict (id : Task_ds.task_id) (sched : sched) : \
+          (sched, unit) result =\n"
+         s;
+       Printf.printf "match find_task_%s_opt id sched with\n" s;
+       print_endline "| None -> Error ()";
+       Printf.printf "| Some _ -> Ok (remove_task_%s id sched)\n" s)
+    store_types
