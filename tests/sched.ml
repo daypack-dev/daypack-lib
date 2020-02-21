@@ -3,57 +3,69 @@ open Test_utils
 (*$ #use "tests/serialization_related.cinaps";;
   #use "tests/sched.cinaps";;
 
-  let unpack_pack_store_list = [
-    ("task_store",
-     "task",
-     "Daypack_lib.Task_id_map.of_seq",
-     "Daypack_lib.Sched.Serialize.pack_task_store",
-     "Daypack_lib.Sched.Deserialize.unpack_task_list",
-     "Daypack_lib.Task_id_map.equal"
-    );
-    ("task_inst_store",
-     "task_inst",
-     "Daypack_lib.Task_inst_id_map.of_seq",
-     "Daypack_lib.Sched.Serialize.pack_task_inst_store",
-     "Daypack_lib.Sched.Deserialize.unpack_task_inst_list",
-     "Daypack_lib.Task_inst_id_map.equal"
-    );
-    ("task_seg_store",
-     "task_seg",
-     "Daypack_lib.Task_seg_id_map.of_seq",
-     "Daypack_lib.Sched.Serialize.pack_task_seg_store",
-     "Daypack_lib.Sched.Deserialize.unpack_task_seg_list",
-     "Daypack_lib.Task_seg_id_map.equal"
-    );
-    ("sched_req_pending_store",
-     "sched_req",
-     "Daypack_lib.Sched_req_id_map.of_seq",
-     "Daypack_lib.Sched.Serialize.pack_sched_req_pending_store",
-     "Daypack_lib.Sched.Deserialize.unpack_sched_req_pending_list",
-     "Daypack_lib.Sched_req_id_map.equal"
-    );
-    ("sched_req_record_store",
-     "sched_req_record",
-     "Daypack_lib.Sched_req_id_map.of_seq",
-     "Daypack_lib.Sched.Serialize.pack_sched_req_record_store",
-     "Daypack_lib.Sched.Deserialize.unpack_sched_req_record_list",
-     "Daypack_lib.Sched_req_id_map.equal"
-    );
-    ("quota",
-     "(pair task_inst_id pos_int64)",
-     "Daypack_lib.Task_inst_id_map.of_seq",
-     "Daypack_lib.Sched.Serialize.pack_quota",
-     "Daypack_lib.Sched.Deserialize.unpack_quota",
-     "Daypack_lib.Task_inst_id_map.equal"
-    );
-    ("task_seg_id_to_progress",
-     "(pair task_seg_id progress)",
-     "Daypack_lib.Task_seg_id_map.of_seq",
-     "Daypack_lib.Sched.Serialize.pack_task_seg_id_to_progress",
-     "Daypack_lib.Sched.Deserialize.unpack_task_seg_id_to_progress",
-     "Daypack_lib.Task_seg_id_map.equal"
-    );
-  ] in
+  let store_types = ["uncompleted"; "completed"; "discarded"] in
+
+  let unpack_pack_store_list =
+    List.map (fun s ->
+        (Printf.sprintf "task_%s_store" s,
+         "task",
+         "Daypack_lib.Task_id_map.of_seq",
+         Printf.sprintf "Daypack_lib.Sched.Serialize.pack_task_%s_store" s,
+         Printf.sprintf "Daypack_lib.Sched.Deserialize.unpack_task_%s_list" s,
+         "Daypack_lib.Task_id_map.equal"
+        )
+      ) store_types
+    @
+    List.map (fun s ->
+        (Printf.sprintf "task_inst_%s_store" s,
+         "task_inst",
+         "Daypack_lib.Task_inst_id_map.of_seq",
+         Printf.sprintf "Daypack_lib.Sched.Serialize.pack_task_inst_%s_store" s,
+         Printf.sprintf "Daypack_lib.Sched.Deserialize.unpack_task_inst_%s_list" s,
+         "Daypack_lib.Task_inst_id_map.equal"
+        )
+      ) store_types
+    @
+    List.map (fun s ->
+        (Printf.sprintf "task_seg_%s_store" s,
+         "task_seg",
+         "Daypack_lib.Task_seg_id_map.of_seq",
+         Printf.sprintf "Daypack_lib.Sched.Serialize.pack_task_seg_%s_store" s,
+         Printf.sprintf "Daypack_lib.Sched.Deserialize.unpack_task_seg_%s_list" s,
+         "Daypack_lib.Task_seg_id_map.equal"
+        )
+      ) store_types
+    @
+    [
+      ("sched_req_pending_store",
+       "sched_req",
+       "Daypack_lib.Sched_req_id_map.of_seq",
+       "Daypack_lib.Sched.Serialize.pack_sched_req_pending_store",
+       "Daypack_lib.Sched.Deserialize.unpack_sched_req_pending_list",
+       "Daypack_lib.Sched_req_id_map.equal"
+      );
+      ("sched_req_record_store",
+       "sched_req_record",
+       "Daypack_lib.Sched_req_id_map.of_seq",
+       "Daypack_lib.Sched.Serialize.pack_sched_req_record_store",
+       "Daypack_lib.Sched.Deserialize.unpack_sched_req_record_list",
+       "Daypack_lib.Sched_req_id_map.equal"
+      );
+      ("quota",
+       "(pair task_inst_id pos_int64)",
+       "Daypack_lib.Task_inst_id_map.of_seq",
+       "Daypack_lib.Sched.Serialize.pack_quota",
+       "Daypack_lib.Sched.Deserialize.unpack_quota",
+       "Daypack_lib.Task_inst_id_map.equal"
+      );
+      ("task_seg_id_to_progress",
+       "(pair task_seg_id progress)",
+       "Daypack_lib.Task_seg_id_map.of_seq",
+       "Daypack_lib.Sched.Serialize.pack_task_seg_id_to_progress",
+       "Daypack_lib.Sched.Deserialize.unpack_task_seg_id_to_progress",
+       "Daypack_lib.Task_seg_id_map.equal"
+      );
+    ] in
 
   let unpack_pack_bucket_store_list = [
     ("user_id_to_task_ids",
@@ -199,41 +211,120 @@ open Test_utils
   print_endline "]";
 *)
 
-let qc_unpack_is_inverse_of_pack_task_store =
-  QCheck.Test.make ~count:5000 ~name:"qc_unpack_is_inverse_of_pack_task_store"
+let qc_unpack_is_inverse_of_pack_task_uncompleted_store =
+  QCheck.Test.make ~count:5000
+    ~name:"qc_unpack_is_inverse_of_pack_task_uncompleted_store"
     QCheck.(list_of_size Gen.(int_bound 100) task)
     (fun l ->
        let x = l |> List.to_seq |> Daypack_lib.Task_id_map.of_seq in
        let y =
          x
-         |> Daypack_lib.Sched.Serialize.pack_task_store
-         |> Daypack_lib.Sched.Deserialize.unpack_task_list
+         |> Daypack_lib.Sched.Serialize.pack_task_uncompleted_store
+         |> Daypack_lib.Sched.Deserialize.unpack_task_uncompleted_list
        in
        Daypack_lib.Task_id_map.equal (fun x y -> compare x y = 0) x y)
 
-let qc_unpack_is_inverse_of_pack_task_inst_store =
+let qc_unpack_is_inverse_of_pack_task_completed_store =
   QCheck.Test.make ~count:5000
-    ~name:"qc_unpack_is_inverse_of_pack_task_inst_store"
+    ~name:"qc_unpack_is_inverse_of_pack_task_completed_store"
+    QCheck.(list_of_size Gen.(int_bound 100) task)
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Task_id_map.of_seq in
+       let y =
+         x
+         |> Daypack_lib.Sched.Serialize.pack_task_completed_store
+         |> Daypack_lib.Sched.Deserialize.unpack_task_completed_list
+       in
+       Daypack_lib.Task_id_map.equal (fun x y -> compare x y = 0) x y)
+
+let qc_unpack_is_inverse_of_pack_task_discarded_store =
+  QCheck.Test.make ~count:5000
+    ~name:"qc_unpack_is_inverse_of_pack_task_discarded_store"
+    QCheck.(list_of_size Gen.(int_bound 100) task)
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Task_id_map.of_seq in
+       let y =
+         x
+         |> Daypack_lib.Sched.Serialize.pack_task_discarded_store
+         |> Daypack_lib.Sched.Deserialize.unpack_task_discarded_list
+       in
+       Daypack_lib.Task_id_map.equal (fun x y -> compare x y = 0) x y)
+
+let qc_unpack_is_inverse_of_pack_task_inst_uncompleted_store =
+  QCheck.Test.make ~count:5000
+    ~name:"qc_unpack_is_inverse_of_pack_task_inst_uncompleted_store"
     QCheck.(list_of_size Gen.(int_bound 100) task_inst)
     (fun l ->
        let x = l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq in
        let y =
          x
-         |> Daypack_lib.Sched.Serialize.pack_task_inst_store
-         |> Daypack_lib.Sched.Deserialize.unpack_task_inst_list
+         |> Daypack_lib.Sched.Serialize.pack_task_inst_uncompleted_store
+         |> Daypack_lib.Sched.Deserialize.unpack_task_inst_uncompleted_list
        in
        Daypack_lib.Task_inst_id_map.equal (fun x y -> compare x y = 0) x y)
 
-let qc_unpack_is_inverse_of_pack_task_seg_store =
+let qc_unpack_is_inverse_of_pack_task_inst_completed_store =
   QCheck.Test.make ~count:5000
-    ~name:"qc_unpack_is_inverse_of_pack_task_seg_store"
+    ~name:"qc_unpack_is_inverse_of_pack_task_inst_completed_store"
+    QCheck.(list_of_size Gen.(int_bound 100) task_inst)
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq in
+       let y =
+         x
+         |> Daypack_lib.Sched.Serialize.pack_task_inst_completed_store
+         |> Daypack_lib.Sched.Deserialize.unpack_task_inst_completed_list
+       in
+       Daypack_lib.Task_inst_id_map.equal (fun x y -> compare x y = 0) x y)
+
+let qc_unpack_is_inverse_of_pack_task_inst_discarded_store =
+  QCheck.Test.make ~count:5000
+    ~name:"qc_unpack_is_inverse_of_pack_task_inst_discarded_store"
+    QCheck.(list_of_size Gen.(int_bound 100) task_inst)
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Task_inst_id_map.of_seq in
+       let y =
+         x
+         |> Daypack_lib.Sched.Serialize.pack_task_inst_discarded_store
+         |> Daypack_lib.Sched.Deserialize.unpack_task_inst_discarded_list
+       in
+       Daypack_lib.Task_inst_id_map.equal (fun x y -> compare x y = 0) x y)
+
+let qc_unpack_is_inverse_of_pack_task_seg_uncompleted_store =
+  QCheck.Test.make ~count:5000
+    ~name:"qc_unpack_is_inverse_of_pack_task_seg_uncompleted_store"
     QCheck.(list_of_size Gen.(int_bound 100) task_seg)
     (fun l ->
        let x = l |> List.to_seq |> Daypack_lib.Task_seg_id_map.of_seq in
        let y =
          x
-         |> Daypack_lib.Sched.Serialize.pack_task_seg_store
-         |> Daypack_lib.Sched.Deserialize.unpack_task_seg_list
+         |> Daypack_lib.Sched.Serialize.pack_task_seg_uncompleted_store
+         |> Daypack_lib.Sched.Deserialize.unpack_task_seg_uncompleted_list
+       in
+       Daypack_lib.Task_seg_id_map.equal (fun x y -> compare x y = 0) x y)
+
+let qc_unpack_is_inverse_of_pack_task_seg_completed_store =
+  QCheck.Test.make ~count:5000
+    ~name:"qc_unpack_is_inverse_of_pack_task_seg_completed_store"
+    QCheck.(list_of_size Gen.(int_bound 100) task_seg)
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Task_seg_id_map.of_seq in
+       let y =
+         x
+         |> Daypack_lib.Sched.Serialize.pack_task_seg_completed_store
+         |> Daypack_lib.Sched.Deserialize.unpack_task_seg_completed_list
+       in
+       Daypack_lib.Task_seg_id_map.equal (fun x y -> compare x y = 0) x y)
+
+let qc_unpack_is_inverse_of_pack_task_seg_discarded_store =
+  QCheck.Test.make ~count:5000
+    ~name:"qc_unpack_is_inverse_of_pack_task_seg_discarded_store"
+    QCheck.(list_of_size Gen.(int_bound 100) task_seg)
+    (fun l ->
+       let x = l |> List.to_seq |> Daypack_lib.Task_seg_id_map.of_seq in
+       let y =
+         x
+         |> Daypack_lib.Sched.Serialize.pack_task_seg_discarded_store
+         |> Daypack_lib.Sched.Deserialize.unpack_task_seg_discarded_list
        in
        Daypack_lib.Task_seg_id_map.equal (fun x y -> compare x y = 0) x y)
 
@@ -396,9 +487,15 @@ let qc_add_diff_is_inverse_of_sub_diff_test_sched =
 
 let suite =
   [
-    qc_unpack_is_inverse_of_pack_task_store;
-    qc_unpack_is_inverse_of_pack_task_inst_store;
-    qc_unpack_is_inverse_of_pack_task_seg_store;
+    qc_unpack_is_inverse_of_pack_task_uncompleted_store;
+    qc_unpack_is_inverse_of_pack_task_completed_store;
+    qc_unpack_is_inverse_of_pack_task_discarded_store;
+    qc_unpack_is_inverse_of_pack_task_inst_uncompleted_store;
+    qc_unpack_is_inverse_of_pack_task_inst_completed_store;
+    qc_unpack_is_inverse_of_pack_task_inst_discarded_store;
+    qc_unpack_is_inverse_of_pack_task_seg_uncompleted_store;
+    qc_unpack_is_inverse_of_pack_task_seg_completed_store;
+    qc_unpack_is_inverse_of_pack_task_seg_discarded_store;
     qc_unpack_is_inverse_of_pack_sched_req_pending_store;
     qc_unpack_is_inverse_of_pack_sched_req_record_store;
     qc_unpack_is_inverse_of_pack_quota;
