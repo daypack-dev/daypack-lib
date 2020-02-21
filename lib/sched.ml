@@ -1605,6 +1605,7 @@ module Recur = struct
            let task_inst_id = (user_id, task_part, task_inst_part) in
            let stored_task_inst_data =
              Task_inst.find_task_inst_any_opt task_inst_id sched
+             |> Option.get
            in
            task_inst_data = stored_task_inst_data
            && ( Sched_req_id_map.exists
@@ -1652,7 +1653,7 @@ module Recur = struct
               in
               sched)
            sched)
-      sd.store.task_store (sid, sd)
+      sd.store.task_uncompleted_store (sid, sd)
 end
 
 module Leftover = struct
