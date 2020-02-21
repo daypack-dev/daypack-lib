@@ -476,21 +476,9 @@ module Task_seg = struct
 
   (*$ #use "lib/sched.cinaps";;
 
-    List.iter
-      (fun s ->
-         Printf.printf
-           "let remove_task_seg_%s (id : Task_ds.task_seg_id) (sched : sched) : \
-            sched =\n"
-           s;
-         print_endline "let sid, sd = Id.remove_task_seg_id id sched in";
-         Printf.printf
-           {|
-(sid,
- { sd with store = { sd.store with task_seg_%s_store = Task_seg_id_map.remove id sd.store.task_seg_%s_store } }
-)
-|}
-           s s)
-      store_types
+    print_task_seg_remove ();
+    print_task_seg_remove_strict ();
+    print_task_seg_remove_seq ()
   *)
 
   let remove_task_seg_uncompleted (id : Task_ds.task_seg_id) (sched : sched) :
@@ -538,19 +526,6 @@ module Task_seg = struct
           };
       } )
 
-  (*$*)
-
-  (*$ #use "lib/sched.cinaps";;
-
-    List.iter (fun s ->
-        Printf.printf "let reove_task_seg_%s_strict (id : Task_ds.task_seg_id) (sched : sched) : (sched, unit) result =\n" s;
-        Printf.printf "match find_task_seg_%s_opt id sched with\n" s;
-        print_endline "| None -> Error ()";
-        Printf.printf "| Some _ -> Ok (remove_task_seg_%s id sched)\n" s;
-      )
-      store_types
-  *)
-
   let reove_task_seg_uncompleted_strict (id : Task_ds.task_seg_id)
       (sched : sched) : (sched, unit) result =
     match find_task_seg_uncompleted_opt id sched with
@@ -569,29 +544,17 @@ module Task_seg = struct
     | None -> Error ()
     | Some _ -> Ok (remove_task_seg_discarded id sched)
 
-  (*$*)
-  (*$ #use "lib/sched.cinaps";;
-
-    List.iter (fun s ->
-        Printf.printf "let reove_task_seg_%s_seq (ids : Task_ds.task_seg_id Seq.t) (sched : sched) : sched =\n" s;
-        print_endline "Seq.fold_left";
-        Printf.printf "(fun sched id -> remove_task_seg_%s id sched)\n" s;
-        print_endline "sched ids";
-      )
-      store_types
-  *)
-
-  let reove_task_seg_uncompleted_seq (ids : Task_ds.task_seg_id Seq.t)
+  let remove_task_seg_uncompleted_seq (ids : Task_ds.task_seg_id Seq.t)
       (sched : sched) : sched =
     Seq.fold_left
       (fun sched id -> remove_task_seg_uncompleted id sched)
       sched ids
 
-  let reove_task_seg_completed_seq (ids : Task_ds.task_seg_id Seq.t)
+  let remove_task_seg_completed_seq (ids : Task_ds.task_seg_id Seq.t)
       (sched : sched) : sched =
     Seq.fold_left (fun sched id -> remove_task_seg_completed id sched) sched ids
 
-  let reove_task_seg_discarded_seq (ids : Task_ds.task_seg_id Seq.t)
+  let remove_task_seg_discarded_seq (ids : Task_ds.task_seg_id Seq.t)
       (sched : sched) : sched =
     Seq.fold_left (fun sched id -> remove_task_seg_discarded id sched) sched ids
 
@@ -605,8 +568,9 @@ module Task_inst = struct
     let task_inst_id, (sid, sd) =
       Id.get_new_task_inst_id parent_task_id (sid, sd)
     in
-    let task_inst_store =
-      Task_inst_id_map.add task_inst_id data sd.store.task_inst_store
+    let task_inst_uncompleted_store =
+      Task_inst_id_map.add task_inst_id data
+        sd.store.task_inst_uncompleted_store
     in
     let quota =
       match data.task_inst_type with
@@ -615,7 +579,9 @@ module Task_inst = struct
       | Task_ds.Reminder | Passing -> sd.store.quota
     in
     ( (task_inst_id, data),
-      (sid, { sd with store = { sd.store with task_inst_store; quota } }) )
+      ( sid,
+        { sd with store = { sd.store with task_inst_uncompleted_store; quota } }
+      ) )
 
   let add_task_inst_list ~(parent_task_id : Task_ds.task_id)
       (data_list : Task_ds.task_inst_data list) (sched : sched) :
@@ -631,6 +597,10 @@ module Task_inst = struct
     : Task_ds.task_inst_data option =
     Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_store
 
+  (*$ #use "lib/sched.cinaps";;
+
+  *)
+  (*$*)
   let remove_task_inst (task_inst_id : Task_ds.task_inst_id) (sched : sched) :
     sched =
     let children_task_seg_ids = Id.get_task_seg_id_seq task_inst_id sched in
