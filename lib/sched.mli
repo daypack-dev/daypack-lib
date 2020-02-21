@@ -146,6 +146,8 @@ module Task_seg : sig
 
   val remove_task_seg_discarded : Task_ds.task_seg_id -> sched -> sched
 
+  val remove_task_seg_all : Task_ds.task_seg_id -> sched -> sched
+
   val remove_task_seg_uncompleted_strict :
     Task_ds.task_seg_id -> sched -> (sched, unit) result
 
@@ -187,11 +189,13 @@ module Task_inst : sig
   val find_task_inst_discarded_opt :
     Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-  val remove_task_uncompleted_inst : Task_ds.task_inst_id -> sched -> sched
+  val remove_task_inst_uncompleted : Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_completed_inst : Task_ds.task_inst_id -> sched -> sched
+  val remove_task_inst_completed : Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_discarded_inst : Task_ds.task_inst_id -> sched -> sched
+  val remove_task_inst_discarded : Task_ds.task_inst_id -> sched -> sched
+
+  val remove_task_inst_all : Task_ds.task_inst_id -> sched -> sched
 
   val remove_task_inst_uncompleted_strict :
     Task_ds.task_inst_id -> sched -> (sched, unit) result
@@ -202,9 +206,14 @@ module Task_inst : sig
   val remove_task_inst_discarded_strict :
     Task_ds.task_inst_id -> sched -> (sched, unit) result
 
-  val remove_task_inst_uncompleted_seq : Task_ds.task_inst_id Seq.t -> sched -> sched
-  val remove_task_inst_completed_seq : Task_ds.task_inst_id Seq.t -> sched -> sched
-  val remove_task_inst_discarded_seq : Task_ds.task_inst_id Seq.t -> sched -> sched
+  val remove_task_inst_uncompleted_seq :
+    Task_ds.task_inst_id Seq.t -> sched -> sched
+
+  val remove_task_inst_completed_seq :
+    Task_ds.task_inst_id Seq.t -> sched -> sched
+
+  val remove_task_inst_discarded_seq :
+    Task_ds.task_inst_id Seq.t -> sched -> sched
 end
 
 module Task : sig
@@ -215,11 +224,25 @@ module Task : sig
     sched ->
     Task_ds.task * Task_ds.task_inst list * sched
 
-  val find_task_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
+  val find_task_uncompleted_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
 
-  val remove_task : Task_ds.task_id -> sched -> sched
+  val find_task_completed_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
 
-  val remove_task_strict : Task_ds.task_id -> sched -> (sched, unit) result
+  val find_task_discarded_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
+
+  val remove_task_uncompleted : Task_ds.task_id -> sched -> sched
+
+  val remove_task_completed : Task_ds.task_id -> sched -> sched
+
+  val remove_task_discarded : Task_ds.task_id -> sched -> sched
+
+  val remove_task_all : Task_ds.task_id -> sched -> sched
+
+  val remove_task_uncompleted_strict : Task_ds.task_id -> sched -> (sched, unit) result
+
+  val remove_task_completed_strict : Task_ds.task_id -> sched -> (sched, unit) result
+
+  val remove_task_discarded_strict : Task_ds.task_id -> sched -> (sched, unit) result
 end
 
 module Agenda : sig
@@ -373,11 +396,23 @@ module Leftover : sig
 end
 
 module Serialize : sig
-  val pack_task_store : task_store -> Sched_t.task list
+  val pack_task_uncompleted_store : task_store -> Sched_t.task list
 
-  val pack_task_inst_store : task_inst_store -> Sched_t.task_inst list
+  val pack_task_completed_store : task_store -> Sched_t.task list
 
-  val pack_task_seg_store : task_seg_store -> Sched_t.task_seg list
+  val pack_task_discarded_store : task_store -> Sched_t.task list
+
+  val pack_task_inst_uncompleted_store : task_inst_store -> Sched_t.task_inst list
+
+  val pack_task_inst_completed_store : task_inst_store -> Sched_t.task_inst list
+
+  val pack_task_inst_discarded_store : task_inst_store -> Sched_t.task_inst list
+
+  val pack_task_seg_uncompleted_store : task_seg_store -> Sched_t.task_seg list
+
+  val pack_task_seg_completed_store : task_seg_store -> Sched_t.task_seg list
+
+  val pack_task_seg_discarded_store : task_seg_store -> Sched_t.task_seg list
 
   val pack_sched_req_pending_store :
     sched_req_store -> Sched_req_ds_t.sched_req list
@@ -417,11 +452,23 @@ module Serialize : sig
 end
 
 module Deserialize : sig
-  val unpack_task_list : Sched_t.task list -> task_store
+  val unpack_task_uncompleted_list : Sched_t.task list -> task_store
 
-  val unpack_task_inst_list : Sched_t.task_inst list -> task_inst_store
+  val unpack_task_completed_list : Sched_t.task list -> task_store
 
-  val unpack_task_seg_list : Sched_t.task_seg list -> task_seg_store
+  val unpack_task_discarded_list : Sched_t.task list -> task_store
+
+  val unpack_task_inst_uncompleted_list : Sched_t.task_inst list -> task_inst_store
+
+  val unpack_task_inst_completed_list : Sched_t.task_inst list -> task_inst_store
+
+  val unpack_task_inst_discarded_list : Sched_t.task_inst list -> task_inst_store
+
+  val unpack_task_seg_uncompleted_list : Sched_t.task_seg list -> task_seg_store
+
+  val unpack_task_seg_completed_list : Sched_t.task_seg list -> task_seg_store
+
+  val unpack_task_seg_discarded_list : Sched_t.task_seg list -> task_seg_store
 
   val unpack_sched_req_pending_list :
     Sched_req_ds_t.sched_req list -> sched_req_store

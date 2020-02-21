@@ -530,6 +530,12 @@ module Task_seg = struct
           };
       } )
 
+  let remove_task_seg_all (id : Task_ds.task_seg_id) (sched : sched) : sched =
+    sched
+    |> remove_task_seg_uncompleted id
+    |> remove_task_seg_completed id
+    |> remove_task_seg_discarded id
+
   let remove_task_seg_uncompleted_strict (id : Task_ds.task_seg_id)
       (sched : sched) : (sched, unit) result =
     match find_task_seg_uncompleted_opt id sched with
@@ -699,6 +705,12 @@ module Task_inst = struct
           } ))
     |> Id.remove_task_inst_id id
 
+  let remove_task_inst_all (id : Task_ds.task_inst_id) (sched : sched) : sched =
+    sched
+    |> remove_task_inst_uncompleted id
+    |> remove_task_inst_completed id
+    |> remove_task_inst_discarded id
+
   let remove_task_inst_uncompleted_strict (id : Task_ds.task_inst_id)
       (sched : sched) : (sched, unit) result =
     match find_task_inst_uncompleted_opt id sched with
@@ -843,6 +855,12 @@ module Task = struct
               };
           } ))
     |> Id.remove_task_id id
+
+  let remove_task_all (id : Task_ds.task_id) (sched : sched) : sched =
+    sched
+    |> remove_task_uncompleted id
+    |> remove_task_completed id
+    |> remove_task_discarded id
 
   let remove_task_uncompleted_strict (id : Task_ds.task_id) (sched : sched) :
     (sched, unit) result =

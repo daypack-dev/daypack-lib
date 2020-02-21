@@ -889,7 +889,12 @@ let print_task_seg_remove () =
 )
 |}
          s s)
-    store_types
+    store_types;
+  Printf.printf
+    "let remove_task_seg_all (id : Task_ds.task_seg_id) (sched : sched) : \
+     sched =\n";
+  Printf.printf "sched\n";
+  List.iter (fun s -> Printf.printf "|> remove_task_seg_%s id\n" s) store_types
 
 let print_task_seg_remove_strict () =
   List.iter
@@ -961,7 +966,12 @@ let print_task_inst_remove () =
           sd.store.task_inst_id_to_task_seg_ids;\n";
        print_endline "}}))";
        Printf.printf "|> Id.remove_task_inst_id id\n")
-    store_types
+    store_types;
+  Printf.printf
+    "let remove_task_inst_all (id : Task_ds.task_inst_id) (sched : sched) : \
+     sched =\n";
+  Printf.printf "sched\n";
+  List.iter (fun s -> Printf.printf "|> remove_task_inst_%s id\n" s) store_types
 
 let print_task_inst_remove_strict () =
   List.iter
@@ -1017,7 +1027,11 @@ let print_task_remove () =
           sd.store.task_id_to_task_inst_ids;\n";
        print_endline "}}))";
        Printf.printf "|> Id.remove_task_id id\n")
-    store_types
+    store_types;
+  Printf.printf
+    "let remove_task_all (id : Task_ds.task_id) (sched : sched) : sched =\n";
+  Printf.printf "sched\n";
+  List.iter (fun s -> Printf.printf "|> remove_task_%s id\n" s) store_types
 
 let print_task_remove_strict () =
   List.iter
