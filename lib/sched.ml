@@ -1718,40 +1718,127 @@ module Serialize = struct
     Store.print_pack_related_functions ()
   *)
 
-  let pack_task_store (x : task_store) : Sched_t.task list =
+  let pack_task_uncompleted_store (x : task_store) : Sched_t.task list =
     x
     |> Task_id_map.to_seq
     |> Seq.map Task_ds.Serialize.pack_task
     |> List.of_seq
 
-  let pack_task_store_diff (x : task_store_diff) :
+  let pack_task_uncompleted_store_diff (x : task_store_diff) :
     (Task_ds_t.task_id, Task_ds_t.task_data) Map_utils_t.diff =
-    { added = pack_task_store x.added; removed = pack_task_store x.removed }
+    {
+      added = pack_task_uncompleted_store x.added;
+      removed = pack_task_uncompleted_store x.removed;
+    }
 
-  let pack_task_inst_store (x : task_inst_store) : Sched_t.task_inst list =
+  let pack_task_completed_store (x : task_store) : Sched_t.task list =
+    x
+    |> Task_id_map.to_seq
+    |> Seq.map Task_ds.Serialize.pack_task
+    |> List.of_seq
+
+  let pack_task_completed_store_diff (x : task_store_diff) :
+    (Task_ds_t.task_id, Task_ds_t.task_data) Map_utils_t.diff =
+    {
+      added = pack_task_completed_store x.added;
+      removed = pack_task_completed_store x.removed;
+    }
+
+  let pack_task_discarded_store (x : task_store) : Sched_t.task list =
+    x
+    |> Task_id_map.to_seq
+    |> Seq.map Task_ds.Serialize.pack_task
+    |> List.of_seq
+
+  let pack_task_discarded_store_diff (x : task_store_diff) :
+    (Task_ds_t.task_id, Task_ds_t.task_data) Map_utils_t.diff =
+    {
+      added = pack_task_discarded_store x.added;
+      removed = pack_task_discarded_store x.removed;
+    }
+
+  let pack_task_inst_uncompleted_store (x : task_inst_store) :
+    Sched_t.task_inst list =
     x
     |> Task_inst_id_map.to_seq
     |> Seq.map Task_ds.Serialize.pack_task_inst
     |> List.of_seq
 
-  let pack_task_inst_store_diff (x : task_inst_store_diff) :
+  let pack_task_inst_uncompleted_store_diff (x : task_inst_store_diff) :
     (Task_ds_t.task_inst_id, Task_ds_t.task_inst_data) Map_utils_t.diff =
     {
-      added = pack_task_inst_store x.added;
-      removed = pack_task_inst_store x.removed;
+      added = pack_task_inst_uncompleted_store x.added;
+      removed = pack_task_inst_uncompleted_store x.removed;
     }
 
-  let pack_task_seg_store (x : task_seg_store) : Sched_t.task_seg list =
+  let pack_task_inst_completed_store (x : task_inst_store) :
+    Sched_t.task_inst list =
+    x
+    |> Task_inst_id_map.to_seq
+    |> Seq.map Task_ds.Serialize.pack_task_inst
+    |> List.of_seq
+
+  let pack_task_inst_completed_store_diff (x : task_inst_store_diff) :
+    (Task_ds_t.task_inst_id, Task_ds_t.task_inst_data) Map_utils_t.diff =
+    {
+      added = pack_task_inst_completed_store x.added;
+      removed = pack_task_inst_completed_store x.removed;
+    }
+
+  let pack_task_inst_discarded_store (x : task_inst_store) :
+    Sched_t.task_inst list =
+    x
+    |> Task_inst_id_map.to_seq
+    |> Seq.map Task_ds.Serialize.pack_task_inst
+    |> List.of_seq
+
+  let pack_task_inst_discarded_store_diff (x : task_inst_store_diff) :
+    (Task_ds_t.task_inst_id, Task_ds_t.task_inst_data) Map_utils_t.diff =
+    {
+      added = pack_task_inst_discarded_store x.added;
+      removed = pack_task_inst_discarded_store x.removed;
+    }
+
+  let pack_task_seg_uncompleted_store (x : task_seg_store) :
+    Sched_t.task_seg list =
     x
     |> Task_seg_id_map.to_seq
     |> Seq.map Task_ds.Serialize.pack_task_seg
     |> List.of_seq
 
-  let pack_task_seg_store_diff (x : task_seg_store_diff) :
+  let pack_task_seg_uncompleted_store_diff (x : task_seg_store_diff) :
     (Task_ds_t.task_seg_id, Task_ds_t.task_seg_size) Map_utils_t.diff =
     {
-      added = pack_task_seg_store x.added;
-      removed = pack_task_seg_store x.removed;
+      added = pack_task_seg_uncompleted_store x.added;
+      removed = pack_task_seg_uncompleted_store x.removed;
+    }
+
+  let pack_task_seg_completed_store (x : task_seg_store) : Sched_t.task_seg list
+    =
+    x
+    |> Task_seg_id_map.to_seq
+    |> Seq.map Task_ds.Serialize.pack_task_seg
+    |> List.of_seq
+
+  let pack_task_seg_completed_store_diff (x : task_seg_store_diff) :
+    (Task_ds_t.task_seg_id, Task_ds_t.task_seg_size) Map_utils_t.diff =
+    {
+      added = pack_task_seg_completed_store x.added;
+      removed = pack_task_seg_completed_store x.removed;
+    }
+
+  let pack_task_seg_discarded_store (x : task_seg_store) : Sched_t.task_seg list
+    =
+    x
+    |> Task_seg_id_map.to_seq
+    |> Seq.map Task_ds.Serialize.pack_task_seg
+    |> List.of_seq
+
+  let pack_task_seg_discarded_store_diff (x : task_seg_store_diff) :
+    (Task_ds_t.task_seg_id, Task_ds_t.task_seg_size) Map_utils_t.diff =
+    {
+      added = pack_task_seg_discarded_store x.added;
+      removed = pack_task_seg_discarded_store x.removed;
     }
 
   let pack_sched_req_pending_store (x : sched_req_store) :
@@ -2059,43 +2146,136 @@ module Deserialize = struct
     Store.print_unpack_related_functions ()
   *)
 
-  let unpack_task_list (x : Sched_t.task list) : task_store =
+  let unpack_task_uncompleted_list (x : Sched_t.task list) : task_store =
     x
     |> List.to_seq
     |> Seq.map Task_ds.Deserialize.unpack_task
     |> Task_id_map.of_seq
 
-  let unpack_task_list_diff
+  let unpack_task_uncompleted_list_diff
       (x : (Task_ds_t.task_id, Task_ds_t.task_data) Map_utils_t.diff) :
     task_store_diff =
-    { added = unpack_task_list x.added; removed = unpack_task_list x.removed }
+    {
+      added = unpack_task_uncompleted_list x.added;
+      removed = unpack_task_uncompleted_list x.removed;
+    }
 
-  let unpack_task_inst_list (x : Sched_t.task_inst list) : task_inst_store =
+  let unpack_task_completed_list (x : Sched_t.task list) : task_store =
+    x
+    |> List.to_seq
+    |> Seq.map Task_ds.Deserialize.unpack_task
+    |> Task_id_map.of_seq
+
+  let unpack_task_completed_list_diff
+      (x : (Task_ds_t.task_id, Task_ds_t.task_data) Map_utils_t.diff) :
+    task_store_diff =
+    {
+      added = unpack_task_completed_list x.added;
+      removed = unpack_task_completed_list x.removed;
+    }
+
+  let unpack_task_discarded_list (x : Sched_t.task list) : task_store =
+    x
+    |> List.to_seq
+    |> Seq.map Task_ds.Deserialize.unpack_task
+    |> Task_id_map.of_seq
+
+  let unpack_task_discarded_list_diff
+      (x : (Task_ds_t.task_id, Task_ds_t.task_data) Map_utils_t.diff) :
+    task_store_diff =
+    {
+      added = unpack_task_discarded_list x.added;
+      removed = unpack_task_discarded_list x.removed;
+    }
+
+  let unpack_task_inst_uncompleted_list (x : Sched_t.task_inst list) :
+    task_inst_store =
     x
     |> List.to_seq
     |> Seq.map Task_ds.Deserialize.unpack_task_inst
     |> Task_inst_id_map.of_seq
 
-  let unpack_task_inst_list_diff
+  let unpack_task_inst_uncompleted_list_diff
       (x : (Task_ds_t.task_inst_id, Task_ds_t.task_inst_data) Map_utils_t.diff)
     : task_inst_store_diff =
     {
-      added = unpack_task_inst_list x.added;
-      removed = unpack_task_inst_list x.removed;
+      added = unpack_task_inst_uncompleted_list x.added;
+      removed = unpack_task_inst_uncompleted_list x.removed;
     }
 
-  let unpack_task_seg_list (x : Sched_t.task_seg list) : task_seg_store =
+  let unpack_task_inst_completed_list (x : Sched_t.task_inst list) :
+    task_inst_store =
+    x
+    |> List.to_seq
+    |> Seq.map Task_ds.Deserialize.unpack_task_inst
+    |> Task_inst_id_map.of_seq
+
+  let unpack_task_inst_completed_list_diff
+      (x : (Task_ds_t.task_inst_id, Task_ds_t.task_inst_data) Map_utils_t.diff)
+    : task_inst_store_diff =
+    {
+      added = unpack_task_inst_completed_list x.added;
+      removed = unpack_task_inst_completed_list x.removed;
+    }
+
+  let unpack_task_inst_discarded_list (x : Sched_t.task_inst list) :
+    task_inst_store =
+    x
+    |> List.to_seq
+    |> Seq.map Task_ds.Deserialize.unpack_task_inst
+    |> Task_inst_id_map.of_seq
+
+  let unpack_task_inst_discarded_list_diff
+      (x : (Task_ds_t.task_inst_id, Task_ds_t.task_inst_data) Map_utils_t.diff)
+    : task_inst_store_diff =
+    {
+      added = unpack_task_inst_discarded_list x.added;
+      removed = unpack_task_inst_discarded_list x.removed;
+    }
+
+  let unpack_task_seg_uncompleted_list (x : Sched_t.task_seg list) :
+    task_seg_store =
     x
     |> List.to_seq
     |> Seq.map Task_ds.Deserialize.unpack_task_seg
     |> Task_seg_id_map.of_seq
 
-  let unpack_task_seg_list_diff
+  let unpack_task_seg_uncompleted_list_diff
       (x : (Task_ds_t.task_seg_id, Task_ds_t.task_seg_size) Map_utils_t.diff) :
     task_seg_store_diff =
     {
-      added = unpack_task_seg_list x.added;
-      removed = unpack_task_seg_list x.removed;
+      added = unpack_task_seg_uncompleted_list x.added;
+      removed = unpack_task_seg_uncompleted_list x.removed;
+    }
+
+  let unpack_task_seg_completed_list (x : Sched_t.task_seg list) :
+    task_seg_store =
+    x
+    |> List.to_seq
+    |> Seq.map Task_ds.Deserialize.unpack_task_seg
+    |> Task_seg_id_map.of_seq
+
+  let unpack_task_seg_completed_list_diff
+      (x : (Task_ds_t.task_seg_id, Task_ds_t.task_seg_size) Map_utils_t.diff) :
+    task_seg_store_diff =
+    {
+      added = unpack_task_seg_completed_list x.added;
+      removed = unpack_task_seg_completed_list x.removed;
+    }
+
+  let unpack_task_seg_discarded_list (x : Sched_t.task_seg list) :
+    task_seg_store =
+    x
+    |> List.to_seq
+    |> Seq.map Task_ds.Deserialize.unpack_task_seg
+    |> Task_seg_id_map.of_seq
+
+  let unpack_task_seg_discarded_list_diff
+      (x : (Task_ds_t.task_seg_id, Task_ds_t.task_seg_size) Map_utils_t.diff) :
+    task_seg_store_diff =
+    {
+      added = unpack_task_seg_discarded_list x.added;
+      removed = unpack_task_seg_discarded_list x.removed;
     }
 
   let unpack_sched_req_pending_list (x : Sched_req_ds_t.sched_req list) :
@@ -2753,27 +2933,69 @@ module Print = struct
            ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.sched_req_record_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks uncompleted :\n";
     Task_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
-      sd.store.task_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts :\n";
+      sd.store.task_uncompleted_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks completed :\n";
+    Task_id_map.iter
+      (fun id data ->
+         Task_ds.Print.debug_string_of_task ~indent_level:(indent_level + 2)
+           ~buffer (id, data)
+         |> ignore)
+      sd.store.task_completed_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks discarded :\n";
+    Task_id_map.iter
+      (fun id data ->
+         Task_ds.Print.debug_string_of_task ~indent_level:(indent_level + 2)
+           ~buffer (id, data)
+         |> ignore)
+      sd.store.task_discarded_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts uncompleted :\n";
     Task_inst_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
-      sd.store.task_inst_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs :\n";
+      sd.store.task_inst_uncompleted_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts completed :\n";
+    Task_inst_id_map.iter
+      (fun id data ->
+         Task_ds.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
+           ~buffer (id, data)
+         |> ignore)
+      sd.store.task_inst_completed_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts discarded :\n";
+    Task_inst_id_map.iter
+      (fun id data ->
+         Task_ds.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
+           ~buffer (id, data)
+         |> ignore)
+      sd.store.task_inst_discarded_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs uncompleted :\n";
     Task_seg_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
-      sd.store.task_seg_store;
+      sd.store.task_seg_uncompleted_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs completed :\n";
+    Task_seg_id_map.iter
+      (fun id data ->
+         Task_ds.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
+           ~buffer (id, data)
+         |> ignore)
+      sd.store.task_seg_completed_store;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs discarded :\n";
+    Task_seg_id_map.iter
+      (fun id data ->
+         Task_ds.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
+           ~buffer (id, data)
+         |> ignore)
+      sd.store.task_seg_discarded_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "agenda :\n";
     Int64_map.iter
       (fun _start bucket ->

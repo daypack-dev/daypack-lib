@@ -29,9 +29,15 @@ type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
 type store = {
-  task_store : task_store;
-  task_inst_store : task_inst_store;
-  task_seg_store : task_seg_store;
+  task_uncompleted_store : task_store;
+  task_completed_store : task_store;
+  task_discarded_store : task_store;
+  task_inst_uncompleted_store : task_inst_store;
+  task_inst_completed_store : task_inst_store;
+  task_inst_discarded_store : task_inst_store;
+  task_seg_uncompleted_store : task_seg_store;
+  task_seg_completed_store : task_seg_store;
+  task_seg_discarded_store : task_seg_store;
   user_id_to_task_ids : Int64_set.t User_id_map.t;
   task_id_to_task_inst_ids : Int64_set.t Task_id_map.t;
   task_inst_id_to_task_seg_ids : Int64_int64_option_set.t Task_inst_id_map.t;
@@ -45,9 +51,15 @@ type store = {
 }
 
 type store_diff = {
-  task_store_diff : task_store_diff;
-  task_inst_store_diff : task_inst_store_diff;
-  task_seg_store_diff : task_seg_store_diff;
+  task_uncompleted_store_diff : task_store_diff;
+  task_completed_store_diff : task_store_diff;
+  task_discarded_store_diff : task_store_diff;
+  task_inst_uncompleted_store_diff : task_inst_store_diff;
+  task_inst_completed_store_diff : task_inst_store_diff;
+  task_inst_discarded_store_diff : task_inst_store_diff;
+  task_seg_uncompleted_store_diff : task_seg_store_diff;
+  task_seg_completed_store_diff : task_seg_store_diff;
+  task_seg_discarded_store_diff : task_seg_store_diff;
   user_id_to_task_ids_diff : User_id_map_utils.Int64_bucketed.diff_bucketed;
   task_id_to_task_inst_ids_diff :
     Task_id_map_utils.Int64_bucketed.diff_bucketed;
@@ -119,15 +131,33 @@ module Task_seg : sig
   val add_task_segs_via_task_seg_place_seq :
     Task_ds.task_seg_place Seq.t -> sched -> sched
 
-  val find_task_seg_opt :
+  val find_task_seg_uncompleted_opt :
     Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
 
-  val remove_task_seg : Task_ds.task_seg_id -> sched -> sched
+  val find_task_seg_completed_opt :
+    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
 
-  val remove_task_seg_strict :
+  val find_task_seg_discarded_opt :
+    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
+
+  val remove_task_seg_uncompleted : Task_ds.task_seg_id -> sched -> sched
+
+  val remove_task_seg_completed : Task_ds.task_seg_id -> sched -> sched
+
+  val remove_task_seg_discarded : Task_ds.task_seg_id -> sched -> sched
+
+  val remove_task_seg_uncompleted_strict :
     Task_ds.task_seg_id -> sched -> (sched, unit) result
 
-  val remove_task_seg_seq : Task_ds.task_seg_id Seq.t -> sched -> sched
+  val remove_task_seg_completed_strict :
+    Task_ds.task_seg_id -> sched -> (sched, unit) result
+
+  val remove_task_seg_discarded_strict :
+    Task_ds.task_seg_id -> sched -> (sched, unit) result
+
+  val remove_task_seg_uncompleted_seq : Task_ds.task_seg_id Seq.t -> sched -> sched
+  val remove_task_seg_completed_seq : Task_ds.task_seg_id Seq.t -> sched -> sched
+  val remove_task_seg_discarded_seq : Task_ds.task_seg_id Seq.t -> sched -> sched
 end
 
 module Task_inst : sig

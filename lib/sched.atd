@@ -88,12 +88,12 @@ type store = {
   task_uncompleted_list : task list;
   task_completed_list : task list;
   task_discarded_list : task list;
-  task_uncompleted_inst_list : task_inst list;
-  task_completed_inst_list : task_inst list;
-  task_discarded_inst_list : task_inst list;
-  task_uncompleted_seg_list : task_seg list;
-  task_completed_seg_list : task_seg list;
-  task_discarded_seg_list : task_seg list;
+  task_inst_uncompleted_list : task_inst list;
+  task_inst_completed_list : task_inst list;
+  task_inst_discarded_list : task_inst list;
+  task_seg_uncompleted_list : task_seg list;
+  task_seg_completed_list : task_seg list;
+  task_seg_discarded_list : task_seg list;
   user_id_to_task_ids : (user_id * int64 list) list;
   task_id_to_task_inst_ids : (task_id * int64 list) list;
   task_inst_id_to_task_seg_ids : (task_inst_id * task_seg_part_sub list) list;
@@ -107,9 +107,15 @@ type store = {
 }
 
 type store_diff = {
-  task_list_diff : (task_id, task_data) diff;
-  task_inst_list_diff : (task_inst_id, task_inst_data) diff;
-  task_seg_list_diff : (task_seg_id, task_seg_size) diff;
+  task_uncompleted_list_diff : (task_id, task_data) diff;
+  task_completed_list_diff : (task_id, task_data) diff;
+  task_discarded_list_diff : (task_id, task_data) diff;
+  task_inst_uncompleted_list_diff : (task_inst_id, task_inst_data) diff;
+  task_inst_completed_list_diff : (task_inst_id, task_inst_data) diff;
+  task_inst_discarded_list_diff : (task_inst_id, task_inst_data) diff;
+  task_seg_uncompleted_list_diff : (task_seg_id, task_seg_size) diff;
+  task_seg_completed_list_diff : (task_seg_id, task_seg_size) diff;
+  task_seg_discarded_list_diff : (task_seg_id, task_seg_size) diff;
   user_id_to_task_ids_diff : (user_id, int64) diff_bucketed;
   task_id_to_task_inst_ids_diff : (task_id, int64) diff_bucketed;
   task_inst_id_to_task_seg_ids_diff : (task_inst_id, task_seg_part_sub) diff_bucketed;
