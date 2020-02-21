@@ -734,7 +734,19 @@ let print_task_seg_find () =
           : Task_ds.task_seg_size option =\n"
          s;
        Printf.printf "Task_seg_id_map.find_opt id sd.store.task_seg_%s_store\n" s)
-    store_types
+    store_types;
+  Printf.printf
+    "let find_task_seg_any_opt (id : Task_ds.task_seg_id) (sched : sched) : \
+     Task_ds.task_seg_size option =\n";
+  Printf.printf "match find_task_seg_uncompleted_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None ->\n";
+  Printf.printf "match find_task_seg_completed_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None ->\n";
+  Printf.printf "match find_task_seg_discarded_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None -> None"
 
 let print_task_seg_remove () =
   List.iter
@@ -786,7 +798,19 @@ let print_task_inst_find () =
          s;
        Printf.printf "Task_inst_id_map.find_opt id sd.store.task_inst_%s_store\n"
          s)
-    store_types
+    store_types;
+  Printf.printf
+    "let find_task_inst_any_opt (id : Task_ds.task_inst_id) (sched : sched) : \
+     Task_ds.task_inst_data option =\n";
+  Printf.printf "match find_task_inst_uncompleted_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None ->\n";
+  Printf.printf "match find_task_inst_completed_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None ->\n";
+  Printf.printf "match find_task_inst_discarded_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None -> None"
 
 let print_task_inst_remove () =
   List.iter

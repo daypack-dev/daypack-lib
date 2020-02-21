@@ -464,6 +464,18 @@ module Task_seg = struct
     Task_ds.task_seg_size option =
     Task_seg_id_map.find_opt id sd.store.task_seg_discarded_store
 
+  let find_task_seg_any_opt (id : Task_ds.task_seg_id) (sched : sched) :
+    Task_ds.task_seg_size option =
+    match find_task_seg_uncompleted_opt id sched with
+    | Some x -> Some x
+    | None -> (
+        match find_task_seg_completed_opt id sched with
+        | Some x -> Some x
+        | None -> (
+            match find_task_seg_discarded_opt id sched with
+            | Some x -> Some x
+            | None -> None ) )
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -601,6 +613,18 @@ module Task_inst = struct
   let find_task_inst_discarded_opt (id : Task_ds.task_inst_id) ((_, sd) : sched)
     : Task_ds.task_inst_data option =
     Task_inst_id_map.find_opt id sd.store.task_inst_discarded_store
+
+  let find_task_inst_any_opt (id : Task_ds.task_inst_id) (sched : sched) :
+    Task_ds.task_inst_data option =
+    match find_task_inst_uncompleted_opt id sched with
+    | Some x -> Some x
+    | None -> (
+        match find_task_inst_completed_opt id sched with
+        | Some x -> Some x
+        | None -> (
+            match find_task_inst_discarded_opt id sched with
+            | Some x -> Some x
+            | None -> None ) )
 
   (*$*)
 
@@ -1570,7 +1594,7 @@ module Recur = struct
 
   let instance_recorded_already (task_id : Task_ds.task_id)
       (task_inst_data : Task_ds.task_inst_data)
-      (sched_req_template : Task_ds.sched_req_template) ((_sid, sd) : sched) :
+      (sched_req_template : Task_ds.sched_req_template) ((_sid, sd) as sched: sched) :
     bool =
     let user_id, task_part = task_id in
     match Task_id_map.find_opt task_id sd.store.task_id_to_task_inst_ids with
@@ -1580,7 +1604,7 @@ module Recur = struct
         (fun task_inst_part ->
            let task_inst_id = (user_id, task_part, task_inst_part) in
            let stored_task_inst_data =
-             Task_inst_id_map.find task_inst_id sd.store.task_inst_store
+             Task_inst.find_task_inst_any_opt task_inst_id sched
            in
            task_inst_data = stored_task_inst_data
            && ( Sched_req_id_map.exists
