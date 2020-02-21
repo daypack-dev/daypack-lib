@@ -155,9 +155,14 @@ module Task_seg : sig
   val remove_task_seg_discarded_strict :
     Task_ds.task_seg_id -> sched -> (sched, unit) result
 
-  val remove_task_seg_uncompleted_seq : Task_ds.task_seg_id Seq.t -> sched -> sched
-  val remove_task_seg_completed_seq : Task_ds.task_seg_id Seq.t -> sched -> sched
-  val remove_task_seg_discarded_seq : Task_ds.task_seg_id Seq.t -> sched -> sched
+  val remove_task_seg_uncompleted_seq :
+    Task_ds.task_seg_id Seq.t -> sched -> sched
+
+  val remove_task_seg_completed_seq :
+    Task_ds.task_seg_id Seq.t -> sched -> sched
+
+  val remove_task_seg_discarded_seq :
+    Task_ds.task_seg_id Seq.t -> sched -> sched
 end
 
 module Task_inst : sig
@@ -173,15 +178,33 @@ module Task_inst : sig
     sched ->
     Task_ds.task_inst list * sched
 
-  val find_task_inst_opt :
+  val find_task_inst_uncompleted_opt :
     Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-  val remove_task_inst : Task_ds.task_inst_id -> sched -> sched
+  val find_task_inst_completed_opt :
+    Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-  val remove_task_inst_strict :
+  val find_task_inst_discarded_opt :
+    Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
+
+  val remove_task_uncompleted_inst : Task_ds.task_inst_id -> sched -> sched
+
+  val remove_task_completed_inst : Task_ds.task_inst_id -> sched -> sched
+
+  val remove_task_discarded_inst : Task_ds.task_inst_id -> sched -> sched
+
+  val remove_task_inst_uncompleted_strict :
     Task_ds.task_inst_id -> sched -> (sched, unit) result
 
-  val remove_task_inst_seq : Task_ds.task_inst_id Seq.t -> sched -> sched
+  val remove_task_inst_completed_strict :
+    Task_ds.task_inst_id -> sched -> (sched, unit) result
+
+  val remove_task_inst_discarded_strict :
+    Task_ds.task_inst_id -> sched -> (sched, unit) result
+
+  val remove_task_inst_uncompleted_seq : Task_ds.task_inst_id Seq.t -> sched -> sched
+  val remove_task_inst_completed_seq : Task_ds.task_inst_id Seq.t -> sched -> sched
+  val remove_task_inst_discarded_seq : Task_ds.task_inst_id Seq.t -> sched -> sched
 end
 
 module Task : sig

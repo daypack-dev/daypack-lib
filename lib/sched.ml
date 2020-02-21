@@ -530,20 +530,20 @@ module Task_seg = struct
           };
       } )
 
-  let reove_task_seg_uncompleted_strict (id : Task_ds.task_seg_id)
+  let remove_task_seg_uncompleted_strict (id : Task_ds.task_seg_id)
       (sched : sched) : (sched, unit) result =
     match find_task_seg_uncompleted_opt id sched with
     | None -> Error ()
     | Some _ -> Ok (remove_task_seg_uncompleted id sched)
 
-  let reove_task_seg_completed_strict (id : Task_ds.task_seg_id) (sched : sched)
-    : (sched, unit) result =
+  let remove_task_seg_completed_strict (id : Task_ds.task_seg_id)
+      (sched : sched) : (sched, unit) result =
     match find_task_seg_completed_opt id sched with
     | None -> Error ()
     | Some _ -> Ok (remove_task_seg_completed id sched)
 
-  let reove_task_seg_discarded_strict (id : Task_ds.task_seg_id) (sched : sched)
-    : (sched, unit) result =
+  let remove_task_seg_discarded_strict (id : Task_ds.task_seg_id)
+      (sched : sched) : (sched, unit) result =
     match find_task_seg_discarded_opt id sched with
     | None -> Error ()
     | Some _ -> Ok (remove_task_seg_discarded id sched)
@@ -699,19 +699,19 @@ module Task_inst = struct
           } ))
     |> Id.remove_task_inst_id id
 
-  let reove_task_inst_uncompleted_strict (id : Task_ds.task_inst_id)
+  let remove_task_inst_uncompleted_strict (id : Task_ds.task_inst_id)
       (sched : sched) : (sched, unit) result =
     match find_task_inst_uncompleted_opt id sched with
     | None -> Error ()
     | Some _ -> Ok (remove_task_inst_uncompleted id sched)
 
-  let reove_task_inst_completed_strict (id : Task_ds.task_inst_id)
+  let remove_task_inst_completed_strict (id : Task_ds.task_inst_id)
       (sched : sched) : (sched, unit) result =
     match find_task_inst_completed_opt id sched with
     | None -> Error ()
     | Some _ -> Ok (remove_task_inst_completed id sched)
 
-  let reove_task_inst_discarded_strict (id : Task_ds.task_inst_id)
+  let remove_task_inst_discarded_strict (id : Task_ds.task_inst_id)
       (sched : sched) : (sched, unit) result =
     match find_task_inst_discarded_opt id sched with
     | None -> Error ()
@@ -844,19 +844,19 @@ module Task = struct
           } ))
     |> Id.remove_task_id id
 
-  let reove_task_uncompleted_strict (id : Task_ds.task_id) (sched : sched) :
+  let remove_task_uncompleted_strict (id : Task_ds.task_id) (sched : sched) :
     (sched, unit) result =
     match find_task_uncompleted_opt id sched with
     | None -> Error ()
     | Some _ -> Ok (remove_task_uncompleted id sched)
 
-  let reove_task_completed_strict (id : Task_ds.task_id) (sched : sched) :
+  let remove_task_completed_strict (id : Task_ds.task_id) (sched : sched) :
     (sched, unit) result =
     match find_task_completed_opt id sched with
     | None -> Error ()
     | Some _ -> Ok (remove_task_completed id sched)
 
-  let reove_task_discarded_strict (id : Task_ds.task_id) (sched : sched) :
+  let remove_task_discarded_strict (id : Task_ds.task_id) (sched : sched) :
     (sched, unit) result =
     match find_task_discarded_opt id sched with
     | None -> Error ()
@@ -2933,63 +2933,72 @@ module Print = struct
            ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.sched_req_record_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks uncompleted :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "tasks uncompleted :\n";
     Task_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_uncompleted_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks completed :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "tasks completed :\n";
     Task_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_completed_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "tasks discarded :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "tasks discarded :\n";
     Task_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_discarded_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts uncompleted :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task insts uncompleted :\n";
     Task_inst_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_uncompleted_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts completed :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task insts completed :\n";
     Task_inst_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_completed_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task insts discarded :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task insts discarded :\n";
     Task_inst_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_discarded_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs uncompleted :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task segs uncompleted :\n";
     Task_seg_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_seg_uncompleted_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs completed :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task segs completed :\n";
     Task_seg_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_seg_completed_store;
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "task segs discarded :\n";
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "task segs discarded :\n";
     Task_seg_id_map.iter
       (fun id data ->
          Task_ds.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
