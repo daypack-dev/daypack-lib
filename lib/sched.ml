@@ -197,8 +197,28 @@ module Id = struct
             };
         } )
 
-  let get_new_task_inst_id (task_id : Task_ds.task_id) ((sid, sd) : sched) :
+  let add_task_inst_id ((user_id, task_part, task_inst_part) : Task_ds.task_inst_id) ((sid, sd) : sched) : sched =
+    let task_id = (user_id, task_part) in
+    let task_inst_ids =
+      Task_id_map.find_opt task_id sd.store.task_id_to_task_inst_ids
+      |> Option.value ~default:Int64_set.empty
+      |> Int64_set.add task_inst_part
+    in
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_id_to_task_inst_ids =
+              Task_id_map.add task_id task_inst_ids
+                sd.store.task_id_to_task_inst_ids;
+          };
+      } )
+
+  let get_new_task_inst_id ((user_id, task_part) : Task_ds.task_id) ((sid, sd) : sched) :
     Task_ds.task_inst_id * sched =
+    let task_id = (user_id, task_part) in
     let task_inst_ids =
       Task_id_map.find_opt task_id sd.store.task_id_to_task_inst_ids
       |> Option.value ~default:Int64_set.empty
@@ -206,20 +226,8 @@ module Id = struct
     let task_inst_part =
       Int64_set.max_elt_opt task_inst_ids |> incre_int64_id
     in
-    let task_inst_ids = Int64_set.add task_inst_part task_inst_ids in
-    let user_id, task_part = task_id in
-    ( (user_id, task_part, task_inst_part),
-      ( sid,
-        {
-          sd with
-          store =
-            {
-              sd.store with
-              task_id_to_task_inst_ids =
-                Task_id_map.add task_id task_inst_ids
-                  sd.store.task_id_to_task_inst_ids;
-            };
-        } ) )
+    let task_inst_id = (user_id, task_part, task_inst_part) in
+    ( task_inst_id, add_task_inst_id task_inst_id (sid, sd))
 
   let get_task_inst_id_seq ((id1, id2) : Task_ds.task_id) ((_, sd) : sched) :
     Task_ds.task_inst_id Seq.t =
@@ -247,6 +255,29 @@ module Id = struct
             };
         } )
 
+  let add_task_seg_id ((user_id, task_part, task_inst_part, task_seg_part, task_seg_sub_id) : Task_ds.task_seg_id)
+      ((sid, sd) : sched) : sched =
+    let task_inst_id = (user_id, task_part, task_inst_part) in
+    let task_seg_ids =
+      Task_inst_id_map.find_opt task_inst_id
+        sd.store.task_inst_id_to_task_seg_ids
+      |> Option.value ~default:Int64_int64_option_set.empty
+    in
+    let task_seg_ids =
+      Int64_int64_option_set.add (task_seg_part, task_seg_sub_id) task_seg_ids
+    in
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_id_to_task_seg_ids =
+              Task_inst_id_map.add task_inst_id task_seg_ids
+                sd.store.task_inst_id_to_task_seg_ids;
+          };
+      } )
+
   let get_new_task_seg_id (task_inst_id : Task_ds.task_inst_id)
       ((sid, sd) : sched) : Task_ds.task_seg_id * sched =
     let task_seg_ids =
@@ -258,22 +289,9 @@ module Id = struct
       Int64_int64_option_set.max_elt_opt task_seg_ids
       |> incre_int64_int64_option_id
     in
-    let task_seg_ids =
-      Int64_int64_option_set.add (task_seg_part, task_seg_sub_id) task_seg_ids
-    in
     let user_id, task_part, task_inst_part = task_inst_id in
-    ( (user_id, task_part, task_inst_part, task_seg_part, task_seg_sub_id),
-      ( sid,
-        {
-          sd with
-          store =
-            {
-              sd.store with
-              task_inst_id_to_task_seg_ids =
-                Task_inst_id_map.add task_inst_id task_seg_ids
-                  sd.store.task_inst_id_to_task_seg_ids;
-            };
-        } ) )
+    let task_seg_id =(user_id, task_part, task_inst_part, task_seg_part, task_seg_sub_id) in
+    ( task_seg_id, add_task_seg_id task_seg_id (sid, sd))
 
   let get_task_seg_id_seq ((id1, id2, id3) : Task_ds.task_inst_id)
       ((_, sd) : sched) : Task_ds.task_seg_id Seq.t =
