@@ -828,46 +828,57 @@ module Task_inst = struct
           } ))
     |> Id.remove_task_inst_id id
 
-  let remove_task_inst_all (id : Task_ds.task_inst_id) (sched : sched) : sched =
+  let remove_task_inst_all ?(remove_children_task_segs : bool = true)
+      (id : Task_ds.task_inst_id) (sched : sched) : sched =
     sched
-    |> remove_task_inst_uncompleted id
-    |> remove_task_inst_completed id
-    |> remove_task_inst_discarded id
+    |> remove_task_inst_uncompleted ~remove_children_task_segs id
+    |> remove_task_inst_completed ~remove_children_task_segs id
+    |> remove_task_inst_discarded ~remove_children_task_segs id
 
-  let remove_task_inst_uncompleted_strict (id : Task_ds.task_inst_id)
+  let remove_task_inst_uncompleted_strict
+      ?(remove_children_task_segs : bool = true) (id : Task_ds.task_inst_id)
       (sched : sched) : (sched, unit) result =
     match find_task_inst_uncompleted_opt id sched with
     | None -> Error ()
-    | Some _ -> Ok (remove_task_inst_uncompleted id sched)
+    | Some _ ->
+      Ok (remove_task_inst_uncompleted ~remove_children_task_segs id sched)
 
-  let remove_task_inst_completed_strict (id : Task_ds.task_inst_id)
+  let remove_task_inst_completed_strict
+      ?(remove_children_task_segs : bool = true) (id : Task_ds.task_inst_id)
       (sched : sched) : (sched, unit) result =
     match find_task_inst_completed_opt id sched with
     | None -> Error ()
-    | Some _ -> Ok (remove_task_inst_completed id sched)
+    | Some _ ->
+      Ok (remove_task_inst_completed ~remove_children_task_segs id sched)
 
-  let remove_task_inst_discarded_strict (id : Task_ds.task_inst_id)
+  let remove_task_inst_discarded_strict
+      ?(remove_children_task_segs : bool = true) (id : Task_ds.task_inst_id)
       (sched : sched) : (sched, unit) result =
     match find_task_inst_discarded_opt id sched with
     | None -> Error ()
-    | Some _ -> Ok (remove_task_inst_discarded id sched)
+    | Some _ ->
+      Ok (remove_task_inst_discarded ~remove_children_task_segs id sched)
 
-  let remove_task_inst_uncompleted_seq (ids : Task_ds.task_inst_id Seq.t)
-      (sched : sched) : sched =
+  let remove_task_inst_uncompleted_seq
+      ?(remove_children_task_segs : bool = true)
+      (ids : Task_ds.task_inst_id Seq.t) (sched : sched) : sched =
     Seq.fold_left
-      (fun sched id -> remove_task_inst_uncompleted id sched)
+      (fun sched id ->
+         remove_task_inst_uncompleted ~remove_children_task_segs id sched)
       sched ids
 
-  let remove_task_inst_completed_seq (ids : Task_ds.task_inst_id Seq.t)
-      (sched : sched) : sched =
+  let remove_task_inst_completed_seq ?(remove_children_task_segs : bool = true)
+      (ids : Task_ds.task_inst_id Seq.t) (sched : sched) : sched =
     Seq.fold_left
-      (fun sched id -> remove_task_inst_completed id sched)
+      (fun sched id ->
+         remove_task_inst_completed ~remove_children_task_segs id sched)
       sched ids
 
-  let remove_task_inst_discarded_seq (ids : Task_ds.task_inst_id Seq.t)
-      (sched : sched) : sched =
+  let remove_task_inst_discarded_seq ?(remove_children_task_segs : bool = true)
+      (ids : Task_ds.task_inst_id Seq.t) (sched : sched) : sched =
     Seq.fold_left
-      (fun sched id -> remove_task_inst_discarded id sched)
+      (fun sched id ->
+         remove_task_inst_discarded ~remove_children_task_segs id sched)
       sched ids
 
   (*$*)
