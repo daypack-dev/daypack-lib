@@ -135,7 +135,7 @@ module Maybe_append_to_head = struct
     | hd :: tl -> (
         let hd' =
           hd
-          |> Sched.Task.remove_task task_id
+          |> Sched.Task.remove_task_all task_id
           |> Sched.Sched_req.remove_pending_sched_req_by_task_id task_id
           |> Sched.Sched_req.remove_sched_req_record_by_task_id task_id
         in
@@ -158,7 +158,7 @@ module Maybe_append_to_head = struct
     | hd :: tl -> (
         let hd' =
           hd
-          |> Sched.Task_inst.remove_task_inst task_inst_id
+          |> Sched.Task_inst.remove_task_inst_all task_inst_id
           |> Sched.Sched_req.remove_pending_sched_req_by_task_inst_id
             task_inst_id
           |> Sched.Sched_req.remove_sched_req_record_by_task_inst_id

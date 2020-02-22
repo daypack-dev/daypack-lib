@@ -766,9 +766,13 @@ let task_inst_id_to_progress =
 let store_gen =
   let open QCheck.Gen in
   map
-    (fun ( task_store,
-           task_inst_store,
-           task_seg_store,
+    (fun ( (task_uncompleted_store, task_completed_store, task_discarded_store),
+           ( task_inst_uncompleted_store,
+             task_inst_completed_store,
+             task_inst_discarded_store ),
+           ( task_seg_uncompleted_store,
+             task_seg_completed_store,
+             task_seg_discarded_store ),
            ( user_id_to_task_ids,
              task_id_to_task_inst_ids,
              task_inst_id_to_task_seg_ids,
@@ -781,9 +785,15 @@ let store_gen =
                  task_inst_id_to_progress ) ) ) ) ->
       let open Daypack_lib.Sched in
       {
-        task_store;
-        task_inst_store;
-        task_seg_store;
+        task_uncompleted_store;
+        task_completed_store;
+        task_discarded_store;
+        task_inst_uncompleted_store;
+        task_inst_completed_store;
+        task_inst_discarded_store;
+        task_seg_uncompleted_store;
+        task_seg_completed_store;
+        task_seg_discarded_store;
         user_id_to_task_ids;
         task_id_to_task_inst_ids;
         task_inst_id_to_task_seg_ids;
@@ -795,7 +805,10 @@ let store_gen =
         task_seg_id_to_progress;
         task_inst_id_to_progress;
       })
-    (quad task_store_gen task_inst_store_gen task_seg_store_gen
+    (quad
+       (triple task_store_gen task_store_gen task_store_gen)
+       (triple task_inst_store_gen task_inst_store_gen task_inst_store_gen)
+       (triple task_seg_store_gen task_seg_store_gen task_seg_store_gen)
        (quad user_id_to_task_ids_gen task_id_to_task_inst_ids_gen
           task_inst_id_to_task_seg_ids_gen
           (quad pos_int64_set_gen sched_req_store_gen sched_req_store_gen

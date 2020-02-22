@@ -17,8 +17,8 @@ module Store = struct
   let pack_store_list =
     [
       {
-        f_pack_suffix = "task_store";
-        f_unpack_suffix = "task_list";
+        f_pack_suffix = "task_uncompleted_store";
+        f_unpack_suffix = "task_uncompleted_list";
         store_typ = "task_store";
         diff_typ = "task_store_diff";
         ret_typ = "Sched_t.task list";
@@ -32,8 +32,38 @@ module Store = struct
         f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_task_data";
       };
       {
-        f_pack_suffix = "task_inst_store";
-        f_unpack_suffix = "task_inst_list";
+        f_pack_suffix = "task_completed_store";
+        f_unpack_suffix = "task_completed_list";
+        store_typ = "task_store";
+        diff_typ = "task_store_diff";
+        ret_typ = "Sched_t.task list";
+        diff_ret_typ =
+          "(Task_ds_t.task_id, Task_ds_t.task_data) Map_utils_t.diff";
+        f_to_seq = "Task_id_map.to_seq";
+        f_of_seq = "Task_id_map.of_seq";
+        f_inner_pack = Some "Task_ds.Serialize.pack_task";
+        f_inner_pack_data = Some "Task_ds.Serialize.pack_task_data";
+        f_inner_unpack = Some "Task_ds.Deserialize.unpack_task";
+        f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_task_data";
+      };
+      {
+        f_pack_suffix = "task_discarded_store";
+        f_unpack_suffix = "task_discarded_list";
+        store_typ = "task_store";
+        diff_typ = "task_store_diff";
+        ret_typ = "Sched_t.task list";
+        diff_ret_typ =
+          "(Task_ds_t.task_id, Task_ds_t.task_data) Map_utils_t.diff";
+        f_to_seq = "Task_id_map.to_seq";
+        f_of_seq = "Task_id_map.of_seq";
+        f_inner_pack = Some "Task_ds.Serialize.pack_task";
+        f_inner_pack_data = Some "Task_ds.Serialize.pack_task_data";
+        f_inner_unpack = Some "Task_ds.Deserialize.unpack_task";
+        f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_task_data";
+      };
+      {
+        f_pack_suffix = "task_inst_uncompleted_store";
+        f_unpack_suffix = "task_inst_uncompleted_list";
         store_typ = "task_inst_store";
         diff_typ = "task_inst_store_diff";
         ret_typ = "Sched_t.task_inst list";
@@ -47,8 +77,68 @@ module Store = struct
         f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_task_inst_data";
       };
       {
-        f_pack_suffix = "task_seg_store";
-        f_unpack_suffix = "task_seg_list";
+        f_pack_suffix = "task_inst_completed_store";
+        f_unpack_suffix = "task_inst_completed_list";
+        store_typ = "task_inst_store";
+        diff_typ = "task_inst_store_diff";
+        ret_typ = "Sched_t.task_inst list";
+        diff_ret_typ =
+          "(Task_ds_t.task_inst_id, Task_ds_t.task_inst_data) Map_utils_t.diff";
+        f_to_seq = "Task_inst_id_map.to_seq";
+        f_of_seq = "Task_inst_id_map.of_seq";
+        f_inner_pack = Some "Task_ds.Serialize.pack_task_inst";
+        f_inner_pack_data = Some "Task_ds.Serialize.pack_task_inst_data";
+        f_inner_unpack = Some "Task_ds.Deserialize.unpack_task_inst";
+        f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_task_inst_data";
+      };
+      {
+        f_pack_suffix = "task_inst_discarded_store";
+        f_unpack_suffix = "task_inst_discarded_list";
+        store_typ = "task_inst_store";
+        diff_typ = "task_inst_store_diff";
+        ret_typ = "Sched_t.task_inst list";
+        diff_ret_typ =
+          "(Task_ds_t.task_inst_id, Task_ds_t.task_inst_data) Map_utils_t.diff";
+        f_to_seq = "Task_inst_id_map.to_seq";
+        f_of_seq = "Task_inst_id_map.of_seq";
+        f_inner_pack = Some "Task_ds.Serialize.pack_task_inst";
+        f_inner_pack_data = Some "Task_ds.Serialize.pack_task_inst_data";
+        f_inner_unpack = Some "Task_ds.Deserialize.unpack_task_inst";
+        f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_task_inst_data";
+      };
+      {
+        f_pack_suffix = "task_seg_uncompleted_store";
+        f_unpack_suffix = "task_seg_uncompleted_list";
+        store_typ = "task_seg_store";
+        diff_typ = "task_seg_store_diff";
+        ret_typ = "Sched_t.task_seg list";
+        diff_ret_typ =
+          "(Task_ds_t.task_seg_id, Task_ds_t.task_seg_size) Map_utils_t.diff";
+        f_to_seq = "Task_seg_id_map.to_seq";
+        f_of_seq = "Task_seg_id_map.of_seq";
+        f_inner_pack = Some "Task_ds.Serialize.pack_task_seg";
+        f_inner_pack_data = Some "Task_ds.Serialize.pack_task_seg_size";
+        f_inner_unpack = Some "Task_ds.Deserialize.unpack_task_seg";
+        f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_task_seg_size";
+      };
+      {
+        f_pack_suffix = "task_seg_completed_store";
+        f_unpack_suffix = "task_seg_completed_list";
+        store_typ = "task_seg_store";
+        diff_typ = "task_seg_store_diff";
+        ret_typ = "Sched_t.task_seg list";
+        diff_ret_typ =
+          "(Task_ds_t.task_seg_id, Task_ds_t.task_seg_size) Map_utils_t.diff";
+        f_to_seq = "Task_seg_id_map.to_seq";
+        f_of_seq = "Task_seg_id_map.of_seq";
+        f_inner_pack = Some "Task_ds.Serialize.pack_task_seg";
+        f_inner_pack_data = Some "Task_ds.Serialize.pack_task_seg_size";
+        f_inner_unpack = Some "Task_ds.Deserialize.unpack_task_seg";
+        f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_task_seg_size";
+      };
+      {
+        f_pack_suffix = "task_seg_discarded_store";
+        f_unpack_suffix = "task_seg_discarded_list";
         store_typ = "task_seg_store";
         diff_typ = "task_seg_store_diff";
         ret_typ = "Sched_t.task_seg list";
@@ -473,20 +563,56 @@ end
 
 let store_fields =
   [
-    ( "task_list",
-      "task_store",
+    ( "task_uncompleted_list",
+      "task_uncompleted_store",
       "Task_id_map.equal (fun x y -> compare x y = 0)",
       "Task_id_map_utils.diff",
       "Task_id_map_utils.add_diff",
       "Task_id_map_utils.sub_diff" );
-    ( "task_inst_list",
-      "task_inst_store",
+    ( "task_completed_list",
+      "task_completed_store",
+      "Task_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_id_map_utils.diff",
+      "Task_id_map_utils.add_diff",
+      "Task_id_map_utils.sub_diff" );
+    ( "task_discarded_list",
+      "task_discarded_store",
+      "Task_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_id_map_utils.diff",
+      "Task_id_map_utils.add_diff",
+      "Task_id_map_utils.sub_diff" );
+    ( "task_inst_uncompleted_list",
+      "task_inst_uncompleted_store",
       "Task_inst_id_map.equal (fun x y -> compare x y = 0)",
       "Task_inst_id_map_utils.diff",
       "Task_inst_id_map_utils.add_diff",
       "Task_inst_id_map_utils.sub_diff" );
-    ( "task_seg_list",
-      "task_seg_store",
+    ( "task_inst_completed_list",
+      "task_inst_completed_store",
+      "Task_inst_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_inst_id_map_utils.diff",
+      "Task_inst_id_map_utils.add_diff",
+      "Task_inst_id_map_utils.sub_diff" );
+    ( "task_inst_discarded_list",
+      "task_inst_discarded_store",
+      "Task_inst_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_inst_id_map_utils.diff",
+      "Task_inst_id_map_utils.add_diff",
+      "Task_inst_id_map_utils.sub_diff" );
+    ( "task_seg_uncompleted_list",
+      "task_seg_uncompleted_store",
+      "Task_seg_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_seg_id_map_utils.diff",
+      "Task_seg_id_map_utils.add_diff",
+      "Task_seg_id_map_utils.sub_diff" );
+    ( "task_seg_completed_list",
+      "task_seg_completed_store",
+      "Task_seg_id_map.equal (fun x y -> compare x y = 0)",
+      "Task_seg_id_map_utils.diff",
+      "Task_seg_id_map_utils.add_diff",
+      "Task_seg_id_map_utils.sub_diff" );
+    ( "task_seg_discarded_list",
+      "task_seg_discarded_store",
       "Task_seg_id_map.equal (fun x y -> compare x y = 0)",
       "Task_seg_id_map_utils.diff",
       "Task_seg_id_map_utils.add_diff",
@@ -723,3 +849,198 @@ let print_agenda_equal () =
     agenda_fields
   |> String.concat " && "
   |> print_string
+
+let store_types = [ "uncompleted"; "completed"; "discarded" ]
+
+let print_task_seg_find () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let find_task_seg_%s_opt (id : Task_ds.task_seg_id) ((_, sd) : sched) \
+          : Task_ds.task_seg_size option =\n"
+         s;
+       Printf.printf "Task_seg_id_map.find_opt id sd.store.task_seg_%s_store\n" s)
+    store_types;
+  Printf.printf
+    "let find_task_seg_any_opt (id : Task_ds.task_seg_id) (sched : sched) : \
+     Task_ds.task_seg_size option =\n";
+  Printf.printf "match find_task_seg_uncompleted_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None ->\n";
+  Printf.printf "match find_task_seg_completed_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None ->\n";
+  Printf.printf "match find_task_seg_discarded_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None -> None"
+
+let print_task_seg_remove () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_seg_%s (id : Task_ds.task_seg_id) (sched : sched) : \
+          sched =\n"
+         s;
+       print_endline "let sid, sd = Id.remove_task_seg_id id sched in";
+       Printf.printf
+         {|
+(sid,
+ { sd with store = { sd.store with task_seg_%s_store = Task_seg_id_map.remove id sd.store.task_seg_%s_store } }
+)
+|}
+         s s)
+    store_types;
+  Printf.printf
+    "let remove_task_seg_all (id : Task_ds.task_seg_id) (sched : sched) : \
+     sched =\n";
+  Printf.printf "sched\n";
+  List.iter (fun s -> Printf.printf "|> remove_task_seg_%s id\n" s) store_types
+
+let print_task_seg_remove_strict () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_seg_%s_strict (id : Task_ds.task_seg_id) (sched : \
+          sched) : (sched, unit) result =\n"
+         s;
+       Printf.printf "match find_task_seg_%s_opt id sched with\n" s;
+       print_endline "| None -> Error ()";
+       Printf.printf "| Some _ -> Ok (remove_task_seg_%s id sched)\n" s)
+    store_types
+
+let print_task_seg_remove_seq () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_seg_%s_seq (ids : Task_ds.task_seg_id Seq.t) (sched : \
+          sched) : sched =\n"
+         s;
+       print_endline "Seq.fold_left";
+       Printf.printf "(fun sched id -> remove_task_seg_%s id sched)\n" s;
+       print_endline "sched ids")
+    store_types
+
+let print_task_inst_find () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let find_task_inst_%s_opt (id : Task_ds.task_inst_id) ((_, sd) : \
+          sched) : Task_ds.task_inst_data option =\n"
+         s;
+       Printf.printf "Task_inst_id_map.find_opt id sd.store.task_inst_%s_store\n"
+         s)
+    store_types;
+  Printf.printf
+    "let find_task_inst_any_opt (id : Task_ds.task_inst_id) (sched : sched) : \
+     Task_ds.task_inst_data option =\n";
+  Printf.printf "match find_task_inst_uncompleted_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None ->\n";
+  Printf.printf "match find_task_inst_completed_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None ->\n";
+  Printf.printf "match find_task_inst_discarded_opt id sched with\n";
+  Printf.printf "| Some x -> Some x\n";
+  Printf.printf "| None -> None"
+
+let print_task_inst_remove () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_inst_%s (id : Task_ds.task_inst_id) (sched : sched) : \
+          sched =\n"
+         s;
+       Printf.printf
+         "let children_task_seg_ids = Id.get_task_seg_id_seq id sched in\n";
+       print_endline "sched";
+       Printf.printf "|> Task_seg.remove_task_seg_%s_seq children_task_seg_ids\n"
+         s;
+       print_endline
+         "|> (fun (sid, sd) -> ( sid, { sd with store = { sd.store with";
+       Printf.printf
+         "task_inst_%s_store = Task_inst_id_map.remove id \
+          sd.store.task_inst_%s_store;\n"
+         s s;
+       Printf.printf
+         "task_inst_id_to_task_seg_ids = Task_inst_id_map.remove id \
+          sd.store.task_inst_id_to_task_seg_ids;\n";
+       print_endline "}}))";
+       Printf.printf "|> Id.remove_task_inst_id id\n")
+    store_types;
+  Printf.printf
+    "let remove_task_inst_all (id : Task_ds.task_inst_id) (sched : sched) : \
+     sched =\n";
+  Printf.printf "sched\n";
+  List.iter (fun s -> Printf.printf "|> remove_task_inst_%s id\n" s) store_types
+
+let print_task_inst_remove_strict () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_inst_%s_strict (id : Task_ds.task_inst_id) (sched : \
+          sched) : (sched, unit) result =\n"
+         s;
+       Printf.printf "match find_task_inst_%s_opt id sched with\n" s;
+       print_endline "| None -> Error ()";
+       Printf.printf "| Some _ -> Ok (remove_task_inst_%s id sched)\n" s)
+    store_types
+
+let print_task_inst_remove_seq () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_inst_%s_seq (ids : Task_ds.task_inst_id Seq.t) (sched \
+          : sched) : sched =\n"
+         s;
+       print_endline "Seq.fold_left";
+       Printf.printf "(fun sched id -> remove_task_inst_%s id sched)\n" s;
+       print_endline "sched ids")
+    store_types
+
+let print_task_find () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let find_task_%s_opt (id : Task_ds.task_id) ((_, sd) : sched) : \
+          Task_ds.task_data option =\n"
+         s;
+       Printf.printf "Task_id_map.find_opt id sd.store.task_%s_store\n" s)
+    store_types
+
+let print_task_remove () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_%s (id : Task_ds.task_id) (sched : sched) : sched =\n"
+         s;
+       Printf.printf
+         "let children_task_inst_ids = Id.get_task_inst_id_seq id sched in\n";
+       print_endline "sched";
+       Printf.printf
+         "|> Task_inst.remove_task_inst_%s_seq children_task_inst_ids\n" s;
+       print_endline
+         "|> (fun (sid, sd) -> ( sid, { sd with store = { sd.store with";
+       Printf.printf
+         "task_%s_store = Task_id_map.remove id sd.store.task_%s_store;\n" s s;
+       Printf.printf
+         "task_id_to_task_inst_ids = Task_id_map.remove id \
+          sd.store.task_id_to_task_inst_ids;\n";
+       print_endline "}}))";
+       Printf.printf "|> Id.remove_task_id id\n")
+    store_types;
+  Printf.printf
+    "let remove_task_all (id : Task_ds.task_id) (sched : sched) : sched =\n";
+  Printf.printf "sched\n";
+  List.iter (fun s -> Printf.printf "|> remove_task_%s id\n" s) store_types
+
+let print_task_remove_strict () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let remove_task_%s_strict (id : Task_ds.task_id) (sched : sched) : \
+          (sched, unit) result =\n"
+         s;
+       Printf.printf "match find_task_%s_opt id sched with\n" s;
+       print_endline "| None -> Error ()";
+       Printf.printf "| Some _ -> Ok (remove_task_%s id sched)\n" s)
+    store_types
