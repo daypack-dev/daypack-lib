@@ -69,11 +69,13 @@ module In_place_head = struct
          ((), `In_place, sched))
       t
 
-  let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t) : unit
-    =
+  let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t) :
+    unit =
     map_head
       (fun sched ->
-         let sched = Sched.Progress.move_task_seg_to_completed task_seg_id sched in
+         let sched =
+           Sched.Progress.move_task_seg_to_completed task_seg_id sched
+         in
          ((), `In_place, sched))
       t
 
@@ -87,8 +89,8 @@ module In_place_head = struct
          ((), `In_place, sched))
       t
 
-  let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id) (t : t) :
-    unit =
+  let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id) (t : t)
+    : unit =
     map_head
       (fun sched ->
          let sched =
@@ -97,8 +99,8 @@ module In_place_head = struct
          ((), `In_place, sched))
       t
 
-  let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id) (t : t) :
-    unit =
+  let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
+      (t : t) : unit =
     map_head
       (fun sched ->
          let sched =

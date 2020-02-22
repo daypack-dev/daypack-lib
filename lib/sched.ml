@@ -1134,34 +1134,37 @@ module Progress = struct
                 (fun progress ->
                    let open Task_ds in
                    match progress with
-                   | None -> Some { chunks = [chunk] }
-                   | Some progress ->
-                     Some { chunks = chunk :: progress.chunks })
+                   | None -> Some { chunks = [ chunk ] }
+                   | Some progress -> Some { chunks = chunk :: progress.chunks })
                 sd.store.task_seg_id_to_progress;
           };
       } )
 
   let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id)
       ((_sid, sd) as sched : sched) : sched =
-    let (id1, id2, id3) = task_inst_id in
+    let id1, id2, id3 = task_inst_id in
     match Task_inst.find_task_inst_any_opt task_inst_id sched with
     | None -> sched
     | Some task_inst_data ->
-      let task_seg_ids = match Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_task_seg_ids with
+      let task_seg_ids =
+        match
+          Task_inst_id_map.find_opt task_inst_id
+            sd.store.task_inst_id_to_task_seg_ids
+        with
         | None -> Seq.empty
-        | Some s -> Int64_int64_option_set.to_seq s |>
-                    Seq.map (fun (task_seg_part, sub_id) ->
-                        (id1, id2, id3, task_seg_part, sub_id)
-                      )
+        | Some s ->
+          Int64_int64_option_set.to_seq s
+          |> Seq.map (fun (task_seg_part, sub_id) ->
+              (id1, id2, id3, task_seg_part, sub_id))
       in
       sched
       |> Task_inst.remove_task_inst_all task_inst_id
       |> Task_inst.add_task_inst_completed task_inst_id task_inst_data
-      |> (fun sched ->
-          Seq.fold_left (fun sched task_seg_id ->
-              move_task_seg_to_completed task_seg_id sched
-            ) sched task_seg_ids
-        )
+      |> fun sched ->
+      Seq.fold_left
+        (fun sched task_seg_id ->
+           move_task_seg_to_completed task_seg_id sched)
+        sched task_seg_ids
 
   let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
       (sched : sched) : sched =
@@ -1185,9 +1188,8 @@ module Progress = struct
                 (fun progress ->
                    let open Task_ds in
                    match progress with
-                   | None -> Some { chunks = [chunk] }
-                   | Some progress ->
-                     Some { chunks = chunk :: progress.chunks })
+                   | None -> Some { chunks = [ chunk ] }
+                   | Some progress -> Some { chunks = chunk :: progress.chunks })
                 sd.store.task_inst_id_to_progress;
           };
       } )
@@ -1799,18 +1801,13 @@ module Leftover = struct
         let id1, id2, id3, _, _ = task_seg_id in
         let task_inst_id = (id1, id2, id3) in
         Option.is_some
-          (Task_inst.find_task_inst_uncompleted_opt
-            task_inst_id sched)
-      )
+          (Task_inst.find_task_inst_uncompleted_opt task_inst_id sched))
     |> Seq.filter (fun (task_seg_id, _, _) ->
         Option.is_some
-          (Task_seg.find_task_seg_uncompleted_opt
-             task_seg_id sched)
-      )
+          (Task_seg.find_task_seg_uncompleted_opt task_seg_id sched))
     |> Seq.map (fun (task_seg_id, place_start, place_end_exc) ->
         let task_seg_size = place_end_exc -^ place_start in
-        (task_seg_id, task_seg_size)
-      )
+        (task_seg_id, task_seg_size))
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
     let leftover_task_seg_ids = get_leftover_task_segs sched in
