@@ -150,6 +150,26 @@ module Id = struct
   let incre_int64_int64_option_id x =
     match x with None -> (0L, None) | Some (id, _) -> (Int64.succ id, None)
 
+  let add_task_id ((user_id, task_part) : Task_ds.task_id) ((sid, sd) : sched) :
+    sched =
+    let task_ids =
+      User_id_map.find_opt user_id sd.store.user_id_to_task_ids
+      |> Option.value ~default:Int64_set.empty
+      |> Int64_set.add task_part
+    in
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+              user_id_to_task_ids =
+                User_id_map.add user_id task_ids sd.store.user_id_to_task_ids;
+          }
+      }
+    )
+
+
   let get_new_task_id (user_id : Task_ds.user_id) ((sid, sd) : sched) :
     Task_ds.task_id * sched =
     let task_ids =
@@ -157,18 +177,8 @@ module Id = struct
       |> Option.value ~default:Int64_set.empty
     in
     let task_part = Int64_set.max_elt_opt task_ids |> incre_int64_id in
-    let task_ids = Int64_set.add task_part task_ids in
-    ( (user_id, task_part),
-      ( sid,
-        {
-          sd with
-          store =
-            {
-              sd.store with
-              user_id_to_task_ids =
-                User_id_map.add user_id task_ids sd.store.user_id_to_task_ids;
-            };
-        } ) )
+    let task_id = (user_id, task_part) in
+    task_id, add_task_id task_id (sid, sd)
 
   let remove_task_id ((user_id, task_part) : Task_ds.task_id)
       ((sid, sd) : sched) : sched =
