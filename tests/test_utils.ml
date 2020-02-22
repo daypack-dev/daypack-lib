@@ -459,9 +459,9 @@ let task_seg_place_map =
 
 let progress_gen =
   let open QCheck.Gen in
-  map2
-    (fun completed chunks -> Daypack_lib.Task_ds.{ completed; chunks })
-    bool tiny_sorted_time_slots_gen
+  map
+    (fun chunks -> Daypack_lib.Task_ds.{ chunks })
+    tiny_sorted_time_slots_gen
 
 let progress = QCheck.make ~print:Print_utils.progress progress_gen
 
