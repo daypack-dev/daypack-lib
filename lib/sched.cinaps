@@ -852,6 +852,22 @@ let print_agenda_equal () =
 
 let store_types = [ "uncompleted"; "completed"; "discarded" ]
 
+let print_task_seg_add () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let add_task_seg_%s (id : Task_ds.task_seg_id) (size : \
+          Task_ds.task_seg_size) ((sid, sd) : sched) : sched =\n"
+         s;
+       Printf.printf
+         {|
+(sid,
+ { sd with store = { sd.store with task_seg_%s_store = Task_seg_id_map.add id size sd.store.task_seg_%s_store } }
+)
+|}
+         s s)
+    store_types
+
 let print_task_seg_find () =
   List.iter
     (fun s ->
@@ -918,6 +934,22 @@ let print_task_seg_remove_seq () =
        print_endline "Seq.fold_left";
        Printf.printf "(fun sched id -> remove_task_seg_%s id sched)\n" s;
        print_endline "sched ids")
+    store_types
+
+let print_task_inst_add () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let add_task_inst_%s (id : Task_ds.task_inst_id) (data : \
+          Task_ds.task_inst_data) ((sid, sd) : sched) : sched =\n"
+         s;
+       Printf.printf
+         {|
+(sid,
+ { sd with store = { sd.store with task_inst_%s_store = Task_inst_id_map.add id data sd.store.task_inst_%s_store } }
+)
+|}
+         s s)
     store_types
 
 let print_task_inst_find () =
@@ -995,6 +1027,22 @@ let print_task_inst_remove_seq () =
        print_endline "Seq.fold_left";
        Printf.printf "(fun sched id -> remove_task_inst_%s id sched)\n" s;
        print_endline "sched ids")
+    store_types
+
+let print_task_add () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let add_task_%s (id : Task_ds.task_id) (data : Task_ds.task_data) \
+          ((sid, sd) : sched) : sched =\n"
+         s;
+       Printf.printf
+         {|
+(sid,
+ { sd with store = { sd.store with task_%s_store = Task_id_map.add id data sd.store.task_%s_store } }
+)
+|}
+         s s)
     store_types
 
 let print_task_find () =

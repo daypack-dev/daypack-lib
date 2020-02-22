@@ -449,8 +449,48 @@ module Task_seg = struct
 
   (*$ #use "lib/sched.cinaps";;
 
+    print_task_seg_add ();
     print_task_seg_find ()
   *)
+
+  let add_task_seg_uncompleted (id : Task_ds.task_seg_id)
+      (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_uncompleted_store =
+              Task_seg_id_map.add id size sd.store.task_seg_uncompleted_store;
+          };
+      } )
+
+  let add_task_seg_completed (id : Task_ds.task_seg_id)
+      (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_completed_store =
+              Task_seg_id_map.add id size sd.store.task_seg_completed_store;
+          };
+      } )
+
+  let add_task_seg_discarded (id : Task_ds.task_seg_id)
+      (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_discarded_store =
+              Task_seg_id_map.add id size sd.store.task_seg_discarded_store;
+          };
+      } )
 
   let find_task_seg_uncompleted_opt (id : Task_ds.task_seg_id) ((_, sd) : sched)
     : Task_ds.task_seg_size option =
@@ -605,8 +645,48 @@ module Task_inst = struct
 
   (*$ #use "lib/sched.cinaps";;
 
+    print_task_inst_add ();
     print_task_inst_find ()
   *)
+
+  let add_task_inst_uncompleted (id : Task_ds.task_inst_id)
+      (data : Task_ds.task_inst_data) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_uncompleted_store =
+              Task_inst_id_map.add id data sd.store.task_inst_uncompleted_store;
+          };
+      } )
+
+  let add_task_inst_completed (id : Task_ds.task_inst_id)
+      (data : Task_ds.task_inst_data) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_completed_store =
+              Task_inst_id_map.add id data sd.store.task_inst_completed_store;
+          };
+      } )
+
+  let add_task_inst_discarded (id : Task_ds.task_inst_id)
+      (data : Task_ds.task_inst_data) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_discarded_store =
+              Task_inst_id_map.add id data sd.store.task_inst_discarded_store;
+          };
+      } )
 
   let find_task_inst_uncompleted_opt (id : Task_ds.task_inst_id)
       ((_, sd) : sched) : Task_ds.task_inst_data option =
@@ -776,8 +856,48 @@ module Task = struct
 
   (*$ #use "lib/sched.cinaps";;
 
+    print_task_add ();
     print_task_find ()
   *)
+
+  let add_task_uncompleted (id : Task_ds.task_id) (data : Task_ds.task_data)
+      ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_uncompleted_store =
+              Task_id_map.add id data sd.store.task_uncompleted_store;
+          };
+      } )
+
+  let add_task_completed (id : Task_ds.task_id) (data : Task_ds.task_data)
+      ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_completed_store =
+              Task_id_map.add id data sd.store.task_completed_store;
+          };
+      } )
+
+  let add_task_discarded (id : Task_ds.task_id) (data : Task_ds.task_data)
+      ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_discarded_store =
+              Task_id_map.add id data sd.store.task_discarded_store;
+          };
+      } )
 
   let find_task_uncompleted_opt (id : Task_ds.task_id) ((_, sd) : sched) :
     Task_ds.task_data option =
@@ -983,32 +1103,23 @@ module Agenda = struct
 end
 
 module Progress = struct
-  let set_task_seg_completed_flag (task_seg_id : Task_ds.task_seg_id) ~completed
-      ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_id_to_progress =
-              Task_seg_id_map.update task_seg_id
-                (fun progress ->
-                   let open Task_ds in
-                   match progress with
-                   | None -> Some { completed; chunks = [] }
-                   | Some progress -> Some { progress with completed })
-                sd.store.task_seg_id_to_progress;
-          };
-      } )
-
-  let mark_task_seg_completed (task_seg_id : Task_ds.task_seg_id)
+  let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    set_task_seg_completed_flag task_seg_id ~completed:true sched
+    match Task_seg.find_task_seg_any_opt task_seg_id sched with
+    | None -> sched
+    | Some task_seg_size ->
+      sched
+      |> Task_seg.remove_task_seg_all task_seg_id
+      |> Task_seg.add_task_seg_completed task_seg_id task_seg_size
 
-  let mark_task_seg_uncompleted (task_seg_id : Task_ds.task_seg_id)
+  let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    set_task_seg_completed_flag task_seg_id ~completed:false sched
+    match Task_seg.find_task_seg_any_opt task_seg_id sched with
+    | None -> sched
+    | Some task_seg_size ->
+      sched
+      |> Task_seg.remove_task_seg_all task_seg_id
+      |> Task_seg.add_task_seg_uncompleted task_seg_id task_seg_size
 
   let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
@@ -1023,39 +1134,30 @@ module Progress = struct
                 (fun progress ->
                    let open Task_ds in
                    match progress with
-                   | None -> Some { completed = false; chunks = [] }
+                   | None -> Some { chunks = [chunk] }
                    | Some progress ->
-                     Some { progress with chunks = chunk :: progress.chunks })
+                     Some { chunks = chunk :: progress.chunks })
                 sd.store.task_seg_id_to_progress;
-          };
-      } )
-
-  let set_task_inst_completed_flag (task_inst_id : Task_ds.task_inst_id)
-      ~completed ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_inst_id_to_progress =
-              Task_inst_id_map.update task_inst_id
-                (fun progress ->
-                   let open Task_ds in
-                   match progress with
-                   | None -> Some { completed; chunks = [] }
-                   | Some progress -> Some { progress with completed })
-                sd.store.task_inst_id_to_progress;
           };
       } )
 
   let mark_task_inst_completed (task_inst_id : Task_ds.task_inst_id)
       (sched : sched) : sched =
-    set_task_inst_completed_flag task_inst_id ~completed:true sched
+    match Task_inst.find_task_inst_any_opt task_inst_id sched with
+    | None -> sched
+    | Some task_inst_data ->
+      sched
+      |> Task_inst.remove_task_inst_all task_inst_id
+      |> Task_inst.add_task_inst_completed task_inst_id task_inst_data
 
   let mark_task_inst_uncompleted (task_inst_id : Task_ds.task_inst_id)
       (sched : sched) : sched =
-    set_task_inst_completed_flag task_inst_id ~completed:false sched
+    match Task_inst.find_task_inst_any_opt task_inst_id sched with
+    | None -> sched
+    | Some task_inst_data ->
+      sched
+      |> Task_inst.remove_task_inst_all task_inst_id
+      |> Task_inst.add_task_inst_uncompleted task_inst_id task_inst_data
 
   let add_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
@@ -1070,9 +1172,9 @@ module Progress = struct
                 (fun progress ->
                    let open Task_ds in
                    match progress with
-                   | None -> Some { completed = false; chunks = [] }
+                   | None -> Some { chunks = [chunk] }
                    | Some progress ->
-                     Some { progress with chunks = chunk :: progress.chunks })
+                     Some { chunks = chunk :: progress.chunks })
                 sd.store.task_inst_id_to_progress;
           };
       } )
