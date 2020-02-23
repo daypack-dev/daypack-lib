@@ -23,13 +23,13 @@ module In_place_head : sig
 
   val instantiate : start:int64 -> end_exc:int64 -> t -> unit
 
-  val mark_task_seg_completed : Task_ds.task_seg_id -> t -> unit
+  val move_task_seg_to_completed : Task_ds.task_seg_id -> t -> unit
 
-  val mark_task_seg_uncompleted : Task_ds.task_seg_id -> t -> unit
+  val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> t -> unit
 
-  val mark_task_inst_completed : Task_ds.task_inst_id -> t -> unit
+  val move_task_inst_to_completed : Task_ds.task_inst_id -> t -> unit
 
-  val mark_task_inst_uncompleted : Task_ds.task_inst_id -> t -> unit
+  val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> t -> unit
 
   val add_task_seg_progress_chunk :
     Task_ds.task_seg_id -> int64 * int64 -> t -> unit

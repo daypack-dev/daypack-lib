@@ -189,31 +189,53 @@ module Task_inst : sig
   val find_task_inst_discarded_opt :
     Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-  val remove_task_inst_uncompleted : Task_ds.task_inst_id -> sched -> sched
+  val remove_task_inst_uncompleted :
+    ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_inst_completed : Task_ds.task_inst_id -> sched -> sched
+  val remove_task_inst_completed :
+    ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_inst_discarded : Task_ds.task_inst_id -> sched -> sched
+  val remove_task_inst_discarded :
+    ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_inst_all : Task_ds.task_inst_id -> sched -> sched
+  val remove_task_inst_all :
+    ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
 
   val remove_task_inst_uncompleted_strict :
-    Task_ds.task_inst_id -> sched -> (sched, unit) result
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_inst_id ->
+    sched ->
+    (sched, unit) result
 
   val remove_task_inst_completed_strict :
-    Task_ds.task_inst_id -> sched -> (sched, unit) result
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_inst_id ->
+    sched ->
+    (sched, unit) result
 
   val remove_task_inst_discarded_strict :
-    Task_ds.task_inst_id -> sched -> (sched, unit) result
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_inst_id ->
+    sched ->
+    (sched, unit) result
 
   val remove_task_inst_uncompleted_seq :
-    Task_ds.task_inst_id Seq.t -> sched -> sched
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_inst_id Seq.t ->
+    sched ->
+    sched
 
   val remove_task_inst_completed_seq :
-    Task_ds.task_inst_id Seq.t -> sched -> sched
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_inst_id Seq.t ->
+    sched ->
+    sched
 
   val remove_task_inst_discarded_seq :
-    Task_ds.task_inst_id Seq.t -> sched -> sched
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_inst_id Seq.t ->
+    sched ->
+    sched
 end
 
 module Task : sig
@@ -233,22 +255,54 @@ module Task : sig
   val find_task_discarded_opt :
     Task_ds.task_id -> sched -> Task_ds.task_data option
 
-  val remove_task_uncompleted : Task_ds.task_id -> sched -> sched
+  val remove_task_uncompleted :
+    ?remove_children_task_insts:bool ->
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_id ->
+    sched ->
+    sched
 
-  val remove_task_completed : Task_ds.task_id -> sched -> sched
+  val remove_task_completed :
+    ?remove_children_task_insts:bool ->
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_id ->
+    sched ->
+    sched
 
-  val remove_task_discarded : Task_ds.task_id -> sched -> sched
+  val remove_task_discarded :
+    ?remove_children_task_insts:bool ->
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_id ->
+    sched ->
+    sched
 
-  val remove_task_all : Task_ds.task_id -> sched -> sched
+  val remove_task_all :
+    ?remove_children_task_insts:bool ->
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_id ->
+    sched ->
+    sched
 
   val remove_task_uncompleted_strict :
-    Task_ds.task_id -> sched -> (sched, unit) result
+    ?remove_children_task_insts:bool ->
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_id ->
+    sched ->
+    (sched, unit) result
 
   val remove_task_completed_strict :
-    Task_ds.task_id -> sched -> (sched, unit) result
+    ?remove_children_task_insts:bool ->
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_id ->
+    sched ->
+    (sched, unit) result
 
   val remove_task_discarded_strict :
-    Task_ds.task_id -> sched -> (sched, unit) result
+    ?remove_children_task_insts:bool ->
+    ?remove_children_task_segs:bool ->
+    Task_ds.task_id ->
+    sched ->
+    (sched, unit) result
 end
 
 module Agenda : sig
@@ -287,22 +341,16 @@ module Agenda : sig
 end
 
 module Progress : sig
-  val set_task_seg_completed_flag :
-    Task_ds.task_seg_id -> completed:bool -> sched -> sched
+  val move_task_seg_to_completed : Task_ds.task_seg_id -> sched -> sched
 
-  val mark_task_seg_completed : Task_ds.task_seg_id -> sched -> sched
-
-  val mark_task_seg_uncompleted : Task_ds.task_seg_id -> sched -> sched
+  val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> sched -> sched
 
   val add_task_seg_progress_chunk :
     Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
 
-  val set_task_inst_completed_flag :
-    Task_ds.task_inst_id -> completed:bool -> sched -> sched
+  val move_task_inst_to_completed : Task_ds.task_inst_id -> sched -> sched
 
-  val mark_task_inst_completed : Task_ds.task_inst_id -> sched -> sched
-
-  val mark_task_inst_uncompleted : Task_ds.task_inst_id -> sched -> sched
+  val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> sched -> sched
 
   val add_task_inst_progress_chunk :
     Task_ds.task_inst_id -> int64 * int64 -> sched -> sched
