@@ -1251,7 +1251,8 @@ module Progress = struct
               (id1, id2, id3, task_seg_part, sub_id))
       in
       sched
-      |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false task_inst_id
+      |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false
+        task_inst_id
       |> Task_inst.add_task_inst_completed task_inst_id task_inst_data
       |> fun sched ->
       Seq.fold_left
@@ -1265,7 +1266,8 @@ module Progress = struct
     | None -> sched
     | Some task_inst_data ->
       sched
-      |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false task_inst_id
+      |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false
+        task_inst_id
       |> Task_inst.add_task_inst_uncompleted task_inst_id task_inst_data
 
   let add_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
