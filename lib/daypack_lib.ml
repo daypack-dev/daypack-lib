@@ -26,3 +26,4 @@ module Int64_int64_option_set_utils = Int64_int64_option_set_utils
 module Task_seg_place_set = Task_seg_place_set
 module Time = Time
 module Time_pattern = Time_pattern
+module Time_profile = Time_profile
