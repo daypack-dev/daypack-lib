@@ -1,9 +1,12 @@
-type data = { periods : (Time_pattern.t * Time_pattern.t) list }
+type period = Time_pattern.t * Time_pattern.t
 
-let matching_time_slots_of_data ~start ~end_exc (data : data) :
+type data = { periods : period list }
+
+let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
   Time_slot_ds.t Seq.t =
   let time_slots = [ (start, end_exc) ] in
-  List.to_seq data.periods
+  periods
+  |> List.to_seq
   |> Seq.map (fun (start_pat, end_exc_pat) ->
       ( let start_seq =
           Time_pattern.matching_time_slots start_pat time_slots
