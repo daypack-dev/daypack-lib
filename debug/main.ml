@@ -698,6 +698,26 @@ let debug_time_pattern_matching_time_slots () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
+let debug_time_profile_matching_time_slots_of_periods () =
+  print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
+  let start = Unix.time () |> Unix.gmtime |> Time.tm_to_time in
+  let end_exc = Int64.add (Unix.time () |> Unix.gmtime |> Time.tm_to_time) (Int64.mul 10L 60L) in
+  let periods =
+    let open Time_pattern in
+    [
+      (
+      { years = [2020]; months = []; days = `Month_days []; hours = []; minutes = [] },
+      { years = [2020]; months = []; days = `Month_days []; hours = []; minutes = [] }
+    )
+    ]
+  in
+  let s = Time_profile.matching_time_slots_of_periods ~start ~end_exc periods in
+  s
+  |> OSeq.take 10
+  |> OSeq.iteri (fun i (start, end_exc) ->
+      Printf.printf "iter : %d\n" i;
+      Printf.printf "  [%Ld, %Ld)\n" start end_exc)
+
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";
  *   let tm =
@@ -863,9 +883,9 @@ let debug_time_pattern_matching_time_slots () =
  *   debug_sched_backtracking_search_pending ();
  *   print_newline () *)
 
-let () =
-  debug_sched_usage_simulation ();
-  print_newline ()
+(* let () =
+ *   debug_sched_usage_simulation ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_normalize_pattern ();
@@ -886,3 +906,7 @@ let () =
 (* let () =
  *   debug_time_pattern_next_match_int64 ();
  *   print_newline () *)
+
+let () =
+  debug_time_profile_matching_time_slots_of_periods ();
+  print_newline ()
