@@ -701,13 +701,13 @@ let debug_time_pattern_matching_time_slots () =
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
   let start = Unix.time () |> Unix.gmtime |> Time.tm_to_time in
-  let end_exc = Int64.add (Unix.time () |> Unix.gmtime |> Time.tm_to_time) (Int64.mul 10L 60L) in
+  let end_exc = Int64.add (Unix.time () |> Unix.gmtime |> Time.tm_to_time) (Int64.mul 10_000L 60L) in
   let periods =
     let open Time_pattern in
     [
       (
-      { years = [2020]; months = []; days = `Month_days []; hours = []; minutes = [] },
-      { years = [2020]; months = []; days = `Month_days []; hours = []; minutes = [] }
+      { years = []; months = [5]; days = `Month_days []; hours = []; minutes = [] },
+      { years = []; months = [5]; days = `Month_days []; hours = []; minutes = [] }
     )
     ]
   in
