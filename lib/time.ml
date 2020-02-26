@@ -62,3 +62,7 @@ let current_time_utc_sec () : int64 =
 
 let current_time_utc_min () : int64 =
   (current_time_utc_sec ()) /^ 60L
+
+let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
+  let timestamp, _ = Unix.mktime tm in
+  Unix.gmtime timestamp
