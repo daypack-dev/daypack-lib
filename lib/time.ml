@@ -57,11 +57,9 @@ let wday_of_mday ~year ~month ~mday =
   in
   tm.tm_wday
 
-let current_time_utc_sec () : int64 =
-  Unix.time () |> Int64.of_float
+let current_time_utc_sec () : int64 = Unix.time () |> Int64.of_float
 
-let current_time_utc_min () : int64 =
-  (current_time_utc_sec ()) /^ 60L
+let current_time_utc_min () : int64 = current_time_utc_sec () /^ 60L
 
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
