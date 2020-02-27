@@ -3,6 +3,7 @@
  (name daypack_lib)
  (public_name daypack-lib)
  (libraries unix
+            calendar
             oseq
             biniou
             yojson
