@@ -1811,7 +1811,10 @@ module Recur = struct
           in
           let end_exc = min seq_end_exc end_exc in
           aux start end_exc diff task_inst_data sched_req_template
-        | Task_ds.Time_pattern_match _ -> failwith "Unimplemented" )
+        | Task_ds.Time_pattern_match (pattern, recur) ->
+          (* let start_tm = Unix.mktime (start *^ 60L) in *)
+             Seq.empty
+      )
       |> Seq.filter (fun (_task_inst_data, sched_req_template) ->
           match
             Task_ds.sched_req_template_bound_on_start_and_end_exc

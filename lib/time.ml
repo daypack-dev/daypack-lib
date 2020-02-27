@@ -1,13 +1,22 @@
 open Int64_utils
 
-let time_to_tm (time : int64) : Unix.tm =
-  time *^ 60L |> Int64.to_float |> Unix.localtime
+type mode = [
+    `Local
+  | `UTC
+]
 
-let tm_to_time (tm : Unix.tm) : int64 =
+let time_to_tm (mode : mode) (time : int64) : Unix.tm =
+  time *^ 60L |> Int64.to_float |>
+  (fun x ->
+     match mode with
+     | `Local -> Unix.localtime x
+     | `UTC -> Unix.gmtime x)
+
+let local_tm_to_time (tm : Unix.tm) : int64 =
   let time, _ = Unix.mktime tm in
   (time |> Int64.of_float) /^ 60L
 
-let normalize_tm tm =
+let normalize_local_tm tm =
   let _, tm = Unix.mktime tm in
   tm
 
@@ -41,7 +50,7 @@ let day_count_of_month ~year ~month =
 
 let wday_of_mday ~year ~month ~mday =
   let tm =
-    normalize_tm
+    normalize_local_tm
       Unix.
         {
           tm_sec = 0;
