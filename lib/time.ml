@@ -27,9 +27,10 @@ let tm_to_time (mode : mode) (tm : Unix.tm) : int64 =
     )
   |> (fun time -> (time |> Int64.of_float) /^ 60L)
 
-let normalize_local_tm tm =
-  let _, tm = Unix.mktime tm in
+let normalize_tm tm =
   tm
+  |> CalendarLib.Calendar.from_unixtm
+  |> CalendarLib.Calendar.to_unixtm
 
 let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
 
@@ -61,7 +62,7 @@ let day_count_of_month ~year ~month =
 
 let wday_of_mday ~year ~month ~mday =
   let tm =
-    normalize_local_tm
+    normalize_tm
       Unix.
         {
           tm_sec = 0;
@@ -77,9 +78,18 @@ let wday_of_mday ~year ~month ~mday =
   in
   tm.tm_wday
 
-let current_time_utc_sec () : int64 = Unix.time () |> Int64.of_float
+let cur_time_utc_sec () : int64 = Unix.time () |> Int64.of_float
 
-let current_time_utc_min () : int64 = current_time_utc_sec () /^ 60L
+let cur_time_utc_min () : int64 = cur_time_utc_sec () /^ 60L
+
+let cur_tm_utc () : Unix.tm =
+  Unix.time ()
+|> Unix.localtime
+
+let cur_tm_local () : Unix.tm =
+  Unix.time ()
+|>
+  Unix.gmtime
 
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
