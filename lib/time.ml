@@ -94,3 +94,26 @@ let cur_tm_local () : Unix.tm =
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
   Unix.gmtime timestamp
+
+module Print = struct
+  let tm_to_date_string (tm : Unix.tm) : string =
+    Printf.sprintf
+      "%d-%d-%d_%d:%d"
+      tm.tm_year
+      tm.tm_mon
+      tm.tm_mday
+      tm.tm_hour
+      tm.tm_min
+
+  let time_to_date_string (mode : mode) (time : int64) : string =
+    let tm = time_to_tm mode time in
+    tm_to_date_string tm
+
+  let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+      (mode : mode) (time : int64) : string =
+    Debug_print.bprintf ~indent_level buffer "%s\n" (time_to_date_string mode time);
+    Buffer.contents buffer
+
+  let debug_print_time ?(indent_level = 0) (mode : mode) (time : int64) : unit =
+    print_string (debug_string_of_time ~indent_level mode time)
+end
