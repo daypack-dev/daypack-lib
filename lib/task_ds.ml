@@ -220,6 +220,8 @@ module Deserialize = struct
     match recur_type with
     | `Arithmetic_seq (arith_seq, recur_data) ->
       Arithemtic_seq (unpack_arith_seq arith_seq, unpack_recur_data recur_data)
+    | `Time_pattern_match (pattern, recur_data) ->
+      Time_pattern_match (Time_pattern.Deserialize.unpack_pattern pattern, unpack_recur_data recur_data)
 
   and unpack_recur (recur : Task_ds_t.recur) : recur =
     {

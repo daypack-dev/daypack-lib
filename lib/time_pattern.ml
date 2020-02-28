@@ -212,7 +212,7 @@ end
 module Deserialize = struct
   let unpack_days (x : Time_pattern_t.days) : days = x
 
-  let pack_pattern (t : Time_pattern_t.t) : t =
+  let unpack_pattern (t : Time_pattern_t.t) : t =
     {
       years = t.years;
       months = t.months;
