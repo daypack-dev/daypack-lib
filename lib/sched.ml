@@ -1784,9 +1784,12 @@ module Recur = struct
     match task_data.task_type with
     | Task_ds.One_off -> Seq.empty
     | Task_ds.Recurring recur ->
-      let usable_time_slots =
+      let usable_time_slot_seq =
         Time_slot_ds.invert ~start ~end_exc
           (List.to_seq recur.excluded_time_slots)
+      in
+      let usable_time_slot_list =
+        List.of_seq usable_time_slot_seq
       in
       ( match recur.recur_type with
         | Task_ds.Arithemtic_seq
@@ -1811,9 +1814,13 @@ module Recur = struct
           in
           let end_exc = min seq_end_exc end_exc in
           aux start end_exc diff task_inst_data sched_req_template
-        | Task_ds.Time_pattern_match (pattern, recur) ->
-          (* let start_tm = Unix.mktime (start *^ 60L) in *)
-             Seq.empty
+        | Task_ds.Time_pattern_match (pattern, { task_inst_data; sched_req_template }) ->
+          Time_pattern.matching_time_slots pattern (usable_time_slot_list)
+          |> Seq.map (fun (start', _end_exc) ->
+              task_inst_data,
+              Sched_req_data_unit_skeleton.shift_time_list ~offset:start'
+                sched_req_template
+            )
       )
       |> Seq.filter (fun (_task_inst_data, sched_req_template) ->
           match
@@ -1823,7 +1830,7 @@ module Recur = struct
           | None -> true
           | Some bound ->
             Time_slot_ds.a_is_subset_of_b ~a:(Seq.return bound)
-              ~b:usable_time_slots)
+              ~b:usable_time_slot_seq)
 
   let instance_recorded_already (task_id : Task_ds.task_id)
       (task_inst_data : Task_ds.task_inst_data)
