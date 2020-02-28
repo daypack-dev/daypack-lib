@@ -12,9 +12,20 @@ let time_to_tm (mode : mode) (time : int64) : Unix.tm =
      | `Local -> Unix.localtime x
      | `UTC -> Unix.gmtime x)
 
-let local_tm_to_time (tm : Unix.tm) : int64 =
-  let time, _ = Unix.mktime tm in
-  (time |> Int64.of_float) /^ 60L
+let tm_to_time (mode : mode) (tm : Unix.tm) : int64 =
+  tm
+  |> (fun x ->
+      match mode with
+      | `Local ->
+        let time, _ = Unix.mktime tm in
+        time
+      | `UTC ->
+        x
+        |> CalendarLib.Calendar.from_unixtm
+        |> CalendarLib.Calendar.from_gmt
+        |> CalendarLib.Calendar.to_unixfloat
+    )
+  |> (fun time -> (time |> Int64.of_float) /^ 60L)
 
 let normalize_local_tm tm =
   let _, tm = Unix.mktime tm in
