@@ -1,0 +1,12 @@
+type days = [
+  | Weekdays of int list
+  | Month_days of int list
+]
+
+type t = {
+  years : int list;
+  months : int list;
+  days : days;
+  hours : int list;
+  minutes : int list;
+}

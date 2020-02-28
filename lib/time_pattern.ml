@@ -196,6 +196,20 @@ let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
  *               | `Start -> Some start
  *               | `End -> Some end_exc ) ) ) *)
 
+module Serialize = struct
+  let pack_days (x : days) : Time_pattern_t.days =
+    x
+
+  let pack_pattern (t : t) : Time_pattern_t.t =
+    {
+      years = t.years;
+      months = t.months;
+      days = pack_days t.days;
+      hours = t.hours;
+      minutes = t.minutes;
+    }
+end
+
 module Print = struct
   let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (t : t) : string =
