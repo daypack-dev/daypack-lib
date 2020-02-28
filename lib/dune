@@ -111,3 +111,9 @@
           time_pattern_t.mli)
  (deps    time_pattern.atd)
  (action  (run atdgen -t %{deps})))
+
+(rule
+ (targets time_pattern_j.ml
+          time_pattern_j.mli)
+ (deps    time_pattern.atd)
+ (action  (run atdgen -j -j-std %{deps})))
