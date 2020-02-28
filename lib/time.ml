@@ -1,16 +1,15 @@
 open Int64_utils
 
-type mode = [
-    `Local
+type mode =
+  [ `Local
   | `UTC
-]
+  ]
 
 let time_to_tm (mode : mode) (time : int64) : Unix.tm =
-  time *^ 60L |> Int64.to_float |>
-  (fun x ->
-     match mode with
-     | `Local -> Unix.localtime x
-     | `UTC -> Unix.gmtime x)
+  time *^ 60L
+  |> Int64.to_float
+  |> fun x ->
+  match mode with `Local -> Unix.localtime x | `UTC -> Unix.gmtime x
 
 let tm_to_time (mode : mode) (tm : Unix.tm) : int64 =
   tm
@@ -23,14 +22,11 @@ let tm_to_time (mode : mode) (tm : Unix.tm) : int64 =
         x
         |> CalendarLib.Calendar.from_unixtm
         |> CalendarLib.Calendar.from_gmt
-        |> CalendarLib.Calendar.to_unixfloat
-    )
-  |> (fun time -> (time |> Int64.of_float) /^ 60L)
+        |> CalendarLib.Calendar.to_unixfloat)
+  |> fun time -> (time |> Int64.of_float) /^ 60L
 
 let normalize_tm tm =
-  tm
-  |> CalendarLib.Calendar.from_unixtm
-  |> CalendarLib.Calendar.to_unixtm
+  tm |> CalendarLib.Calendar.from_unixtm |> CalendarLib.Calendar.to_unixtm
 
 let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
 
@@ -82,14 +78,9 @@ let cur_time_utc_sec () : int64 = Unix.time () |> Int64.of_float
 
 let cur_time_utc_min () : int64 = cur_time_utc_sec () /^ 60L
 
-let cur_tm_utc () : Unix.tm =
-  Unix.time ()
-|> Unix.localtime
+let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.localtime
 
-let cur_tm_local () : Unix.tm =
-  Unix.time ()
-|>
-  Unix.gmtime
+let cur_tm_local () : Unix.tm = Unix.time () |> Unix.gmtime
 
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
@@ -97,12 +88,7 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
 
 module Print = struct
   let tm_to_date_string (tm : Unix.tm) : string =
-    Printf.sprintf
-      "%d-%d-%d_%d:%d"
-      tm.tm_year
-      tm.tm_mon
-      tm.tm_mday
-      tm.tm_hour
+    Printf.sprintf "%d-%d-%d_%d:%d" tm.tm_year tm.tm_mon tm.tm_mday tm.tm_hour
       tm.tm_min
 
   let time_to_date_string (mode : mode) (time : int64) : string =
@@ -111,7 +97,8 @@ module Print = struct
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (mode : mode) (time : int64) : string =
-    Debug_print.bprintf ~indent_level buffer "%s\n" (time_to_date_string mode time);
+    Debug_print.bprintf ~indent_level buffer "%s\n"
+      (time_to_date_string mode time);
     Buffer.contents buffer
 
   let debug_print_time ?(indent_level = 0) (mode : mode) (time : int64) : unit =

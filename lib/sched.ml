@@ -1788,9 +1788,7 @@ module Recur = struct
         Time_slot_ds.invert ~start ~end_exc
           (List.to_seq recur.excluded_time_slots)
       in
-      let usable_time_slot_list =
-        List.of_seq usable_time_slot_seq
-      in
+      let usable_time_slot_list = List.of_seq usable_time_slot_seq in
       ( match recur.recur_type with
         | Task_ds.Arithemtic_seq
             ( { start = seq_start; end_exc = seq_end_exc; diff },
@@ -1814,14 +1812,13 @@ module Recur = struct
           in
           let end_exc = min seq_end_exc end_exc in
           aux start end_exc diff task_inst_data sched_req_template
-        | Task_ds.Time_pattern_match (pattern, { task_inst_data; sched_req_template }) ->
-          Time_pattern.matching_time_slots pattern (usable_time_slot_list)
+        | Task_ds.Time_pattern_match
+            (pattern, { task_inst_data; sched_req_template }) ->
+          Time_pattern.matching_time_slots pattern usable_time_slot_list
           |> Seq.map (fun (start', _end_exc) ->
-              task_inst_data,
-              Sched_req_data_unit_skeleton.shift_time_list ~offset:start'
-                sched_req_template
-            )
-      )
+              ( task_inst_data,
+                Sched_req_data_unit_skeleton.shift_time_list ~offset:start'
+                  sched_req_template )) )
       |> Seq.filter (fun (_task_inst_data, sched_req_template) ->
           match
             Task_ds.sched_req_template_bound_on_start_and_end_exc

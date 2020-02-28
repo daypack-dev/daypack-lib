@@ -701,11 +701,7 @@ let debug_time_pattern_matching_time_slots () =
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
   let start = Time.cur_time_utc_min () in
-  let end_exc =
-    Int64.add
-      start
-      (Int64.mul 10_000L 60L)
-  in
+  let end_exc = Int64.add start (Int64.mul 10_000L 60L) in
   let periods =
     let open Time_pattern in
     [
