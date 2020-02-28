@@ -61,7 +61,9 @@ let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     else 0
   in
   match t.minutes with
-  | [] -> Seq.map (fun tm_min -> { acc with tm_min }) OSeq.(start --^ 60)
+  | [] -> Seq.map (fun tm_min ->
+      Printf.printf "test : %d\n" tm_min;
+      { acc with tm_min }) OSeq.(start --^ 60)
   | pat_min_list ->
     pat_min_list
     |> List.to_seq
@@ -92,11 +94,11 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
     if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
       start.tm_mday
-    else 0
+    else 1
   in
   match t.days with
   | `Month_days [] | `Weekdays [] ->
-    Seq.map (fun tm_mday -> { acc with tm_mday }) OSeq.(start --^ day_count)
+    Seq.map (fun tm_mday -> { acc with tm_mday }) OSeq.(start -- day_count)
   | `Month_days pat_mday_list ->
     pat_mday_list
     |> List.to_seq
@@ -162,8 +164,8 @@ let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
     matching_tm_seq ~search_years_ahead t start_tm
     |> Seq.map (Time.tm_to_time `UTC)
     |> Seq.map (fun time -> (time, time +^ 1L))
-    |> Time_slot_ds.intersect (List.to_seq time_slots)
-    |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:false
+    (* |> Time_slot_ds.intersect (List.to_seq time_slots) *)
+    (* |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:false *)
 
 (* let next_match_int64 ?(time_slots : Time_slot_ds.t list = []) ~normalize_dir
  *     ~search_years_ahead (t : t) (time : int64) : int64 option =

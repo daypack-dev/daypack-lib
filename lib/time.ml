@@ -4,21 +4,21 @@ let first_mday = 1
 
 let tm_year_offset = 1900
 
-type mode =
+type time_zone =
   [ `Local
   | `UTC
   ]
 
-let time_to_tm (mode : mode) (time : int64) : Unix.tm =
+let unix_time_to_tm ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
   time *^ 60L
   |> Int64.to_float
   |> fun x ->
-  match mode with `Local -> Unix.localtime x | `UTC -> Unix.gmtime x
+  match time_zone_of_tm with `Local -> Unix.localtime x | `UTC -> Unix.gmtime x
 
-let tm_to_time (mode : mode) (tm : Unix.tm) : int64 =
+let tm_to_unix_time ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
   tm
   |> (fun x ->
-      match mode with
+      match time_zone_of_tm with
       | `Local ->
         let time, _ = Unix.mktime tm in
         time
@@ -78,13 +78,13 @@ let wday_of_mday ~year ~month ~mday =
   in
   tm.tm_wday
 
-let cur_time_utc_sec () : int64 = Unix.time () |> Int64.of_float
+let cur_unix_time_sec () : int64 = Unix.time () |> Int64.of_float
 
-let cur_time_utc_min () : int64 = cur_time_utc_sec () /^ 60L
+let cur_unix_time_min () : int64 = cur_unix_time_sec () /^ 60L
 
-let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.localtime
+let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
 
-let cur_tm_local () : Unix.tm = Unix.time () |> Unix.gmtime
+let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.gmtime
 
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
@@ -92,10 +92,10 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
 
 module Print = struct
   let tm_to_date_string (tm : Unix.tm) : string =
-    Printf.sprintf "%d-%02d-%02d_%02d:%02d" (tm_year_offset + tm.tm_year) tm.tm_mon tm.tm_mday tm.tm_hour
+    Printf.sprintf "%d-%02d-%02d_%02d:%02d" (tm.tm_year + tm_year_offset) (tm.tm_mon + 1) tm.tm_mday tm.tm_hour
       tm.tm_min
 
-  let time_to_date_string (mode : mode) (time : int64) : string =
+  let time_to_date_string ~(time_zone : time_zone) (time : int64) : string =
     let tm = time_to_tm mode time in
     tm_to_date_string tm
 
