@@ -210,6 +210,20 @@ module Serialize = struct
     }
 end
 
+module Deserialize = struct
+  let unpack_days (x : Time_pattern_t.days) : days =
+    x
+
+  let pack_pattern (t : Time_pattern_t.t) : t =
+    {
+      years = t.years;
+      months = t.months;
+      days = unpack_days t.days;
+      hours = t.hours;
+      minutes = t.minutes;
+    }
+end
+
 module Print = struct
   let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (t : t) : string =
