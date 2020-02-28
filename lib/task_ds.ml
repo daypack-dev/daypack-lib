@@ -276,6 +276,19 @@ module Deserialize = struct
 end
 
 module Print = struct
+  let debug_string_of_sched_req_template ?(indent_level = 0) ?(buffer = Buffer.create 4096) (sched_req_template : sched_req_template) : string =
+    List.iter
+      (fun x ->
+         Sched_req_data_unit_skeleton.Print
+         .debug_string_of_sched_req_data_unit_skeleton ~buffer
+           ~indent_level
+           ~string_of_data:Int64.to_string
+           ~string_of_time:Int64.to_string
+           ~string_of_time_slot:Time_slot_ds.to_string x
+         |> ignore)
+      sched_req_template;
+    Buffer.contents buffer
+
   let debug_string_of_arith_seq ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) arith_seq =
     Debug_print.bprintf ~indent_level buffer "{";
@@ -327,17 +340,23 @@ module Print = struct
               "diff : %Ld\n" diff;
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "sched req template :\n";
-            List.iter
-              (fun x ->
-                 Sched_req_data_unit_skeleton.Print
-                 .debug_string_of_sched_req_data_unit_skeleton ~buffer
-                   ~indent_level:(indent_level + 3)
-                   ~string_of_data:Int64.to_string
-                   ~string_of_time:Int64.to_string
-                   ~string_of_time_slot:Time_slot_ds.to_string x
-                 |> ignore)
-              sched_req_template
-          | Time_pattern_match _ -> failwith "Unimplemented" ) );
+            debug_string_of_sched_req_template
+            ~indent_level:(indent_level + 3)
+            ~buffer
+              sched_req_template |> ignore;
+          | Time_pattern_match (pattern, { task_inst_data = _; sched_req_template }) ->
+            Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+              "recur type : time pattern\n";
+            Time_pattern.Print.debug_string_of_pattern ~indent_level:(indent_level + 2) ~buffer
+              pattern |> ignore;
+            Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+              "sched req template :\n";
+            debug_string_of_sched_req_template
+            ~indent_level:(indent_level + 3)
+            ~buffer
+              sched_req_template |> ignore;
+        )
+    );
     Buffer.contents buffer
 
   let debug_string_of_task_inst ?(indent_level = 0)
