@@ -197,8 +197,7 @@ let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
  *               | `End -> Some end_exc ) ) ) *)
 
 module Serialize = struct
-  let pack_days (x : days) : Time_pattern_t.days =
-    x
+  let pack_days (x : days) : Time_pattern_t.days = x
 
   let pack_pattern (t : t) : Time_pattern_t.t =
     {
@@ -211,8 +210,7 @@ module Serialize = struct
 end
 
 module Deserialize = struct
-  let unpack_days (x : Time_pattern_t.days) : days =
-    x
+  let unpack_days (x : Time_pattern_t.days) : days = x
 
   let pack_pattern (t : Time_pattern_t.t) : t =
     {
