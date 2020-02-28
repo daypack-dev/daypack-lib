@@ -18,10 +18,6 @@ type t = {
  *   | `End
  *   ] *)
 
-let first_mday = 1
-
-let tm_year_offset = 1900
-
 (* let normalize_pattern (dir : normalize_dir) t =
  *   let map_none upper x default_val =
  *     match x with
@@ -90,7 +86,7 @@ let matching_hours (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     |> Seq.map (fun pat_hour -> { acc with tm_hour = pat_hour })
 
 let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
-  let year = acc.tm_year + tm_year_offset in
+  let year = acc.tm_year + Time.tm_year_offset in
   let month = acc.tm_mon in
   let day_count = Time.day_count_of_month ~year ~month in
   let start =
@@ -136,7 +132,7 @@ let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
     |> List.to_seq
     |> Seq.filter (fun pat_year -> start.tm_year <= pat_year)
     |> Seq.map (fun pat_year ->
-        { acc with tm_year = pat_year - tm_year_offset })
+        { acc with tm_year = pat_year - Time.tm_year_offset })
 
 let matching_tm_seq ~search_years_ahead (t : t) (start : Unix.tm) :
   Unix.tm Seq.t =

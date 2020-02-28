@@ -1,5 +1,9 @@
 open Int64_utils
 
+let first_mday = 1
+
+let tm_year_offset = 1900
+
 type mode =
   [ `Local
   | `UTC
@@ -88,7 +92,7 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
 
 module Print = struct
   let tm_to_date_string (tm : Unix.tm) : string =
-    Printf.sprintf "%d-%d-%d_%d:%d" tm.tm_year tm.tm_mon tm.tm_mday tm.tm_hour
+    Printf.sprintf "%d-%02d-%02d_%02d:%02d" (tm_year_offset + tm.tm_year) tm.tm_mon tm.tm_mday tm.tm_hour
       tm.tm_min
 
   let time_to_date_string (mode : mode) (time : int64) : string =

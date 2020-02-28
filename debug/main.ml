@@ -693,10 +693,12 @@ let debug_time_pattern_matching_time_slots () =
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   let s = Daypack_lib.Time_pattern.matching_time_slots pattern time_slots in
   s
-  |> OSeq.take 100
+  |> OSeq.take 10
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
-      Printf.printf "  [%Ld, %Ld)\n" start end_exc)
+      Printf.printf "  [%s, %s)\n"
+        (Time.Print.time_to_date_string `UTC start)
+        (Time.Print.time_to_date_string `UTC end_exc))
 
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
@@ -905,9 +907,9 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_pattern_matching_time_slots ();
- *   print_newline () *)
+let () =
+  debug_time_pattern_matching_time_slots ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
@@ -917,6 +919,6 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_pattern_next_match_int64 ();
  *   print_newline () *)
 
-let () =
-  debug_time_profile_matching_time_slots_of_periods ();
-  print_newline ()
+(* let () =
+ *   debug_time_profile_matching_time_slots_of_periods ();
+ *   print_newline () *)
