@@ -140,7 +140,8 @@ module Serialize = struct
     match recur_type with
     | Arithemtic_seq (arith_seq, recur_data) ->
       `Arithmetic_seq (pack_arith_seq arith_seq, pack_recur_data recur_data)
-    | Time_pattern_match _ -> failwith "Unimplemented"
+    | Time_pattern_match (pattern, recur_data) ->
+      `Time_pattern_match (Time_pattern.Serialize.pack_pattern pattern, pack_recur_data recur_data)
 
   and pack_recur (recur : recur) : Task_ds_t.recur =
     {
