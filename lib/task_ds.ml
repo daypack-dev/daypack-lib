@@ -141,7 +141,9 @@ module Serialize = struct
     | Arithemtic_seq (arith_seq, recur_data) ->
       `Arithmetic_seq (pack_arith_seq arith_seq, pack_recur_data recur_data)
     | Time_pattern_match (pattern, recur_data) ->
-      `Time_pattern_match (Time_pattern.Serialize.pack_pattern pattern, pack_recur_data recur_data)
+      `Time_pattern_match
+        ( Time_pattern.Serialize.pack_pattern pattern,
+          pack_recur_data recur_data )
 
   and pack_recur (recur : recur) : Task_ds_t.recur =
     {
@@ -221,7 +223,9 @@ module Deserialize = struct
     | `Arithmetic_seq (arith_seq, recur_data) ->
       Arithemtic_seq (unpack_arith_seq arith_seq, unpack_recur_data recur_data)
     | `Time_pattern_match (pattern, recur_data) ->
-      Time_pattern_match (Time_pattern.Deserialize.unpack_pattern pattern, unpack_recur_data recur_data)
+      Time_pattern_match
+        ( Time_pattern.Deserialize.unpack_pattern pattern,
+          unpack_recur_data recur_data )
 
   and unpack_recur (recur : Task_ds_t.recur) : recur =
     {
@@ -276,14 +280,14 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let debug_string_of_sched_req_template ?(indent_level = 0) ?(buffer = Buffer.create 4096) (sched_req_template : sched_req_template) : string =
+  let debug_string_of_sched_req_template ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (sched_req_template : sched_req_template) :
+    string =
     List.iter
       (fun x ->
          Sched_req_data_unit_skeleton.Print
-         .debug_string_of_sched_req_data_unit_skeleton ~buffer
-           ~indent_level
-           ~string_of_data:Int64.to_string
-           ~string_of_time:Int64.to_string
+         .debug_string_of_sched_req_data_unit_skeleton ~buffer ~indent_level
+           ~string_of_data:Int64.to_string ~string_of_time:Int64.to_string
            ~string_of_time_slot:Time_slot_ds.to_string x
          |> ignore)
       sched_req_template;
@@ -340,23 +344,21 @@ module Print = struct
               "diff : %Ld\n" diff;
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "sched req template :\n";
-            debug_string_of_sched_req_template
-            ~indent_level:(indent_level + 3)
-            ~buffer
-              sched_req_template |> ignore;
-          | Time_pattern_match (pattern, { task_inst_data = _; sched_req_template }) ->
+            debug_string_of_sched_req_template ~indent_level:(indent_level + 3)
+              ~buffer sched_req_template
+            |> ignore
+          | Time_pattern_match
+              (pattern, { task_inst_data = _; sched_req_template }) ->
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "recur type : time pattern\n";
-            Time_pattern.Print.debug_string_of_pattern ~indent_level:(indent_level + 2) ~buffer
-              pattern |> ignore;
+            Time_pattern.Print.debug_string_of_pattern
+              ~indent_level:(indent_level + 2) ~buffer pattern
+            |> ignore;
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "sched req template :\n";
-            debug_string_of_sched_req_template
-            ~indent_level:(indent_level + 3)
-            ~buffer
-              sched_req_template |> ignore;
-        )
-    );
+            debug_string_of_sched_req_template ~indent_level:(indent_level + 3)
+              ~buffer sched_req_template
+            |> ignore ) );
     Buffer.contents buffer
 
   let debug_string_of_task_inst ?(indent_level = 0)
