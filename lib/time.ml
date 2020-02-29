@@ -50,20 +50,40 @@ let week_day_of_int (x : int) : week_day =
   | 6 -> `Sat
   | _ -> failwith "Invalid wday int"
 
+let cal_week_day_of_week_day (week_day : week_day) : CalendarLib.Calendar.day =
+  match week_day with
+  | `Sun -> Sun
+  | `Mon -> Mon
+  | `Tue -> Tue
+  | `Wed -> Wed
+  | `Thu -> Thu
+  | `Fri -> Fri
+  | `Sat -> Sat
+
+let week_day_of_cal_week_day (week_day : CalendarLib.Calendar.day) : week_day =
+  match week_day with
+  | Sun -> `Sun
+  | Mon -> `Mon
+  | Tue -> `Tue
+  | Wed -> `Wed
+  | Thu -> `Thu
+  | Fri -> `Fri
+  | Sat -> `Sat
+
 let int_of_month (month : month) : int =
   match month with
   | `Jan -> 0
   | `Feb -> 1
   | `Mar -> 2
   | `Apr -> 3
-  | 	`May -> 4
-  | 	`Jun -> 5
-  | 	`Jul -> 6
-  | 	`Aug -> 7
-  | 	`Sep -> 8
-  | 	`Oct -> 9
-  | 	`Nov -> 10
-  | 	`Dec -> 11
+  | `May -> 4
+  | `Jun -> 5
+  | `Jul -> 6
+  | `Aug -> 7
+  | `Sep -> 8
+  | `Oct -> 9
+  | `Nov -> 10
+  | `Dec -> 11
 
 let month_of_int (x : int) : month =
   match x with
@@ -80,6 +100,66 @@ let month_of_int (x : int) : month =
   | 10 -> `Nov
   | 11 -> `Dec
   | _ -> failwith "Invalid month int"
+
+let cal_month_of_month (month : month) : CalendarLib.Calendar.month =
+  match month with
+  | `Jan -> Jan
+  | `Feb -> Feb
+  | `Mar -> Mar
+  | `Apr -> Apr
+  | `May -> May
+  | `Jun -> Jun
+  | `Jul -> Jul
+  | `Aug -> Aug
+  | `Sep -> Sep
+  | `Oct -> Oct
+  | `Nov -> Nov
+  | `Dec -> Dec
+
+let month_of_cal_month (month : CalendarLib.Calendar.month) : month =
+  match month with
+  | Jan -> `Jan
+  | Feb -> `Feb
+  | Mar -> `Mar
+  | Apr -> `Apr
+  | May -> `May
+  | Jun -> `Jun
+  | Jul -> `Jul
+  | Aug -> `Aug
+  | Sep -> `Sep
+  | Oct -> `Oct
+  | Nov -> `Nov
+  | Dec -> `Dec
+
+let month_compare (m1 : month) (m2 : month) : int =
+  compare (int_of_month m1) (int_of_month m2)
+
+let month_lt m1 m2 =
+  int_of_month m1 < int_of_month m2
+
+let month_le m1 m2 =
+  int_of_month m1 <= int_of_month m2
+
+let month_gt m1 m2 =
+  int_of_month m1 > int_of_month m2
+
+let month_ge m1 m2 =
+  int_of_month m1 >= int_of_month m2
+
+let week_day_compare (d1 : week_day) (d2 : week_day) : int =
+  compare (int_of_week_day d1) (int_of_week_day d2)
+
+let week_day_lt d1 d2 =
+  int_of_week_day d1 < int_of_week_day d2
+
+let week_day_le d1 d2 =
+  int_of_week_day d1 <= int_of_week_day d2
+
+let week_day_gt d1 d2 =
+  int_of_week_day d1 > int_of_week_day d2
+
+let week_day_ge d1 d2 =
+  int_of_week_day d1 >= int_of_week_day d2
 
 type time_zone =
   [ `Local
@@ -123,39 +203,26 @@ let is_leap_year ~year =
 
 let day_count_of_year ~year = if is_leap_year ~year then 366 else 365
 
-let day_count_of_month ~year ~month =
-  match month + 1 with
-  | 1 -> 31
-  | 2 -> if is_leap_year ~year then 29 else 28
-  | 3 -> 31
-  | 4 -> 30
-  | 5 -> 31
-  | 6 -> 30
-  | 7 -> 31
-  | 8 -> 31
-  | 9 -> 30
-  | 10 -> 31
-  | 11 -> 30
-  | 12 -> 31
-  | _ -> failwith "Unexpected number for mon"
+let day_count_of_month ~year ~(month : month) =
+  match month with
+  | `Jan -> 31
+  | `Feb -> if is_leap_year ~year then 29 else 28
+  | `Mar -> 31
+  | `Apr -> 30
+  | `May -> 31
+  | `Jun -> 30
+  | `Jul -> 31
+  | `Aug -> 31
+  | `Sep -> 30
+  | `Oct -> 31
+  | `Nov -> 30
+  | `Dec -> 31
 
-let wday_of_mday ~year ~month ~mday =
-  let tm =
-    normalize_tm
-      Unix.
-        {
-          tm_sec = 0;
-          tm_min = 0;
-          tm_hour = 0;
-          tm_mday = mday;
-          tm_mon = month;
-          tm_year = year;
-          tm_wday = 0;
-          tm_yday = 0;
-          tm_isdst = false;
-        }
-  in
-  tm.tm_wday
+let week_day_of_month_day ~(year : int) ~(month : month) ~(mday : int) : week_day =
+  CalendarLib.Date.
+    day_of_week
+      (CalendarLib.Date.make year (int_of_month month) mday)
+|> week_day_of_cal_week_day
 
 let cur_unix_time_sec () : int64 = Unix.time () |> Int64.of_float
 
@@ -169,7 +236,45 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
   Unix.gmtime timestamp
 
+module Serialize = struct
+  let pack_week_day (x : week_day) : Time_t.week_day =
+    x
+
+  let pack_month (x : month) : Time_t.month = x
+end
+
+module Deserialize = struct
+  let unpack_week_day (x : Time_t.week_day) : week_day = x
+
+  let unpack_month (x : Time_t.month) : month = x
+end
+
 module Print = struct
+  let week_day_to_string (wday : week_day) : string =
+    match wday with
+    | `Sun -> "sun"
+    | `Mon -> "mon"
+    | `Tue -> "tue"
+    | `Wed -> "wed"
+    | `Thu -> "thu"
+    | `Fri -> "fri"
+    | `Sat -> "sat"
+
+  let month_to_string (month : month) : string =
+    match month with
+    | `Jan -> "jan"
+    | `Feb -> "feb"
+    | `Mar -> "mar"
+    | `Apr -> "apr"
+    | `May -> "may"
+    | `Jun -> "jun"
+    | `Jul -> "jul"
+    | `Aug -> "aug"
+    | `Sep -> "sep"
+    | `Oct -> "oct"
+    | `Nov -> "nov"
+    | `Dec -> "dec"
+
   let tm_to_date_string (tm : Unix.tm) : string =
     Printf.sprintf "%d-%02d-%02d_%02d:%02d"
       (tm.tm_year + tm_year_offset)

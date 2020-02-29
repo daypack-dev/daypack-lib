@@ -1,13 +1,13 @@
 open Int64_utils
 
 type days =
-  [ `Weekdays of int list
+  [ `Weekdays of Time.week_day list
   | `Month_days of int list
   ]
 
 type t = {
   years : int list;
-  months : int list;
+  months : Time.month list;
   days : days;
   hours : int list;
   minutes : int list;
@@ -87,7 +87,7 @@ let matching_hours (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
 
 let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let year = acc.tm_year + Time.tm_year_offset in
-  let month = acc.tm_mon in
+  let month = Time.month_of_int acc.tm_mon in
   let day_count = Time.day_count_of_month ~year ~month in
   let start =
     if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
@@ -105,20 +105,21 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   | `Weekdays pat_wday_list ->
     Seq.filter_map
       (fun mday ->
-         let wday = Time.wday_of_mday ~year ~month ~mday in
+         let wday = Time.week_day_of_month_day ~year ~month ~mday in
          if List.mem wday pat_wday_list then Some { acc with tm_mday = mday }
          else None)
       OSeq.(start --^ day_count)
 
 let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
-  let start = if acc.tm_year = start.tm_year then start.tm_mon else 0 in
+  let start = if acc.tm_year = start.tm_year then
+      Time.month_of_int start.tm_mon else `Jan in
   match t.months with
-  | [] -> Seq.map (fun tm_mon -> { acc with tm_mon }) OSeq.(start --^ 12)
+  | [] -> Seq.map (fun tm_mon -> { acc with tm_mon }) OSeq.((Time.int_of_month start) --^ 12)
   | pat_mon_list ->
     pat_mon_list
     |> List.to_seq
-    |> Seq.filter (fun pat_mon -> start <= pat_mon)
-    |> Seq.map (fun pat_mon -> { acc with tm_mon = pat_mon })
+    |> Seq.filter (fun pat_mon -> Time.month_le start pat_mon)
+    |> Seq.map (fun pat_mon -> { acc with tm_mon = Time.int_of_month pat_mon })
 
 let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
   : Unix.tm Seq.t =
@@ -222,15 +223,17 @@ module Print = struct
   let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
+    let aux_months l = String.concat "," (List.map Time.Print.month_to_string l) in
+    let aux_week_days l = String.concat "," (List.map Time.Print.week_day_to_string l) in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : [%s]\n"
       (aux t.years);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "mon : [%s]\n"
-      (aux t.months);
+      (aux_months t.months);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s\n"
       ( match t.days with
         | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)
-        | `Weekdays xs -> Printf.sprintf "weekday [%s]" (aux xs) );
+        | `Weekdays xs -> Printf.sprintf "weekday [%s]" (aux_week_days xs) );
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : [%s]\n"
       (aux t.hours);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : [%s]\n"

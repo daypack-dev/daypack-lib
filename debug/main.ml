@@ -633,7 +633,7 @@ let debug_time_pattern_matching_tm_seq () =
     let open Daypack_lib.Time_pattern in
     {
       years = [];
-      months = [ 5 ];
+      months = [ `Jun ];
       days = `Month_days [];
       hours = [ 11 ];
       minutes = [ 0 ];
@@ -687,7 +687,7 @@ let debug_time_pattern_matching_time_slots () =
     let open Daypack_lib.Time_pattern in
     {
       years = [];
-      months = [ 1 ];
+      months = [ `Feb ];
       days = `Month_days [];
       hours = [ 13 ];
       minutes = [];

@@ -107,6 +107,18 @@
  (action  (run atdgen -t %{deps})))
 
 (rule
+ (targets time_t.ml
+          time_t.mli)
+ (deps    time.atd)
+ (action  (run atdgen -t %{deps})))
+
+(rule
+ (targets time_j.ml
+          time_j.mli)
+ (deps    time.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+(rule
  (targets time_pattern_t.ml
           time_pattern_t.mli)
  (deps    time_pattern.atd)
