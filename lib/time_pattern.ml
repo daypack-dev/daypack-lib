@@ -158,14 +158,14 @@ let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
   match Time_slot_ds.min_start_and_max_end_exc_list time_slots with
   | None -> Seq.empty
   | Some (start, end_exc) ->
-    let start_tm = Time.time_to_tm `Local start in
-    let end_exc_tm = Time.time_to_tm `Local end_exc in
+    let start_tm = Time.unix_time_to_tm ~time_zone_of_tm:`Local start in
+    let end_exc_tm = Time.unix_time_to_tm ~time_zone_of_tm:`Local end_exc in
     let search_years_ahead = end_exc_tm.tm_year - start_tm.tm_year + 1 in
     matching_tm_seq ~search_years_ahead t start_tm
-    |> Seq.map (Time.tm_to_time `UTC)
+    |> Seq.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
     |> Seq.map (fun time -> (time, time +^ 1L))
-    (* |> Time_slot_ds.intersect (List.to_seq time_slots) *)
-    (* |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:false *)
+    |> Time_slot_ds.intersect (List.to_seq time_slots)
+    |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:false
 
 (* let next_match_int64 ?(time_slots : Time_slot_ds.t list = []) ~normalize_dir
  *     ~search_years_ahead (t : t) (time : int64) : int64 option =

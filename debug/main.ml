@@ -677,8 +677,8 @@ let debug_time_pattern_matching_time_slots () =
      *      }) *)
     Unix.time () |> Unix.localtime
   in
-  let start = Time.tm_to_time `Local tm in
-  let end_exc = Time.tm_to_time `Local { tm with tm_year = tm.tm_year + 1 } in
+  let start = Time.tm_to_unix_time ~time_zone_of_tm:`Local tm in
+  let end_exc = Time.tm_to_unix_time ~time_zone_of_tm:`Local { tm with tm_year = tm.tm_year + 1 } in
   let time_slots = [ (start, end_exc) ] in
   let pattern =
     let open Daypack_lib.Time_pattern in
@@ -697,12 +697,12 @@ let debug_time_pattern_matching_time_slots () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        (Time.Print.time_to_date_string `UTC start)
-        (Time.Print.time_to_date_string `UTC end_exc))
+        (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
+        (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc))
 
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
-  let start = Time.cur_time_utc_min () in
+  let start = Time.cur_unix_time_min () in
   let end_exc = Int64.add start (Int64.mul 10_000L 60L) in
   let periods =
     let open Time_pattern in

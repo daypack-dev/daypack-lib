@@ -95,16 +95,16 @@ module Print = struct
     Printf.sprintf "%d-%02d-%02d_%02d:%02d" (tm.tm_year + tm_year_offset) (tm.tm_mon + 1) tm.tm_mday tm.tm_hour
       tm.tm_min
 
-  let time_to_date_string ~(time_zone : time_zone) (time : int64) : string =
-    let tm = time_to_tm mode time in
+  let time_to_date_string ~(display_in_time_zone : time_zone) (time : int64) : string =
+    let tm = unix_time_to_tm ~time_zone_of_tm:display_in_time_zone time in
     tm_to_date_string tm
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
-      (mode : mode) (time : int64) : string =
+      ~(display_in_time_zone : time_zone) (time : int64) : string =
     Debug_print.bprintf ~indent_level buffer "%s\n"
-      (time_to_date_string mode time);
+      (time_to_date_string ~display_in_time_zone time);
     Buffer.contents buffer
 
-  let debug_print_time ?(indent_level = 0) (mode : mode) (time : int64) : unit =
-    print_string (debug_string_of_time ~indent_level mode time)
+  let debug_print_time ?(indent_level = 0) ~(display_in_time_zone : time_zone) (time : int64) : unit =
+    print_string (debug_string_of_time ~indent_level ~display_in_time_zone time)
 end
