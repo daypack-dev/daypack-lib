@@ -712,14 +712,14 @@ let debug_time_profile_matching_time_slots_of_periods () =
     [
       ( {
         years = [];
-        months = [ ];
+        months = [];
         days = `Month_days [ 1 ];
         hours = [];
         minutes = [];
       },
         {
           years = [];
-          months = [ ];
+          months = [];
           days = `Month_days [ 1 ];
           hours = [];
           minutes = [];

@@ -111,15 +111,20 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
       OSeq.(start --^ day_count)
 
 let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
-  let start = if acc.tm_year = start.tm_year then
-      Time.month_of_int start.tm_mon else `Jan in
+  let start =
+    if acc.tm_year = start.tm_year then Time.month_of_int start.tm_mon else `Jan
+  in
   match t.months with
-  | [] -> Seq.map (fun tm_mon -> { acc with tm_mon }) OSeq.((Time.int_of_month start) --^ 12)
+  | [] ->
+    Seq.map
+      (fun tm_mon -> { acc with tm_mon })
+      OSeq.(Time.int_of_month start --^ 12)
   | pat_mon_list ->
     pat_mon_list
     |> List.to_seq
     |> Seq.filter (fun pat_mon -> Time.month_le start pat_mon)
-    |> Seq.map (fun pat_mon -> { acc with tm_mon = Time.int_of_month pat_mon })
+    |> Seq.map (fun pat_mon ->
+        { acc with tm_mon = Time.int_of_month pat_mon })
 
 let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
   : Unix.tm Seq.t =
@@ -223,8 +228,12 @@ module Print = struct
   let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
-    let aux_months l = String.concat "," (List.map Time.Print.month_to_string l) in
-    let aux_week_days l = String.concat "," (List.map Time.Print.week_day_to_string l) in
+    let aux_months l =
+      String.concat "," (List.map Time.Print.month_to_string l)
+    in
+    let aux_week_days l =
+      String.concat "," (List.map Time.Print.week_day_to_string l)
+    in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : [%s]\n"
       (aux t.years);
