@@ -3235,8 +3235,10 @@ module Print = struct
            (fun (id, start, end_exc) ->
               Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
                 "%s - %s | %s\n"
-                (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
-                (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc)
+                (Time.Print.time_to_date_string ~display_in_time_zone:`Local
+                   start)
+                (Time.Print.time_to_date_string ~display_in_time_zone:`Local
+                   end_exc)
                 (Task_ds.task_seg_id_to_string id))
            bucket)
       sd.agenda.indexed_by_start;
