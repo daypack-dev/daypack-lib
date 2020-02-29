@@ -13,7 +13,9 @@ let unix_time_to_tm ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
   time *^ 60L
   |> Int64.to_float
   |> fun x ->
-  match time_zone_of_tm with `Local -> Unix.localtime x | `UTC -> Unix.gmtime x
+  match time_zone_of_tm with
+  | `Local -> Unix.localtime x
+  | `UTC -> Unix.gmtime x
 
 let tm_to_unix_time ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
   tm
@@ -92,10 +94,12 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
 
 module Print = struct
   let tm_to_date_string (tm : Unix.tm) : string =
-    Printf.sprintf "%d-%02d-%02d_%02d:%02d" (tm.tm_year + tm_year_offset) (tm.tm_mon + 1) tm.tm_mday tm.tm_hour
-      tm.tm_min
+    Printf.sprintf "%d-%02d-%02d_%02d:%02d"
+      (tm.tm_year + tm_year_offset)
+      (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min
 
-  let time_to_date_string ~(display_in_time_zone : time_zone) (time : int64) : string =
+  let time_to_date_string ~(display_in_time_zone : time_zone) (time : int64) :
+    string =
     let tm = unix_time_to_tm ~time_zone_of_tm:display_in_time_zone time in
     tm_to_date_string tm
 
@@ -105,6 +109,7 @@ module Print = struct
       (time_to_date_string ~display_in_time_zone time);
     Buffer.contents buffer
 
-  let debug_print_time ?(indent_level = 0) ~(display_in_time_zone : time_zone) (time : int64) : unit =
+  let debug_print_time ?(indent_level = 0) ~(display_in_time_zone : time_zone)
+      (time : int64) : unit =
     print_string (debug_string_of_time ~indent_level ~display_in_time_zone time)
 end

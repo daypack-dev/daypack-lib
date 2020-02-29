@@ -61,8 +61,7 @@ let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     else 0
   in
   match t.minutes with
-  | [] -> Seq.map (fun tm_min ->
-      { acc with tm_min }) OSeq.(start --^ 60)
+  | [] -> Seq.map (fun tm_min -> { acc with tm_min }) OSeq.(start --^ 60)
   | pat_min_list ->
     pat_min_list
     |> List.to_seq

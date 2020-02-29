@@ -678,7 +678,10 @@ let debug_time_pattern_matching_time_slots () =
     Unix.time () |> Unix.localtime
   in
   let start = Time.tm_to_unix_time ~time_zone_of_tm:`Local tm in
-  let end_exc = Time.tm_to_unix_time ~time_zone_of_tm:`Local { tm with tm_year = tm.tm_year + 1 } in
+  let end_exc =
+    Time.tm_to_unix_time ~time_zone_of_tm:`Local
+      { tm with tm_year = tm.tm_year + 1 }
+  in
   let time_slots = [ (start, end_exc) ] in
   let pattern =
     let open Daypack_lib.Time_pattern in
