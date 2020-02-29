@@ -62,7 +62,6 @@ let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   in
   match t.minutes with
   | [] -> Seq.map (fun tm_min ->
-      Printf.printf "test : %d\n" tm_min;
       { acc with tm_min }) OSeq.(start --^ 60)
   | pat_min_list ->
     pat_min_list
