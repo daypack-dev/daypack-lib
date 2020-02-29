@@ -912,9 +912,9 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_pattern_matching_time_slots ();
- *   print_newline () *)
+let () =
+  debug_time_pattern_matching_time_slots ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
@@ -924,6 +924,6 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_pattern_next_match_int64 ();
  *   print_newline () *)
 
-let () =
-  debug_time_profile_matching_time_slots_of_periods ();
-  print_newline ()
+(* let () =
+ *   debug_time_profile_matching_time_slots_of_periods ();
+ *   print_newline () *)
