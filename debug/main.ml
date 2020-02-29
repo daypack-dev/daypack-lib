@@ -686,7 +686,7 @@ let debug_time_pattern_matching_time_slots () =
       years = [];
       months = [ 1 ];
       days = `Month_days [];
-      hours = [ 11 ];
+      hours = [ 13 ];
       minutes = [];
     }
   in
