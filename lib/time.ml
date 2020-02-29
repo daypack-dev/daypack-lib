@@ -243,28 +243,28 @@ end
 module Print = struct
   let week_day_to_string (wday : week_day) : string =
     match wday with
-    | `Sun -> "sun"
-    | `Mon -> "mon"
-    | `Tue -> "tue"
-    | `Wed -> "wed"
-    | `Thu -> "thu"
-    | `Fri -> "fri"
-    | `Sat -> "sat"
+    | `Sun -> "Sun"
+    | `Mon -> "Mon"
+    | `Tue -> "Tue"
+    | `Wed -> "Wed"
+    | `Thu -> "Thu"
+    | `Fri -> "Fri"
+    | `Sat -> "Sat"
 
   let month_to_string (month : month) : string =
     match month with
-    | `Jan -> "jan"
-    | `Feb -> "feb"
-    | `Mar -> "mar"
-    | `Apr -> "apr"
-    | `May -> "may"
-    | `Jun -> "jun"
-    | `Jul -> "jul"
-    | `Aug -> "aug"
-    | `Sep -> "sep"
-    | `Oct -> "oct"
-    | `Nov -> "nov"
-    | `Dec -> "dec"
+    | `Jan -> "Jan"
+    | `Feb -> "Feb"
+    | `Mar -> "Mar"
+    | `Apr -> "Apr"
+    | `May -> "May"
+    | `Jun -> "Jun"
+    | `Jul -> "Jul"
+    | `Aug -> "Aug"
+    | `Sep -> "Sep"
+    | `Oct -> "Oct"
+    | `Nov -> "Nov"
+    | `Dec -> "Dec"
 
   let tm_to_date_string (tm : Unix.tm) : string =
     Printf.sprintf "%d-%02d-%02d_%02d:%02d"
