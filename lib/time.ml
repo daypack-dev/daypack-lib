@@ -1,8 +1,85 @@
 open Int64_utils
 
+type week_day = [
+  | 	`Sun
+  | 	`Mon
+  | 	`Tue
+  | 	`Wed
+  | 	`Thu
+  | 	`Fri
+  | 	`Sat
+]
+
+type month = [
+    `Jan
+  | `Feb
+  | `Mar
+  | `Apr
+
+| 	`May
+| 	`Jun
+| 	`Jul
+| 	`Aug
+| 	`Sep
+| 	`Oct
+| 	`Nov
+| 	`Dec]
+
 let first_mday = 1
 
 let tm_year_offset = 1900
+
+let int_of_week_day (wday : week_day) : int =
+  match wday with
+  | `Sun -> 0
+  | `Mon -> 1
+  | 	`Tue -> 2
+  | 	`Wed -> 3
+  | 	`Thu -> 3
+  | 	`Fri -> 3
+  | 	`Sat -> 3
+
+let week_day_of_int (x : int) : week_day =
+  match x with
+  | 0 -> `Sun
+  | 1 -> `Mon
+  | 2 -> `Tue
+  | 3 -> `Wed
+  | 4 -> `Thu
+  | 5 -> `Fri
+  | 6 -> `Sat
+  | _ -> failwith "Invalid wday int"
+
+let int_of_month (month : month) : int =
+  match month with
+  | `Jan -> 0
+  | `Feb -> 1
+  | `Mar -> 2
+  | `Apr -> 3
+  | 	`May -> 4
+  | 	`Jun -> 5
+  | 	`Jul -> 6
+  | 	`Aug -> 7
+  | 	`Sep -> 8
+  | 	`Oct -> 9
+  | 	`Nov -> 10
+  | 	`Dec -> 11
+
+let month_of_int (x : int) : month =
+  match x with
+  | 0 -> `Jan
+  | 1 -> `Feb
+  | 2 -> `Mar
+  | 3 -> `Apr
+  | 4 -> `May
+  | 5 -> `Jun
+  | 6 -> `Jul
+  | 7 -> `Aug
+  | 8 -> `Sep
+  | 9 -> `Oct
+  | 10 -> `Nov
+  | 11 -> `Dec
+  | _ -> failwith "Invalid month int"
 
 type time_zone =
   [ `Local
