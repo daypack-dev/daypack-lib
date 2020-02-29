@@ -712,15 +712,15 @@ let debug_time_profile_matching_time_slots_of_periods () =
     [
       ( {
         years = [];
-        months = [ 5 ];
-        days = `Month_days [];
+        months = [ ];
+        days = `Month_days [ 1 ];
         hours = [];
         minutes = [];
       },
         {
           years = [];
-          months = [ 5 ];
-          days = `Month_days [];
+          months = [ ];
+          days = `Month_days [ 1 ];
           hours = [];
           minutes = [];
         } );
@@ -731,7 +731,9 @@ let debug_time_profile_matching_time_slots_of_periods () =
   |> OSeq.take 10
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
-      Printf.printf "  [%Ld, %Ld)\n" start end_exc)
+      Printf.printf "  [%s, %s)\n"
+        (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
+        (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc))
 
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";
@@ -910,9 +912,9 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
-let () =
-  debug_time_pattern_matching_time_slots ();
-  print_newline ()
+(* let () =
+ *   debug_time_pattern_matching_time_slots ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
@@ -922,6 +924,6 @@ let () =
  *   debug_time_pattern_next_match_int64 ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_profile_matching_time_slots_of_periods ();
- *   print_newline () *)
+let () =
+  debug_time_profile_matching_time_slots_of_periods ();
+  print_newline ()
