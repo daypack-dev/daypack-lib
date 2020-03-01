@@ -27,7 +27,6 @@ module Serialize = struct
     |> String_map.to_seq
     |> Seq.map Time_profile.Serialize.pack_profile
     |> List.of_seq
-
 end
 
 module Deserialize = struct
@@ -43,33 +42,28 @@ module Deserialize = struct
   let read_from_dir ~(dir : string) (t : t) : (t, string) result =
     try
       let profiles =
-      Sys.readdir dir
-      |> Array.to_list
-      |> List.filter_map (fun s ->
-          Filename.chop_suffix_opt ~suffix:".json" s
-          |> Option.map (fun name ->
-              (name, Filename.concat dir s)
-            )
-        )
-      |> List.map (fun (profile, path) ->
-          let ic = open_in path in
-          Fun.protect ~finally:(fun () -> close_in ic)
-            (fun () ->
-               let s = really_input_string ic (in_channel_length ic) in
-               profile, s
-            )
-        )
-      |> List.map (fun (profile, s) ->
-          let data =
-            s |> Time_profile_j.data_of_string
-            |> Time_profile.Deserialize.unpack_data
-          in
-          profile, data
-        )
-      |> List.to_seq
-      |> String_map.of_seq
+        Sys.readdir dir
+        |> Array.to_list
+        |> List.filter_map (fun s ->
+            Filename.chop_suffix_opt ~suffix:".json" s
+            |> Option.map (fun name -> (name, Filename.concat dir s)))
+        |> List.map (fun (profile, path) ->
+            let ic = open_in path in
+            Fun.protect
+              ~finally:(fun () -> close_in ic)
+              (fun () ->
+                 let s = really_input_string ic (in_channel_length ic) in
+                 (profile, s)))
+        |> List.map (fun (profile, s) ->
+            let data =
+              s
+              |> Time_profile_j.data_of_string
+              |> Time_profile.Deserialize.unpack_data
+            in
+            (profile, data))
+        |> List.to_seq
+        |> String_map.of_seq
       in
       Ok { profiles }
-    with
-    | Sys_error msg -> Error msg
+    with Sys_error msg -> Error msg
 end
