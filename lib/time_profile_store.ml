@@ -42,8 +42,7 @@ module Serialize = struct
               ~finally:(fun () -> close_out oc)
               (fun () -> output_string oc data));
         Ok () )
-      else
-        Error "File is not a directory"
+      else Error "File is not a directory"
     with Sys_error msg -> Error msg
 end
 

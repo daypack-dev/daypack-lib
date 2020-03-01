@@ -592,16 +592,23 @@ let debug_sched_usage_simulation () =
   print_endline "=====";
   print_endline "Serializing";
   Printf.printf "cwd : %s\n" (Sys.getcwd ());
-  (match Sched_ver_history.Serialize.write_to_dir ~dir:"test" sched_ver_history with
-  | Ok () -> print_endline "Okay"
-  | Error msg -> print_endline msg);
+  ( match
+      Sched_ver_history.Serialize.write_to_dir ~dir:"test" sched_ver_history
+    with
+    | Ok () -> print_endline "Okay"
+    | Error msg -> print_endline msg );
   print_endline "=====";
   print_endline "Deserializing";
   Printf.printf "cwd : %s\n" (Sys.getcwd ());
   let sched_ver_history =
-  (match Sched_ver_history.Deserialize.read_from_dir ~dir:"test" with
-  | Ok x -> print_endline "Okay"; x
-  | Error msg -> print_endline msg; failwith "Deserialization failed") in
+    match Sched_ver_history.Deserialize.read_from_dir ~dir:"test" with
+    | Ok x ->
+      print_endline "Okay";
+      x
+    | Error msg ->
+      print_endline msg;
+      failwith "Deserialization failed"
+  in
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
   (* Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history; *)

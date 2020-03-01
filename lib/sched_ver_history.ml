@@ -243,7 +243,7 @@ module Serialize = struct
 
   let write_to_dir ~(dir : string) (t : t) : (unit, string) result =
     try
-      if Sys.is_directory dir then
+      if Sys.is_directory dir then (
         match to_base_and_diffs t with
         | None -> Ok ()
         | Some (base, diffs) ->
@@ -258,14 +258,14 @@ module Serialize = struct
           |> OSeq.iteri (fun i sched_diff_str ->
               let oc =
                 open_out
-                  (Filename.concat dir (Printf.sprintf "sched_v%d.json" (i + 1)))
+                  (Filename.concat dir
+                     (Printf.sprintf "sched_v%d.json" (i + 1)))
               in
               Fun.protect
                 ~finally:(fun () -> close_out oc)
                 (fun () -> output_string oc sched_diff_str));
-          Ok ()
-      else
-        Error "File is not a directory"
+          Ok () )
+      else Error "File is not a directory"
     with Sys_error msg -> Error msg
 end
 
@@ -299,8 +299,9 @@ module Deserialize = struct
         Sys.readdir dir
         |> Array.to_seq
         |> Seq.filter_map (fun s ->
-            try Scanf.sscanf s "sched_v%d.json" (fun i ->
-                if i = 0 then None else Some (i, s))
+            try
+              Scanf.sscanf s "sched_v%d.json" (fun i ->
+                  if i = 0 then None else Some (i, s))
             with Stdlib.Scanf.Scan_failure _ -> None)
         |> Seq.map (fun (i, s) ->
             let ic = open_in (Filename.concat dir s) in
