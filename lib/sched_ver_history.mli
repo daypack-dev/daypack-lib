@@ -65,6 +65,8 @@ module Serialize : sig
     Sched.sched list -> (Sched.sched * Sched.sched_diff list) option
 
   val to_base_and_diffs : t -> (Sched.sched * Sched.sched_diff list) option
+
+  val write_to_dir : dir:string -> t -> (unit, string) result
 end
 
 module Deserialize : sig
@@ -72,6 +74,8 @@ module Deserialize : sig
     Sched.sched -> Sched.sched_diff list -> Sched.sched list
 
   val of_base_and_diffs : Sched.sched -> Sched.sched_diff list -> t
+
+  val read_from_dir : dir:string -> (t, string) result
 end
 
 module Print : sig

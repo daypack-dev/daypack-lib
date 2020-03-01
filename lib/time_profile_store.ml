@@ -30,8 +30,7 @@ module Serialize = struct
 
   let write_to_dir ~(dir : string) (t : t) : (unit, string) result =
     try
-      if Sys.is_directory dir then Error "File is not a directory"
-      else (
+      if Sys.is_directory dir then (
         t.profiles
         |> String_map.to_seq
         |> Seq.map (fun (name, data) ->
@@ -43,6 +42,8 @@ module Serialize = struct
               ~finally:(fun () -> close_out oc)
               (fun () -> output_string oc data));
         Ok () )
+      else
+        Error "File is not a directory"
     with Sys_error msg -> Error msg
 end
 
