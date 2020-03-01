@@ -258,7 +258,7 @@ module Serialize = struct
           |> OSeq.iteri (fun i sched_diff_str ->
               let oc =
                 open_out
-                  (Filename.concat dir (Printf.sprintf "sched_v%d.json" i))
+                  (Filename.concat dir (Printf.sprintf "sched_v%d.json" (i + 1)))
               in
               Fun.protect
                 ~finally:(fun () -> close_out oc)
@@ -299,7 +299,8 @@ module Deserialize = struct
         Sys.readdir dir
         |> Array.to_seq
         |> Seq.filter_map (fun s ->
-            try Scanf.sscanf s "sched_v%d.json" (fun i -> Some (i, s))
+            try Scanf.sscanf s "sched_v%d.json" (fun i ->
+                if i = 0 then None else Some (i, s))
             with Stdlib.Scanf.Scan_failure _ -> None)
         |> Seq.map (fun (i, s) ->
             let ic = open_in (Filename.concat dir s) in
