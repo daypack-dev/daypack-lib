@@ -298,26 +298,17 @@ module Deserialize = struct
         Sys.readdir dir
         |> Array.to_seq
         |> Seq.filter_map (fun s ->
-            try
-              Scanf.sscanf s "sched_v%d.json" (fun i ->
-                  Some (i, s)
-                )
-            with
-              Stdlib.Scanf.Scan_failure _ -> None
-          )
+            try Scanf.sscanf s "sched_v%d.json" (fun i -> Some (i, s))
+            with Stdlib.Scanf.Scan_failure _ -> None)
         |> Seq.map (fun (i, s) ->
             let ic = open_in (Filename.concat dir s) in
-            (i,
-             Fun.protect ~finally:(fun () -> close_in ic)
-               (fun () ->
-                  really_input_string ic (in_channel_length ic)
-               )
-            )
-          )
+            ( i,
+              Fun.protect
+                ~finally:(fun () -> close_in ic)
+                (fun () -> really_input_string ic (in_channel_length ic)) ))
         |> OSeq.sort ~cmp:(fun (i1, _) (i2, _) -> compare i1 i2)
         |> Seq.map (fun (_i, s) ->
-            Sched.Deserialize.sched_diff_of_json_string s
-          )
+            Sched.Deserialize.sched_diff_of_json_string s)
         |> List.of_seq
       in
       Ok (of_base_and_diffs base diffs)
