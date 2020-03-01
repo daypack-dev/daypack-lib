@@ -1251,7 +1251,8 @@ module Progress = struct
               (id1, id2, id3, task_seg_part, sub_id))
       in
       sched
-      |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false task_inst_id
+      |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false
+        task_inst_id
       |> Task_inst.add_task_inst_completed task_inst_id task_inst_data
       |> fun sched ->
       Seq.fold_left
@@ -1265,7 +1266,8 @@ module Progress = struct
     | None -> sched
     | Some task_inst_data ->
       sched
-      |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false task_inst_id
+      |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false
+        task_inst_id
       |> Task_inst.add_task_inst_uncompleted task_inst_id task_inst_data
 
   let add_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
@@ -1782,10 +1784,11 @@ module Recur = struct
     match task_data.task_type with
     | Task_ds.One_off -> Seq.empty
     | Task_ds.Recurring recur ->
-      let usable_time_slots =
+      let usable_time_slot_seq =
         Time_slot_ds.invert ~start ~end_exc
           (List.to_seq recur.excluded_time_slots)
       in
+      let usable_time_slot_list = List.of_seq usable_time_slot_seq in
       ( match recur.recur_type with
         | Task_ds.Arithemtic_seq
             ( { start = seq_start; end_exc = seq_end_exc; diff },
@@ -1809,7 +1812,13 @@ module Recur = struct
           in
           let end_exc = min seq_end_exc end_exc in
           aux start end_exc diff task_inst_data sched_req_template
-        | Task_ds.Time_pattern_match _ -> failwith "Unimplemented" )
+        | Task_ds.Time_pattern_match
+            (pattern, { task_inst_data; sched_req_template }) ->
+          Time_pattern.matching_time_slots pattern usable_time_slot_list
+          |> Seq.map (fun (start', _end_exc) ->
+              ( task_inst_data,
+                Sched_req_data_unit_skeleton.shift_time_list ~offset:start'
+                  sched_req_template )) )
       |> Seq.filter (fun (_task_inst_data, sched_req_template) ->
           match
             Task_ds.sched_req_template_bound_on_start_and_end_exc
@@ -1818,7 +1827,7 @@ module Recur = struct
           | None -> true
           | Some bound ->
             Time_slot_ds.a_is_subset_of_b ~a:(Seq.return bound)
-              ~b:usable_time_slots)
+              ~b:usable_time_slot_seq)
 
   let instance_recorded_already (task_id : Task_ds.task_id)
       (task_inst_data : Task_ds.task_inst_data)
@@ -3225,7 +3234,11 @@ module Print = struct
          Task_seg_place_set.iter
            (fun (id, start, end_exc) ->
               Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
-                "%Ld - %Ld | %s\n" start end_exc
+                "%s - %s | %s\n"
+                (Time.Print.time_to_date_string ~display_in_time_zone:`Local
+                   start)
+                (Time.Print.time_to_date_string ~display_in_time_zone:`Local
+                   end_exc)
                 (Task_ds.task_seg_id_to_string id))
            bucket)
       sd.agenda.indexed_by_start;

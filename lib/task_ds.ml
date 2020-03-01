@@ -1,7 +1,5 @@
 open Int64_utils
 
-type time_pattern = unit
-
 type arith_seq = {
   start : int64;
   end_exc : int64;
@@ -30,7 +28,7 @@ and task_type =
 
 and recur_type =
   | Arithemtic_seq of arith_seq * recur_data
-  | Time_pattern_match of time_pattern * recur_data
+  | Time_pattern_match of Time_pattern.t * recur_data
 
 and recur = {
   excluded_time_slots : Time_slot_ds.t list;
@@ -142,7 +140,10 @@ module Serialize = struct
     match recur_type with
     | Arithemtic_seq (arith_seq, recur_data) ->
       `Arithmetic_seq (pack_arith_seq arith_seq, pack_recur_data recur_data)
-    | Time_pattern_match _ -> failwith "Unimplemented"
+    | Time_pattern_match (pattern, recur_data) ->
+      `Time_pattern_match
+        ( Time_pattern.Serialize.pack_pattern pattern,
+          pack_recur_data recur_data )
 
   and pack_recur (recur : recur) : Task_ds_t.recur =
     {
@@ -221,6 +222,10 @@ module Deserialize = struct
     match recur_type with
     | `Arithmetic_seq (arith_seq, recur_data) ->
       Arithemtic_seq (unpack_arith_seq arith_seq, unpack_recur_data recur_data)
+    | `Time_pattern_match (pattern, recur_data) ->
+      Time_pattern_match
+        ( Time_pattern.Deserialize.unpack_pattern pattern,
+          unpack_recur_data recur_data )
 
   and unpack_recur (recur : Task_ds_t.recur) : recur =
     {
@@ -275,6 +280,19 @@ module Deserialize = struct
 end
 
 module Print = struct
+  let debug_string_of_sched_req_template ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (sched_req_template : sched_req_template) :
+    string =
+    List.iter
+      (fun x ->
+         Sched_req_data_unit_skeleton.Print
+         .debug_string_of_sched_req_data_unit_skeleton ~buffer ~indent_level
+           ~string_of_data:Int64.to_string ~string_of_time:Int64.to_string
+           ~string_of_time_slot:Time_slot_ds.to_string x
+         |> ignore)
+      sched_req_template;
+    Buffer.contents buffer
+
   let debug_string_of_arith_seq ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) arith_seq =
     Debug_print.bprintf ~indent_level buffer "{";
@@ -326,104 +344,21 @@ module Print = struct
               "diff : %Ld\n" diff;
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "sched req template :\n";
-            List.iter
-              (* (fun sched_req_template ->
-               *    match sched_req_template with
-               *    | Sched_req_data_unit_skeleton.Fixed
-               *        { task_seg_related_data; start } ->
-               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-               *        "fixed : size : %Ld, start : %Ld\n" task_seg_related_data
-               *        start
-               *    | Shift (l, time_slots) ->
-               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-               *        "shift :\n";
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "sizes :\n";
-               *      List.iter
-               *        (fun size ->
-               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
-               *             buffer "%Ld\n" size)
-               *        l;
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "time slots :";
-               *      List.iter
-               *        (fun (start, end_exc) ->
-               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
-               *             buffer "[%Ld, %Ld)\n" start end_exc)
-               *        time_slots
-               *    | Split_and_shift (size, time_slots) ->
-               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-               *        "split and shift :";
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "size : %Ld\n" size;
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "time slots :";
-               *      List.iter
-               *        (fun (start, end_exc) ->
-               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
-               *             buffer "[%Ld, %Ld)\n" start end_exc)
-               *        time_slots
-               *    | Split_even { task_seg_related_data; time_slots; buckets } ->
-               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-               *        "split even :";
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "size : %Ld\n" task_seg_related_data;
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "time slots :";
-               *      List.iter
-               *        (fun (start, end_exc) ->
-               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
-               *             buffer "[%Ld, %Ld)\n" start end_exc)
-               *        time_slots;
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "buckets :";
-               *      List.iter
-               *        (fun (start, end_exc) ->
-               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
-               *             buffer "[%Ld, %Ld)\n" start end_exc)
-               *        buckets
-               *    | Time_share (sizes, time_slots) ->
-               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-               *        "time share :";
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "sizes :";
-               *      List.iter
-               *        (fun size ->
-               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
-               *             buffer "%Ld\n" size)
-               *        sizes;
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "time slots :";
-               *      List.iter
-               *        (fun (start, end_exc) ->
-               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
-               *             buffer "[%Ld, %Ld)\n" start end_exc)
-               *        time_slots
-               *    | Push_toward (size, target, time_slots) ->
-               *      Debug_print.bprintf ~indent_level:(indent_level + 3) buffer
-               *        "push to :";
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "direction : %s\n"
-               *        (match dir with `Front -> "front" | `Back -> "right");
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "size : %Ld\n" size;
-               *      Debug_print.bprintf ~indent_level:(indent_level + 4) buffer
-               *        "time slots :";
-               *      List.iter
-               *        (fun (start, end_exc) ->
-               *           Debug_print.bprintf ~indent_level:(indent_level + 5)
-               *             buffer "[%Ld, %Ld)\n" start end_exc)
-               *        time_slots) *)
-              (fun x ->
-                 Sched_req_data_unit_skeleton.Print
-                 .debug_string_of_sched_req_data_unit_skeleton ~buffer
-                   ~indent_level:(indent_level + 3)
-                   ~string_of_data:Int64.to_string
-                   ~string_of_time:Int64.to_string
-                   ~string_of_time_slot:Time_slot_ds.to_string x
-                 |> ignore)
-              sched_req_template
-          | Time_pattern_match _ -> failwith "Unimplemented" ) );
+            debug_string_of_sched_req_template ~indent_level:(indent_level + 3)
+              ~buffer sched_req_template
+            |> ignore
+          | Time_pattern_match
+              (pattern, { task_inst_data = _; sched_req_template }) ->
+            Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+              "recur type : time pattern\n";
+            Time_pattern.Print.debug_string_of_pattern
+              ~indent_level:(indent_level + 2) ~buffer pattern
+            |> ignore;
+            Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+              "sched req template :\n";
+            debug_string_of_sched_req_template ~indent_level:(indent_level + 3)
+              ~buffer sched_req_template
+            |> ignore ) );
     Buffer.contents buffer
 
   let debug_string_of_task_inst ?(indent_level = 0)

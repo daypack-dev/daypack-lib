@@ -10,11 +10,6 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     time_slots
     |> Time_slot_ds.normalize_list_in_seq_out
     |> Time_slot_ds.intersect free_time_slots
-    |> fun time_slots ->
-    Seq.iter
-      (fun time_slot -> Printf.printf "%s\n" (Time_slot_ds.to_string time_slot))
-      time_slots;
-    time_slots
   in
   Seq.flat_map
     (fun sched_req_record_data ->
