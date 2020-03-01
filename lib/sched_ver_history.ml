@@ -241,7 +241,7 @@ module Serialize = struct
   let to_base_and_diffs (t : t) : (Sched.sched * Sched.sched_diff list) option =
     list_to_base_and_diffs t.history
 
-  (* let save_to_dir ~(dir : string) (t : t) : (unit, unit) result = *)
+  (* let save_to_dir ~(dir : string) (t : t) : (unit, string) result = *)
 end
 
 module Deserialize = struct

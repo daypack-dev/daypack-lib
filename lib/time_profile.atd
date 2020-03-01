@@ -1,0 +1,7 @@
+type time_pattern <ocaml from="Time_pattern" t="t"> = abstract
+
+type period = (time_pattern * time_pattern)
+
+type data = {
+  periods : period list;
+}
