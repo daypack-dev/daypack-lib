@@ -3,7 +3,7 @@ type t = { mutable profiles : Time_profile.data String_map.t }
 let make_empty () : t = { profiles = String_map.empty }
 
 let matching_time_slots_of_profile =
-  let cache : (string, Time_slot_ds.t list) Hashtbl.t = Hashtbl.create 100 in
+  let cache : (string, Time_slot_ds.t list) Hashtbl.t = Hashtbl.create 20 in
   fun ~start ~end_exc ~(profile : string) (t : t) ->
     ( match Hashtbl.find_opt cache profile with
       | None ->
