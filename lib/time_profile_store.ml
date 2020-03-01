@@ -35,17 +35,14 @@ module Serialize = struct
         t.profiles
         |> String_map.to_seq
         |> Seq.map (fun (name, data) ->
-            ( name,
-              Time_profile.Serialize.json_string_of_data data
-               ))
+            (name, Time_profile.Serialize.json_string_of_data data))
         |> Seq.iter (fun (name, data) ->
             let path = Filename.concat dir name in
             let oc = open_out path in
             Fun.protect
               ~finally:(fun () -> close_out oc)
               (fun () -> output_string oc data));
-      Ok ()
-      )
+        Ok () )
     with Sys_error msg -> Error msg
 end
 
