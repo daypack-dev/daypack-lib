@@ -284,6 +284,44 @@ module Deserialize = struct
   let of_base_and_diffs base diffs : t =
     let history = list_of_base_and_diffs base diffs in
     { history }
+
+  let read_from_dir ~(dir : string) : (t, string) result =
+    try
+      let base =
+        let ic = open_in (Filename.concat dir "sched_v0.json") in
+        Fun.protect
+          ~finally:(fun () -> close_in ic)
+          (fun () -> really_input_string ic (in_channel_length ic))
+        |> Sched.Deserialize.sched_of_json_string
+      in
+      let diffs =
+        Sys.readdir dir
+        |> Array.to_seq
+        |> Seq.filter_map (fun s ->
+            try
+              Scanf.sscanf s "sched_v%d.json" (fun i ->
+                  Some (i, s)
+                )
+            with
+              Stdlib.Scanf.Scan_failure _ -> None
+          )
+        |> Seq.map (fun (i, s) ->
+            let ic = open_in (Filename.concat dir s) in
+            (i,
+             Fun.protect ~finally:(fun () -> close_in ic)
+               (fun () ->
+                  really_input_string ic (in_channel_length ic)
+               )
+            )
+          )
+        |> OSeq.sort ~cmp:(fun (i1, _) (i2, _) -> compare i1 i2)
+        |> Seq.map (fun (_i, s) ->
+            Sched.Deserialize.sched_diff_of_json_string s
+          )
+        |> List.of_seq
+      in
+      Ok (of_base_and_diffs base diffs)
+    with Sys_error msg -> Error msg
 end
 
 module Print = struct
