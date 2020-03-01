@@ -2,6 +2,8 @@ type period = Time_pattern.t * Time_pattern.t
 
 type data = { periods : period list }
 
+type t = string * data
+
 (* let matching_tm_seq_of_periods ~search_years_ahead (start : Unix.tm) :
  *   (Unix.tm Seq.t =
  *   periods

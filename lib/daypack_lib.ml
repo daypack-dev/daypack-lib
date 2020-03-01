@@ -27,3 +27,5 @@ module Task_seg_place_set = Task_seg_place_set
 module Time = Time
 module Time_pattern = Time_pattern
 module Time_profile = Time_profile
+module Time_profile_store = Time_profile_store
+module String_map = String_map

@@ -5,3 +5,5 @@ type period = (time_pattern * time_pattern)
 type data = {
   periods : period list;
 }
+
+type t = (string * data)
