@@ -46,6 +46,9 @@ module Serialize = struct
 
   let pack_data (data : data) : Time_profile_t.data =
     { periods = pack_periods data.periods }
+
+  let pack_profile ((id, data) : t) : Time_profile_t.t =
+    (id, pack_data data)
 end
 
 module Deserialize = struct
@@ -58,4 +61,7 @@ module Deserialize = struct
 
   let unpack_data (data : Time_profile_t.data) : data =
     { periods = unpack_periods data.periods }
+
+  let unpack_profile ((id, data) : Time_profile_t.t) : t =
+    (id, unpack_data data)
 end
