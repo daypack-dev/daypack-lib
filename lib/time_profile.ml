@@ -36,6 +36,12 @@ let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
       OSeq.map2 (fun start end_exc -> (start, end_exc)) start_seq end_exc_seq)
   |> OSeq.merge
 
+let matching_time_slots_of_data ~start ~end_exc ( data : data) : Time_slot_ds.t Seq.t =
+  matching_time_slots_of_periods ~start ~end_exc data.periods
+
+let matching_time_slots_of_profile ~start ~end_exc ((_id, data) : t) : Time_slot_ds.t Seq.t =
+  matching_time_slots_of_periods ~start ~end_exc data.periods
+
 module Serialize = struct
   let pack_period (start, end_exc) : Time_profile_t.period =
     ( Time_pattern.Serialize.pack_pattern start,

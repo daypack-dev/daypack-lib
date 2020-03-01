@@ -1,5 +1,12 @@
 type t = Time_profile.data String_map.t
 
+let matching_time_slots_of_profile ~start ~end_exc ~(profile : string) (t : t) : Time_slot_ds.t Seq.t option =
+  String_map.find_opt profile t
+|>
+  Option.map (fun profile ->
+    Time_profile.matching_time_slots_of_data ~start ~end_exc profile
+    )
+
 module Serialize = struct
   let pack_store (t : t) : Time_profile_store_t.t =
     t |>
