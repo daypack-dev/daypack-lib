@@ -501,6 +501,10 @@ module Serialize : sig
 
   val pack_sched_req_ids : Int64_set.t -> int64 list
 
+  val pack_sched : sched -> Sched_t.sched
+
+  val pack_sched_diff : sched_diff -> Sched_t.sched_diff
+
   val json_string_of_sched : sched -> string
 
   val json_string_of_sched_diff : sched_diff -> string
@@ -559,6 +563,10 @@ module Deserialize : sig
     (int64 * Task_ds_t.task_seg_place list) list -> task_seg_place_map
 
   val unpack_sched_req_ids : int64 list -> Int64_set.t
+
+  val unpack_sched : Sched_t.sched -> sched
+
+  val unpack_sched_diff : Sched_t.sched_diff -> sched_diff
 
   val sched_of_json_string : string -> sched
 

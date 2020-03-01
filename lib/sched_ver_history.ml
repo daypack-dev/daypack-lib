@@ -241,7 +241,40 @@ module Serialize = struct
   let to_base_and_diffs (t : t) : (Sched.sched * Sched.sched_diff list) option =
     list_to_base_and_diffs t.history
 
-  (* let save_to_dir ~(dir : string) (t : t) : (unit, string) result = *)
+  let write_to_dir ~(dir : string) (t : t) : (unit, string) result =
+    try
+      if Sys.is_directory dir then Error "File is not a directory"
+      else
+        match to_base_and_diffs t with
+        | None -> Ok ()
+        | Some (base, diffs) -> (
+          begin
+            let base_str = Sched.Serialize.json_string_of_sched base in
+            let oc = open_out (Filename.concat dir "sched_v0.json") in
+            Fun.protect
+              ~finally:(fun () ->
+                  close_out oc
+                )
+              (fun () ->
+                  output_string oc base_str
+                )
+          end;
+          diffs
+          |> List.to_seq
+          |> Seq.map Sched.Serialize.json_string_of_sched_diff
+          |> OSeq.iteri (fun i sched_diff_str ->
+              let oc = open_out (Filename.concat dir
+                                   (Printf.sprintf "sched_v%d.json" i)) in
+              Fun.protect
+                ~finally:(fun () -> close_out oc)
+                (fun () ->
+                   output_string oc sched_diff_str
+                )
+            );
+          Ok ()
+        )
+    with
+    Sys_error msg -> Error msg
 end
 
 module Deserialize = struct

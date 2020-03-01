@@ -31,7 +31,7 @@ module Serialize = struct
   let write_to_dir ~(dir : string) (t : t) : (unit, string) result =
     try
       if Sys.is_directory dir then Error "File is not a directory"
-      else
+      else (
         t.profiles
         |> String_map.to_seq
         |> Seq.map (fun (name, data) ->
@@ -44,8 +44,9 @@ module Serialize = struct
             let oc = open_out path in
             Fun.protect
               ~finally:(fun () -> close_out oc)
-              (fun () -> output_string oc data))
-        |> Result.ok
+              (fun () -> output_string oc data));
+      Ok ()
+      )
     with Sys_error msg -> Error msg
 end
 
@@ -63,25 +64,24 @@ module Deserialize = struct
     try
       let profiles =
         Sys.readdir dir
-        |> Array.to_list
-        |> List.filter_map (fun s ->
+        |> Array.to_seq
+        |> Seq.filter_map (fun s ->
             Filename.chop_suffix_opt ~suffix:".json" s
             |> Option.map (fun name -> (name, Filename.concat dir s)))
-        |> List.map (fun (name, path) ->
+        |> Seq.map (fun (name, path) ->
             let ic = open_in path in
             Fun.protect
               ~finally:(fun () -> close_in ic)
               (fun () ->
                  let s = really_input_string ic (in_channel_length ic) in
                  (name, s)))
-        |> List.map (fun (name, s) ->
+        |> Seq.map (fun (name, s) ->
             let data =
               s
               |> Time_profile_j.data_of_string
               |> Time_profile.Deserialize.unpack_data
             in
             (name, data))
-        |> List.to_seq
         |> String_map.of_seq
       in
       Ok { profiles }
