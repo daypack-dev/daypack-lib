@@ -590,6 +590,20 @@ let debug_sched_usage_simulation () =
     (0L, 0L, 1L, 0L, None) (0L, 100L) sched_ver_history;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
+  print_endline "Serializing";
+  Printf.printf "cwd : %s\n" (Sys.getcwd ());
+  (match Sched_ver_history.Serialize.write_to_dir ~dir:"test" sched_ver_history with
+  | Ok () -> print_endline "Okay"
+  | Error msg -> print_endline msg);
+  print_endline "=====";
+  print_endline "Deserializing";
+  Printf.printf "cwd : %s\n" (Sys.getcwd ());
+  let sched_ver_history =
+  (match Sched_ver_history.Deserialize.read_from_dir ~dir:"test" with
+  | Ok x -> print_endline "Okay"; x
+  | Error msg -> print_endline msg; failwith "Deserialization failed") in
+  Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
+  print_endline "=====";
   (* Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history; *)
   (* ( match
    *     Sched_ver_history.Maybe_append_to_head.sched ~start:100L ~end_exc:200L
@@ -897,13 +911,13 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_union_time_slots ();
  *   print_newline () *)
 
-let () =
-  debug_sched_backtracking_search_pending ();
-  print_newline ()
-
 (* let () =
- *   debug_sched_usage_simulation ();
+ *   debug_sched_backtracking_search_pending ();
  *   print_newline () *)
+
+let () =
+  debug_sched_usage_simulation ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_normalize_pattern ();
