@@ -36,9 +36,8 @@ module Serialize = struct
         |> String_map.to_seq
         |> Seq.map (fun (name, data) ->
             ( name,
-              data
-              |> Time_profile.Serialize.pack_data
-              |> Time_profile_j.string_of_data ))
+              Time_profile.Serialize.json_string_of_data data
+               ))
         |> Seq.iter (fun (name, data) ->
             let path = Filename.concat dir name in
             let oc = open_out path in
@@ -76,12 +75,7 @@ module Deserialize = struct
                  let s = really_input_string ic (in_channel_length ic) in
                  (name, s)))
         |> Seq.map (fun (name, s) ->
-            let data =
-              s
-              |> Time_profile_j.data_of_string
-              |> Time_profile.Deserialize.unpack_data
-            in
-            (name, data))
+            (name, Time_profile.Deserialize.data_of_json_string s))
         |> String_map.of_seq
       in
       Ok { profiles }
