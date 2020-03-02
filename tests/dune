@@ -4,5 +4,7 @@
  (libraries qcheck
             qcheck-alcotest
             alcotest
-            daypack_lib)
+            daypack_lib
+            core
+            fileutils)
  )
