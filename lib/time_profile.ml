@@ -46,8 +46,7 @@ let matching_time_slots_of_profile ~start ~end_exc ((_id, data) : t) :
 
 module Equal = struct
   let period_equal ((pat11, pat12) : period) ((pat21, pat22) : period) : bool =
-    Time_pattern.Equal.equal pat11 pat21
-      && Time_pattern.Equal.equal pat12 pat22
+    Time_pattern.Equal.equal pat11 pat21 && Time_pattern.Equal.equal pat12 pat22
 
   let data_equal (d1 : data) (d2 : data) : bool =
     List.for_all2 period_equal d1.periods d2.periods

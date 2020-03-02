@@ -192,54 +192,37 @@ let time_slots_gen =
 let time_slots = QCheck.make ~print:Print_utils.time_slots time_slots_gen
 
 let weekday_gen : Daypack_lib.Time.weekday QCheck.Gen.t =
-  let open QCheck.Gen in
-  oneofl
-  [ `Sun
-  ; `Mon
-  ; `Tue
-  ; `Wed
-  ; `Thu
-  ; `Fri
-  ; `Sat
-  ]
+  QCheck.Gen.(oneofl [ `Sun; `Mon; `Tue; `Wed; `Thu; `Fri; `Sat ])
 
 let month_gen : Daypack_lib.Time.month QCheck.Gen.t =
   let open QCheck.Gen in
   oneofl
-  [ `Jan
-  ; `Feb
-  ; `Mar
-  ; `Apr
-  ; `May
-  ; `Jun
-  ; `Jul
-  ; `Aug
-  ; `Sep
-  ; `Oct
-  ; `Nov
-  ; `Dec
-  ]
+    [ `Jan; `Feb; `Mar; `Apr; `May; `Jun; `Jul; `Aug; `Sep; `Oct; `Nov; `Dec ]
 
 let days_gen : Daypack_lib.Time_pattern.days QCheck.Gen.t =
   let open QCheck.Gen in
   oneof
     [
       map (fun weekdays -> `Weekdays weekdays) (list weekday_gen);
-      map (fun month_days -> `Month_days month_days) (list (int_range 1 32))
+      map (fun month_days -> `Month_days month_days) (list (int_range 1 32));
     ]
 
 let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
   let open QCheck.Gen in
   map
     (fun (years, months, days, (hours, minutes)) ->
-       Daypack_lib.Time_pattern.{ years; months; days; hours; minutes }
-    )
-    (quad (list_size (int_bound 5) (int_range 1980 2100))
+       Daypack_lib.Time_pattern.{ years; months; days; hours; minutes })
+    (quad
+       (list_size (int_bound 5) (int_range 1980 2100))
        (list_size (int_bound 5) month_gen)
        days_gen
-       (pair (list_size (int_bound 5) (int_bound 24)) (list_size (int_bound 5) (int_bound 60))))
+       (pair
+          (list_size (int_bound 5) (int_bound 24))
+          (list_size (int_bound 5) (int_bound 60))))
 
-let time_pattern = QCheck.make ~print:Daypack_lib.Time_pattern.Print.debug_string_of_pattern time_pattern_gen
+let time_pattern =
+  QCheck.make ~print:Daypack_lib.Time_pattern.Print.debug_string_of_pattern
+    time_pattern_gen
 
 let task_seg_id_gen =
   let open QCheck.Gen in

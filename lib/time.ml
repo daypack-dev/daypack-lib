@@ -210,8 +210,8 @@ let day_count_of_month ~year ~(month : month) =
   | `Nov -> 30
   | `Dec -> 31
 
-let weekday_of_month_day ~(year : int) ~(month : month) ~(mday : int) :
-  weekday =
+let weekday_of_month_day ~(year : int) ~(month : month) ~(mday : int) : weekday
+  =
   CalendarLib.Date.day_of_week
     (CalendarLib.Date.make year (int_of_month month) mday)
   |> weekday_of_cal_weekday
