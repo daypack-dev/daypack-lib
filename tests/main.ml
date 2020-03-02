@@ -6,6 +6,7 @@ let () =
       ("Time_slot", Time_slot_ds.suite);
       ("Time_pattern", Time_pattern.suite);
       ("Time_profile", Time_profile.suite);
+      ("Time_profile_store", Time_profile_store.suite);
       ("Task_seg_place_gens", Task_seg_place_gens.suite);
       ("Task", Task_ds.suite);
       ("Sched", Sched.suite);

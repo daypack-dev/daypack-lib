@@ -2,6 +2,11 @@ type t = { mutable profiles : Time_profile.data String_map.t }
 
 let make_empty () : t = { profiles = String_map.empty }
 
+let of_profile_list profiles =
+  {
+    profiles = profiles |> List.to_seq |> String_map.of_seq
+  }
+
 let matching_time_slots_of_profile =
   let cache : (string, Time_slot_ds.t list) Hashtbl.t = Hashtbl.create 20 in
   fun ~start ~end_exc ~(profile : string) (t : t) ->
@@ -82,4 +87,27 @@ end
 module Equal = struct
   let equal (t1 : t) (t2 : t) : bool =
     String_map.equal Time_profile.Equal.data_equal t1.profiles t2.profiles
+end
+
+module Print = struct
+  let debug_string_of_time_profile_store ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (t : t) : string =
+    let open Time_profile in
+    Debug_print.bprintf ~indent_level buffer "time profile store\n";
+    t.profiles
+    |> String_map.to_seq
+    |> Seq.iter (fun (name, data) ->
+         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "profile : %s\n"
+           name;
+         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "periods :\n";
+         List.iter (fun (start, end_exc) ->
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "start\n";
+             Time_pattern.Print.debug_string_of_pattern ~indent_level:(indent_level + 3) ~buffer start |> ignore;
+             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "end\n";
+             Time_pattern.Print.debug_string_of_pattern ~indent_level:(indent_level + 3) ~buffer end_exc |> ignore;
+           )
+         data.periods
+      )
+    ;
+    Buffer.contents buffer
 end

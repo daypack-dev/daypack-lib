@@ -226,6 +226,21 @@ let time_pattern =
   QCheck.make ~print:Daypack_lib.Time_pattern.Print.debug_string_of_pattern
     time_pattern_gen
 
+let time_profile_gen =
+  let open QCheck.Gen in
+  pair string_readable
+                (map (fun periods -> Daypack_lib.Time_profile.{ periods} )
+                   (list (pair time_pattern_gen time_pattern_gen)))
+
+let time_profile_store_gen =
+  let open QCheck.Gen in
+  map
+    Daypack_lib.Time_profile_store.of_profile_list
+    (list time_profile_gen)
+
+let time_profile_store =
+  QCheck.make ~print:Daypack_lib.Time_profile_store.Print.debug_string_of_time_profile_store time_profile_store_gen
+
 let task_seg_id_gen =
   let open QCheck.Gen in
   map
