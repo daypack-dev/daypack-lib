@@ -187,7 +187,7 @@ let time_slots_gen =
   map
     (List.map (fun (start, size) ->
          (start, Int64.add start (Int64.of_int size))))
-    (list (pair ui64 small_nat))
+    (list (pair (pos_int64_bound_gen 100_000L) small_nat))
 
 let time_slots = QCheck.make ~print:Print_utils.time_slots time_slots_gen
 
@@ -432,7 +432,7 @@ let task_seg_place_gen =
     (fun task_seg_id start offset ->
        let end_exc = Int64.add start offset in
        (task_seg_id, start, end_exc))
-    task_seg_id_gen pos_int64_gen (pos_int64_bound_gen 100L)
+    task_seg_id_gen (pos_int64_bound_gen 100_000L) (pos_int64_bound_gen 100L)
 
 let task_seg_place =
   QCheck.make ~print:Print_utils.task_seg_place task_seg_place_gen
