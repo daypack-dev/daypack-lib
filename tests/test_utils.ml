@@ -146,7 +146,8 @@ let sorted_time_slots_maybe_gaps_gen =
             (Some end_exc, (start, end_exc) :: acc))
          (None, [])
        |> fun (_, l) -> List.rev l)
-    (pair pos_int64_gen (list (pair nz_small_nat_gen small_nat)))
+    (pair pos_int64_gen
+       (list_size (int_bound 1000) (pair nz_small_nat_gen small_nat)))
 
 let sorted_time_slots_maybe_gaps =
   QCheck.make ~print:Print_utils.time_slots sorted_time_slots_maybe_gaps_gen
@@ -167,7 +168,8 @@ let sorted_time_slots_with_gaps_gen =
             (Some end_exc, (start, end_exc) :: acc))
          (None, [])
        |> fun (_, l) -> List.rev l)
-    (pair pos_int64_gen (list (pair nz_small_nat_gen nz_small_nat_gen)))
+    (pair pos_int64_gen
+       (list_size (int_bound 1000) (pair nz_small_nat_gen nz_small_nat_gen)))
 
 let sorted_time_slots_with_gaps =
   QCheck.make ~print:Print_utils.time_slots sorted_time_slots_with_gaps_gen
