@@ -189,7 +189,7 @@ let time_slots_gen =
   map
     (List.map (fun (start, size) ->
          (start, Int64.add start (Int64.of_int size))))
-    (list (pair (pos_int64_bound_gen 100_000L) small_nat))
+    (list_size (int_bound 100) (pair (pos_int64_bound_gen 100_000L) small_nat))
 
 let time_slots = QCheck.make ~print:Print_utils.time_slots time_slots_gen
 
@@ -205,8 +205,12 @@ let days_gen : Daypack_lib.Time_pattern.days QCheck.Gen.t =
   let open QCheck.Gen in
   oneof
     [
-      map (fun weekdays -> `Weekdays weekdays) (list weekday_gen);
-      map (fun month_days -> `Month_days month_days) (list (int_range 1 32));
+      map
+        (fun weekdays -> `Weekdays weekdays)
+        (list_size (int_bound 10) weekday_gen);
+      map
+        (fun month_days -> `Month_days month_days)
+        (list_size (int_bound 10) (int_range 1 32));
     ]
 
 let days =
@@ -235,7 +239,7 @@ let time_profile_gen =
   pair string_readable
     (map
        (fun periods -> Daypack_lib.Time_profile.{ periods })
-       (list (pair time_pattern_gen time_pattern_gen)))
+       (list_size (int_bound 50) (pair time_pattern_gen time_pattern_gen)))
 
 let time_profile_store_gen =
   let open QCheck.Gen in
