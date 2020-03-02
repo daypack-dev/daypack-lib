@@ -78,3 +78,8 @@ module Deserialize = struct
       Ok { profiles }
     with Sys_error msg -> Error msg
 end
+
+module Equal = struct
+  let equal (t1 : t) (t2 : t) : bool =
+    String_map.equal Time_profile.Equal.data_equal t1.profiles t2.profiles
+end

@@ -224,6 +224,18 @@ module Deserialize = struct
     }
 end
 
+module Equal = struct
+  let equal (pat1 : t) (pat2 : t) : bool =
+    (List.sort_uniq compare pat1.years = List.sort_uniq compare pat2.years)
+    && (List.sort_uniq compare pat1.months = List.sort_uniq compare pat2.months)
+    && (match pat1.days, pat2.days with
+        | `Weekdays l1, `Weekdays l2 -> List.sort_uniq compare l1 = List.sort_uniq compare l2
+        | `Month_days l1, `Month_days l2 -> List.sort_uniq compare l1 = List.sort_uniq compare l2
+        | _ -> false)
+    && (List.sort_uniq compare pat1.hours = List.sort_uniq compare pat2.hours)
+    && (List.sort_uniq compare pat1.minutes = List.sort_uniq compare pat2.minutes)
+end
+
 module Print = struct
   let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (t : t) : string =

@@ -44,6 +44,15 @@ let matching_time_slots_of_profile ~start ~end_exc ((_id, data) : t) :
   Time_slot_ds.t Seq.t =
   matching_time_slots_of_periods ~start ~end_exc data.periods
 
+module Equal = struct
+  let period_equal ((pat11, pat12) : period) ((pat21, pat22) : period) : bool =
+    Time_pattern.Equal.equal pat11 pat21
+      && Time_pattern.Equal.equal pat12 pat22
+
+  let data_equal (d1 : data) (d2 : data) : bool =
+    List.for_all2 period_equal d1.periods d2.periods
+end
+
 module Serialize = struct
   let pack_period (start, end_exc) : Time_profile_t.period =
     ( Time_pattern.Serialize.pack_pattern start,
