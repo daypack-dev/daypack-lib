@@ -33,8 +33,20 @@ let qc_of_base_and_diffs_is_inverse_of_to_base_and_diffs =
          in
          Daypack_lib.Sched_ver_history.Equal.equal t reconstructed_t)
 
+let qc_read_from_dir_is_inverse_of_write_to_dir =
+  QCheck.Test.make ~count:500
+    ~name:"qc_read_from_dir_is_inverse_of_write_to_dir"
+    sched_ver_history
+    (fun sched_ver_history ->
+       let dir = "qc_read_from_dir_is_inverse_of_write_to_dir" in
+       Daypack_lib.Sched_ver_history.Serialize.write_to_dir ~dir sched_ver_history |> Stdlib.Result.get_ok;
+       let sched_ver_history' = Daypack_lib.Sched_ver_history.Deserialize.read_from_dir ~dir |> Stdlib.Result.get_ok in
+       Daypack_lib.Sched_ver_history.Equal.equal sched_ver_history sched_ver_history'
+    )
+
 let suite =
   [
     qc_list_of_base_and_diffs_is_inverse_of_list_to_base_and_diffs;
     qc_of_base_and_diffs_is_inverse_of_to_base_and_diffs;
+    qc_read_from_dir_is_inverse_of_write_to_dir;
   ]

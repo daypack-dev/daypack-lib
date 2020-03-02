@@ -826,3 +826,11 @@ let sched_gen =
 
 let sched =
   QCheck.make ~print:Daypack_lib.Sched.Print.debug_string_of_sched sched_gen
+
+let sched_ver_history_gen =
+  QCheck.Gen.map
+    Daypack_lib.Sched_ver_history.of_sched_list
+    QCheck.Gen.(list_size (int_range 1 10) sched_gen)
+
+let sched_ver_history =
+  QCheck.make ~print:Daypack_lib.Sched_ver_history.Print.debug_string_of_sched_ver_history sched_ver_history_gen
