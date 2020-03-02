@@ -239,14 +239,22 @@ module Equal = struct
 end
 
 module Print = struct
+  let debug_string_of_days ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+      (days : days) : string =
+    let aux l = String.concat "," (List.map string_of_int l) in
+    let aux_weekdays l =
+      String.concat "," (List.map Time.Print.weekday_to_string l)
+    in
+    (match days with
+    | `Month_days xs -> Debug_print.bprintf ~indent_level buffer "month day [%s]" (aux xs)
+    | `Weekdays xs -> Debug_print.bprintf ~indent_level buffer "weekday [%s]" (aux_weekdays xs));
+    Buffer.contents buffer
+
   let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_months l =
       String.concat "," (List.map Time.Print.month_to_string l)
-    in
-    let aux_weekdays l =
-      String.concat "," (List.map Time.Print.weekday_to_string l)
     in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : [%s]\n"
@@ -254,9 +262,7 @@ module Print = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "mon : [%s]\n"
       (aux_months t.months);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s\n"
-      ( match t.days with
-        | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)
-        | `Weekdays xs -> Printf.sprintf "weekday [%s]" (aux_weekdays xs) );
+      (debug_string_of_days ~indent_level:(indent_level + 2) ~buffer t.days);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : [%s]\n"
       (aux t.hours);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : [%s]\n"

@@ -207,6 +207,8 @@ let days_gen : Daypack_lib.Time_pattern.days QCheck.Gen.t =
       map (fun month_days -> `Month_days month_days) (list (int_range 1 32));
     ]
 
+let days = QCheck.make ~print:Daypack_lib.Time_pattern.Print.debug_string_of_days days_gen
+
 let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
   let open QCheck.Gen in
   map
