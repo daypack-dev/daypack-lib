@@ -245,9 +245,12 @@ module Print = struct
     let aux_weekdays l =
       String.concat "," (List.map Time.Print.weekday_to_string l)
     in
-    (match days with
-    | `Month_days xs -> Debug_print.bprintf ~indent_level buffer "month day [%s]" (aux xs)
-    | `Weekdays xs -> Debug_print.bprintf ~indent_level buffer "weekday [%s]" (aux_weekdays xs));
+    ( match days with
+      | `Month_days xs ->
+        Debug_print.bprintf ~indent_level buffer "month day [%s]" (aux xs)
+      | `Weekdays xs ->
+        Debug_print.bprintf ~indent_level buffer "weekday [%s]"
+          (aux_weekdays xs) );
     Buffer.contents buffer
 
   let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
