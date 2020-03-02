@@ -226,16 +226,16 @@ end
 
 module Equal = struct
   let equal (pat1 : t) (pat2 : t) : bool =
-    List.sort_uniq compare pat1.years = List.sort_uniq compare pat2.years
-    && List.sort_uniq compare pat1.months = List.sort_uniq compare pat2.months
+    List.sort compare pat1.years = List.sort compare pat2.years
+    && List.sort compare pat1.months = List.sort compare pat2.months
     && ( match (pat1.days, pat2.days) with
         | `Weekdays l1, `Weekdays l2 ->
-          List.sort_uniq compare l1 = List.sort_uniq compare l2
+          List.sort compare l1 = List.sort compare l2
         | `Month_days l1, `Month_days l2 ->
-          List.sort_uniq compare l1 = List.sort_uniq compare l2
+          List.sort compare l1 = List.sort compare l2
         | _ -> false )
-    && List.sort_uniq compare pat1.hours = List.sort_uniq compare pat2.hours
-    && List.sort_uniq compare pat1.minutes = List.sort_uniq compare pat2.minutes
+    && List.sort compare pat1.hours = List.sort compare pat2.hours
+    && List.sort compare pat1.minutes = List.sort compare pat2.minutes
 end
 
 module Print = struct
@@ -247,9 +247,9 @@ module Print = struct
     in
     ( match days with
       | `Month_days xs ->
-        Debug_print.bprintf ~indent_level buffer "month day [%s]" (aux xs)
+        Debug_print.bprintf ~indent_level buffer "month day [%s]\n" (aux xs)
       | `Weekdays xs ->
-        Debug_print.bprintf ~indent_level buffer "weekday [%s]"
+        Debug_print.bprintf ~indent_level buffer "weekday [%s]\n"
           (aux_weekdays xs) );
     Buffer.contents buffer
 
