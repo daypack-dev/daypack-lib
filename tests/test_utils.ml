@@ -239,6 +239,8 @@ let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
        days_gen
        (pair (list_size (int_bound 5) (int_bound 24)) (list_size (int_bound 5) (int_bound 60))))
 
+let time_pattern = QCheck.make ~print:Daypack_lib.Time_pattern.Print.debug_string_of_pattern time_pattern_gen
+
 let task_seg_id_gen =
   let open QCheck.Gen in
   map
