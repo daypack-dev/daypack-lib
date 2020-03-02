@@ -18,6 +18,12 @@
         ~f_unpack
         ~f_equal)
     unpack_pack_list;
+
+  print_endline "let suite = [";
+  List.iter (fun (name, _, _, _, _, _) ->
+      Printf.printf "%s;\n" (unpack_is_inverse_of_pack_test_name name);
+    ) unpack_pack_store_list;
+  print_endline "]";
 *)
 
 (*$*)
