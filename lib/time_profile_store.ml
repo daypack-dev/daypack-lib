@@ -39,7 +39,7 @@ module Serialize = struct
         |> Seq.map (fun (name, data) ->
             (name, Time_profile.Serialize.json_string_of_data data))
         |> Seq.iter (fun (name, data) ->
-            let path = Filename.concat dir name in
+            let path = Filename.concat dir (name ^ ".json") in
             let oc = open_out path in
             Fun.protect
               ~finally:(fun () -> close_out oc)
