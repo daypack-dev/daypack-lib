@@ -241,7 +241,32 @@ module Serialize = struct
   let to_base_and_diffs (t : t) : (Sched.sched * Sched.sched_diff list) option =
     list_to_base_and_diffs t.history
 
-  (* let save_to_dir ~(dir : string) (t : t) : (unit, unit) result = *)
+  let write_to_dir ~(dir : string) (t : t) : (unit, string) result =
+    try
+      if Sys.is_directory dir then (
+        match to_base_and_diffs t with
+        | None -> Ok ()
+        | Some (base, diffs) ->
+          (let base_str = Sched.Serialize.json_string_of_sched base in
+           let oc = open_out (Filename.concat dir "sched_v0.json") in
+           Fun.protect
+             ~finally:(fun () -> close_out oc)
+             (fun () -> output_string oc base_str));
+          diffs
+          |> List.to_seq
+          |> Seq.map Sched.Serialize.json_string_of_sched_diff
+          |> OSeq.iteri (fun i sched_diff_str ->
+              let oc =
+                open_out
+                  (Filename.concat dir
+                     (Printf.sprintf "sched_v%d.json" (i + 1)))
+              in
+              Fun.protect
+                ~finally:(fun () -> close_out oc)
+                (fun () -> output_string oc sched_diff_str));
+          Ok () )
+      else Error "File is not a directory"
+    with Sys_error msg -> Error msg
 end
 
 module Deserialize = struct
@@ -260,6 +285,37 @@ module Deserialize = struct
   let of_base_and_diffs base diffs : t =
     let history = list_of_base_and_diffs base diffs in
     { history }
+
+  let read_from_dir ~(dir : string) : (t, string) result =
+    try
+      let base =
+        let ic = open_in (Filename.concat dir "sched_v0.json") in
+        Fun.protect
+          ~finally:(fun () -> close_in ic)
+          (fun () -> really_input_string ic (in_channel_length ic))
+        |> Sched.Deserialize.sched_of_json_string
+      in
+      let diffs =
+        Sys.readdir dir
+        |> Array.to_seq
+        |> Seq.filter_map (fun s ->
+            try
+              Scanf.sscanf s "sched_v%d.json" (fun i ->
+                  if i = 0 then None else Some (i, s))
+            with Stdlib.Scanf.Scan_failure _ -> None)
+        |> Seq.map (fun (i, s) ->
+            let ic = open_in (Filename.concat dir s) in
+            ( i,
+              Fun.protect
+                ~finally:(fun () -> close_in ic)
+                (fun () -> really_input_string ic (in_channel_length ic)) ))
+        |> OSeq.sort ~cmp:(fun (i1, _) (i2, _) -> compare i1 i2)
+        |> Seq.map (fun (_i, s) ->
+            Sched.Deserialize.sched_diff_of_json_string s)
+        |> List.of_seq
+      in
+      Ok (of_base_and_diffs base diffs)
+    with Sys_error msg -> Error msg
 end
 
 module Print = struct

@@ -129,3 +129,27 @@
           time_pattern_j.mli)
  (deps    time_pattern.atd)
  (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets time_profile_t.ml
+          time_profile_t.mli)
+ (deps    time_profile.atd)
+ (action  (run atdgen -t %{deps})))
+
+(rule
+ (targets time_profile_j.ml
+          time_profile_j.mli)
+ (deps    time_profile.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets time_profile_store_t.ml
+          time_profile_store_t.mli)
+ (deps    time_profile_store.atd)
+ (action  (run atdgen -t %{deps})))
+
+(rule
+ (targets time_profile_store_j.ml
+          time_profile_store_j.mli)
+ (deps    time_profile_store.atd)
+ (action  (run atdgen -j -j-std %{deps})))

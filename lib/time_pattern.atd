@@ -1,9 +1,9 @@
-type week_day <ocaml from="Time"> = abstract
+type weekday <ocaml from="Time"> = abstract
 
 type month <ocaml from="Time"> = abstract
 
 type days = [
-  | Weekdays of week_day list
+  | Weekdays of weekday list
   | Month_days of int list
 ]
 

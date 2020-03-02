@@ -146,7 +146,8 @@ let sorted_time_slots_maybe_gaps_gen =
             (Some end_exc, (start, end_exc) :: acc))
          (None, [])
        |> fun (_, l) -> List.rev l)
-    (pair pos_int64_gen (list (pair nz_small_nat_gen small_nat)))
+    (pair pos_int64_gen
+       (list_size (int_bound 1000) (pair nz_small_nat_gen small_nat)))
 
 let sorted_time_slots_maybe_gaps =
   QCheck.make ~print:Print_utils.time_slots sorted_time_slots_maybe_gaps_gen
@@ -167,7 +168,8 @@ let sorted_time_slots_with_gaps_gen =
             (Some end_exc, (start, end_exc) :: acc))
          (None, [])
        |> fun (_, l) -> List.rev l)
-    (pair pos_int64_gen (list (pair nz_small_nat_gen nz_small_nat_gen)))
+    (pair pos_int64_gen
+       (list_size (int_bound 1000) (pair nz_small_nat_gen nz_small_nat_gen)))
 
 let sorted_time_slots_with_gaps =
   QCheck.make ~print:Print_utils.time_slots sorted_time_slots_with_gaps_gen
@@ -187,9 +189,68 @@ let time_slots_gen =
   map
     (List.map (fun (start, size) ->
          (start, Int64.add start (Int64.of_int size))))
-    (list (pair ui64 small_nat))
+    (list_size (int_bound 100) (pair (pos_int64_bound_gen 100_000L) small_nat))
 
 let time_slots = QCheck.make ~print:Print_utils.time_slots time_slots_gen
+
+let weekday_gen : Daypack_lib.Time.weekday QCheck.Gen.t =
+  QCheck.Gen.(oneofl [ `Sun; `Mon; `Tue; `Wed; `Thu; `Fri; `Sat ])
+
+let month_gen : Daypack_lib.Time.month QCheck.Gen.t =
+  let open QCheck.Gen in
+  oneofl
+    [ `Jan; `Feb; `Mar; `Apr; `May; `Jun; `Jul; `Aug; `Sep; `Oct; `Nov; `Dec ]
+
+let days_gen : Daypack_lib.Time_pattern.days QCheck.Gen.t =
+  let open QCheck.Gen in
+  oneof
+    [
+      map
+        (fun weekdays -> `Weekdays weekdays)
+        (list_size (int_bound 10) weekday_gen);
+      map
+        (fun month_days -> `Month_days month_days)
+        (list_size (int_bound 10) (int_range 1 32));
+    ]
+
+let days =
+  QCheck.make ~print:Daypack_lib.Time_pattern.Print.debug_string_of_days
+    days_gen
+
+let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
+  let open QCheck.Gen in
+  map
+    (fun (years, months, days, (hours, minutes)) ->
+       Daypack_lib.Time_pattern.{ years; months; days; hours; minutes })
+    (quad
+       (list_size (int_bound 5) (int_range 1980 2100))
+       (list_size (int_bound 5) month_gen)
+       days_gen
+       (pair
+          (list_size (int_bound 5) (int_bound 24))
+          (list_size (int_bound 5) (int_bound 60))))
+
+let time_pattern =
+  QCheck.make ~print:Daypack_lib.Time_pattern.Print.debug_string_of_pattern
+    time_pattern_gen
+
+let time_profile_gen =
+  let open QCheck.Gen in
+  pair (map string_of_int int)
+    (map
+       (fun periods -> Daypack_lib.Time_profile.{ periods })
+       (list_size (int_bound 100) (pair time_pattern_gen time_pattern_gen)))
+
+let time_profile_store_gen =
+  let open QCheck.Gen in
+  map Daypack_lib.Time_profile_store.of_profile_list
+    (list_size (int_bound 20) time_profile_gen)
+
+let time_profile_store =
+  QCheck.make
+    ~print:
+      Daypack_lib.Time_profile_store.Print.debug_string_of_time_profile_store
+    time_profile_store_gen
 
 let task_seg_id_gen =
   let open QCheck.Gen in
@@ -432,7 +493,9 @@ let task_seg_place_gen =
     (fun task_seg_id start offset ->
        let end_exc = Int64.add start offset in
        (task_seg_id, start, end_exc))
-    task_seg_id_gen pos_int64_gen (pos_int64_bound_gen 100L)
+    task_seg_id_gen
+    (pos_int64_bound_gen 100_000L)
+    (pos_int64_bound_gen 100L)
 
 let task_seg_place =
   QCheck.make ~print:Print_utils.task_seg_place task_seg_place_gen
@@ -826,3 +889,12 @@ let sched_gen =
 
 let sched =
   QCheck.make ~print:Daypack_lib.Sched.Print.debug_string_of_sched sched_gen
+
+let sched_ver_history_gen =
+  QCheck.Gen.map Daypack_lib.Sched_ver_history.of_sched_list
+    QCheck.Gen.(list_size (int_range 1 10) sched_gen)
+
+let sched_ver_history =
+  QCheck.make
+    ~print:Daypack_lib.Sched_ver_history.Print.debug_string_of_sched_ver_history
+    sched_ver_history_gen

@@ -1,7 +1,7 @@
 open Int64_utils
 
 type days =
-  [ `Weekdays of Time.week_day list
+  [ `Weekdays of Time.weekday list
   | `Month_days of int list
   ]
 
@@ -105,7 +105,7 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   | `Weekdays pat_wday_list ->
     Seq.filter_map
       (fun mday ->
-         let wday = Time.week_day_of_month_day ~year ~month ~mday in
+         let wday = Time.weekday_of_month_day ~year ~month ~mday in
          if List.mem wday pat_wday_list then Some { acc with tm_mday = mday }
          else None)
       OSeq.(start --^ day_count)
@@ -224,15 +224,40 @@ module Deserialize = struct
     }
 end
 
+module Equal = struct
+  let equal (pat1 : t) (pat2 : t) : bool =
+    List.sort compare pat1.years = List.sort compare pat2.years
+    && List.sort compare pat1.months = List.sort compare pat2.months
+    && ( match (pat1.days, pat2.days) with
+        | `Weekdays l1, `Weekdays l2 ->
+          List.sort compare l1 = List.sort compare l2
+        | `Month_days l1, `Month_days l2 ->
+          List.sort compare l1 = List.sort compare l2
+        | _ -> false )
+    && List.sort compare pat1.hours = List.sort compare pat2.hours
+    && List.sort compare pat1.minutes = List.sort compare pat2.minutes
+end
+
 module Print = struct
+  let debug_string_of_days ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+      (days : days) : string =
+    let aux l = String.concat "," (List.map string_of_int l) in
+    let aux_weekdays l =
+      String.concat "," (List.map Time.Print.weekday_to_string l)
+    in
+    ( match days with
+      | `Month_days xs ->
+        Debug_print.bprintf ~indent_level buffer "month day [%s]\n" (aux xs)
+      | `Weekdays xs ->
+        Debug_print.bprintf ~indent_level buffer "weekday [%s]\n"
+          (aux_weekdays xs) );
+    Buffer.contents buffer
+
   let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_months l =
       String.concat "," (List.map Time.Print.month_to_string l)
-    in
-    let aux_week_days l =
-      String.concat "," (List.map Time.Print.week_day_to_string l)
     in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : [%s]\n"
@@ -240,9 +265,7 @@ module Print = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "mon : [%s]\n"
       (aux_months t.months);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s\n"
-      ( match t.days with
-        | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)
-        | `Weekdays xs -> Printf.sprintf "weekday [%s]" (aux_week_days xs) );
+      (debug_string_of_days ~indent_level:(indent_level + 2) ~buffer t.days);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : [%s]\n"
       (aux t.hours);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : [%s]\n"

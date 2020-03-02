@@ -18,7 +18,7 @@ all :
 
 .PHONY: test
 test :
-	dune exec ./tests/main.exe
+	OCAMLRUNPARAM=b dune exec ./tests/main.exe
 
 .PHONY: debug
 debug :

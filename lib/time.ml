@@ -1,6 +1,6 @@
 open Int64_utils
 
-type week_day =
+type weekday =
   [ `Sun
   | `Mon
   | `Tue
@@ -29,7 +29,7 @@ let first_mday = 1
 
 let tm_year_offset = 1900
 
-let int_of_week_day (wday : week_day) : int =
+let int_of_weekday (wday : weekday) : int =
   match wday with
   | `Sun -> 0
   | `Mon -> 1
@@ -39,7 +39,7 @@ let int_of_week_day (wday : week_day) : int =
   | `Fri -> 3
   | `Sat -> 3
 
-let week_day_of_int (x : int) : week_day =
+let weekday_of_int (x : int) : weekday =
   match x with
   | 0 -> `Sun
   | 1 -> `Mon
@@ -50,8 +50,8 @@ let week_day_of_int (x : int) : week_day =
   | 6 -> `Sat
   | _ -> failwith "Invalid wday int"
 
-let cal_week_day_of_week_day (week_day : week_day) : CalendarLib.Calendar.day =
-  match week_day with
+let cal_weekday_of_weekday (weekday : weekday) : CalendarLib.Calendar.day =
+  match weekday with
   | `Sun -> Sun
   | `Mon -> Mon
   | `Tue -> Tue
@@ -60,8 +60,8 @@ let cal_week_day_of_week_day (week_day : week_day) : CalendarLib.Calendar.day =
   | `Fri -> Fri
   | `Sat -> Sat
 
-let week_day_of_cal_week_day (week_day : CalendarLib.Calendar.day) : week_day =
-  match week_day with
+let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
+  match weekday with
   | Sun -> `Sun
   | Mon -> `Mon
   | Tue -> `Tue
@@ -142,16 +142,16 @@ let month_gt m1 m2 = int_of_month m1 > int_of_month m2
 
 let month_ge m1 m2 = int_of_month m1 >= int_of_month m2
 
-let week_day_compare (d1 : week_day) (d2 : week_day) : int =
-  compare (int_of_week_day d1) (int_of_week_day d2)
+let weekday_compare (d1 : weekday) (d2 : weekday) : int =
+  compare (int_of_weekday d1) (int_of_weekday d2)
 
-let week_day_lt d1 d2 = int_of_week_day d1 < int_of_week_day d2
+let weekday_lt d1 d2 = int_of_weekday d1 < int_of_weekday d2
 
-let week_day_le d1 d2 = int_of_week_day d1 <= int_of_week_day d2
+let weekday_le d1 d2 = int_of_weekday d1 <= int_of_weekday d2
 
-let week_day_gt d1 d2 = int_of_week_day d1 > int_of_week_day d2
+let weekday_gt d1 d2 = int_of_weekday d1 > int_of_weekday d2
 
-let week_day_ge d1 d2 = int_of_week_day d1 >= int_of_week_day d2
+let weekday_ge d1 d2 = int_of_weekday d1 >= int_of_weekday d2
 
 type time_zone =
   [ `Local
@@ -210,11 +210,11 @@ let day_count_of_month ~year ~(month : month) =
   | `Nov -> 30
   | `Dec -> 31
 
-let week_day_of_month_day ~(year : int) ~(month : month) ~(mday : int) :
-  week_day =
+let weekday_of_month_day ~(year : int) ~(month : month) ~(mday : int) : weekday
+  =
   CalendarLib.Date.day_of_week
     (CalendarLib.Date.make year (int_of_month month) mday)
-  |> week_day_of_cal_week_day
+  |> weekday_of_cal_weekday
 
 let cur_unix_time_sec () : int64 = Unix.time () |> Int64.of_float
 
@@ -229,19 +229,19 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   Unix.gmtime timestamp
 
 module Serialize = struct
-  let pack_week_day (x : week_day) : Time_t.week_day = x
+  let pack_weekday (x : weekday) : Time_t.weekday = x
 
   let pack_month (x : month) : Time_t.month = x
 end
 
 module Deserialize = struct
-  let unpack_week_day (x : Time_t.week_day) : week_day = x
+  let unpack_weekday (x : Time_t.weekday) : weekday = x
 
   let unpack_month (x : Time_t.month) : month = x
 end
 
 module Print = struct
-  let week_day_to_string (wday : week_day) : string =
+  let weekday_to_string (wday : weekday) : string =
     match wday with
     | `Sun -> "Sun"
     | `Mon -> "Mon"
