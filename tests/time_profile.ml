@@ -13,7 +13,7 @@ let qc_unpack_is_inverse_of_pack_period =
 
 let qc_unpack_is_inverse_of_pack_data =
   QCheck.Test.make ~count:5000 ~name:"qc_unpack_is_inverse_of_pack_data"
-    QCheck.(list (pair time_pattern time_pattern))
+    QCheck.(list_of_size Gen.(int_bound 100) (pair time_pattern time_pattern))
     (fun periods ->
        let d = Daypack_lib.Time_profile.{ periods } in
        let d' =

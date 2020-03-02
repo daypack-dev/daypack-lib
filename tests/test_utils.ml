@@ -237,7 +237,8 @@ let time_profile_gen =
 
 let time_profile_store_gen =
   let open QCheck.Gen in
-  map Daypack_lib.Time_profile_store.of_profile_list (list time_profile_gen)
+  map Daypack_lib.Time_profile_store.of_profile_list
+    (list_size (int_bound 100) time_profile_gen)
 
 let time_profile_store =
   QCheck.make
