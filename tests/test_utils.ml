@@ -432,7 +432,9 @@ let task_seg_place_gen =
     (fun task_seg_id start offset ->
        let end_exc = Int64.add start offset in
        (task_seg_id, start, end_exc))
-    task_seg_id_gen (pos_int64_bound_gen 100_000L) (pos_int64_bound_gen 100L)
+    task_seg_id_gen
+    (pos_int64_bound_gen 100_000L)
+    (pos_int64_bound_gen 100L)
 
 let task_seg_place =
   QCheck.make ~print:Print_utils.task_seg_place task_seg_place_gen
@@ -828,9 +830,10 @@ let sched =
   QCheck.make ~print:Daypack_lib.Sched.Print.debug_string_of_sched sched_gen
 
 let sched_ver_history_gen =
-  QCheck.Gen.map
-    Daypack_lib.Sched_ver_history.of_sched_list
+  QCheck.Gen.map Daypack_lib.Sched_ver_history.of_sched_list
     QCheck.Gen.(list_size (int_range 1 10) sched_gen)
 
 let sched_ver_history =
-  QCheck.make ~print:Daypack_lib.Sched_ver_history.Print.debug_string_of_sched_ver_history sched_ver_history_gen
+  QCheck.make
+    ~print:Daypack_lib.Sched_ver_history.Print.debug_string_of_sched_ver_history
+    sched_ver_history_gen
