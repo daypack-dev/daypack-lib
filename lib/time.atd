@@ -1,4 +1,4 @@
-type week_day = [
+type weekday = [
   | Sun
   | Mon
   | Tue

@@ -1,7 +1,7 @@
 open Int64_utils
 
 type days =
-  [ `Weekdays of Time.week_day list
+  [ `Weekdays of Time.weekday list
   | `Month_days of int list
   ]
 
@@ -105,7 +105,7 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   | `Weekdays pat_wday_list ->
     Seq.filter_map
       (fun mday ->
-         let wday = Time.week_day_of_month_day ~year ~month ~mday in
+         let wday = Time.weekday_of_month_day ~year ~month ~mday in
          if List.mem wday pat_wday_list then Some { acc with tm_mday = mday }
          else None)
       OSeq.(start --^ day_count)
@@ -231,8 +231,8 @@ module Print = struct
     let aux_months l =
       String.concat "," (List.map Time.Print.month_to_string l)
     in
-    let aux_week_days l =
-      String.concat "," (List.map Time.Print.week_day_to_string l)
+    let aux_weekdays l =
+      String.concat "," (List.map Time.Print.weekday_to_string l)
     in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : [%s]\n"
@@ -242,7 +242,7 @@ module Print = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "day : %s\n"
       ( match t.days with
         | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)
-        | `Weekdays xs -> Printf.sprintf "weekday [%s]" (aux_week_days xs) );
+        | `Weekdays xs -> Printf.sprintf "weekday [%s]" (aux_weekdays xs) );
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hour : [%s]\n"
       (aux t.hours);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : [%s]\n"
