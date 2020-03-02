@@ -236,15 +236,15 @@ let time_pattern =
 
 let time_profile_gen =
   let open QCheck.Gen in
-  pair string_readable
+  pair (map string_of_int int)
     (map
        (fun periods -> Daypack_lib.Time_profile.{ periods })
-       (list_size (int_bound 50) (pair time_pattern_gen time_pattern_gen)))
+       (list_size (int_bound 100) (pair time_pattern_gen time_pattern_gen)))
 
 let time_profile_store_gen =
   let open QCheck.Gen in
   map Daypack_lib.Time_profile_store.of_profile_list
-    (list_size (int_bound 100) time_profile_gen)
+    (list_size (int_bound 20) time_profile_gen)
 
 let time_profile_store =
   QCheck.make
