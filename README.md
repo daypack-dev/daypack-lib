@@ -26,13 +26,36 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 - Automatic scheduling
 
-  - See below for strategies supported
+  - See below for strategies supported in scheduling requests
 
 - Manual scheduling
 
 - Recurrence
 
   - All automatic scheduling strategies are available for recurring tasks as well
+
+- Time pattern (similar to cron time expression)
+
+  - This can be used to specify "fuzzy" starting and ending time of tasks in scheduling reuqests
+    and also time profiles
+
+- Time profiles
+
+  - Specification of scheduling requests is supplemented by time profiles, which are aliases
+    for time periods (a pair of time patterns indicating start and end time of time slots)
+
+  - Some downloadable prebuilt profiles are
+
+    - `work_hours`
+
+      - Monday to Friday 9am to 5pm
+
+    - `sleep_hours`
+
+  - Time profiles are JSON files designed to be easily created/customised/extended by users, and Daypack processes all profiles
+    provided in the profile directory (see user manual)
+
+  - Time profile builder sites are being planned right now (similar to keyboard or mouse macro/profile building sites)
 
 - Backup plan
 
@@ -44,6 +67,14 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
   - You can mark task items as "completed" (or "uncompleted")
 
   - You can record time periods spent for task items
+
+- Schedule versioning and rollback
+
+  - "Snapshots" are made before certain major operations such as scheduling,
+    user can also initiate a snapshot manually
+
+  - This allows rollbacks/undos should the user find the schedule resulted from an operation
+    unsatisfactory
 
 - (WIP) Multiple user (supported by library, but frontend adoption is WIP)
 
