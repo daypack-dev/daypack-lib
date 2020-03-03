@@ -591,10 +591,13 @@ let debug_sched_usage_simulation () =
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
   print_endline "Serializing sched_ver_history";
-  let sched_ver_history_dir = Core.Filename.temp_dir "daypack" "sched_ver_history" in
+  let sched_ver_history_dir =
+    Core.Filename.temp_dir "daypack" "sched_ver_history"
+  in
   Printf.printf "cwd : %s\n" (Sys.getcwd ());
   ( match
-      Sched_ver_history.Serialize.write_to_dir ~dir:sched_ver_history_dir sched_ver_history
+      Sched_ver_history.Serialize.write_to_dir ~dir:sched_ver_history_dir
+        sched_ver_history
     with
     | Ok () -> print_endline "Okay"
     | Error msg -> print_endline msg );
@@ -602,7 +605,9 @@ let debug_sched_usage_simulation () =
   print_endline "Deserializing";
   Printf.printf "cwd : %s\n" (Sys.getcwd ());
   let sched_ver_history =
-    match Sched_ver_history.Deserialize.read_from_dir ~dir:sched_ver_history_dir with
+    match
+      Sched_ver_history.Deserialize.read_from_dir ~dir:sched_ver_history_dir
+    with
     | Ok x ->
       print_endline "Okay";
       x
@@ -613,10 +618,13 @@ let debug_sched_usage_simulation () =
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
   print_endline "Serializing time_profile_store";
-  let time_profile_store_dir = Core.Filename.temp_dir "daypack" "time_profile_store" in
+  let time_profile_store_dir =
+    Core.Filename.temp_dir "daypack" "time_profile_store"
+  in
   Printf.printf "cwd : %s\n" (Sys.getcwd ());
   ( match
-      Time_profile_store.Serialize.write_to_dir ~dir:time_profile_store_dir time_profile_store
+      Time_profile_store.Serialize.write_to_dir ~dir:time_profile_store_dir
+        time_profile_store
     with
     | Ok () -> print_endline "Okay"
     | Error msg -> print_endline msg );
@@ -624,7 +632,9 @@ let debug_sched_usage_simulation () =
   print_endline "Deserializing";
   Printf.printf "cwd : %s\n" (Sys.getcwd ());
   let time_profile_store =
-    match Time_profile_store.Deserialize.read_from_dir ~dir:time_profile_store_dir with
+    match
+      Time_profile_store.Deserialize.read_from_dir ~dir:time_profile_store_dir
+    with
     | Ok x ->
       print_endline "Okay";
       x
