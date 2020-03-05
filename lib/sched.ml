@@ -1355,6 +1355,22 @@ module Progress = struct
           };
       } )
 
+  let find_task_inst_progress (task_inst_id : Task_ds.task_inst_id)
+      ((_sid, sd) : sched) : Task_ds.progress option =
+    Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress
+
+  let find_task_inst_progress_chunk_set (task_inst_id : Task_ds.task_inst_id)
+      ((_sid, sd) : sched) : Int64_int64_set.t =
+    match
+      Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress
+    with
+    | None -> Int64_int64_set.empty
+    | Some progress -> progress.chunks
+
+  let find_task_inst_progress_chunk_seq (task_inst_id : Task_ds.task_inst_id)
+      (sched : sched) : (int64 * int64) Seq.t =
+    find_task_inst_progress_chunk_set task_inst_id sched |> Int64_int64_set.to_seq
+
   let remove_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
     ( sid,
