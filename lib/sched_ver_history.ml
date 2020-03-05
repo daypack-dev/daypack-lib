@@ -153,25 +153,24 @@ module Maybe_append_to_head = struct
   let remove_task (task_id : Task_ds.task_id) (t : t) : unit =
     map_head
       (fun hd ->
-        let hd' =
-          hd
-          |> Sched.Task.remove_task_all task_id
-          |> Sched.Sched_req.remove_pending_sched_req_by_task_id task_id
-          |> Sched.Sched_req.remove_sched_req_record_by_task_id task_id
-        in
-        let task_seg_place_seq =
-          Sched.Agenda.find_task_seg_place_seq_by_task_id task_id hd
-        in
-        match task_seg_place_seq () with
-        | Seq.Nil -> ((), Replace_head hd')
-        | _ ->
-          let hd' =
-            hd'
-            |> Sched.Sched_req.remove_sched_req_record_by_task_id task_id
-            |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
-          in
-          ((), New_head hd')
-      )
+         let hd' =
+           hd
+           |> Sched.Task.remove_task_all task_id
+           |> Sched.Sched_req.remove_pending_sched_req_by_task_id task_id
+           |> Sched.Sched_req.remove_sched_req_record_by_task_id task_id
+         in
+         let task_seg_place_seq =
+           Sched.Agenda.find_task_seg_place_seq_by_task_id task_id hd
+         in
+         match task_seg_place_seq () with
+         | Seq.Nil -> ((), Replace_head hd')
+         | _ ->
+           let hd' =
+             hd'
+             |> Sched.Sched_req.remove_sched_req_record_by_task_id task_id
+             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
+           in
+           ((), New_head hd'))
       t
 
   let remove_task_inst (task_inst_id : Task_ds.task_inst_id) (t : t) : unit =
