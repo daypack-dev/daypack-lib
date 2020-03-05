@@ -68,44 +68,67 @@ module In_place_head = struct
          ((), In_place, sched))
       t
 
-  let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t) :
-    unit =
-    map_head
-      (fun sched ->
-         let sched =
-           Sched.Progress.move_task_seg_to_completed task_seg_id sched
-         in
-         ((), In_place, sched))
-      t
-
-  let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id) (t : t) :
-    unit =
-    map_head
-      (fun sched ->
-         let sched =
-           Sched.Progress.move_task_seg_to_uncompleted task_seg_id sched
-         in
-         ((), In_place, sched))
-      t
-
-  let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id) (t : t)
-    : unit =
-    map_head
-      (fun sched ->
-         let sched =
-           Sched.Progress.move_task_inst_to_completed task_inst_id sched
-         in
-         ((), In_place, sched))
-      t
-
-  let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
+  let move_task_seg_internal ~(move_task_seg_by_id : Task_ds.task_seg_id -> Sched.sched -> Sched.sched)
+      (task_seg_id : Task_ds.task_seg_id)
       (t : t) : unit =
     map_head
       (fun sched ->
          let sched =
-           Sched.Progress.move_task_inst_to_uncompleted task_inst_id sched
+           move_task_seg_by_id task_seg_id sched
          in
          ((), In_place, sched))
+      t
+
+  let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t) :
+    unit =
+    move_task_seg_internal
+      ~move_task_seg_by_id:Sched.Progress.move_task_seg_to_completed
+      task_seg_id
+      t
+
+  let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id) (t : t) :
+    unit =
+    move_task_seg_internal
+      ~move_task_seg_by_id:Sched.Progress.move_task_seg_to_uncompleted
+      task_seg_id
+      t
+
+  let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id) (t : t) :
+    unit =
+    move_task_seg_internal
+      ~move_task_seg_by_id:Sched.Progress.move_task_seg_to_discarded
+      task_seg_id
+      t
+
+  let move_task_inst_internal ~(move_task_inst_by_id : Task_ds.task_inst_id -> Sched.sched -> Sched.sched)
+      (task_inst_id : Task_ds.task_inst_id)
+      (t : t) : unit =
+    map_head
+      (fun sched ->
+         let sched = move_task_inst_by_id task_inst_id sched in
+         ((), In_place, sched)
+      )
+      t
+
+  let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id) (t : t)
+    : unit =
+    move_task_inst_internal
+      ~move_task_inst_by_id:Sched.Progress.move_task_inst_to_completed
+      task_inst_id
+      t
+
+  let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
+      (t : t) : unit =
+    move_task_inst_internal
+      ~move_task_inst_by_id:Sched.Progress.move_task_inst_to_uncompleted
+      task_inst_id
+      t
+
+  let move_task_inst_to_discarded (task_inst_id : Task_ds.task_inst_id)
+      (t : t) : unit =
+    move_task_inst_internal
+      ~move_task_inst_by_id:Sched.Progress.move_task_inst_to_discarded
+      task_inst_id
       t
 
   let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
