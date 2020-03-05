@@ -192,7 +192,8 @@ module Serialize = struct
 
   and pack_task_seg_place x = x
 
-  and pack_progress (x : progress) : Task_ds_t.progress = { chunks = Int64_int64_set.Serialize.pack x.chunks }
+  and pack_progress (x : progress) : Task_ds_t.progress =
+    { chunks = Int64_int64_set.Serialize.pack x.chunks }
 end
 
 module Deserialize = struct
