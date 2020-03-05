@@ -1196,23 +1196,27 @@ module Agenda = struct
 end
 
 module Progress = struct
-  let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id)
+  let move_task_seg (move : Task_ds.task_seg_id -> Task_ds.task_seg_size -> sched -> sched)
+      (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
     match Task_seg.find_task_seg_any_opt task_seg_id sched with
     | None -> sched
     | Some task_seg_size ->
       sched
       |> Task_seg.remove_task_seg_all task_seg_id
-      |> Task_seg.add_task_seg_completed task_seg_id task_seg_size
+      |> move task_seg_id task_seg_size
+
+  let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id)
+      (sched : sched) : sched =
+    move_task_seg Task_seg.add_task_seg_completed task_seg_id sched
 
   let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    match Task_seg.find_task_seg_any_opt task_seg_id sched with
-    | None -> sched
-    | Some task_seg_size ->
-      sched
-      |> Task_seg.remove_task_seg_all task_seg_id
-      |> Task_seg.add_task_seg_uncompleted task_seg_id task_seg_size
+    move_task_seg Task_seg.add_task_seg_uncompleted task_seg_id sched
+
+  let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id)
+      (sched : sched) : sched =
+    move_task_seg Task_seg.add_task_seg_discarded task_seg_id sched
 
   let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
