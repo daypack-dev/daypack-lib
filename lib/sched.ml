@@ -1249,14 +1249,15 @@ module Progress = struct
 
   let find_task_seg_progress_chunk_set (task_seg_id : Task_ds.task_seg_id)
       ((_sid, sd) : sched) : Int64_int64_set.t =
-    match Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress with
+    match
+      Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress
+    with
     | None -> Int64_int64_set.empty
     | Some progress -> progress.chunks
 
   let find_task_seg_progress_chunk_seq (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : (int64 * int64) Seq.t =
-    find_task_seg_progress_chunk_set task_seg_id sched
-    |> Int64_int64_set.to_seq
+    find_task_seg_progress_chunk_set task_seg_id sched |> Int64_int64_set.to_seq
 
   let remove_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
