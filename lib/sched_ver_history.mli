@@ -38,7 +38,13 @@ module In_place_head : sig
   val add_task_seg_progress_chunk :
     Task_ds.task_seg_id -> int64 * int64 -> t -> unit
 
+  val remove_task_seg_progress_chunk :
+    Task_ds.task_seg_id -> int64 * int64 -> t -> unit
+
   val add_task_inst_progress_chunk :
+    Task_ds.task_inst_id -> int64 * int64 -> t -> unit
+
+  val remove_task_inst_progress_chunk :
     Task_ds.task_inst_id -> int64 * int64 -> t -> unit
 end
 
