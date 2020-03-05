@@ -350,6 +350,9 @@ module Progress : sig
   val add_task_seg_progress_chunk :
     Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
 
+  val remove_task_seg_progress_chunk :
+    Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
+
   val move_task_inst_to_completed : Task_ds.task_inst_id -> sched -> sched
 
   val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> sched -> sched
@@ -357,6 +360,9 @@ module Progress : sig
   val move_task_inst_to_discarded : Task_ds.task_inst_id -> sched -> sched
 
   val add_task_inst_progress_chunk :
+    Task_ds.task_inst_id -> int64 * int64 -> sched -> sched
+
+  val remove_task_inst_progress_chunk :
     Task_ds.task_inst_id -> int64 * int64 -> sched -> sched
 end
 
