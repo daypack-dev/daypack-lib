@@ -350,6 +350,15 @@ module Progress : sig
   val add_task_seg_progress_chunk :
     Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
 
+  val find_task_seg_progress :
+    Task_ds.task_seg_id -> sched -> Task_ds.progress option
+
+  val find_task_seg_progress_chunk_set :
+    Task_ds.task_seg_id -> sched -> Int64_int64_set.t
+
+  val find_task_seg_progress_chunk_seq :
+    Task_ds.task_seg_id -> sched -> (int64 * int64) Seq.t
+
   val remove_task_seg_progress_chunk :
     Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
 
