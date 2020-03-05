@@ -1248,22 +1248,23 @@ module Progress = struct
     ( sid,
       {
         sd with
-        store = {
-          sd.store with
-          task_seg_id_to_progress =
-            Task_seg_id_map.update task_seg_id
-              (fun progress ->
-                 let open Task_ds in
-                 match progress with
-                 | None -> None
-                 | Some progress ->
-                   Some
-                     { chunks = Int64_int64_set.remove chunk progress.chunks }
-              )
-              sd.store.task_seg_id_to_progress
-        }
-      }
-    )
+        store =
+          {
+            sd.store with
+            task_seg_id_to_progress =
+              Task_seg_id_map.update task_seg_id
+                (fun progress ->
+                   let open Task_ds in
+                   match progress with
+                   | None -> None
+                   | Some progress ->
+                     Some
+                       {
+                         chunks = Int64_int64_set.remove chunk progress.chunks;
+                       })
+                sd.store.task_seg_id_to_progress;
+          };
+      } )
 
   let move_task_inst_and_task_segs_internal
       ~(move_task_inst :
@@ -1354,7 +1355,9 @@ module Progress = struct
                    | None -> None
                    | Some progress ->
                      Some
-                       { chunks = Int64_int64_set.remove chunk progress.chunks })
+                       {
+                         chunks = Int64_int64_set.remove chunk progress.chunks;
+                       })
                 sd.store.task_inst_id_to_progress;
           };
       } )
