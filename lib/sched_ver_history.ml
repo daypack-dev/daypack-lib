@@ -24,16 +24,14 @@ let map_head (f : Sched.sched -> 'a * head_choice) (t : t) : 'a =
     ( match choice with
       | Replace_head x -> t.history <- [ x ]
       | New_head x -> t.history <- [ x ]
-      | Do_nothing -> ()
-    );
+      | Do_nothing -> () );
     ret
   | hd :: tl ->
     let ret, choice = f hd in
     ( match choice with
       | Replace_head x -> t.history <- x :: tl
       | New_head x -> t.history <- x :: hd :: tl
-      | Do_nothing -> ()
-    );
+      | Do_nothing -> () );
     ret
 
 module In_place_head = struct
@@ -149,7 +147,6 @@ module In_place_head = struct
          in
          ((), Replace_head sched))
       t
-
 end
 
 module Maybe_append_to_head = struct
@@ -206,31 +203,32 @@ module Maybe_append_to_head = struct
       (chunk : int64 * int64) (t : t) : unit =
     map_head
       (fun sched ->
-        let chunks = Sched.Progress.find_task_seg_progress_chunk_set task_seg_id sched in
-        if Int64_int64_set.mem chunk chunks then
-          let hd' =
-            sched
-            |> Sched.Progress.remove_task_seg_progress_chunk task_seg_id chunk
-          in
-          ((), Replace_head hd')
-        else
-          ((), Do_nothing)
-      )
+         let chunks =
+           Sched.Progress.find_task_seg_progress_chunk_set task_seg_id sched
+         in
+         if Int64_int64_set.mem chunk chunks then
+           let hd' =
+             sched
+             |> Sched.Progress.remove_task_seg_progress_chunk task_seg_id chunk
+           in
+           ((), Replace_head hd')
+         else ((), Do_nothing))
       t
 
   let remove_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
       (chunk : int64 * int64) (t : t) : unit =
     map_head
       (fun sched ->
-         let chunks = Sched.Progress.find_task_inst_progress_chunk_set task_inst_id sched in
+         let chunks =
+           Sched.Progress.find_task_inst_progress_chunk_set task_inst_id sched
+         in
          if Int64_int64_set.mem chunk chunks then
            let hd' =
-             sched |>
-             Sched.Progress.remove_task_inst_progress_chunk task_inst_id chunk
+             sched
+             |> Sched.Progress.remove_task_inst_progress_chunk task_inst_id chunk
            in
            ((), Replace_head hd')
-         else
-           ((), Do_nothing))
+         else ((), Do_nothing))
       t
 
   let sched ~start ~end_exc ~include_sched_reqs_partially_within_time_period

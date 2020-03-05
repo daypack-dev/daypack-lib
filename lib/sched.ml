@@ -1369,7 +1369,8 @@ module Progress = struct
 
   let find_task_inst_progress_chunk_seq (task_inst_id : Task_ds.task_inst_id)
       (sched : sched) : (int64 * int64) Seq.t =
-    find_task_inst_progress_chunk_set task_inst_id sched |> Int64_int64_set.to_seq
+    find_task_inst_progress_chunk_set task_inst_id sched
+    |> Int64_int64_set.to_seq
 
   let remove_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
