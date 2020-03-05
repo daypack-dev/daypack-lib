@@ -1231,8 +1231,8 @@ module Progress = struct
                 (fun progress ->
                    let open Task_ds in
                    match progress with
-                   | None -> Some { chunks = [ chunk ] }
-                   | Some progress -> Some { chunks = chunk :: progress.chunks })
+                   | None -> Some { chunks = Int64_int64_set.empty }
+                   | Some progress -> Some { chunks = Int64_int64_set.add chunk progress.chunks })
                 sd.store.task_seg_id_to_progress;
           };
       } )
@@ -1306,8 +1306,8 @@ module Progress = struct
                 (fun progress ->
                    let open Task_ds in
                    match progress with
-                   | None -> Some { chunks = [ chunk ] }
-                   | Some progress -> Some { chunks = chunk :: progress.chunks })
+                   | None -> Some { chunks = Int64_int64_set.empty }
+                   | Some progress -> Some { chunks = Int64_int64_set.add chunk progress.chunks })
                 sd.store.task_inst_id_to_progress;
           };
       } )
