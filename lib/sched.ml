@@ -1081,6 +1081,18 @@ module Task = struct
     Task_ds.task_data option =
     Task_id_map.find_opt id sd.store.task_discarded_store
 
+  let find_task_any_opt (id : Task_ds.task_id) (sched : sched) :
+    Task_ds.task_data option =
+    match find_task_uncompleted_opt id sched with
+    | Some x -> Some x
+    | None -> (
+        match find_task_completed_opt id sched with
+        | Some x -> Some x
+        | None -> (
+            match find_task_discarded_opt id sched with
+            | Some x -> Some x
+            | None -> None ) )
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -1313,7 +1325,7 @@ end
 
 module Progress = struct
   let move_task_seg_internal
-      ~(move_task_seg :
+      ~(add_task_seg :
           Task_ds.task_seg_id -> Task_ds.task_seg_size -> sched -> sched)
       (task_seg_id : Task_ds.task_seg_id) (sched : sched) : sched =
     match Task_seg.find_task_seg_any_opt task_seg_id sched with
@@ -1321,21 +1333,21 @@ module Progress = struct
     | Some task_seg_size ->
       sched
       |> Task_seg.remove_task_seg_all task_seg_id
-      |> move_task_seg task_seg_id task_seg_size
+      |> add_task_seg task_seg_id task_seg_size
 
   let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    move_task_seg_internal ~move_task_seg:Task_seg.add_task_seg_completed
+    move_task_seg_internal ~add_task_seg:Task_seg.add_task_seg_completed
       task_seg_id sched
 
   let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    move_task_seg_internal ~move_task_seg:Task_seg.add_task_seg_uncompleted
+    move_task_seg_internal ~add_task_seg:Task_seg.add_task_seg_uncompleted
       task_seg_id sched
 
   let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    move_task_seg_internal ~move_task_seg:Task_seg.add_task_seg_discarded
+    move_task_seg_internal ~add_task_seg:Task_seg.add_task_seg_discarded
       task_seg_id sched
 
   let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
@@ -1399,7 +1411,7 @@ module Progress = struct
       } )
 
   let move_task_inst_and_task_segs_internal
-      ~(move_task_inst :
+      ~(add_task_inst :
           Task_ds.task_inst_id -> Task_ds.task_inst_data -> sched -> sched)
       ~(move_task_seg_by_id : Task_ds.task_seg_id -> sched -> sched)
       (task_inst_id : Task_ds.task_inst_id) (sched : sched) : sched =
@@ -1412,7 +1424,7 @@ module Progress = struct
       sched
       |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false
         task_inst_id
-      |> move_task_inst task_inst_id task_inst_data
+      |> add_task_inst task_inst_id task_inst_data
       |> fun sched ->
       Seq.fold_left
         (fun sched task_seg_id -> move_task_seg_by_id task_seg_id sched)
@@ -1421,7 +1433,7 @@ module Progress = struct
   let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id)
       (sched : sched) : sched =
     move_task_inst_and_task_segs_internal
-      ~move_task_inst:Task_inst.add_task_inst_completed
+      ~add_task_inst:Task_inst.add_task_inst_completed
       ~move_task_seg_by_id:move_task_seg_to_completed task_inst_id sched
 
   let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
@@ -1437,8 +1449,27 @@ module Progress = struct
   let move_task_inst_to_discarded (task_inst_id : Task_ds.task_inst_id)
       (sched : sched) : sched =
     move_task_inst_and_task_segs_internal
-      ~move_task_inst:Task_inst.add_task_inst_discarded
+      ~add_task_inst:Task_inst.add_task_inst_discarded
       ~move_task_seg_by_id:move_task_seg_to_discarded task_inst_id sched
+
+  let move_task_and_task_inst_and_task_segs_internal
+      ~(add_task : Task_ds.task_id -> Task_ds.task_data -> sched -> sched)
+      ~(move_task_inst_by_id : Task_ds.task_inst_id -> sched -> sched)
+      (task_id : Task_ds.task_id) (sched : sched) : sched =
+    match Task.find_task_any_opt task_id sched with
+    | None -> sched
+    | Some task_data ->
+      let task_inst_ids =
+        Task_inst.find_task_inst_ids_by_task_id task_id sched
+      in
+      sched
+      |> Task.remove_task_all ~remove_children_task_insts:false
+        ~remove_children_task_segs:false task_id
+      |> add_task task_id task_data
+      |> fun sched ->
+      Seq.fold_left
+        (fun sched task_inst_id -> move_task_inst_by_id task_inst_id sched)
+        sched task_inst_ids
 
   (*$
     let l = [ "seg"; "inst" ] in

@@ -303,6 +303,8 @@ module Task : sig
   val find_task_discarded_opt :
     Task_ds.task_id -> sched -> Task_ds.task_data option
 
+  val find_task_any_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
+
   val remove_task_uncompleted :
     ?remove_children_task_insts:bool ->
     ?remove_children_task_segs:bool ->
