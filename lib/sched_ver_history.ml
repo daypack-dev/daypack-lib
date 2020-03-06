@@ -234,29 +234,30 @@ module Maybe_append_to_head = struct
 
   let sched ~start ~end_exc ~include_sched_reqs_partially_within_time_period
       ~up_to_sched_req_id_inc (t : t) : (unit, unit) result =
-    match t.history with
-    | [] -> Ok ()
-    | hd :: tl -> (
-        let sched_req_records, hd' =
-          hd
-          |> Sched.Recur.instantiate ~start ~end_exc
-          |> Sched.Leftover.sched_for_leftover_task_segs ~start ~end_exc
-          |> Sched.Sched_req.allocate_task_segs_for_pending_sched_reqs ~start
-            ~end_exc ~include_sched_reqs_partially_within_time_period
-            ~up_to_sched_req_id_inc
-        in
-        match sched_req_records with
-        | [] -> Ok ()
-        | _ -> (
-            let possible_scheds =
-              Sched_search.backtracking_search_multi ~start ~end_exc ~base:hd'
-                sched_req_records
-            in
-            match possible_scheds () with
-            | Seq.Nil -> Error ()
-            | Seq.Cons (hd', _) ->
-              t.history <- hd' :: hd :: tl;
-              Ok () ) )
+    map_head
+      (fun hd ->
+         let sched_req_records, hd' =
+           hd
+           |> Sched.Recur.instantiate ~start ~end_exc
+           |> Sched.Leftover.sched_for_leftover_task_segs ~start ~end_exc
+           |> Sched.Sched_req.allocate_task_segs_for_pending_sched_reqs ~start
+             ~end_exc ~include_sched_reqs_partially_within_time_period
+             ~up_to_sched_req_id_inc
+         in
+         match sched_req_records with
+         | [] -> (Ok (), Do_nothing)
+         | _ -> (
+             let possible_scheds =
+               Sched_search.backtracking_search_multi ~start ~end_exc ~base:hd'
+                 sched_req_records
+             in
+             match possible_scheds () with
+             | Seq.Nil -> (Error (), Do_nothing)
+             | Seq.Cons (hd', _) ->
+               (Ok (), New_head hd')
+           )
+      )
+      t
 end
 
 module Append_to_head = struct
