@@ -422,6 +422,9 @@ module Progress : sig
   val find_task_seg_progress :
     Task_ds.task_seg_id -> sched -> Task_ds.progress option
 
+  val find_task_seg_progress_seq_by_task_inst_id :
+    Task_ds.task_inst_id -> sched -> Task_ds.progress Seq.t
+
   val find_task_seg_progress_seq_by_task_id :
     Task_ds.task_id -> sched -> Task_ds.progress Seq.t
 
@@ -430,6 +433,9 @@ module Progress : sig
 
   val find_task_seg_progress_chunk_seq :
     Task_ds.task_seg_id -> sched -> (int64 * int64) Seq.t
+
+  val find_task_seg_progress_chunk_seq_by_task_inst_id :
+    Task_ds.task_inst_id -> sched -> (int64 * int64) Seq.t
 
   val find_task_seg_progress_chunk_seq_by_task_id :
     Task_ds.task_id -> sched -> (int64 * int64) Seq.t
