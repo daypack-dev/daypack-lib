@@ -192,7 +192,8 @@ module Maybe_append_to_head = struct
          in
          let no_task_seg_progress_recorded =
            OSeq.is_empty
-             (Sched.Progress.find_task_seg_progress_chunk_seq_by_task_inst_id task_inst_id hd)
+             (Sched.Progress.find_task_seg_progress_chunk_seq_by_task_inst_id
+                task_inst_id hd)
          in
          let hd' =
            hd
@@ -206,8 +207,7 @@ module Maybe_append_to_head = struct
            no_task_seg_place_s_recorded
            && no_task_inst_progress_recorded
            && no_task_seg_progress_recorded
-         then
-           ((), Replace_head hd')
+         then ((), Replace_head hd')
          else
            let hd' =
              hd'
