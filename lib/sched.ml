@@ -1402,22 +1402,13 @@ module Progress = struct
       ~(move_task_inst :
           Task_ds.task_inst_id -> Task_ds.task_inst_data -> sched -> sched)
       ~(move_task_seg_by_id : Task_ds.task_seg_id -> sched -> sched)
-      (task_inst_id : Task_ds.task_inst_id) ((_sid, sd) as sched : sched) :
+      (task_inst_id : Task_ds.task_inst_id) (sched : sched) :
     sched =
-    let id1, id2, id3 = task_inst_id in
     match Task_inst.find_task_inst_any_opt task_inst_id sched with
     | None -> sched
     | Some task_inst_data ->
       let task_seg_ids =
-        match
-          Task_inst_id_map.find_opt task_inst_id
-            sd.store.task_inst_id_to_task_seg_ids
-        with
-        | None -> Seq.empty
-        | Some s ->
-          Int64_int64_option_set.to_seq s
-          |> Seq.map (fun (task_seg_part, sub_id) ->
-              (id1, id2, id3, task_seg_part, sub_id))
+        Task_seg.find_task_seg_ids_by_task_inst_id task_inst_id sched
       in
       sched
       |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false
