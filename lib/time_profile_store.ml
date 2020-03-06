@@ -113,4 +113,7 @@ module Print = struct
              |> ignore)
           data.periods);
     Buffer.contents buffer
+
+  let debug_print_time_profile_store ?(indent_level = 0) (t : t) =
+    print_string (debug_string_of_time_profile_store ~indent_level t)
 end

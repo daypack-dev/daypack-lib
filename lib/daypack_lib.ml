@@ -21,6 +21,7 @@ module Int64_map = Int64_map
 module Int64_map_utils = Int64_map_utils
 module Int64_set = Int64_set
 module Int64_set_utils = Int64_set_utils
+module Int64_int64_set = Int64_int64_set
 module Int64_int64_option_set = Int64_int64_option_set
 module Int64_int64_option_set_utils = Int64_int64_option_set_utils
 module Task_seg_place_set = Task_seg_place_set
