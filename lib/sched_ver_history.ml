@@ -154,11 +154,11 @@ module Maybe_append_to_head = struct
          let task_seg_place_seq =
            Sched.Agenda.find_task_seg_place_seq_by_task_id task_id (sid, sd)
          in
-         let task_insts =
-           Task_id_map.find_opt task_id sd.store.task_id_to_task_inst_ids
-         let progress_chunks =
-           Sched.Progress.find_task_inst_progress_chunk_set task_id
-         in
+         (* let task_insts =
+          *   Task_id_map.find_opt task_id sd.store.task_id_to_task_inst_ids
+          * let progress_chunks =
+          *   Sched.Progress.find_task_inst_progress_chunk_set task_id
+          * in *)
          match task_seg_place_seq () with
          | Seq.Nil -> ((), Replace_head hd')
          | _ ->
