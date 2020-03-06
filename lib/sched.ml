@@ -814,6 +814,7 @@ module Task_inst = struct
 
     print_task_inst_add ();
     print_task_inst_find ();
+    print_task_inst_ids_find_by_task_id ();
     print_task_inst_seq_find_by_task_id ()
   *)
 
@@ -883,42 +884,58 @@ module Task_inst = struct
             | Some x -> Some x
             | None -> None ) )
 
-  let find_task_inst_seq_any_by_task_id (id : Task_ds.task_id)
-      ((_, sd) as sched : sched) : Task_ds.task_inst Seq.t =
+  let find_task_inst_ids_any_by_task_id (id : Task_ds.task_id) ((_, sd) : sched)
+    : Task_ds.task_inst_id Seq.t =
     let id1, id2 = id in
     Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
     |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
     |> Seq.map (fun x -> (id1, id2, x))
+
+  let find_task_inst_ids_uncompleted_by_task_id (id : Task_ds.task_id)
+      ((_, sd) : sched) : Task_ds.task_inst_id Seq.t =
+    let id1, id2 = id in
+    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+    |> Seq.map (fun x -> (id1, id2, x))
+
+  let find_task_inst_ids_completed_by_task_id (id : Task_ds.task_id)
+      ((_, sd) : sched) : Task_ds.task_inst_id Seq.t =
+    let id1, id2 = id in
+    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+    |> Seq.map (fun x -> (id1, id2, x))
+
+  let find_task_inst_ids_discarded_by_task_id (id : Task_ds.task_id)
+      ((_, sd) : sched) : Task_ds.task_inst_id Seq.t =
+    let id1, id2 = id in
+    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+    |> Seq.map (fun x -> (id1, id2, x))
+
+  let find_task_inst_seq_any_by_task_id (id : Task_ds.task_id) (sched : sched) :
+    Task_ds.task_inst Seq.t =
+    find_task_inst_ids_any_by_task_id id sched
     |> Seq.filter_map (fun task_inst_id ->
         find_task_inst_any_opt task_inst_id sched
         |> Option.map (fun task_inst_data -> (task_inst_id, task_inst_data)))
 
   let find_task_inst_seq_uncompleted_by_task_id (id : Task_ds.task_id)
-      ((_, sd) as sched : sched) : Task_ds.task_inst Seq.t =
-    let id1, id2 = id in
-    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
-    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
-    |> Seq.map (fun x -> (id1, id2, x))
+      (sched : sched) : Task_ds.task_inst Seq.t =
+    find_task_inst_ids_uncompleted_by_task_id id sched
     |> Seq.filter_map (fun task_inst_id ->
         find_task_inst_uncompleted_opt task_inst_id sched
         |> Option.map (fun task_inst_data -> (task_inst_id, task_inst_data)))
 
   let find_task_inst_seq_completed_by_task_id (id : Task_ds.task_id)
-      ((_, sd) as sched : sched) : Task_ds.task_inst Seq.t =
-    let id1, id2 = id in
-    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
-    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
-    |> Seq.map (fun x -> (id1, id2, x))
+      (sched : sched) : Task_ds.task_inst Seq.t =
+    find_task_inst_ids_completed_by_task_id id sched
     |> Seq.filter_map (fun task_inst_id ->
         find_task_inst_completed_opt task_inst_id sched
         |> Option.map (fun task_inst_data -> (task_inst_id, task_inst_data)))
 
   let find_task_inst_seq_discarded_by_task_id (id : Task_ds.task_id)
-      ((_, sd) as sched : sched) : Task_ds.task_inst Seq.t =
-    let id1, id2 = id in
-    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
-    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
-    |> Seq.map (fun x -> (id1, id2, x))
+      (sched : sched) : Task_ds.task_inst Seq.t =
+    find_task_inst_ids_discarded_by_task_id id sched
     |> Seq.filter_map (fun task_inst_id ->
         find_task_inst_discarded_opt task_inst_id sched
         |> Option.map (fun task_inst_data -> (task_inst_id, task_inst_data)))

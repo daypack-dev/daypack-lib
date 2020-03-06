@@ -240,6 +240,18 @@ module Task_inst : sig
   val find_task_inst_any_opt :
     Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
+  val find_task_inst_ids_uncompleted_by_task_id :
+    Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
+
+  val find_task_inst_ids_completed_by_task_id :
+    Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
+
+  val find_task_inst_ids_discarded_by_task_id :
+    Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
+
+  val find_task_inst_ids_any_by_task_id :
+    Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
+
   val find_task_inst_seq_uncompleted_by_task_id :
     Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
 
