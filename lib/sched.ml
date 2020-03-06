@@ -1472,7 +1472,22 @@ module Progress = struct
            "          | Some progress -> Some { chunks = Int64_int64_set.add \
             chunk progress.chunks })\n";
          Printf.printf "     sd.store.task_%s_id_to_progress\n" s;
-         Printf.printf "}})\n")
+         Printf.printf "}})\n";
+
+         Printf.printf
+           "let find_task_%s_progress (id : Task_ds.task_%s_id) ((_sid, sd) : \
+            sched) : Task_ds.progress option =\n"
+           s s;
+         Printf.printf
+           "Task_%s_id_map.find_opt id sd.store.task_%s_id_to_progress\n" s s;
+
+         Printf.printf
+           "let find_task_%s_progress_seq_by_task_id (task_id : \
+            Task_ds.task_id) (sched : sched) : Task_ds.progress Seq.t =\n"
+           s;
+         Printf.printf "Task_%s.find_task_%s_ids_by_task_id task_id sched\n" s s;
+         Printf.printf
+           "|> Seq.filter_map (fun id -> find_task_%s_progress id sched)\n" s)
       l
   *)
 
@@ -1497,6 +1512,15 @@ module Progress = struct
           };
       } )
 
+  let find_task_seg_progress (id : Task_ds.task_seg_id) ((_sid, sd) : sched) :
+    Task_ds.progress option =
+    Task_seg_id_map.find_opt id sd.store.task_seg_id_to_progress
+
+  let find_task_seg_progress_seq_by_task_id (task_id : Task_ds.task_id)
+      (sched : sched) : Task_ds.progress Seq.t =
+    Task_seg.find_task_seg_ids_by_task_id task_id sched
+    |> Seq.filter_map (fun id -> find_task_seg_progress id sched)
+
   let add_task_inst_progress_chunk (id : Task_ds.task_inst_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
     ( sid,
@@ -1518,17 +1542,16 @@ module Progress = struct
           };
       } )
 
-  (*$*)
+  let find_task_inst_progress (id : Task_ds.task_inst_id) ((_sid, sd) : sched) :
+    Task_ds.progress option =
+    Task_inst_id_map.find_opt id sd.store.task_inst_id_to_progress
 
-  let find_task_seg_progress (task_seg_id : Task_ds.task_seg_id)
-      ((_sid, sd) : sched) : Task_ds.progress option =
-    Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress
-
-  let find_task_seg_progress_seq_by_task_id (task_id : Task_ds.task_id)
+  let find_task_inst_progress_seq_by_task_id (task_id : Task_ds.task_id)
       (sched : sched) : Task_ds.progress Seq.t =
-    Task_seg.find_task_seg_ids_by_task_id task_id sched
-    |> Seq.filter_map (fun task_seg_id ->
-        find_task_seg_progress task_seg_id sched)
+    Task_inst.find_task_inst_ids_by_task_id task_id sched
+    |> Seq.filter_map (fun id -> find_task_inst_progress id sched)
+
+  (*$*)
 
   let find_task_seg_progress_chunk_set (task_seg_id : Task_ds.task_seg_id)
       ((_sid, sd) : sched) : Int64_int64_set.t =
@@ -1570,16 +1593,6 @@ module Progress = struct
                 sd.store.task_seg_id_to_progress;
           };
       } )
-
-  let find_task_inst_progress (task_inst_id : Task_ds.task_inst_id)
-      ((_sid, sd) : sched) : Task_ds.progress option =
-    Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress
-
-  let find_task_inst_progress_seq_by_task_id (task_id : Task_ds.task_id)
-      (sched : sched) : Task_ds.progress Seq.t =
-    Task_inst.find_task_inst_ids_by_task_id task_id sched
-    |> Seq.filter_map (fun task_inst_id ->
-        find_task_inst_progress task_inst_id sched)
 
   let find_task_inst_progress_chunk_set (task_inst_id : Task_ds.task_inst_id)
       ((_sid, sd) : sched) : Int64_int64_set.t =
