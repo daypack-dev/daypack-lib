@@ -222,16 +222,7 @@ module Task_inst : sig
   val find_task_inst_any_opt :
     Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-  val find_task_inst_ids_uncompleted_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
-
-  val find_task_inst_ids_completed_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
-
-  val find_task_inst_ids_discarded_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
-
-  val find_task_inst_ids_any_by_task_id :
+  val find_task_inst_ids_by_task_id :
     Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
 
   val find_task_inst_seq_uncompleted_by_task_id :
@@ -431,11 +422,17 @@ module Progress : sig
   val find_task_inst_progress :
     Task_ds.task_inst_id -> sched -> Task_ds.progress option
 
+  val find_task_inst_progress_seq_by_task_id :
+    Task_ds.task_id -> sched -> Task_ds.progress Seq.t
+
   val find_task_inst_progress_chunk_set :
     Task_ds.task_inst_id -> sched -> Int64_int64_set.t
 
   val find_task_inst_progress_chunk_seq :
     Task_ds.task_inst_id -> sched -> (int64 * int64) Seq.t
+
+  val find_task_inst_progress_chunk_seq_by_task_id :
+    Task_ds.task_id -> sched -> (int64 * int64) Seq.t
 
   val remove_task_inst_progress_chunk :
     Task_ds.task_inst_id -> int64 * int64 -> sched -> sched

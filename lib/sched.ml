@@ -560,28 +560,28 @@ module Task_seg = struct
 
   let find_task_seg_seq_any_by_task_inst_id (id : Task_ds.task_inst_id)
       (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_any_by_task_inst_id id sched
+    find_task_seg_ids_by_task_inst_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_any_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
   let find_task_seg_seq_uncompleted_by_task_inst_id (id : Task_ds.task_inst_id)
       (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_uncompleted_by_task_inst_id id sched
+    find_task_seg_ids_by_task_inst_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_uncompleted_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
   let find_task_seg_seq_completed_by_task_inst_id (id : Task_ds.task_inst_id)
       (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_completed_by_task_inst_id id sched
+    find_task_seg_ids_by_task_inst_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_completed_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
   let find_task_seg_seq_discarded_by_task_inst_id (id : Task_ds.task_inst_id)
       (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_discarded_by_task_inst_id id sched
+    find_task_seg_ids_by_task_inst_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_discarded_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
@@ -600,28 +600,28 @@ module Task_seg = struct
 
   let find_task_seg_seq_any_by_task_id (id : Task_ds.task_id) (sched : sched) :
     Task_ds.task_seg Seq.t =
-    find_task_seg_ids_any_by_task_id id sched
+    find_task_seg_ids_by_task_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_any_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
   let find_task_seg_seq_uncompleted_by_task_id (id : Task_ds.task_id)
       (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_uncompleted_by_task_id id sched
+    find_task_seg_ids_by_task_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_uncompleted_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
   let find_task_seg_seq_completed_by_task_id (id : Task_ds.task_id)
       (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_completed_by_task_id id sched
+    find_task_seg_ids_by_task_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_completed_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
   let find_task_seg_seq_discarded_by_task_id (id : Task_ds.task_id)
       (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_discarded_by_task_id id sched
+    find_task_seg_ids_by_task_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_discarded_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
@@ -1475,9 +1475,12 @@ module Progress = struct
       ((_sid, sd) : sched) : Task_ds.progress option =
     Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress
 
-  (* let find_task_inst_progress_seq_by_task_id (task_id : Task_ds.task_id)
-   *     (sched : sched) : Task_ds.progress Seq.t =
-   *   Task_inst.find_task_inst_ids_any_by_task_id *)
+  let find_task_inst_progress_seq_by_task_id (task_id : Task_ds.task_id)
+      (sched : sched) : Task_ds.progress Seq.t =
+    Task_inst.find_task_inst_ids_by_task_id task_id sched
+    |> Seq.filter_map (fun task_inst_id ->
+        find_task_inst_progress task_inst_id sched
+      )
 
   let find_task_inst_progress_chunk_set (task_inst_id : Task_ds.task_inst_id)
       ((_sid, sd) : sched) : Int64_int64_set.t =
@@ -1491,6 +1494,13 @@ module Progress = struct
       (sched : sched) : (int64 * int64) Seq.t =
     find_task_inst_progress_chunk_set task_inst_id sched
     |> Int64_int64_set.to_seq
+
+  let find_task_inst_progress_chunk_seq_by_task_id (task_id : Task_ds.task_id)
+      (sched : sched) : (int64 * int64) Seq.t =
+    Task_inst.find_task_inst_ids_by_task_id task_id sched
+    |> Seq.flat_map (fun task_inst_id ->
+        find_task_inst_progress_chunk_seq task_inst_id sched
+      )
 
   let remove_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
