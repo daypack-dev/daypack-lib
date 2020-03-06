@@ -1402,8 +1402,7 @@ module Progress = struct
       ~(move_task_inst :
           Task_ds.task_inst_id -> Task_ds.task_inst_data -> sched -> sched)
       ~(move_task_seg_by_id : Task_ds.task_seg_id -> sched -> sched)
-      (task_inst_id : Task_ds.task_inst_id) (sched : sched) :
-    sched =
+      (task_inst_id : Task_ds.task_inst_id) (sched : sched) : sched =
     match Task_inst.find_task_inst_any_opt task_inst_id sched with
     | None -> sched
     | Some task_inst_data ->
