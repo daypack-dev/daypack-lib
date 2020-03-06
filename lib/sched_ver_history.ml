@@ -391,12 +391,9 @@ module Print = struct
   let debug_string_of_sched_ver_history ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (t : t) =
     Debug_print.bprintf ~indent_level buffer "sched ver history\n";
-    List.iteri
-      (fun i sched ->
-         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "ver : %d\n"
-           i
-         |> ignore;
-         Sched.Print.debug_string_of_sched ~indent_level:(indent_level + 2)
+    List.iter
+      (fun sched ->
+         Sched.Print.debug_string_of_sched ~indent_level:(indent_level + 1)
            ~buffer sched
          |> ignore)
       (List.rev t.history);
