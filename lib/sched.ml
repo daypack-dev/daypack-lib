@@ -677,7 +677,8 @@ module Task_inst = struct
   (*$ #use "lib/sched.cinaps";;
 
     print_task_inst_add ();
-    print_task_inst_find ()
+    print_task_inst_find ();
+    print_task_inst_seq_find_by_task_id ()
   *)
 
   let add_task_inst_uncompleted (id : Task_ds.task_inst_id)
@@ -745,6 +746,46 @@ module Task_inst = struct
             match find_task_inst_discarded_opt id sched with
             | Some x -> Some x
             | None -> None ) )
+
+  let find_task_inst_seq_any_by_task_id (id : Task_ds.task_id)
+      ((_, sd) as sched : sched) : Task_ds.task_inst Seq.t =
+    let id1, id2 = id in
+    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+    |> Seq.map (fun x -> (id1, id2, x))
+    |> Seq.filter_map (fun task_inst_id ->
+        find_task_inst_any_opt task_inst_id sched
+        |> Option.map (fun task_inst_data -> (task_inst_id, task_inst_data)))
+
+  let find_task_inst_seq_uncompleted_by_task_id (id : Task_ds.task_id)
+      ((_, sd) as sched : sched) : Task_ds.task_inst Seq.t =
+    let id1, id2 = id in
+    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+    |> Seq.map (fun x -> (id1, id2, x))
+    |> Seq.filter_map (fun task_inst_id ->
+        find_task_inst_uncompleted_opt task_inst_id sched
+        |> Option.map (fun task_inst_data -> (task_inst_id, task_inst_data)))
+
+  let find_task_inst_seq_completed_by_task_id (id : Task_ds.task_id)
+      ((_, sd) as sched : sched) : Task_ds.task_inst Seq.t =
+    let id1, id2 = id in
+    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+    |> Seq.map (fun x -> (id1, id2, x))
+    |> Seq.filter_map (fun task_inst_id ->
+        find_task_inst_completed_opt task_inst_id sched
+        |> Option.map (fun task_inst_data -> (task_inst_id, task_inst_data)))
+
+  let find_task_inst_seq_discarded_by_task_id (id : Task_ds.task_id)
+      ((_, sd) as sched : sched) : Task_ds.task_inst Seq.t =
+    let id1, id2 = id in
+    Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+    |> Seq.map (fun x -> (id1, id2, x))
+    |> Seq.filter_map (fun task_inst_id ->
+        find_task_inst_discarded_opt task_inst_id sched
+        |> Option.map (fun task_inst_data -> (task_inst_id, task_inst_data)))
 
   (*$*)
 
