@@ -482,6 +482,7 @@ module Task_seg = struct
 
     print_task_seg_add ();
     print_task_seg_find ();
+    print_task_seg_ids_find_by_task_inst_id ();
     print_task_seg_seq_find_by_task_inst_id ();
     print_task_seg_seq_find_by_task_id ()
   *)
@@ -549,42 +550,58 @@ module Task_seg = struct
             | Some x -> Some x
             | None -> None ) )
 
-  let find_task_seg_seq_any_by_task_inst_id (id : Task_ds.task_inst_id)
-      ((_, sd) as sched : sched) : Task_ds.task_seg Seq.t =
+  let find_task_seg_ids_any_by_task_inst_id (id : Task_ds.task_inst_id)
+      ((_, sd) : sched) : Task_ds.task_seg_id Seq.t =
     let id1, id2, id3 = id in
     Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids
     |> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq
     |> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))
+
+  let find_task_seg_ids_uncompleted_by_task_inst_id (id : Task_ds.task_inst_id)
+      ((_, sd) : sched) : Task_ds.task_seg_id Seq.t =
+    let id1, id2, id3 = id in
+    Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq
+    |> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))
+
+  let find_task_seg_ids_completed_by_task_inst_id (id : Task_ds.task_inst_id)
+      ((_, sd) : sched) : Task_ds.task_seg_id Seq.t =
+    let id1, id2, id3 = id in
+    Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq
+    |> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))
+
+  let find_task_seg_ids_discarded_by_task_inst_id (id : Task_ds.task_inst_id)
+      ((_, sd) : sched) : Task_ds.task_seg_id Seq.t =
+    let id1, id2, id3 = id in
+    Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids
+    |> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq
+    |> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))
+
+  let find_task_seg_seq_any_by_task_inst_id (id : Task_ds.task_inst_id)
+      (sched : sched) : Task_ds.task_seg Seq.t =
+    find_task_seg_ids_any_by_task_inst_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_any_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
   let find_task_seg_seq_uncompleted_by_task_inst_id (id : Task_ds.task_inst_id)
-      ((_, sd) as sched : sched) : Task_ds.task_seg Seq.t =
-    let id1, id2, id3 = id in
-    Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids
-    |> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq
-    |> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))
+      (sched : sched) : Task_ds.task_seg Seq.t =
+    find_task_seg_ids_uncompleted_by_task_inst_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_uncompleted_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
   let find_task_seg_seq_completed_by_task_inst_id (id : Task_ds.task_inst_id)
-      ((_, sd) as sched : sched) : Task_ds.task_seg Seq.t =
-    let id1, id2, id3 = id in
-    Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids
-    |> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq
-    |> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))
+      (sched : sched) : Task_ds.task_seg Seq.t =
+    find_task_seg_ids_completed_by_task_inst_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_completed_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
   let find_task_seg_seq_discarded_by_task_inst_id (id : Task_ds.task_inst_id)
-      ((_, sd) as sched : sched) : Task_ds.task_seg Seq.t =
-    let id1, id2, id3 = id in
-    Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids
-    |> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq
-    |> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))
+      (sched : sched) : Task_ds.task_seg Seq.t =
+    find_task_seg_ids_discarded_by_task_inst_id id sched
     |> Seq.filter_map (fun task_seg_id ->
         find_task_seg_discarded_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
