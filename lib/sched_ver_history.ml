@@ -182,6 +182,18 @@ module Maybe_append_to_head = struct
   let remove_task_inst (task_inst_id : Task_ds.task_inst_id) (t : t) : unit =
     map_head
       (fun hd ->
+         let task_seg_place_seq =
+           Sched.Agenda.find_task_seg_place_seq_by_task_inst_id task_inst_id hd
+         in
+         let no_task_seg_place_s_recorded = OSeq.is_empty task_seg_place_seq in
+         let no_task_inst_progress_recorded =
+           OSeq.is_empty
+             (Sched.Progress.find_task_inst_progress_chunk_seq task_inst_id hd)
+         in
+         let no_task_seg_progress_recorded =
+           OSeq.is_empty
+             (Sched.Progress.find_task_seg_progress_chunk_seq_by_task_inst_id task_inst_id hd)
+         in
          let hd' =
            hd
            |> Sched.Task_inst.remove_task_inst_all task_inst_id
@@ -190,12 +202,13 @@ module Maybe_append_to_head = struct
            |> Sched.Sched_req.remove_sched_req_record_by_task_inst_id
              task_inst_id
          in
-         let task_seg_place_seq =
-           Sched.Agenda.find_task_seg_place_seq_by_task_inst_id task_inst_id hd
-         in
-         match task_seg_place_seq () with
-         | Seq.Nil -> ((), Replace_head hd')
-         | _ ->
+         if
+           no_task_seg_place_s_recorded
+           && no_task_inst_progress_recorded
+           && no_task_seg_progress_recorded
+         then
+           ((), Replace_head hd')
+         else
            let hd' =
              hd'
              |> Sched.Sched_req.remove_sched_req_record_by_task_inst_id
