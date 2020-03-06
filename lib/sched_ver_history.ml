@@ -23,7 +23,7 @@ let map_head (f : Sched.sched -> 'a * head_choice) (t : t) : 'a =
     ( match choice with
       | Replace_head x -> t.history <- x :: tl
       | New_head (_id, x) ->
-        let (id, _) = hd in
+        let id, _ = hd in
         t.history <- (succ id, x) :: hd :: tl
       | Do_nothing -> () );
     ret
