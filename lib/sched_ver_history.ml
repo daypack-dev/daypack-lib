@@ -188,8 +188,7 @@ module Maybe_append_to_head = struct
                task_inst_id
              |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
            in
-           ((), New_head hd')
-      )
+           ((), New_head hd'))
       t
 
   let remove_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
@@ -245,10 +244,7 @@ module Maybe_append_to_head = struct
              in
              match possible_scheds () with
              | Seq.Nil -> (Error (), Do_nothing)
-             | Seq.Cons (hd', _) ->
-               (Ok (), New_head hd')
-           )
-      )
+             | Seq.Cons (hd', _) -> (Ok (), New_head hd') ))
       t
 end
 
