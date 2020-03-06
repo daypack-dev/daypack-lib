@@ -9,14 +9,6 @@ type head_choice =
   | New_head of Sched.sched
   | Do_nothing
 
-(* let fold_head ~none:(f_none : unit -> Sched.sched)
- *     ~some:(f : Sched.sched -> Sched.sched) (t : t) : unit =
- *   match t.history with
- *   | [] -> t.history <- [ f_none () ]
- *   | hd :: tl ->
- *     let hd = f hd in
- *     t.history <- hd :: tl *)
-
 let map_head (f : Sched.sched -> 'a * head_choice) (t : t) : 'a =
   match t.history with
   | [] ->
