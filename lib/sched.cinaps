@@ -919,21 +919,17 @@ let print_task_seg_seq_find_by_task_id () =
          s;
        Printf.printf "let (id1, id2) = id in\n";
        Printf.printf
-         "let task_inst_ids = Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids\n";
-       Printf.printf
-         "  |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq\n";
+         "let task_inst_ids = Task_id_map.find_opt id \
+          sd.store.task_id_to_task_inst_ids\n";
+       Printf.printf "  |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq\n";
        Printf.printf "  |> Seq.map (fun x -> (id1, id2, x))\n";
        Printf.printf "in\n";
+       Printf.printf "task_inst_ids";
+       Printf.printf "|> Seq.flat_map\n";
        Printf.printf
-         "Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids\n";
-       Printf.printf
-         "|> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq\n";
-       Printf.printf "|> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))\n";
-       Printf.printf "|> Seq.filter_map (fun task_seg_id ->\n";
-       Printf.printf "  find_task_seg_%s_opt task_seg_id sched\n" s;
-       Printf.printf
-         "  |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data))\n";
-       Printf.printf ")\n")
+         "  (fun task_inst_id -> find_task_seg_seq_%s_by_task_inst_id \
+          task_inst_id sched)\n"
+         s)
     ("any" :: store_types)
 
 let print_task_seg_remove () =

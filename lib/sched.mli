@@ -140,6 +140,30 @@ module Task_seg : sig
   val find_task_seg_discarded_opt :
     Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
 
+  val find_task_seg_seq_uncompleted_by_task_inst_id :
+    Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
+
+  val find_task_seg_seq_completed_by_task_inst_id :
+    Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
+
+  val find_task_seg_seq_discarded_by_task_inst_id :
+    Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
+
+  val find_task_seg_seq_any_by_task_inst_id :
+    Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
+
+  val find_task_seg_seq_uncompleted_by_task_id :
+    Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+
+  val find_task_seg_seq_completed_by_task_id :
+    Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+
+  val find_task_seg_seq_discarded_by_task_id :
+    Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+
+  val find_task_seg_seq_any_by_task_id :
+    Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+
   val remove_task_seg_uncompleted : Task_ds.task_seg_id -> sched -> sched
 
   val remove_task_seg_completed : Task_ds.task_seg_id -> sched -> sched

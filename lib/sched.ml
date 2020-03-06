@@ -589,6 +589,54 @@ module Task_seg = struct
         find_task_seg_discarded_opt task_seg_id sched
         |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
+  let find_task_seg_seq_any_by_task_id (id : Task_ds.task_id)
+      ((_, sd) as sched : sched) : Task_ds.task_seg Seq.t =
+    let id1, id2 = id in
+    let task_inst_ids =
+      Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+      |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+      |> Seq.map (fun x -> (id1, id2, x))
+    in
+    task_inst_ids
+    |> Seq.flat_map (fun task_inst_id ->
+        find_task_seg_seq_any_by_task_inst_id task_inst_id sched)
+
+  let find_task_seg_seq_uncompleted_by_task_id (id : Task_ds.task_id)
+      ((_, sd) as sched : sched) : Task_ds.task_seg Seq.t =
+    let id1, id2 = id in
+    let task_inst_ids =
+      Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+      |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+      |> Seq.map (fun x -> (id1, id2, x))
+    in
+    task_inst_ids
+    |> Seq.flat_map (fun task_inst_id ->
+        find_task_seg_seq_uncompleted_by_task_inst_id task_inst_id sched)
+
+  let find_task_seg_seq_completed_by_task_id (id : Task_ds.task_id)
+      ((_, sd) as sched : sched) : Task_ds.task_seg Seq.t =
+    let id1, id2 = id in
+    let task_inst_ids =
+      Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+      |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+      |> Seq.map (fun x -> (id1, id2, x))
+    in
+    task_inst_ids
+    |> Seq.flat_map (fun task_inst_id ->
+        find_task_seg_seq_completed_by_task_inst_id task_inst_id sched)
+
+  let find_task_seg_seq_discarded_by_task_id (id : Task_ds.task_id)
+      ((_, sd) as sched : sched) : Task_ds.task_seg Seq.t =
+    let id1, id2 = id in
+    let task_inst_ids =
+      Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+      |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+      |> Seq.map (fun x -> (id1, id2, x))
+    in
+    task_inst_ids
+    |> Seq.flat_map (fun task_inst_id ->
+        find_task_seg_seq_discarded_by_task_inst_id task_inst_id sched)
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
