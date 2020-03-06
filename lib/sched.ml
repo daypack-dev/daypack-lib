@@ -1487,7 +1487,51 @@ module Progress = struct
            s;
          Printf.printf "Task_%s.find_task_%s_ids_by_task_id task_id sched\n" s s;
          Printf.printf
-           "|> Seq.filter_map (fun id -> find_task_%s_progress id sched)\n" s)
+           "|> Seq.filter_map (fun id -> find_task_%s_progress id sched)\n" s;
+
+         Printf.printf
+           "let find_task_%s_progress_chunk_set (id : Task_ds.task_%s_id) \
+            ((_sid, sd) : sched) : Int64_int64_set.t =\n"
+           s s;
+         Printf.printf
+           "match Task_%s_id_map.find_opt id sd.store.task_%s_id_to_progress with\n"
+           s s;
+         Printf.printf "| None -> Int64_int64_set.empty\n";
+         Printf.printf "| Some progress -> progress.chunks\n";
+
+         Printf.printf
+           "let find_task_%s_progress_chunk_seq (id : Task_ds.task_%s_id) \
+            (sched : sched) : (int64 * int64) Seq.t =\n"
+           s s;
+         Printf.printf "find_task_%s_progress_chunk_set id sched\n" s;
+         Printf.printf "|> Int64_int64_set.to_seq\n";
+
+         Printf.printf
+           "let find_task_%s_progress_chunk_seq_by_task_id (task_id : \
+            Task_ds.task_id) (sched : sched) : (int64 * int64) Seq.t =\n"
+           s;
+         Printf.printf "Task_%s.find_task_%s_ids_by_task_id task_id sched\n" s s;
+         Printf.printf
+           "|> Seq.flat_map (fun id -> find_task_%s_progress_chunk_seq id sched)"
+           s;
+
+         Printf.printf
+           "let remove_task_%s_progress_chunk (id : Task_ds.task_%s_id) (chunk \
+            : int64 * int64) ((sid, sd) : sched) : sched =\n"
+           s s;
+         Printf.printf "(sid, { sd with store = { sd.store with\n";
+         Printf.printf "  task_%s_id_to_progress =\n" s;
+         Printf.printf "  Task_%s_id_map.update id\n" s;
+         Printf.printf "  (fun progress ->\n";
+         Printf.printf "     let open Task_ds in\n";
+         Printf.printf "     match progress with\n";
+         Printf.printf "     | None -> None\n";
+         Printf.printf "     | Some progress ->\n";
+         Printf.printf
+           "       Some { chunks = Int64_int64_set.remove chunk progress.chunks }\n";
+         Printf.printf "  )\n";
+         Printf.printf "  sd.store.task_%s_id_to_progress\n" s;
+         Printf.printf "} } )\n")
       l
   *)
 
@@ -1521,6 +1565,44 @@ module Progress = struct
     Task_seg.find_task_seg_ids_by_task_id task_id sched
     |> Seq.filter_map (fun id -> find_task_seg_progress id sched)
 
+  let find_task_seg_progress_chunk_set (id : Task_ds.task_seg_id)
+      ((_sid, sd) : sched) : Int64_int64_set.t =
+    match Task_seg_id_map.find_opt id sd.store.task_seg_id_to_progress with
+    | None -> Int64_int64_set.empty
+    | Some progress -> progress.chunks
+
+  let find_task_seg_progress_chunk_seq (id : Task_ds.task_seg_id)
+      (sched : sched) : (int64 * int64) Seq.t =
+    find_task_seg_progress_chunk_set id sched |> Int64_int64_set.to_seq
+
+  let find_task_seg_progress_chunk_seq_by_task_id (task_id : Task_ds.task_id)
+      (sched : sched) : (int64 * int64) Seq.t =
+    Task_seg.find_task_seg_ids_by_task_id task_id sched
+    |> Seq.flat_map (fun id -> find_task_seg_progress_chunk_seq id sched)
+
+  let remove_task_seg_progress_chunk (id : Task_ds.task_seg_id)
+      (chunk : int64 * int64) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_seg_id_to_progress =
+              Task_seg_id_map.update id
+                (fun progress ->
+                   let open Task_ds in
+                   match progress with
+                   | None -> None
+                   | Some progress ->
+                     Some
+                       {
+                         chunks = Int64_int64_set.remove chunk progress.chunks;
+                       })
+                sd.store.task_seg_id_to_progress;
+          };
+      } )
+
   let add_task_inst_progress_chunk (id : Task_ds.task_inst_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
     ( sid,
@@ -1551,25 +1633,45 @@ module Progress = struct
     Task_inst.find_task_inst_ids_by_task_id task_id sched
     |> Seq.filter_map (fun id -> find_task_inst_progress id sched)
 
-  (*$*)
-
-  let find_task_seg_progress_chunk_set (task_seg_id : Task_ds.task_seg_id)
+  let find_task_inst_progress_chunk_set (id : Task_ds.task_inst_id)
       ((_sid, sd) : sched) : Int64_int64_set.t =
-    match
-      Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress
-    with
+    match Task_inst_id_map.find_opt id sd.store.task_inst_id_to_progress with
     | None -> Int64_int64_set.empty
     | Some progress -> progress.chunks
 
-  let find_task_seg_progress_chunk_seq (task_seg_id : Task_ds.task_seg_id)
+  let find_task_inst_progress_chunk_seq (id : Task_ds.task_inst_id)
       (sched : sched) : (int64 * int64) Seq.t =
-    find_task_seg_progress_chunk_set task_seg_id sched |> Int64_int64_set.to_seq
+    find_task_inst_progress_chunk_set id sched |> Int64_int64_set.to_seq
 
-  let find_task_seg_progress_chunk_seq_by_task_id (task_id : Task_ds.task_id)
+  let find_task_inst_progress_chunk_seq_by_task_id (task_id : Task_ds.task_id)
       (sched : sched) : (int64 * int64) Seq.t =
-    Task_seg.find_task_seg_ids_by_task_id task_id sched
-    |> Seq.flat_map (fun task_seg_id ->
-        find_task_seg_progress_chunk_seq task_seg_id sched)
+    Task_inst.find_task_inst_ids_by_task_id task_id sched
+    |> Seq.flat_map (fun id -> find_task_inst_progress_chunk_seq id sched)
+
+  let remove_task_inst_progress_chunk (id : Task_ds.task_inst_id)
+      (chunk : int64 * int64) ((sid, sd) : sched) : sched =
+    ( sid,
+      {
+        sd with
+        store =
+          {
+            sd.store with
+            task_inst_id_to_progress =
+              Task_inst_id_map.update id
+                (fun progress ->
+                   let open Task_ds in
+                   match progress with
+                   | None -> None
+                   | Some progress ->
+                     Some
+                       {
+                         chunks = Int64_int64_set.remove chunk progress.chunks;
+                       })
+                sd.store.task_inst_id_to_progress;
+          };
+      } )
+
+  (*$*)
 
   let remove_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
@@ -1593,25 +1695,6 @@ module Progress = struct
                 sd.store.task_seg_id_to_progress;
           };
       } )
-
-  let find_task_inst_progress_chunk_set (task_inst_id : Task_ds.task_inst_id)
-      ((_sid, sd) : sched) : Int64_int64_set.t =
-    match
-      Task_inst_id_map.find_opt task_inst_id sd.store.task_inst_id_to_progress
-    with
-    | None -> Int64_int64_set.empty
-    | Some progress -> progress.chunks
-
-  let find_task_inst_progress_chunk_seq (task_inst_id : Task_ds.task_inst_id)
-      (sched : sched) : (int64 * int64) Seq.t =
-    find_task_inst_progress_chunk_set task_inst_id sched
-    |> Int64_int64_set.to_seq
-
-  let find_task_inst_progress_chunk_seq_by_task_id (task_id : Task_ds.task_id)
-      (sched : sched) : (int64 * int64) Seq.t =
-    Task_inst.find_task_inst_ids_by_task_id task_id sched
-    |> Seq.flat_map (fun task_inst_id ->
-        find_task_inst_progress_chunk_seq task_inst_id sched)
 
   let remove_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
       (chunk : int64 * int64) ((sid, sd) : sched) : sched =
