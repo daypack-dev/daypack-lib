@@ -920,12 +920,12 @@ let print_task_seg_seq_find_by_task_inst_id () =
        Printf.printf ")\n")
     ("any" :: store_types)
 
-let print_task_seg_seq_find_by_task_id () =
+let print_task_seg_ids_find_by_task_id () =
   List.iter
     (fun s ->
        Printf.printf
-         "let find_task_seg_seq_%s_by_task_id (id : Task_ds.task_id)\n\
-          ((_, sd) as sched : sched) : Task_ds.task_seg Seq.t =\n"
+         "let find_task_seg_ids_%s_by_task_id (id : Task_ds.task_id)\n\
+          ((_, sd) as sched : sched) : Task_ds.task_seg_id Seq.t =\n"
          s;
        Printf.printf "let (id1, id2) = id in\n";
        Printf.printf
@@ -937,9 +937,24 @@ let print_task_seg_seq_find_by_task_id () =
        Printf.printf "task_inst_ids";
        Printf.printf "|> Seq.flat_map\n";
        Printf.printf
-         "  (fun task_inst_id -> find_task_seg_seq_%s_by_task_inst_id \
+         "  (fun task_inst_id -> find_task_seg_ids_%s_by_task_inst_id \
           task_inst_id sched)\n"
          s)
+    ("any" :: store_types)
+
+let print_task_seg_seq_find_by_task_id () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let find_task_seg_seq_%s_by_task_id (id : Task_ds.task_id)\n\
+          (sched : sched) : Task_ds.task_seg Seq.t =\n"
+         s;
+       Printf.printf "find_task_seg_ids_%s_by_task_id id sched\n" s;
+       Printf.printf "|> Seq.filter_map (fun task_seg_id ->\n";
+       Printf.printf "  find_task_seg_%s_opt task_seg_id sched\n" s;
+       Printf.printf
+         "  |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data))\n";
+       Printf.printf ")\n")
     ("any" :: store_types)
 
 let print_task_seg_remove () =
