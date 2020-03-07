@@ -1408,66 +1408,6 @@ module Progress = struct
     move_task_seg_internal ~add_task_seg:Task_seg.Add.add_task_seg_discarded
       task_seg_id sched
 
-  let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
-      (chunk : int64 * int64) ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_id_to_progress =
-              Task_seg_id_map.update task_seg_id
-                (fun progress ->
-                   let open Task_ds in
-                   match progress with
-                   | None -> Some { chunks = Int64_int64_set.empty }
-                   | Some progress ->
-                     Some
-                       { chunks = Int64_int64_set.add chunk progress.chunks })
-                sd.store.task_seg_id_to_progress;
-          };
-      } )
-
-  let find_task_seg_progress (task_seg_id : Task_ds.task_seg_id)
-      ((_sid, sd) : sched) : Task_ds.progress option =
-    Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress
-
-  let find_task_seg_progress_chunk_set (task_seg_id : Task_ds.task_seg_id)
-      ((_sid, sd) : sched) : Int64_int64_set.t =
-    match
-      Task_seg_id_map.find_opt task_seg_id sd.store.task_seg_id_to_progress
-    with
-    | None -> Int64_int64_set.empty
-    | Some progress -> progress.chunks
-
-  let find_task_seg_progress_chunk_seq (task_seg_id : Task_ds.task_seg_id)
-      (sched : sched) : (int64 * int64) Seq.t =
-    find_task_seg_progress_chunk_set task_seg_id sched |> Int64_int64_set.to_seq
-
-  let remove_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
-      (chunk : int64 * int64) ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_id_to_progress =
-              Task_seg_id_map.update task_seg_id
-                (fun progress ->
-                   let open Task_ds in
-                   match progress with
-                   | None -> None
-                   | Some progress ->
-                     Some
-                       {
-                         chunks = Int64_int64_set.remove chunk progress.chunks;
-                       })
-                sd.store.task_seg_id_to_progress;
-          };
-      } )
-
   let move_task_inst_and_task_segs_internal
       ~(add_task_inst :
           Task_ds.task_inst_id -> Task_ds.task_inst_data -> sched -> sched)
