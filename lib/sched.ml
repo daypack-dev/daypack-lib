@@ -522,7 +522,8 @@ module Task_seg = struct
                 Task_seg_id_map.add id size sd.store.task_seg_discarded_store;
             };
         } )
-      (*$*)
+
+    (*$*)
   end
 
   module Find = struct
@@ -535,201 +536,205 @@ module Task_seg = struct
       print_task_seg_seq_find_by_task_id ()
     *)
 
-  let find_task_seg_uncompleted_opt (id : Task_ds.task_seg_id) ((_, sd) : sched)
-    : Task_ds.task_seg_size option =
-    Task_seg_id_map.find_opt id sd.store.task_seg_uncompleted_store
+    let find_task_seg_uncompleted_opt (id : Task_ds.task_seg_id)
+        ((_, sd) : sched) : Task_ds.task_seg_size option =
+      Task_seg_id_map.find_opt id sd.store.task_seg_uncompleted_store
 
-  let find_task_seg_completed_opt (id : Task_ds.task_seg_id) ((_, sd) : sched) :
-    Task_ds.task_seg_size option =
-    Task_seg_id_map.find_opt id sd.store.task_seg_completed_store
+    let find_task_seg_completed_opt (id : Task_ds.task_seg_id) ((_, sd) : sched)
+      : Task_ds.task_seg_size option =
+      Task_seg_id_map.find_opt id sd.store.task_seg_completed_store
 
-  let find_task_seg_discarded_opt (id : Task_ds.task_seg_id) ((_, sd) : sched) :
-    Task_ds.task_seg_size option =
-    Task_seg_id_map.find_opt id sd.store.task_seg_discarded_store
+    let find_task_seg_discarded_opt (id : Task_ds.task_seg_id) ((_, sd) : sched)
+      : Task_ds.task_seg_size option =
+      Task_seg_id_map.find_opt id sd.store.task_seg_discarded_store
 
-  let find_task_seg_any_opt (id : Task_ds.task_seg_id) (sched : sched) :
-    Task_ds.task_seg_size option =
-    match find_task_seg_uncompleted_opt id sched with
-    | Some x -> Some x
-    | None -> (
-        match find_task_seg_completed_opt id sched with
-        | Some x -> Some x
-        | None -> (
-            match find_task_seg_discarded_opt id sched with
-            | Some x -> Some x
-            | None -> None ) )
+    let find_task_seg_any_opt (id : Task_ds.task_seg_id) (sched : sched) :
+      Task_ds.task_seg_size option =
+      match find_task_seg_uncompleted_opt id sched with
+      | Some x -> Some x
+      | None -> (
+          match find_task_seg_completed_opt id sched with
+          | Some x -> Some x
+          | None -> (
+              match find_task_seg_discarded_opt id sched with
+              | Some x -> Some x
+              | None -> None ) )
 
-  let find_task_seg_ids_by_task_inst_id (id : Task_ds.task_inst_id)
-      ((_, sd) : sched) : Task_ds.task_seg_id Seq.t =
-    let id1, id2, id3 = id in
-    Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids
-    |> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq
-    |> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))
+    let find_task_seg_ids_by_task_inst_id (id : Task_ds.task_inst_id)
+        ((_, sd) : sched) : Task_ds.task_seg_id Seq.t =
+      let id1, id2, id3 = id in
+      Task_inst_id_map.find_opt id sd.store.task_inst_id_to_task_seg_ids
+      |> Option.fold ~none:Seq.empty ~some:Int64_int64_option_set.to_seq
+      |> Seq.map (fun (x, y) -> (id1, id2, id3, x, y))
 
-  let find_task_seg_seq_any_by_task_inst_id (id : Task_ds.task_inst_id)
-      (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_by_task_inst_id id sched
-    |> Seq.filter_map (fun task_seg_id ->
-        find_task_seg_any_opt task_seg_id sched
-        |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
+    let find_task_seg_seq_any_by_task_inst_id (id : Task_ds.task_inst_id)
+        (sched : sched) : Task_ds.task_seg Seq.t =
+      find_task_seg_ids_by_task_inst_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_any_opt task_seg_id sched
+          |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
-  let find_task_seg_seq_uncompleted_by_task_inst_id (id : Task_ds.task_inst_id)
-      (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_by_task_inst_id id sched
-    |> Seq.filter_map (fun task_seg_id ->
-        find_task_seg_uncompleted_opt task_seg_id sched
-        |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
+    let find_task_seg_seq_uncompleted_by_task_inst_id
+        (id : Task_ds.task_inst_id) (sched : sched) : Task_ds.task_seg Seq.t =
+      find_task_seg_ids_by_task_inst_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_uncompleted_opt task_seg_id sched
+          |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
-  let find_task_seg_seq_completed_by_task_inst_id (id : Task_ds.task_inst_id)
-      (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_by_task_inst_id id sched
-    |> Seq.filter_map (fun task_seg_id ->
-        find_task_seg_completed_opt task_seg_id sched
-        |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
+    let find_task_seg_seq_completed_by_task_inst_id (id : Task_ds.task_inst_id)
+        (sched : sched) : Task_ds.task_seg Seq.t =
+      find_task_seg_ids_by_task_inst_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_completed_opt task_seg_id sched
+          |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
-  let find_task_seg_seq_discarded_by_task_inst_id (id : Task_ds.task_inst_id)
-      (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_by_task_inst_id id sched
-    |> Seq.filter_map (fun task_seg_id ->
-        find_task_seg_discarded_opt task_seg_id sched
-        |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
+    let find_task_seg_seq_discarded_by_task_inst_id (id : Task_ds.task_inst_id)
+        (sched : sched) : Task_ds.task_seg Seq.t =
+      find_task_seg_ids_by_task_inst_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_discarded_opt task_seg_id sched
+          |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
-  let find_task_seg_ids_by_task_id (id : Task_ds.task_id)
-      ((_, sd) as sched : sched) : Task_ds.task_seg_id Seq.t =
-    let id1, id2 = id in
-    let task_inst_ids =
-      Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
-      |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
-      |> Seq.map (fun x -> (id1, id2, x))
-    in
-    task_inst_ids
-    |> Seq.flat_map (fun task_inst_id ->
-        find_task_seg_ids_by_task_inst_id task_inst_id sched)
+    let find_task_seg_ids_by_task_id (id : Task_ds.task_id)
+        ((_, sd) as sched : sched) : Task_ds.task_seg_id Seq.t =
+      let id1, id2 = id in
+      let task_inst_ids =
+        Task_id_map.find_opt id sd.store.task_id_to_task_inst_ids
+        |> Option.fold ~none:Seq.empty ~some:Int64_set.to_seq
+        |> Seq.map (fun x -> (id1, id2, x))
+      in
+      task_inst_ids
+      |> Seq.flat_map (fun task_inst_id ->
+          find_task_seg_ids_by_task_inst_id task_inst_id sched)
 
-  let find_task_seg_seq_any_by_task_id (id : Task_ds.task_id) (sched : sched) :
-    Task_ds.task_seg Seq.t =
-    find_task_seg_ids_by_task_id id sched
-    |> Seq.filter_map (fun task_seg_id ->
-        find_task_seg_any_opt task_seg_id sched
-        |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
+    let find_task_seg_seq_any_by_task_id (id : Task_ds.task_id) (sched : sched)
+      : Task_ds.task_seg Seq.t =
+      find_task_seg_ids_by_task_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_any_opt task_seg_id sched
+          |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
-  let find_task_seg_seq_uncompleted_by_task_id (id : Task_ds.task_id)
-      (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_by_task_id id sched
-    |> Seq.filter_map (fun task_seg_id ->
-        find_task_seg_uncompleted_opt task_seg_id sched
-        |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
+    let find_task_seg_seq_uncompleted_by_task_id (id : Task_ds.task_id)
+        (sched : sched) : Task_ds.task_seg Seq.t =
+      find_task_seg_ids_by_task_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_uncompleted_opt task_seg_id sched
+          |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
-  let find_task_seg_seq_completed_by_task_id (id : Task_ds.task_id)
-      (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_by_task_id id sched
-    |> Seq.filter_map (fun task_seg_id ->
-        find_task_seg_completed_opt task_seg_id sched
-        |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
+    let find_task_seg_seq_completed_by_task_id (id : Task_ds.task_id)
+        (sched : sched) : Task_ds.task_seg Seq.t =
+      find_task_seg_ids_by_task_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_completed_opt task_seg_id sched
+          |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
-  let find_task_seg_seq_discarded_by_task_id (id : Task_ds.task_id)
-      (sched : sched) : Task_ds.task_seg Seq.t =
-    find_task_seg_ids_by_task_id id sched
-    |> Seq.filter_map (fun task_seg_id ->
-        find_task_seg_discarded_opt task_seg_id sched
-        |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
+    let find_task_seg_seq_discarded_by_task_id (id : Task_ds.task_id)
+        (sched : sched) : Task_ds.task_seg Seq.t =
+      find_task_seg_ids_by_task_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_discarded_opt task_seg_id sched
+          |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
-  (*$*)
-end
+    (*$*)
+  end
 
-module Remove = struct
-  (*$ #use "lib/sched.cinaps";;
+  module Remove = struct
+    (*$ #use "lib/sched.cinaps";;
 
-    print_task_seg_remove ();
-    print_task_seg_remove_strict ();
-    print_task_seg_remove_seq ()
-  *)
+      print_task_seg_remove ();
+      print_task_seg_remove_strict ();
+      print_task_seg_remove_seq ()
+    *)
 
-  let remove_task_seg_uncompleted (id : Task_ds.task_seg_id) (sched : sched) :
-    sched =
-    let sid, sd = Id.remove_task_seg_id id sched in
+    let remove_task_seg_uncompleted (id : Task_ds.task_seg_id) (sched : sched) :
+      sched =
+      let sid, sd = Id.remove_task_seg_id id sched in
 
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_uncompleted_store =
-              Task_seg_id_map.remove id sd.store.task_seg_uncompleted_store;
-          };
-      } )
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              task_seg_uncompleted_store =
+                Task_seg_id_map.remove id sd.store.task_seg_uncompleted_store;
+            };
+        } )
 
-  let remove_task_seg_completed (id : Task_ds.task_seg_id) (sched : sched) :
-    sched =
-    let sid, sd = Id.remove_task_seg_id id sched in
+    let remove_task_seg_completed (id : Task_ds.task_seg_id) (sched : sched) :
+      sched =
+      let sid, sd = Id.remove_task_seg_id id sched in
 
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_completed_store =
-              Task_seg_id_map.remove id sd.store.task_seg_completed_store;
-          };
-      } )
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              task_seg_completed_store =
+                Task_seg_id_map.remove id sd.store.task_seg_completed_store;
+            };
+        } )
 
-  let remove_task_seg_discarded (id : Task_ds.task_seg_id) (sched : sched) :
-    sched =
-    let sid, sd = Id.remove_task_seg_id id sched in
+    let remove_task_seg_discarded (id : Task_ds.task_seg_id) (sched : sched) :
+      sched =
+      let sid, sd = Id.remove_task_seg_id id sched in
 
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_discarded_store =
-              Task_seg_id_map.remove id sd.store.task_seg_discarded_store;
-          };
-      } )
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              task_seg_discarded_store =
+                Task_seg_id_map.remove id sd.store.task_seg_discarded_store;
+            };
+        } )
 
-  let remove_task_seg_all (id : Task_ds.task_seg_id) (sched : sched) : sched =
-    sched
-    |> remove_task_seg_uncompleted id
-    |> remove_task_seg_completed id
-    |> remove_task_seg_discarded id
+    let remove_task_seg_all (id : Task_ds.task_seg_id) (sched : sched) : sched =
+      sched
+      |> remove_task_seg_uncompleted id
+      |> remove_task_seg_completed id
+      |> remove_task_seg_discarded id
 
-  let remove_task_seg_uncompleted_strict (id : Task_ds.task_seg_id)
-      (sched : sched) : (sched, unit) result =
-    match Find.find_task_seg_uncompleted_opt id sched with
-    | None -> Error ()
-    | Some _ -> Ok (remove_task_seg_uncompleted id sched)
+    let remove_task_seg_uncompleted_strict (id : Task_ds.task_seg_id)
+        (sched : sched) : (sched, unit) result =
+      match Find.find_task_seg_uncompleted_opt id sched with
+      | None -> Error ()
+      | Some _ -> Ok (remove_task_seg_uncompleted id sched)
 
-  let remove_task_seg_completed_strict (id : Task_ds.task_seg_id)
-      (sched : sched) : (sched, unit) result =
-    match Find.find_task_seg_completed_opt id sched with
-    | None -> Error ()
-    | Some _ -> Ok (remove_task_seg_completed id sched)
+    let remove_task_seg_completed_strict (id : Task_ds.task_seg_id)
+        (sched : sched) : (sched, unit) result =
+      match Find.find_task_seg_completed_opt id sched with
+      | None -> Error ()
+      | Some _ -> Ok (remove_task_seg_completed id sched)
 
-  let remove_task_seg_discarded_strict (id : Task_ds.task_seg_id)
-      (sched : sched) : (sched, unit) result =
-    match Find.find_task_seg_discarded_opt id sched with
-    | None -> Error ()
-    | Some _ -> Ok (remove_task_seg_discarded id sched)
+    let remove_task_seg_discarded_strict (id : Task_ds.task_seg_id)
+        (sched : sched) : (sched, unit) result =
+      match Find.find_task_seg_discarded_opt id sched with
+      | None -> Error ()
+      | Some _ -> Ok (remove_task_seg_discarded id sched)
 
-  let remove_task_seg_uncompleted_seq (ids : Task_ds.task_seg_id Seq.t)
-      (sched : sched) : sched =
-    Seq.fold_left
-      (fun sched id -> remove_task_seg_uncompleted id sched)
-      sched ids
+    let remove_task_seg_uncompleted_seq (ids : Task_ds.task_seg_id Seq.t)
+        (sched : sched) : sched =
+      Seq.fold_left
+        (fun sched id -> remove_task_seg_uncompleted id sched)
+        sched ids
 
-  let remove_task_seg_completed_seq (ids : Task_ds.task_seg_id Seq.t)
-      (sched : sched) : sched =
-    Seq.fold_left (fun sched id -> remove_task_seg_completed id sched) sched ids
+    let remove_task_seg_completed_seq (ids : Task_ds.task_seg_id Seq.t)
+        (sched : sched) : sched =
+      Seq.fold_left
+        (fun sched id -> remove_task_seg_completed id sched)
+        sched ids
 
-  let remove_task_seg_discarded_seq (ids : Task_ds.task_seg_id Seq.t)
-      (sched : sched) : sched =
-    Seq.fold_left (fun sched id -> remove_task_seg_discarded id sched) sched ids
+    let remove_task_seg_discarded_seq (ids : Task_ds.task_seg_id Seq.t)
+        (sched : sched) : sched =
+      Seq.fold_left
+        (fun sched id -> remove_task_seg_discarded id sched)
+        sched ids
 
-  (*$*)
-end
+    (*$*)
+  end
 end
 
 module Task_inst = struct
@@ -888,7 +893,8 @@ module Task_inst = struct
     sched
     |> (fun sched ->
         if remove_children_task_segs then
-          Task_seg.Remove.remove_task_seg_uncompleted_seq children_task_seg_ids sched
+          Task_seg.Remove.remove_task_seg_uncompleted_seq children_task_seg_ids
+            sched
         else sched)
     |> (fun (sid, sd) ->
         ( sid,
@@ -913,7 +919,8 @@ module Task_inst = struct
     sched
     |> (fun sched ->
         if remove_children_task_segs then
-          Task_seg.Remove.remove_task_seg_completed_seq children_task_seg_ids sched
+          Task_seg.Remove.remove_task_seg_completed_seq children_task_seg_ids
+            sched
         else sched)
     |> (fun (sid, sd) ->
         ( sid,
@@ -937,7 +944,8 @@ module Task_inst = struct
     sched
     |> (fun sched ->
         if remove_children_task_segs then
-          Task_seg.Remove.remove_task_seg_discarded_seq children_task_seg_ids sched
+          Task_seg.Remove.remove_task_seg_discarded_seq children_task_seg_ids
+            sched
         else sched)
     |> (fun (sid, sd) ->
         ( sid,
