@@ -1283,6 +1283,7 @@ module Task = struct
 end
 
 module Agenda = struct
+  module Add = struct
   let add_task_seg_place
       (((_id1, _id2, _id3, _id4, _id5), start, _end_exc) as task_seg_place :
          Task_ds.task_seg_place) ((sid, sd) : sched) : sched =
@@ -1310,24 +1311,28 @@ module Agenda = struct
     Seq.fold_left
       (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
       sched task_seg_place_s
+      end
 
+  module Filter = struct
   let filter_task_seg_place_seq (f : Task_ds.task_seg_place -> bool)
       ((_, sd) : sched) : Task_ds.task_seg_place Seq.t =
     sd.agenda.indexed_by_start
     |> Int64_map.to_seq
     |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
     |> Seq.filter f
+end
 
+  module Find = struct
   let find_task_seg_place_seq_by_task_id (task_id : Task_ds.task_id)
       (sched : sched) : Task_ds.task_seg_place Seq.t =
-    filter_task_seg_place_seq
+    Filter.filter_task_seg_place_seq
       (fun ((id1, id2, _id3, _id4, _id5), _, _) -> (id1, id2) = task_id)
       sched
 
   let find_task_seg_place_seq_by_task_inst_id
       (task_inst_id : Task_ds.task_inst_id) (sched : sched) :
     Task_ds.task_seg_place Seq.t =
-    filter_task_seg_place_seq
+    Filter.filter_task_seg_place_seq
       (fun ((id1, id2, id3, _id4, _id5), _, _) ->
          (id1, id2, id3) = task_inst_id)
       sched
@@ -1338,7 +1343,9 @@ module Agenda = struct
     |> Int64_map.to_seq
     |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
     |> Seq.filter (fun (id, _, _) -> task_seg_id = id)
+      end
 
+  module Remove = struct
   let remove_task_seg_place
       ((task_seg_id, start, end_exc) : Task_ds.task_seg_place)
       ((sid, sd) : sched) : sched =
@@ -1369,16 +1376,17 @@ module Agenda = struct
       sched task_seg_place_seq
 
   let remove_task_seg_place_by_task_id task_id sched =
-    let s = find_task_seg_place_seq_by_task_id task_id sched in
+    let s = Find.find_task_seg_place_seq_by_task_id task_id sched in
     remove_task_seg_place_seq s sched
 
   let remove_task_seg_place_by_task_inst_id task_inst_id sched =
-    let s = find_task_seg_place_seq_by_task_inst_id task_inst_id sched in
+    let s = Find.find_task_seg_place_seq_by_task_inst_id task_inst_id sched in
     remove_task_seg_place_seq s sched
 
   let remove_task_seg_place_by_task_seg_id task_seg_id sched =
-    let s = find_task_seg_place_seq_by_task_seg_id task_seg_id sched in
+    let s = Find.find_task_seg_place_seq_by_task_seg_id task_seg_id sched in
     remove_task_seg_place_seq s sched
+      end
 end
 
 module Progress = struct

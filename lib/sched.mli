@@ -375,17 +375,23 @@ module Task : sig
 end
 
 module Agenda : sig
+  module Add : sig
   val add_task_seg_place : Task_ds.task_seg_place -> sched -> sched
 
   val add_task_seg_place_list : Task_ds.task_seg_place list -> sched -> sched
 
   val add_task_seg_place_seq : Task_ds.task_seg_place Seq.t -> sched -> sched
+    end
 
-  val find_task_seg_place_seq_by_task_seg_id :
-    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_place Seq.t
-
+  module Filter : sig
   val filter_task_seg_place_seq :
     (Task_ds.task_seg_place -> bool) -> sched -> Task_ds.task_seg_place Seq.t
+
+    end
+
+  module Find : sig
+  val find_task_seg_place_seq_by_task_seg_id :
+    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_place Seq.t
 
   val find_task_seg_place_seq_by_task_id :
     Task_ds.task_id -> sched -> Task_ds.task_seg_place Seq.t
@@ -395,7 +401,9 @@ module Agenda : sig
 
   val find_task_seg_place_seq_by_task_seg_id :
     Task_ds.task_seg_id -> sched -> Task_ds.task_seg_place Seq.t
+      end
 
+  module Remove : sig
   val remove_task_seg_place : Task_ds.task_seg_place -> sched -> sched
 
   val remove_task_seg_place_seq : Task_ds.task_seg_place Seq.t -> sched -> sched
@@ -407,6 +415,7 @@ module Agenda : sig
 
   val remove_task_seg_place_by_task_seg_id :
     Task_ds.task_seg_id -> sched -> sched
+    end
 end
 
 module Progress : sig

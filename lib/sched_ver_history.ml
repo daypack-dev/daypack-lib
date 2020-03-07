@@ -149,7 +149,7 @@ module Maybe_append_to_head = struct
     map_head
       (fun hd ->
          let task_seg_place_seq =
-           Sched.Agenda.find_task_seg_place_seq_by_task_id task_id hd
+           Sched.Agenda.Find.find_task_seg_place_seq_by_task_id task_id hd
          in
          let no_task_seg_place_s_recorded = OSeq.is_empty task_seg_place_seq in
          let no_task_inst_progress_recorded =
@@ -177,7 +177,7 @@ module Maybe_append_to_head = struct
            let hd' =
              hd'
              |> Sched.Sched_req.Remove.remove_sched_req_record_by_task_id task_id
-             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
+             |> Sched.Agenda.Remove.remove_task_seg_place_seq task_seg_place_seq
            in
            ((), New_head hd'))
       t
@@ -186,7 +186,7 @@ module Maybe_append_to_head = struct
     map_head
       (fun hd ->
          let task_seg_place_seq =
-           Sched.Agenda.find_task_seg_place_seq_by_task_inst_id task_inst_id hd
+           Sched.Agenda.Find.find_task_seg_place_seq_by_task_inst_id task_inst_id hd
          in
          let no_task_seg_place_s_recorded = OSeq.is_empty task_seg_place_seq in
          let no_task_inst_progress_recorded =
@@ -217,7 +217,7 @@ module Maybe_append_to_head = struct
              hd'
              |> Sched.Sched_req.Remove.remove_sched_req_record_by_task_inst_id
                task_inst_id
-             |> Sched.Agenda.remove_task_seg_place_seq task_seg_place_seq
+             |> Sched.Agenda.Remove.remove_task_seg_place_seq task_seg_place_seq
            in
            ((), New_head hd'))
       t
