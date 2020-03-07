@@ -2252,7 +2252,10 @@ module Recur = struct
         | Task_ds.Arithemtic_seq
             ( { start = seq_start; end_exc = seq_end_exc; diff },
               { task_inst_data; sched_req_template } ) ->
-          let rec aux (cur : int64) (end_exc : int64 option) (diff : int64) (task_inst_data : Task_ds.task_inst_data) (sched_req_template : Task_ds.sched_req_template) : (Task_ds.task_inst_data * Task_ds.sched_req_template) Seq.t =
+          let rec aux (cur : int64) (end_exc : int64 option) (diff : int64)
+              (task_inst_data : Task_ds.task_inst_data)
+              (sched_req_template : Task_ds.sched_req_template) :
+            (Task_ds.task_inst_data * Task_ds.sched_req_template) Seq.t =
             let continue =
               match end_exc with
               | None -> true

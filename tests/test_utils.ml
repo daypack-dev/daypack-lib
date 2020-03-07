@@ -416,7 +416,8 @@ let arith_seq_gen =
   let open QCheck.Gen in
   map3
     (fun start offset diff ->
-       Daypack_lib.Task_ds.{ start; end_exc = Option.map (fun x -> Int64.add start x) offset; diff })
+       let open Daypack_lib.Task_ds in
+       { start; end_exc = Option.map (fun x -> Int64.add start x) offset; diff })
     pos_int64_gen (opt small_pos_int64_gen) small_nz_pos_int64_gen
 
 let arith_seq =

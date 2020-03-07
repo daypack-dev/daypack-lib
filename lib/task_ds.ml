@@ -300,8 +300,7 @@ module Print = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "start = %Ld"
       arith_seq.start;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "end_exc = %s"
-      (Option.fold ~none:"None" ~some:Int64.to_string
-          arith_seq.end_exc);
+      (Option.fold ~none:"None" ~some:Int64.to_string arith_seq.end_exc);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "diff = %Ld"
       arith_seq.diff;
     Debug_print.bprintf ~indent_level buffer "}";
@@ -341,7 +340,8 @@ module Print = struct
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "start : %Ld\n" start;
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
-              "end_exc : %s\n" (Option.fold ~none:"None" ~some:Int64.to_string end_exc);
+              "end_exc : %s\n"
+              (Option.fold ~none:"None" ~some:Int64.to_string end_exc);
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "diff : %Ld\n" diff;
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
