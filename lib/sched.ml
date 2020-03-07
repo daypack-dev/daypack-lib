@@ -425,6 +425,7 @@ module Quota = struct
 end
 
 module Task_seg = struct
+  module Add = struct
   let add_task_seg ~(parent_task_inst_id : Task_ds.task_inst_id)
       (size : Task_ds.task_seg_size) ((sid, sd) : sched) :
     Task_ds.task_seg * sched =
@@ -526,6 +527,7 @@ module Task_seg = struct
               Task_seg_id_map.add id size sd.store.task_seg_discarded_store;
           };
       } )
+end
 
   let find_task_seg_uncompleted_opt (id : Task_ds.task_seg_id) ((_, sd) : sched)
     : Task_ds.task_seg_size option =
@@ -1239,7 +1241,7 @@ module Agenda = struct
         sd.agenda.indexed_by_start
     in
     (sid, { sd with agenda = { indexed_by_start } })
-    |> Task_seg.add_task_seg_via_task_seg_place task_seg_place
+    |> Task_seg.Add.add_task_seg_via_task_seg_place task_seg_place
 
   let add_task_seg_place_list (task_seg_place_s : Task_ds.task_seg_place list)
       (sched : sched) : sched =
@@ -1337,17 +1339,17 @@ module Progress = struct
 
   let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    move_task_seg_internal ~add_task_seg:Task_seg.add_task_seg_completed
+    move_task_seg_internal ~add_task_seg:Task_seg.Add.add_task_seg_completed
       task_seg_id sched
 
   let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    move_task_seg_internal ~add_task_seg:Task_seg.add_task_seg_uncompleted
+    move_task_seg_internal ~add_task_seg:Task_seg.Add.add_task_seg_uncompleted
       task_seg_id sched
 
   let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    move_task_seg_internal ~add_task_seg:Task_seg.add_task_seg_discarded
+    move_task_seg_internal ~add_task_seg:Task_seg.Add.add_task_seg_discarded
       task_seg_id sched
 
   let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
@@ -2133,7 +2135,7 @@ module Sched_req = struct
          match sched_req_data_unit with
          | Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start } ->
            let task_seg_related_data, sched =
-             Task_seg.add_task_seg_via_task_seg_alloc_req task_seg_related_data
+             Task_seg.Add.add_task_seg_via_task_seg_alloc_req task_seg_related_data
                sched
            in
            ( Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start }
@@ -2141,31 +2143,31 @@ module Sched_req = struct
              sched )
          | Shift x ->
            let task_seg_related_data_list, sched =
-             Task_seg.add_task_segs_via_task_seg_alloc_req_list
+             Task_seg.Add.add_task_segs_via_task_seg_alloc_req_list
                x.task_seg_related_data_list sched
            in
            (Shift { x with task_seg_related_data_list } :: acc, sched)
          | Split_and_shift x ->
            let task_seg_related_data, sched =
-             Task_seg.add_task_seg_via_task_seg_alloc_req
+             Task_seg.Add.add_task_seg_via_task_seg_alloc_req
                x.task_seg_related_data sched
            in
            (Split_and_shift { x with task_seg_related_data } :: acc, sched)
          | Split_even x ->
            let task_seg_related_data, sched =
-             Task_seg.add_task_seg_via_task_seg_alloc_req
+             Task_seg.Add.add_task_seg_via_task_seg_alloc_req
                x.task_seg_related_data sched
            in
            (Split_even { x with task_seg_related_data } :: acc, sched)
          | Time_share x ->
            let task_seg_related_data_list, sched =
-             Task_seg.add_task_segs_via_task_seg_alloc_req_list
+             Task_seg.Add.add_task_segs_via_task_seg_alloc_req_list
                x.task_seg_related_data_list sched
            in
            (Time_share { x with task_seg_related_data_list } :: acc, sched)
          | Push_toward x ->
            let task_seg_related_data, sched =
-             Task_seg.add_task_seg_via_task_seg_alloc_req
+             Task_seg.Add.add_task_seg_via_task_seg_alloc_req
                x.task_seg_related_data sched
            in
            (Push_toward { x with task_seg_related_data } :: acc, sched))

@@ -111,6 +111,7 @@ module Quota : sig
 end
 
 module Task_seg : sig
+  module Add : sig
   val add_task_seg :
     parent_task_inst_id:Task_ds.task_inst_id ->
     Task_ds.task_seg_size ->
@@ -130,6 +131,7 @@ module Task_seg : sig
 
   val add_task_segs_via_task_seg_place_seq :
     Task_ds.task_seg_place Seq.t -> sched -> sched
+end
 
   val find_task_seg_uncompleted_opt :
     Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
