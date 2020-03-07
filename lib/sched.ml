@@ -1784,357 +1784,106 @@ end
 
 module Sched_req = struct
   module Enqueue = struct
-  let enqueue_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
-      (sched : sched) : Sched_req_ds.sched_req * sched =
-    let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
-    ( (sched_req_id, sched_req_data),
-      ( sid,
-        {
-          sd with
-          store =
-            {
-              sd.store with
-              sched_req_pending_store =
-                Sched_req_id_map.add sched_req_id sched_req_data
-                  sd.store.sched_req_pending_store;
-            };
-        } ) )
+    let enqueue_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
+        (sched : sched) : Sched_req_ds.sched_req * sched =
+      let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
+      ( (sched_req_id, sched_req_data),
+        ( sid,
+          {
+            sd with
+            store =
+              {
+                sd.store with
+                sched_req_pending_store =
+                  Sched_req_id_map.add sched_req_id sched_req_data
+                    sd.store.sched_req_pending_store;
+              };
+          } ) )
 
-  let enqueue_sched_req_data_list
-      (sched_req_data_list : Sched_req_ds.sched_req_data list) (sched : sched) :
-    Sched_req_ds.sched_req list * sched =
-    List.fold_left
-      (fun (sched_reqs, sched) sched_req_data ->
-         let sched_req, sched = enqueue_sched_req_data sched_req_data sched in
-         (sched_req :: sched_reqs, sched))
-      ([], sched) sched_req_data_list
-    |> fun (l, s) -> (List.rev l, s)
-end
+    let enqueue_sched_req_data_list
+        (sched_req_data_list : Sched_req_ds.sched_req_data list) (sched : sched)
+      : Sched_req_ds.sched_req list * sched =
+      List.fold_left
+        (fun (sched_reqs, sched) sched_req_data ->
+           let sched_req, sched = enqueue_sched_req_data sched_req_data sched in
+           (sched_req :: sched_reqs, sched))
+        ([], sched) sched_req_data_list
+      |> fun (l, s) -> (List.rev l, s)
+  end
 
   module Dequeue = struct
-  let dequeue_sched_req (sched_req_id : int64) ((sid, sd) : sched) : sched =
-    match
-      Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store
-    with
-    | None -> (sid, sd)
-    | Some _ ->
-      let sid, sd = Id.remove_sched_req_id sched_req_id (sid, sd) in
-      ( sid,
-        {
-          sd with
-          store =
-            {
-              sd.store with
-              sched_req_pending_store =
-                Sched_req_id_map.remove sched_req_id
-                  sd.store.sched_req_pending_store;
-            };
-        } )
-      end
+    let dequeue_sched_req (sched_req_id : int64) ((sid, sd) : sched) : sched =
+      match
+        Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store
+      with
+      | None -> (sid, sd)
+      | Some _ ->
+        let sid, sd = Id.remove_sched_req_id sched_req_id (sid, sd) in
+        ( sid,
+          {
+            sd with
+            store =
+              {
+                sd.store with
+                sched_req_pending_store =
+                  Sched_req_id_map.remove sched_req_id
+                    sd.store.sched_req_pending_store;
+              };
+          } )
+  end
 
   module Filter = struct
-  let filter_sched_req_record_seq (f : Sched_req_ds.sched_req_record -> bool)
-      ((_, sd) : sched) : Sched_req_ds.sched_req_record Seq.t =
-    sd.store.sched_req_record_store |> Sched_req_id_map.to_seq |> Seq.filter f
-      end
+    let filter_sched_req_record_seq (f : Sched_req_ds.sched_req_record -> bool)
+        ((_, sd) : sched) : Sched_req_ds.sched_req_record Seq.t =
+      sd.store.sched_req_record_store |> Sched_req_id_map.to_seq |> Seq.filter f
+  end
 
   module Find = struct
-  let find_sched_req_record_by_task_id ((id1, id2) : Task_ds.task_id)
-      (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
-    Filter.filter_sched_req_record_seq
-      (fun (_, l) ->
-         List.exists
-           (fun x ->
-              List.exists
-                (fun ((id1', id2', _id3', _id4', _id5'), _) ->
-                   id1 = id1' && id2 = id2')
-                (Sched_req_data_unit_skeleton.get_inner_data x))
-           l)
-      sched
+    let find_sched_req_record_by_task_id ((id1, id2) : Task_ds.task_id)
+        (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
+      Filter.filter_sched_req_record_seq
+        (fun (_, l) ->
+           List.exists
+             (fun x ->
+                List.exists
+                  (fun ((id1', id2', _id3', _id4', _id5'), _) ->
+                     id1 = id1' && id2 = id2')
+                  (Sched_req_data_unit_skeleton.get_inner_data x))
+             l)
+        sched
 
-  let find_sched_req_record_by_task_inst_id
-      ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) :
-    Sched_req_ds.sched_req_record Seq.t =
-    Filter.filter_sched_req_record_seq
-      (fun (_, l) ->
-         List.exists
-           (fun x ->
-              List.exists
-                (fun ((id1', id2', id3', _id4', _id5'), _) ->
-                   id1 = id1' && id2 = id2' && id3 = id3')
-                (Sched_req_data_unit_skeleton.get_inner_data x))
-           l)
-      sched
+    let find_sched_req_record_by_task_inst_id
+        ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) :
+      Sched_req_ds.sched_req_record Seq.t =
+      Filter.filter_sched_req_record_seq
+        (fun (_, l) ->
+           List.exists
+             (fun x ->
+                List.exists
+                  (fun ((id1', id2', id3', _id4', _id5'), _) ->
+                     id1 = id1' && id2 = id2' && id3 = id3')
+                  (Sched_req_data_unit_skeleton.get_inner_data x))
+             l)
+        sched
 
-  let find_sched_req_record_by_task_seg_id
-      ((id1, id2, id3, id4, _id5) : Task_ds.task_seg_id) (sched : sched) :
-    Sched_req_ds.sched_req_record Seq.t =
-    Filter.filter_sched_req_record_seq
-      (fun (_, l) ->
-         List.exists
-           (fun x ->
-              List.exists
-                (fun ((id1', id2', id3', id4', _id5'), _) ->
-                   id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')
-                (Sched_req_data_unit_skeleton.get_inner_data x))
-           l)
-      sched
-      end
+    let find_sched_req_record_by_task_seg_id
+        ((id1, id2, id3, id4, _id5) : Task_ds.task_seg_id) (sched : sched) :
+      Sched_req_ds.sched_req_record Seq.t =
+      Filter.filter_sched_req_record_seq
+        (fun (_, l) ->
+           List.exists
+             (fun x ->
+                List.exists
+                  (fun ((id1', id2', id3', id4', _id5'), _) ->
+                     id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4')
+                  (Sched_req_data_unit_skeleton.get_inner_data x))
+             l)
+        sched
+  end
 
   module Remove = struct
-  let remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
-      (f : Task_ds.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            sched_req_pending_store =
-              sd.store.sched_req_pending_store
-              |> Sched_req_id_map.to_seq
-              |> Seq.filter (fun (_id, sched_req_data) ->
-                  not
-                    (Sched_req_data_unit_skeleton
-                     .list_contains_matching_inner_data f sched_req_data))
-              |> Sched_req_id_map.of_seq;
-          };
-      } )
-
-  let remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
-      (f : Task_ds.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            sched_req_pending_store =
-              sd.store.sched_req_pending_store
-              |> Sched_req_id_map.to_seq
-              |> Seq.filter_map (fun (id, sched_req_data) ->
-                  match
-                    Sched_req_data_unit_skeleton
-                    .remove_data_units_with_matching_inner_data f
-                      sched_req_data
-                  with
-                  | [] -> None
-                  | sched_req_data -> Some (id, sched_req_data))
-              |> Sched_req_id_map.of_seq;
-          };
-      } )
-
-  let remove_sched_req_record_if_contains_matching_task_seg
-      (f : Task_ds.task_seg -> bool) ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            sched_req_record_store =
-              sd.store.sched_req_record_store
-              |> Sched_req_id_map.to_seq
-              |> Seq.filter (fun (_id, sched_req_record_data) ->
-                  not
-                    (Sched_req_data_unit_skeleton
-                     .list_contains_matching_inner_data f
-                       sched_req_record_data))
-              |> Sched_req_id_map.of_seq;
-          };
-      } )
-
-  let remove_sched_req_record_data_unit_if_contains_matching_task_seg
-      (f : Task_ds.task_seg -> bool) ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            sched_req_record_store =
-              sd.store.sched_req_record_store
-              |> Sched_req_id_map.to_seq
-              |> Seq.filter_map (fun (id, sched_req_record_data) ->
-                  match
-                    Sched_req_data_unit_skeleton
-                    .remove_data_units_with_matching_inner_data f
-                      sched_req_record_data
-                  with
-                  | [] -> None
-                  | sched_req_record_data -> Some (id, sched_req_record_data))
-              |> Sched_req_id_map.of_seq;
-          };
-      } )
-
-  (*$
-    let typ_list = [ "pending_sched_req"; "pending_sched_req_data_unit" ] in
-
-    List.iter
-      (fun typ ->
-         Printf.printf "let remove_%s_by_task_id\n" typ;
-         Printf.printf
-           "  ((id1, id2) : Task_ds.task_id) (sched : sched) : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
-           typ;
-         Printf.printf "  (fun ((id1', id2', _id3'), _data) ->\n";
-         Printf.printf "    id1 = id1' && id2 = id2')\n";
-         Printf.printf "    sched\n";
-
-         Printf.printf "let remove_%s_by_task_inst_id\n" typ;
-         Printf.printf
-           "  ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
-           typ;
-         Printf.printf "  (fun ((id1', id2', id3'), _data) ->\n";
-         Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
-         Printf.printf "    sched\n";
-
-         Printf.printf "let remove_%s_by_task_seg_id\n" typ;
-         Printf.printf
-           "  ((id1, id2, id3, _id4, _id5) : Task_ds.task_seg_id) (sched : \
-            sched) : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
-           typ;
-         Printf.printf "  (fun ((id1', id2', id3'), _data) ->\n";
-         Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
-         Printf.printf "    sched\n")
-      typ_list
-  *)
-
-  let remove_pending_sched_req_by_task_id ((id1, id2) : Task_ds.task_id)
-      (sched : sched) : sched =
-    remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
-      (fun ((id1', id2', _id3'), _data) -> id1 = id1' && id2 = id2')
-      sched
-
-  let remove_pending_sched_req_by_task_inst_id
-      ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =
-    remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
-      (fun ((id1', id2', id3'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3')
-      sched
-
-  let remove_pending_sched_req_by_task_seg_id
-      ((id1, id2, id3, _id4, _id5) : Task_ds.task_seg_id) (sched : sched) :
-    sched =
-    remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
-      (fun ((id1', id2', id3'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3')
-      sched
-
-  let remove_pending_sched_req_data_unit_by_task_id
-      ((id1, id2) : Task_ds.task_id) (sched : sched) : sched =
-    remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
-      (fun ((id1', id2', _id3'), _data) -> id1 = id1' && id2 = id2')
-      sched
-
-  let remove_pending_sched_req_data_unit_by_task_inst_id
-      ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =
-    remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
-      (fun ((id1', id2', id3'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3')
-      sched
-
-  let remove_pending_sched_req_data_unit_by_task_seg_id
-      ((id1, id2, id3, _id4, _id5) : Task_ds.task_seg_id) (sched : sched) :
-    sched =
-    remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
-      (fun ((id1', id2', id3'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3')
-      sched
-
-  (*$*)
-
-  (*$
-    let typ_list = [ "sched_req_record"; "sched_req_record_data_unit" ] in
-
-    List.iter
-      (fun typ ->
-         Printf.printf "let remove_%s_by_task_id\n" typ;
-         Printf.printf
-           "  ((id1, id2) : Task_ds.task_id) (sched : sched) : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
-         Printf.printf "  (fun ((id1', id2', _id3', _id4', _id5'), _data) ->\n";
-         Printf.printf "    id1 = id1' && id2 = id2')\n";
-         Printf.printf "    sched\n";
-
-         Printf.printf "let remove_%s_by_task_inst_id\n" typ;
-         Printf.printf
-           "  ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
-         Printf.printf "  (fun ((id1', id2', id3', _id4', _id5'), _data) ->\n";
-         Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
-         Printf.printf "    sched\n";
-
-         Printf.printf "let remove_%s_by_task_seg_id\n" typ;
-         Printf.printf
-           "  ((id1, id2, id3, id4, id5) : Task_ds.task_seg_id) (sched : sched) \
-            : sched =\n";
-         Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
-         Printf.printf "  (fun ((id1', id2', id3', id4', id5'), _data) ->\n";
-         Printf.printf
-           "    id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = \
-            id5')\n";
-         Printf.printf "    sched\n")
-      typ_list
-  *)
-
-  let remove_sched_req_record_by_task_id ((id1, id2) : Task_ds.task_id)
-      (sched : sched) : sched =
-    remove_sched_req_record_if_contains_matching_task_seg
-      (fun ((id1', id2', _id3', _id4', _id5'), _data) ->
-         id1 = id1' && id2 = id2')
-      sched
-
-  let remove_sched_req_record_by_task_inst_id
-      ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =
-    remove_sched_req_record_if_contains_matching_task_seg
-      (fun ((id1', id2', id3', _id4', _id5'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3')
-      sched
-
-  let remove_sched_req_record_by_task_seg_id
-      ((id1, id2, id3, id4, id5) : Task_ds.task_seg_id) (sched : sched) : sched
-    =
-    remove_sched_req_record_if_contains_matching_task_seg
-      (fun ((id1', id2', id3', id4', id5'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = id5')
-      sched
-
-  let remove_sched_req_record_data_unit_by_task_id
-      ((id1, id2) : Task_ds.task_id) (sched : sched) : sched =
-    remove_sched_req_record_data_unit_if_contains_matching_task_seg
-      (fun ((id1', id2', _id3', _id4', _id5'), _data) ->
-         id1 = id1' && id2 = id2')
-      sched
-
-  let remove_sched_req_record_data_unit_by_task_inst_id
-      ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =
-    remove_sched_req_record_data_unit_if_contains_matching_task_seg
-      (fun ((id1', id2', id3', _id4', _id5'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3')
-      sched
-
-  let remove_sched_req_record_data_unit_by_task_seg_id
-      ((id1, id2, id3, id4, id5) : Task_ds.task_seg_id) (sched : sched) : sched
-    =
-    remove_sched_req_record_data_unit_if_contains_matching_task_seg
-      (fun ((id1', id2', id3', id4', id5'), _data) ->
-         id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = id5')
-      sched
-
-  (*$*)
-end
-
-module Discard = struct
-  let discard_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id)
-      ((sid, sd) : sched) : sched =
-    match
-      Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store
-    with
-    | None -> (sid, sd)
-    | Some sched_req_data ->
+    let remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
+        (f : Task_ds.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
       ( sid,
         {
           sd with
@@ -2142,146 +1891,403 @@ module Discard = struct
             {
               sd.store with
               sched_req_pending_store =
-                Sched_req_id_map.remove sched_req_id
-                  sd.store.sched_req_pending_store;
-              sched_req_discarded_store =
-                Sched_req_id_map.add sched_req_id sched_req_data
-                  sd.store.sched_req_discarded_store;
+                sd.store.sched_req_pending_store
+                |> Sched_req_id_map.to_seq
+                |> Seq.filter (fun (_id, sched_req_data) ->
+                    not
+                      (Sched_req_data_unit_skeleton
+                       .list_contains_matching_inner_data f sched_req_data))
+                |> Sched_req_id_map.of_seq;
             };
         } )
-      end
 
-module Allocate_task_segs = struct
-  let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
-      ((_sid, sd) : sched) : sched_req_store * sched_req_store * sched_req_store
-    =
-    let fully_within, leftover =
-      Sched_req_id_map.partition
-        (fun id req_record_data_list ->
-           Sched_req_ds.sched_req_fully_within_time_period ~start ~end_exc
-             (id, req_record_data_list))
-        sd.store.sched_req_pending_store
-    in
-    let partially_within, leftover =
-      Sched_req_id_map.partition
-        (fun id req_record_data ->
-           Sched_req_ds.sched_req_partially_within_time_period ~start ~end_exc
-             (id, req_record_data))
-        leftover
-    in
-    (fully_within, partially_within, leftover)
+    let remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
+        (f : Task_ds.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              sched_req_pending_store =
+                sd.store.sched_req_pending_store
+                |> Sched_req_id_map.to_seq
+                |> Seq.filter_map (fun (id, sched_req_data) ->
+                    match
+                      Sched_req_data_unit_skeleton
+                      .remove_data_units_with_matching_inner_data f
+                        sched_req_data
+                    with
+                    | [] -> None
+                    | sched_req_data -> Some (id, sched_req_data))
+                |> Sched_req_id_map.of_seq;
+            };
+        } )
 
-  let allocate_task_segs_for_sched_req_data
-      (sched_req_data : Sched_req_ds.sched_req_data) (sched : sched) :
-    Sched_req_ds.sched_req_record_data * sched =
-    List.fold_left
-      (fun (acc, sched) sched_req_data_unit ->
-         match sched_req_data_unit with
-         | Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start } ->
-           let task_seg_related_data, sched =
-             Task_seg.Add.add_task_seg_via_task_seg_alloc_req
-               task_seg_related_data sched
-           in
-           ( Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start }
-             :: acc,
-             sched )
-         | Shift x ->
-           let task_seg_related_data_list, sched =
-             Task_seg.Add.add_task_segs_via_task_seg_alloc_req_list
-               x.task_seg_related_data_list sched
-           in
-           (Shift { x with task_seg_related_data_list } :: acc, sched)
-         | Split_and_shift x ->
-           let task_seg_related_data, sched =
-             Task_seg.Add.add_task_seg_via_task_seg_alloc_req
-               x.task_seg_related_data sched
-           in
-           (Split_and_shift { x with task_seg_related_data } :: acc, sched)
-         | Split_even x ->
-           let task_seg_related_data, sched =
-             Task_seg.Add.add_task_seg_via_task_seg_alloc_req
-               x.task_seg_related_data sched
-           in
-           (Split_even { x with task_seg_related_data } :: acc, sched)
-         | Time_share x ->
-           let task_seg_related_data_list, sched =
-             Task_seg.Add.add_task_segs_via_task_seg_alloc_req_list
-               x.task_seg_related_data_list sched
-           in
-           (Time_share { x with task_seg_related_data_list } :: acc, sched)
-         | Push_toward x ->
-           let task_seg_related_data, sched =
-             Task_seg.Add.add_task_seg_via_task_seg_alloc_req
-               x.task_seg_related_data sched
-           in
-           (Push_toward { x with task_seg_related_data } :: acc, sched))
-      ([], sched) sched_req_data
-    |> fun (l, sched) -> (List.rev l, sched)
+    let remove_sched_req_record_if_contains_matching_task_seg
+        (f : Task_ds.task_seg -> bool) ((sid, sd) : sched) : sched =
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              sched_req_record_store =
+                sd.store.sched_req_record_store
+                |> Sched_req_id_map.to_seq
+                |> Seq.filter (fun (_id, sched_req_record_data) ->
+                    not
+                      (Sched_req_data_unit_skeleton
+                       .list_contains_matching_inner_data f
+                         sched_req_record_data))
+                |> Sched_req_id_map.of_seq;
+            };
+        } )
 
-  let allocate_task_segs_for_sched_req_list
-      (sched_req_list : Sched_req_ds.sched_req list) (sched : sched) :
-    Sched_req_ds.sched_req_record list * sched =
-    List.fold_left
-      (fun (acc, sched) (sched_req_id, sched_req_data) ->
-         let sched_req_record_data_unit_list, (sid, sd) =
-           allocate_task_segs_for_sched_req_data sched_req_data sched
-         in
-         ( (sched_req_id, sched_req_record_data_unit_list) :: acc,
-           ( sid,
-             {
-               sd with
-               store =
-                 {
-                   sd.store with
-                   sched_req_record_store =
-                     Sched_req_id_map.add sched_req_id
-                       sched_req_record_data_unit_list
-                       sd.store.sched_req_record_store;
-                 };
-             } ) ))
-      ([], sched) sched_req_list
-    |> fun (l, sched) -> (List.rev l, sched)
+    let remove_sched_req_record_data_unit_if_contains_matching_task_seg
+        (f : Task_ds.task_seg -> bool) ((sid, sd) : sched) : sched =
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              sched_req_record_store =
+                sd.store.sched_req_record_store
+                |> Sched_req_id_map.to_seq
+                |> Seq.filter_map (fun (id, sched_req_record_data) ->
+                    match
+                      Sched_req_data_unit_skeleton
+                      .remove_data_units_with_matching_inner_data f
+                        sched_req_record_data
+                    with
+                    | [] -> None
+                    | sched_req_record_data ->
+                      Some (id, sched_req_record_data))
+                |> Sched_req_id_map.of_seq;
+            };
+        } )
 
-  let allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
-      ~(include_sched_reqs_partially_within_time_period : bool)
-      ~(up_to_sched_req_id_inc : Sched_req_ds.sched_req_id option)
-      ((sid, sd) : sched) : Sched_req_ds.sched_req_record list * sched =
-    let fully_within, partially_within, leftover =
-      partition_pending_sched_reqs_based_on_time_period ~start ~end_exc (sid, sd)
-    in
-    let to_be_scheduled_candidates, leftover =
-      if include_sched_reqs_partially_within_time_period then
-        ( Sched_req_id_map.union
-            (fun _ _ _ -> None)
-            fully_within partially_within,
-          leftover )
-      else
-        ( fully_within,
-          Sched_req_id_map.union (fun _ _ _ -> None) partially_within leftover
-        )
-    in
-    let to_be_scheduled, leftover =
-      match up_to_sched_req_id_inc with
-      | None -> (to_be_scheduled_candidates, leftover)
-      | Some up_to_id_inc -> (
-          let lt, eq, gt =
-            Sched_req_id_map.split up_to_id_inc to_be_scheduled_candidates
-          in
-          let leftover =
-            Sched_req_id_map.union (fun _ _ _ -> None) gt leftover
-          in
-          match eq with
-          | None -> (lt, leftover)
-          | Some eq -> (Sched_req_id_map.add up_to_id_inc eq lt, leftover) )
-    in
-    let to_be_scheduled_sched_reqs =
-      to_be_scheduled |> Sched_req_id_map.to_seq |> List.of_seq
-    in
-    let sd =
-      { sd with store = { sd.store with sched_req_pending_store = leftover } }
-    in
-    allocate_task_segs_for_sched_req_list to_be_scheduled_sched_reqs (sid, sd)
-      end
+    (*$
+      let typ_list = [ "pending_sched_req"; "pending_sched_req_data_unit" ] in
+
+      List.iter
+        (fun typ ->
+           Printf.printf "let remove_%s_by_task_id\n" typ;
+           Printf.printf
+             "  ((id1, id2) : Task_ds.task_id) (sched : sched) : sched =\n";
+           Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
+             typ;
+           Printf.printf "  (fun ((id1', id2', _id3'), _data) ->\n";
+           Printf.printf "    id1 = id1' && id2 = id2')\n";
+           Printf.printf "    sched\n";
+
+           Printf.printf "let remove_%s_by_task_inst_id\n" typ;
+           Printf.printf
+             "  ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : \
+              sched =\n";
+           Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
+             typ;
+           Printf.printf "  (fun ((id1', id2', id3'), _data) ->\n";
+           Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
+           Printf.printf "    sched\n";
+
+           Printf.printf "let remove_%s_by_task_seg_id\n" typ;
+           Printf.printf
+             "  ((id1, id2, id3, _id4, _id5) : Task_ds.task_seg_id) (sched : \
+              sched) : sched =\n";
+           Printf.printf "  remove_%s_if_contains_matching_task_seg_alloc_req\n"
+             typ;
+           Printf.printf "  (fun ((id1', id2', id3'), _data) ->\n";
+           Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
+           Printf.printf "    sched\n")
+        typ_list
+    *)
+
+    let remove_pending_sched_req_by_task_id ((id1, id2) : Task_ds.task_id)
+        (sched : sched) : sched =
+      remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
+        (fun ((id1', id2', _id3'), _data) -> id1 = id1' && id2 = id2')
+        sched
+
+    let remove_pending_sched_req_by_task_inst_id
+        ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =
+      remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
+        (fun ((id1', id2', id3'), _data) ->
+           id1 = id1' && id2 = id2' && id3 = id3')
+        sched
+
+    let remove_pending_sched_req_by_task_seg_id
+        ((id1, id2, id3, _id4, _id5) : Task_ds.task_seg_id) (sched : sched) :
+      sched =
+      remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
+        (fun ((id1', id2', id3'), _data) ->
+           id1 = id1' && id2 = id2' && id3 = id3')
+        sched
+
+    let remove_pending_sched_req_data_unit_by_task_id
+        ((id1, id2) : Task_ds.task_id) (sched : sched) : sched =
+      remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
+        (fun ((id1', id2', _id3'), _data) -> id1 = id1' && id2 = id2')
+        sched
+
+    let remove_pending_sched_req_data_unit_by_task_inst_id
+        ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =
+      remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
+        (fun ((id1', id2', id3'), _data) ->
+           id1 = id1' && id2 = id2' && id3 = id3')
+        sched
+
+    let remove_pending_sched_req_data_unit_by_task_seg_id
+        ((id1, id2, id3, _id4, _id5) : Task_ds.task_seg_id) (sched : sched) :
+      sched =
+      remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req
+        (fun ((id1', id2', id3'), _data) ->
+           id1 = id1' && id2 = id2' && id3 = id3')
+        sched
+
+    (*$*)
+
+    (*$
+      let typ_list = [ "sched_req_record"; "sched_req_record_data_unit" ] in
+
+      List.iter
+        (fun typ ->
+           Printf.printf "let remove_%s_by_task_id\n" typ;
+           Printf.printf
+             "  ((id1, id2) : Task_ds.task_id) (sched : sched) : sched =\n";
+           Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
+           Printf.printf "  (fun ((id1', id2', _id3', _id4', _id5'), _data) ->\n";
+           Printf.printf "    id1 = id1' && id2 = id2')\n";
+           Printf.printf "    sched\n";
+
+           Printf.printf "let remove_%s_by_task_inst_id\n" typ;
+           Printf.printf
+             "  ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : \
+              sched =\n";
+           Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
+           Printf.printf "  (fun ((id1', id2', id3', _id4', _id5'), _data) ->\n";
+           Printf.printf "    id1 = id1' && id2 = id2' && id3 = id3')\n";
+           Printf.printf "    sched\n";
+
+           Printf.printf "let remove_%s_by_task_seg_id\n" typ;
+           Printf.printf
+             "  ((id1, id2, id3, id4, id5) : Task_ds.task_seg_id) (sched : \
+              sched) : sched =\n";
+           Printf.printf "  remove_%s_if_contains_matching_task_seg\n" typ;
+           Printf.printf "  (fun ((id1', id2', id3', id4', id5'), _data) ->\n";
+           Printf.printf
+             "    id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = \
+              id5')\n";
+           Printf.printf "    sched\n")
+        typ_list
+    *)
+
+    let remove_sched_req_record_by_task_id ((id1, id2) : Task_ds.task_id)
+        (sched : sched) : sched =
+      remove_sched_req_record_if_contains_matching_task_seg
+        (fun ((id1', id2', _id3', _id4', _id5'), _data) ->
+           id1 = id1' && id2 = id2')
+        sched
+
+    let remove_sched_req_record_by_task_inst_id
+        ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =
+      remove_sched_req_record_if_contains_matching_task_seg
+        (fun ((id1', id2', id3', _id4', _id5'), _data) ->
+           id1 = id1' && id2 = id2' && id3 = id3')
+        sched
+
+    let remove_sched_req_record_by_task_seg_id
+        ((id1, id2, id3, id4, id5) : Task_ds.task_seg_id) (sched : sched) :
+      sched =
+      remove_sched_req_record_if_contains_matching_task_seg
+        (fun ((id1', id2', id3', id4', id5'), _data) ->
+           id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = id5')
+        sched
+
+    let remove_sched_req_record_data_unit_by_task_id
+        ((id1, id2) : Task_ds.task_id) (sched : sched) : sched =
+      remove_sched_req_record_data_unit_if_contains_matching_task_seg
+        (fun ((id1', id2', _id3', _id4', _id5'), _data) ->
+           id1 = id1' && id2 = id2')
+        sched
+
+    let remove_sched_req_record_data_unit_by_task_inst_id
+        ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) : sched =
+      remove_sched_req_record_data_unit_if_contains_matching_task_seg
+        (fun ((id1', id2', id3', _id4', _id5'), _data) ->
+           id1 = id1' && id2 = id2' && id3 = id3')
+        sched
+
+    let remove_sched_req_record_data_unit_by_task_seg_id
+        ((id1, id2, id3, id4, id5) : Task_ds.task_seg_id) (sched : sched) :
+      sched =
+      remove_sched_req_record_data_unit_if_contains_matching_task_seg
+        (fun ((id1', id2', id3', id4', id5'), _data) ->
+           id1 = id1' && id2 = id2' && id3 = id3' && id4 = id4' && id5 = id5')
+        sched
+
+    (*$*)
+  end
+
+  module Discard = struct
+    let discard_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id)
+        ((sid, sd) : sched) : sched =
+      match
+        Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store
+      with
+      | None -> (sid, sd)
+      | Some sched_req_data ->
+        ( sid,
+          {
+            sd with
+            store =
+              {
+                sd.store with
+                sched_req_pending_store =
+                  Sched_req_id_map.remove sched_req_id
+                    sd.store.sched_req_pending_store;
+                sched_req_discarded_store =
+                  Sched_req_id_map.add sched_req_id sched_req_data
+                    sd.store.sched_req_discarded_store;
+              };
+          } )
+  end
+
+  module Allocate_task_segs = struct
+    let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
+        ((_sid, sd) : sched) :
+      sched_req_store * sched_req_store * sched_req_store =
+      let fully_within, leftover =
+        Sched_req_id_map.partition
+          (fun id req_record_data_list ->
+             Sched_req_ds.sched_req_fully_within_time_period ~start ~end_exc
+               (id, req_record_data_list))
+          sd.store.sched_req_pending_store
+      in
+      let partially_within, leftover =
+        Sched_req_id_map.partition
+          (fun id req_record_data ->
+             Sched_req_ds.sched_req_partially_within_time_period ~start ~end_exc
+               (id, req_record_data))
+          leftover
+      in
+      (fully_within, partially_within, leftover)
+
+    let allocate_task_segs_for_sched_req_data
+        (sched_req_data : Sched_req_ds.sched_req_data) (sched : sched) :
+      Sched_req_ds.sched_req_record_data * sched =
+      List.fold_left
+        (fun (acc, sched) sched_req_data_unit ->
+           match sched_req_data_unit with
+           | Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start }
+             ->
+             let task_seg_related_data, sched =
+               Task_seg.Add.add_task_seg_via_task_seg_alloc_req
+                 task_seg_related_data sched
+             in
+             ( Sched_req_data_unit_skeleton.Fixed
+                 { task_seg_related_data; start }
+               :: acc,
+               sched )
+           | Shift x ->
+             let task_seg_related_data_list, sched =
+               Task_seg.Add.add_task_segs_via_task_seg_alloc_req_list
+                 x.task_seg_related_data_list sched
+             in
+             (Shift { x with task_seg_related_data_list } :: acc, sched)
+           | Split_and_shift x ->
+             let task_seg_related_data, sched =
+               Task_seg.Add.add_task_seg_via_task_seg_alloc_req
+                 x.task_seg_related_data sched
+             in
+             (Split_and_shift { x with task_seg_related_data } :: acc, sched)
+           | Split_even x ->
+             let task_seg_related_data, sched =
+               Task_seg.Add.add_task_seg_via_task_seg_alloc_req
+                 x.task_seg_related_data sched
+             in
+             (Split_even { x with task_seg_related_data } :: acc, sched)
+           | Time_share x ->
+             let task_seg_related_data_list, sched =
+               Task_seg.Add.add_task_segs_via_task_seg_alloc_req_list
+                 x.task_seg_related_data_list sched
+             in
+             (Time_share { x with task_seg_related_data_list } :: acc, sched)
+           | Push_toward x ->
+             let task_seg_related_data, sched =
+               Task_seg.Add.add_task_seg_via_task_seg_alloc_req
+                 x.task_seg_related_data sched
+             in
+             (Push_toward { x with task_seg_related_data } :: acc, sched))
+        ([], sched) sched_req_data
+      |> fun (l, sched) -> (List.rev l, sched)
+
+    let allocate_task_segs_for_sched_req_list
+        (sched_req_list : Sched_req_ds.sched_req list) (sched : sched) :
+      Sched_req_ds.sched_req_record list * sched =
+      List.fold_left
+        (fun (acc, sched) (sched_req_id, sched_req_data) ->
+           let sched_req_record_data_unit_list, (sid, sd) =
+             allocate_task_segs_for_sched_req_data sched_req_data sched
+           in
+           ( (sched_req_id, sched_req_record_data_unit_list) :: acc,
+             ( sid,
+               {
+                 sd with
+                 store =
+                   {
+                     sd.store with
+                     sched_req_record_store =
+                       Sched_req_id_map.add sched_req_id
+                         sched_req_record_data_unit_list
+                         sd.store.sched_req_record_store;
+                   };
+               } ) ))
+        ([], sched) sched_req_list
+      |> fun (l, sched) -> (List.rev l, sched)
+
+    let allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
+        ~(include_sched_reqs_partially_within_time_period : bool)
+        ~(up_to_sched_req_id_inc : Sched_req_ds.sched_req_id option)
+        ((sid, sd) : sched) : Sched_req_ds.sched_req_record list * sched =
+      let fully_within, partially_within, leftover =
+        partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
+          (sid, sd)
+      in
+      let to_be_scheduled_candidates, leftover =
+        if include_sched_reqs_partially_within_time_period then
+          ( Sched_req_id_map.union
+              (fun _ _ _ -> None)
+              fully_within partially_within,
+            leftover )
+        else
+          ( fully_within,
+            Sched_req_id_map.union (fun _ _ _ -> None) partially_within leftover
+          )
+      in
+      let to_be_scheduled, leftover =
+        match up_to_sched_req_id_inc with
+        | None -> (to_be_scheduled_candidates, leftover)
+        | Some up_to_id_inc -> (
+            let lt, eq, gt =
+              Sched_req_id_map.split up_to_id_inc to_be_scheduled_candidates
+            in
+            let leftover =
+              Sched_req_id_map.union (fun _ _ _ -> None) gt leftover
+            in
+            match eq with
+            | None -> (lt, leftover)
+            | Some eq -> (Sched_req_id_map.add up_to_id_inc eq lt, leftover) )
+      in
+      let to_be_scheduled_sched_reqs =
+        to_be_scheduled |> Sched_req_id_map.to_seq |> List.of_seq
+      in
+      let sd =
+        { sd with store = { sd.store with sched_req_pending_store = leftover } }
+      in
+      allocate_task_segs_for_sched_req_list to_be_scheduled_sched_reqs (sid, sd)
+  end
 end
 
 module Recur = struct
@@ -2455,7 +2461,9 @@ module Leftover = struct
     in
     Seq.fold_left
       (fun sched sched_req_data ->
-         let _, sched = Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched in
+         let _, sched =
+           Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched
+         in
          sched)
       sched sched_req_data_seq
 end

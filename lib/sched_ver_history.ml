@@ -232,7 +232,8 @@ module Maybe_append_to_head = struct
          if Int64_int64_set.mem chunk chunks then
            let hd' =
              sched
-             |> Sched.Progress.Remove.remove_task_seg_progress_chunk task_seg_id chunk
+             |> Sched.Progress.Remove.remove_task_seg_progress_chunk task_seg_id
+               chunk
            in
            ((), Replace_head hd')
          else ((), Do_nothing))
@@ -243,12 +244,14 @@ module Maybe_append_to_head = struct
     map_head
       (fun sched ->
          let chunks =
-           Sched.Progress.Find.find_task_inst_progress_chunk_set task_inst_id sched
+           Sched.Progress.Find.find_task_inst_progress_chunk_set task_inst_id
+             sched
          in
          if Int64_int64_set.mem chunk chunks then
            let hd' =
              sched
-             |> Sched.Progress.Remove.remove_task_inst_progress_chunk task_inst_id chunk
+             |> Sched.Progress.Remove.remove_task_inst_progress_chunk
+               task_inst_id chunk
            in
            ((), Replace_head hd')
          else ((), Do_nothing))
@@ -262,8 +265,9 @@ module Maybe_append_to_head = struct
            hd
            |> Sched.Recur.instantiate ~start ~end_exc
            |> Sched.Leftover.sched_for_leftover_task_segs ~start ~end_exc
-           |> Sched.Sched_req.Allocate_task_segs.allocate_task_segs_for_pending_sched_reqs ~start
-             ~end_exc ~include_sched_reqs_partially_within_time_period
+           |> Sched.Sched_req.Allocate_task_segs
+              .allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
+             ~include_sched_reqs_partially_within_time_period
              ~up_to_sched_req_id_inc
          in
          match sched_req_records with
