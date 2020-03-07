@@ -481,12 +481,7 @@ module Task_seg = struct
 
     (*$ #use "lib/sched.cinaps";;
 
-      print_task_seg_add ();
-      print_task_seg_find ();
-      print_task_seg_ids_find_by_task_inst_id ();
-      print_task_seg_seq_find_by_task_inst_id ();
-      print_task_seg_ids_find_by_task_id ();
-      print_task_seg_seq_find_by_task_id ()
+      print_task_seg_add ()
     *)
 
     let add_task_seg_uncompleted (id : Task_ds.task_seg_id)
@@ -527,9 +522,19 @@ module Task_seg = struct
                 Task_seg_id_map.add id size sd.store.task_seg_discarded_store;
             };
         } )
+      (*$*)
   end
 
   module Find = struct
+    (*$ #use "lib/sched.cinaps";;
+
+      print_task_seg_find ();
+      print_task_seg_ids_find_by_task_inst_id ();
+      print_task_seg_seq_find_by_task_inst_id ();
+      print_task_seg_ids_find_by_task_id ();
+      print_task_seg_seq_find_by_task_id ()
+    *)
+
   let find_task_seg_uncompleted_opt (id : Task_ds.task_seg_id) ((_, sd) : sched)
     : Task_ds.task_seg_size option =
     Task_seg_id_map.find_opt id sd.store.task_seg_uncompleted_store
@@ -632,6 +637,7 @@ module Task_seg = struct
   (*$*)
 end
 
+module Remove = struct
   (*$ #use "lib/sched.cinaps";;
 
     print_task_seg_remove ();
@@ -723,6 +729,7 @@ end
     Seq.fold_left (fun sched id -> remove_task_seg_discarded id sched) sched ids
 
   (*$*)
+end
 end
 
 module Task_inst = struct
@@ -881,7 +888,7 @@ module Task_inst = struct
     sched
     |> (fun sched ->
         if remove_children_task_segs then
-          Task_seg.remove_task_seg_uncompleted_seq children_task_seg_ids sched
+          Task_seg.Remove.remove_task_seg_uncompleted_seq children_task_seg_ids sched
         else sched)
     |> (fun (sid, sd) ->
         ( sid,
@@ -906,7 +913,7 @@ module Task_inst = struct
     sched
     |> (fun sched ->
         if remove_children_task_segs then
-          Task_seg.remove_task_seg_completed_seq children_task_seg_ids sched
+          Task_seg.Remove.remove_task_seg_completed_seq children_task_seg_ids sched
         else sched)
     |> (fun (sid, sd) ->
         ( sid,
@@ -930,7 +937,7 @@ module Task_inst = struct
     sched
     |> (fun sched ->
         if remove_children_task_segs then
-          Task_seg.remove_task_seg_discarded_seq children_task_seg_ids sched
+          Task_seg.Remove.remove_task_seg_discarded_seq children_task_seg_ids sched
         else sched)
     |> (fun (sid, sd) ->
         ( sid,
@@ -1336,7 +1343,7 @@ module Progress = struct
     | None -> sched
     | Some task_seg_size ->
       sched
-      |> Task_seg.remove_task_seg_all task_seg_id
+      |> Task_seg.Remove.remove_task_seg_all task_seg_id
       |> add_task_seg task_seg_id task_seg_size
 
   let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id)

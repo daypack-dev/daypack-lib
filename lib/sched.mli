@@ -175,6 +175,7 @@ module Task_seg : sig
     Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
 end
 
+  module Remove : sig
   val remove_task_seg_uncompleted : Task_ds.task_seg_id -> sched -> sched
 
   val remove_task_seg_completed : Task_ds.task_seg_id -> sched -> sched
@@ -200,6 +201,7 @@ end
 
   val remove_task_seg_discarded_seq :
     Task_ds.task_seg_id Seq.t -> sched -> sched
+    end
 end
 
 module Task_inst : sig
