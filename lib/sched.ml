@@ -2286,15 +2286,25 @@ module Recur = struct
               ( task_inst_data,
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:start'
                   sched_req_template )) )
-      |> Seq.filter (fun (_task_inst_data, sched_req_template) ->
-          match
+      |> Seq.map (fun (task_inst_data, sched_req_template) ->
+          ( task_inst_data,
+            sched_req_template,
             Task_ds.sched_req_template_bound_on_start_and_end_exc
-              sched_req_template
-          with
-          | None -> true
-          | Some bound ->
-            Time_slot_ds.a_is_subset_of_b ~a:(Seq.return bound)
-              ~b:usable_time_slot_seq)
+              sched_req_template ))
+      |> OSeq.take_while
+        (fun (_task_inst_data, _sched_req_template, template_bound) ->
+           match template_bound with
+           | None -> false
+           | Some (_bound_start, bound_end_exc) -> bound_end_exc <= end_exc)
+      |> Seq.filter
+        (fun (_task_inst_data, _sched_req_template, template_bound) ->
+           match template_bound with
+           | None -> true
+           | Some bound ->
+             Time_slot_ds.a_is_subset_of_b ~a:(Seq.return bound)
+               ~b:usable_time_slot_seq)
+      |> Seq.map (fun (task_inst_data, sched_req_template, _template_bound) ->
+          (task_inst_data, sched_req_template))
 
   let instance_recorded_already (task_id : Task_ds.task_id)
       (task_inst_data : Task_ds.task_inst_data)
