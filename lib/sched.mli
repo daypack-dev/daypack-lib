@@ -501,10 +501,10 @@ module Progress : sig
 end
 
 module Sched_req : sig
-  val queue_sched_req_data :
+  val enqueue_sched_req_data :
     Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
 
-  val queue_sched_req_data_list :
+  val enqueue_sched_req_data_list :
     Sched_req_ds.sched_req_data list ->
     sched ->
     Sched_req_ds.sched_req list * sched

@@ -1783,7 +1783,7 @@ module Progress = struct
 end
 
 module Sched_req = struct
-  let queue_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
+  let enqueue_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
       (sched : sched) : Sched_req_ds.sched_req * sched =
     let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
     ( (sched_req_id, sched_req_data),
@@ -1799,12 +1799,12 @@ module Sched_req = struct
             };
         } ) )
 
-  let queue_sched_req_data_list
+  let enqueue_sched_req_data_list
       (sched_req_data_list : Sched_req_ds.sched_req_data list) (sched : sched) :
     Sched_req_ds.sched_req list * sched =
     List.fold_left
       (fun (sched_reqs, sched) sched_req_data ->
-         let sched_req, sched = queue_sched_req_data sched_req_data sched in
+         let sched_req, sched = enqueue_sched_req_data sched_req_data sched in
          (sched_req :: sched_reqs, sched))
       ([], sched) sched_req_data_list
     |> fun (l, s) -> (List.rev l, s)
@@ -2396,7 +2396,7 @@ module Recur = struct
                   sched_req_templates
               in
               let _, sched =
-                Sched_req.queue_sched_req_data sched_req_data sched
+                Sched_req.enqueue_sched_req_data sched_req_data sched
               in
               sched)
            sched)
@@ -2441,7 +2441,7 @@ module Leftover = struct
     in
     Seq.fold_left
       (fun sched sched_req_data ->
-         let _, sched = Sched_req.queue_sched_req_data sched_req_data sched in
+         let _, sched = Sched_req.enqueue_sched_req_data sched_req_data sched in
          sched)
       sched sched_req_data_seq
 end

@@ -50,12 +50,12 @@ module In_place_head = struct
          (task_inst, Replace_head sched))
       t
 
-  let queue_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
+  let enqueue_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
     Sched_req_ds.sched_req =
     map_head
       (fun sched ->
          let sched_req, sched =
-           Sched.Sched_req.queue_sched_req_data data sched
+           Sched.Sched_req.enqueue_sched_req_data data sched
          in
          (sched_req, Replace_head sched))
       t
