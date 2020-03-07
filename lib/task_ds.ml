@@ -76,13 +76,13 @@ let succ_task_seg_sub_id ((id1, id2, id3, id4, id5) : task_seg_id) =
 
 let user_id_to_string (id : user_id) = Printf.sprintf "%Ld" id
 
-let task_id_to_string ((id1, id2) : task_id) = Printf.sprintf "%Ld_%Ld" id1 id2
+let task_id_to_string ((id1, id2) : task_id) = Printf.sprintf "%Ld.%Ld" id1 id2
 
 let task_inst_id_to_string ((id1, id2, id3) : task_inst_id) =
-  Printf.sprintf "%Ld_%Ld_%Ld" id1 id2 id3
+  Printf.sprintf "%Ld.%Ld.%Ld" id1 id2 id3
 
 let task_seg_id_to_string ((id1, id2, id3, id4, id5) : task_seg_id) =
-  Printf.sprintf "%Ld_%Ld_%Ld_%Ld_%s" id1 id2 id3 id4
+  Printf.sprintf "%Ld.%Ld.%Ld.%Ld.%s" id1 id2 id3 id4
     (match id5 with None -> "X" | Some x -> Int64.to_string x)
 
 let task_seg_alloc_req_sum_length reqs =
