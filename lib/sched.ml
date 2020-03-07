@@ -1081,6 +1081,18 @@ module Task = struct
     Task_ds.task_data option =
     Task_id_map.find_opt id sd.store.task_discarded_store
 
+  let find_task_any_opt (id : Task_ds.task_id) (sched : sched) :
+    Task_ds.task_data option =
+    match find_task_uncompleted_opt id sched with
+    | Some x -> Some x
+    | None -> (
+        match find_task_completed_opt id sched with
+        | Some x -> Some x
+        | None -> (
+            match find_task_discarded_opt id sched with
+            | Some x -> Some x
+            | None -> None ) )
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -1313,7 +1325,7 @@ end
 
 module Progress = struct
   let move_task_seg_internal
-      ~(move_task_seg :
+      ~(add_task_seg :
           Task_ds.task_seg_id -> Task_ds.task_seg_size -> sched -> sched)
       (task_seg_id : Task_ds.task_seg_id) (sched : sched) : sched =
     match Task_seg.find_task_seg_any_opt task_seg_id sched with
@@ -1321,21 +1333,21 @@ module Progress = struct
     | Some task_seg_size ->
       sched
       |> Task_seg.remove_task_seg_all task_seg_id
-      |> move_task_seg task_seg_id task_seg_size
+      |> add_task_seg task_seg_id task_seg_size
 
   let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    move_task_seg_internal ~move_task_seg:Task_seg.add_task_seg_completed
+    move_task_seg_internal ~add_task_seg:Task_seg.add_task_seg_completed
       task_seg_id sched
 
   let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    move_task_seg_internal ~move_task_seg:Task_seg.add_task_seg_uncompleted
+    move_task_seg_internal ~add_task_seg:Task_seg.add_task_seg_uncompleted
       task_seg_id sched
 
   let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id)
       (sched : sched) : sched =
-    move_task_seg_internal ~move_task_seg:Task_seg.add_task_seg_discarded
+    move_task_seg_internal ~add_task_seg:Task_seg.add_task_seg_discarded
       task_seg_id sched
 
   let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
@@ -1399,40 +1411,24 @@ module Progress = struct
       } )
 
   let move_task_inst_and_task_segs_internal
-      ~(move_task_inst :
+      ~(add_task_inst :
           Task_ds.task_inst_id -> Task_ds.task_inst_data -> sched -> sched)
       ~(move_task_seg_by_id : Task_ds.task_seg_id -> sched -> sched)
-      (task_inst_id : Task_ds.task_inst_id) ((_sid, sd) as sched : sched) :
-    sched =
-    let id1, id2, id3 = task_inst_id in
+      (task_inst_id : Task_ds.task_inst_id) (sched : sched) : sched =
     match Task_inst.find_task_inst_any_opt task_inst_id sched with
     | None -> sched
     | Some task_inst_data ->
       let task_seg_ids =
-        match
-          Task_inst_id_map.find_opt task_inst_id
-            sd.store.task_inst_id_to_task_seg_ids
-        with
-        | None -> Seq.empty
-        | Some s ->
-          Int64_int64_option_set.to_seq s
-          |> Seq.map (fun (task_seg_part, sub_id) ->
-              (id1, id2, id3, task_seg_part, sub_id))
+        Task_seg.find_task_seg_ids_by_task_inst_id task_inst_id sched
       in
       sched
       |> Task_inst.remove_task_inst_all ~remove_children_task_segs:false
         task_inst_id
-      |> move_task_inst task_inst_id task_inst_data
+      |> add_task_inst task_inst_id task_inst_data
       |> fun sched ->
       Seq.fold_left
         (fun sched task_seg_id -> move_task_seg_by_id task_seg_id sched)
         sched task_seg_ids
-
-  let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id)
-      (sched : sched) : sched =
-    move_task_inst_and_task_segs_internal
-      ~move_task_inst:Task_inst.add_task_inst_completed
-      ~move_task_seg_by_id:move_task_seg_to_completed task_inst_id sched
 
   let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
       (sched : sched) : sched =
@@ -1444,11 +1440,58 @@ module Progress = struct
         task_inst_id
       |> Task_inst.add_task_inst_uncompleted task_inst_id task_inst_data
 
+  let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id)
+      (sched : sched) : sched =
+    move_task_inst_and_task_segs_internal
+      ~add_task_inst:Task_inst.add_task_inst_completed
+      ~move_task_seg_by_id:move_task_seg_to_completed task_inst_id sched
+
   let move_task_inst_to_discarded (task_inst_id : Task_ds.task_inst_id)
       (sched : sched) : sched =
     move_task_inst_and_task_segs_internal
-      ~move_task_inst:Task_inst.add_task_inst_discarded
+      ~add_task_inst:Task_inst.add_task_inst_discarded
       ~move_task_seg_by_id:move_task_seg_to_discarded task_inst_id sched
+
+  let move_task_and_task_inst_and_task_segs_internal
+      ~(add_task : Task_ds.task_id -> Task_ds.task_data -> sched -> sched)
+      ~(move_task_inst_by_id : Task_ds.task_inst_id -> sched -> sched)
+      (task_id : Task_ds.task_id) (sched : sched) : sched =
+    match Task.find_task_any_opt task_id sched with
+    | None -> sched
+    | Some task_data ->
+      let task_inst_ids =
+        Task_inst.find_task_inst_ids_by_task_id task_id sched
+      in
+      sched
+      |> Task.remove_task_all ~remove_children_task_insts:false
+        ~remove_children_task_segs:false task_id
+      |> add_task task_id task_data
+      |> fun sched ->
+      Seq.fold_left
+        (fun sched task_inst_id -> move_task_inst_by_id task_inst_id sched)
+        sched task_inst_ids
+
+  let move_task_to_uncompleted (task_id : Task_ds.task_id) (sched : sched) :
+    sched =
+    match Task.find_task_any_opt task_id sched with
+    | None -> sched
+    | Some task_data ->
+      sched
+      |> Task.remove_task_all ~remove_children_task_insts:false
+        ~remove_children_task_segs:false task_id
+      |> Task.add_task_uncompleted task_id task_data
+
+  let move_task_to_completed (task_id : Task_ds.task_id) (sched : sched) : sched
+    =
+    move_task_and_task_inst_and_task_segs_internal
+      ~add_task:Task.add_task_completed
+      ~move_task_inst_by_id:move_task_inst_to_completed task_id sched
+
+  let move_task_to_discarded (task_id : Task_ds.task_id) (sched : sched) : sched
+    =
+    move_task_and_task_inst_and_task_segs_internal
+      ~add_task:Task.add_task_discarded
+      ~move_task_inst_by_id:move_task_inst_to_discarded task_id sched
 
   (*$
     let l = [ "seg"; "inst" ] in
@@ -2209,8 +2252,16 @@ module Recur = struct
         | Task_ds.Arithemtic_seq
             ( { start = seq_start; end_exc = seq_end_exc; diff },
               { task_inst_data; sched_req_template } ) ->
-          let rec aux cur end_exc diff task_inst_data sched_req_template =
-            if cur < end_exc then
+          let rec aux (cur : int64) (end_exc : int64 option) (diff : int64)
+              (task_inst_data : Task_ds.task_inst_data)
+              (sched_req_template : Task_ds.sched_req_template) :
+            (Task_ds.task_inst_data * Task_ds.sched_req_template) Seq.t =
+            let continue =
+              match end_exc with
+              | None -> true
+              | Some end_exc -> cur < end_exc
+            in
+            if continue then
               let sched_req_template_instance =
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:cur
                   sched_req_template
@@ -2226,7 +2277,7 @@ module Recur = struct
             if start < seq_start then seq_start
             else seq_start +^ ((start -^ seq_start) /^ diff *^ diff)
           in
-          let end_exc = min seq_end_exc end_exc in
+          let end_exc = Option.map (fun x -> min x end_exc) seq_end_exc in
           aux start end_exc diff task_inst_data sched_req_template
         | Task_ds.Time_pattern_match
             (pattern, { task_inst_data; sched_req_template }) ->
@@ -2235,15 +2286,25 @@ module Recur = struct
               ( task_inst_data,
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:start'
                   sched_req_template )) )
-      |> Seq.filter (fun (_task_inst_data, sched_req_template) ->
-          match
+      |> Seq.map (fun (task_inst_data, sched_req_template) ->
+          ( task_inst_data,
+            sched_req_template,
             Task_ds.sched_req_template_bound_on_start_and_end_exc
-              sched_req_template
-          with
-          | None -> true
-          | Some bound ->
-            Time_slot_ds.a_is_subset_of_b ~a:(Seq.return bound)
-              ~b:usable_time_slot_seq)
+              sched_req_template ))
+      |> OSeq.take_while
+        (fun (_task_inst_data, _sched_req_template, template_bound) ->
+           match template_bound with
+           | None -> false
+           | Some (_bound_start, bound_end_exc) -> bound_end_exc <= end_exc)
+      |> Seq.filter
+        (fun (_task_inst_data, _sched_req_template, template_bound) ->
+           match template_bound with
+           | None -> true
+           | Some bound ->
+             Time_slot_ds.a_is_subset_of_b ~a:(Seq.return bound)
+               ~b:usable_time_slot_seq)
+      |> Seq.map (fun (task_inst_data, sched_req_template, _template_bound) ->
+          (task_inst_data, sched_req_template))
 
   let instance_recorded_already (task_id : Task_ds.task_id)
       (task_inst_data : Task_ds.task_inst_data)

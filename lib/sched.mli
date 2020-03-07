@@ -303,6 +303,8 @@ module Task : sig
   val find_task_discarded_opt :
     Task_ds.task_id -> sched -> Task_ds.task_data option
 
+  val find_task_any_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
+
   val remove_task_uncompleted :
     ?remove_children_task_insts:bool ->
     ?remove_children_task_segs:bool ->
@@ -415,6 +417,12 @@ module Progress : sig
   val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> sched -> sched
 
   val move_task_inst_to_discarded : Task_ds.task_inst_id -> sched -> sched
+
+  val move_task_to_completed : Task_ds.task_id -> sched -> sched
+
+  val move_task_to_uncompleted : Task_ds.task_id -> sched -> sched
+
+  val move_task_to_discarded : Task_ds.task_id -> sched -> sched
 
   val add_task_seg_progress_chunk :
     Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
