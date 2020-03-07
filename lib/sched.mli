@@ -134,6 +134,7 @@ module Task_seg : sig
       Task_ds.task_seg_place Seq.t -> sched -> sched
   end
 
+  module Find : sig
   val find_task_seg_uncompleted_opt :
     Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
 
@@ -172,6 +173,7 @@ module Task_seg : sig
 
   val find_task_seg_seq_any_by_task_id :
     Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+end
 
   val remove_task_seg_uncompleted : Task_ds.task_seg_id -> sched -> sched
 
