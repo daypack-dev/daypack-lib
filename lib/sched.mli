@@ -501,6 +501,7 @@ module Progress : sig
 end
 
 module Sched_req : sig
+  module Enqueue : sig
   val enqueue_sched_req_data :
     Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
 
@@ -508,14 +509,20 @@ module Sched_req : sig
     Sched_req_ds.sched_req_data list ->
     sched ->
     Sched_req_ds.sched_req list * sched
+    end
 
-  val unqueue_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+  module Dequeue : sig
+  val dequeue_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+    end
 
+  module Filter : sig
   val filter_sched_req_record_seq :
     (Sched_req_ds.sched_req_record -> bool) ->
     sched ->
     Sched_req_ds.sched_req_record Seq.t
+end
 
+  module Find : sig
   val find_sched_req_record_by_task_id :
     Task_ds.task_id -> sched -> Sched_req_ds.sched_req_record Seq.t
 
@@ -524,7 +531,9 @@ module Sched_req : sig
 
   val find_sched_req_record_by_task_seg_id :
     Task_ds.task_seg_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+      end
 
+  module Remove : sig
   val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
     (Task_ds.task_seg_alloc_req -> bool) -> sched -> sched
 
@@ -570,9 +579,13 @@ module Sched_req : sig
 
   val remove_sched_req_record_data_unit_by_task_seg_id :
     Task_ds.task_seg_id -> sched -> sched
+    end
 
+  module Discard : sig
   val discard_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+    end
 
+  module Allocate_task_segs : sig
   val allocate_task_segs_for_pending_sched_reqs :
     start:int64 ->
     end_exc:int64 ->
@@ -580,6 +593,7 @@ module Sched_req : sig
     up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
     sched ->
     Sched_req_ds.sched_req_record list * sched
+    end
 end
 
 module Recur : sig

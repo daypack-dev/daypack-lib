@@ -1783,6 +1783,7 @@ module Progress = struct
 end
 
 module Sched_req = struct
+  module Enqueue = struct
   let enqueue_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
       (sched : sched) : Sched_req_ds.sched_req * sched =
     let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
@@ -1808,8 +1809,10 @@ module Sched_req = struct
          (sched_req :: sched_reqs, sched))
       ([], sched) sched_req_data_list
     |> fun (l, s) -> (List.rev l, s)
+end
 
-  let unqueue_sched_req (sched_req_id : int64) ((sid, sd) : sched) : sched =
+  module Dequeue = struct
+  let dequeue_sched_req (sched_req_id : int64) ((sid, sd) : sched) : sched =
     match
       Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store
     with
@@ -1827,14 +1830,18 @@ module Sched_req = struct
                   sd.store.sched_req_pending_store;
             };
         } )
+      end
 
+  module Filter = struct
   let filter_sched_req_record_seq (f : Sched_req_ds.sched_req_record -> bool)
       ((_, sd) : sched) : Sched_req_ds.sched_req_record Seq.t =
     sd.store.sched_req_record_store |> Sched_req_id_map.to_seq |> Seq.filter f
+      end
 
+  module Find = struct
   let find_sched_req_record_by_task_id ((id1, id2) : Task_ds.task_id)
       (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
-    filter_sched_req_record_seq
+    Filter.filter_sched_req_record_seq
       (fun (_, l) ->
          List.exists
            (fun x ->
@@ -1848,7 +1855,7 @@ module Sched_req = struct
   let find_sched_req_record_by_task_inst_id
       ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) :
     Sched_req_ds.sched_req_record Seq.t =
-    filter_sched_req_record_seq
+    Filter.filter_sched_req_record_seq
       (fun (_, l) ->
          List.exists
            (fun x ->
@@ -1862,7 +1869,7 @@ module Sched_req = struct
   let find_sched_req_record_by_task_seg_id
       ((id1, id2, id3, id4, _id5) : Task_ds.task_seg_id) (sched : sched) :
     Sched_req_ds.sched_req_record Seq.t =
-    filter_sched_req_record_seq
+    Filter.filter_sched_req_record_seq
       (fun (_, l) ->
          List.exists
            (fun x ->
@@ -1872,7 +1879,9 @@ module Sched_req = struct
                 (Sched_req_data_unit_skeleton.get_inner_data x))
            l)
       sched
+      end
 
+  module Remove = struct
   let remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
       (f : Task_ds.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
     ( sid,
@@ -2116,7 +2125,9 @@ module Sched_req = struct
       sched
 
   (*$*)
+end
 
+module Discard = struct
   let discard_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id)
       ((sid, sd) : sched) : sched =
     match
@@ -2138,7 +2149,9 @@ module Sched_req = struct
                   sd.store.sched_req_discarded_store;
             };
         } )
+      end
 
+module Allocate_task_segs = struct
   let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
       ((_sid, sd) : sched) : sched_req_store * sched_req_store * sched_req_store
     =
@@ -2268,6 +2281,7 @@ module Sched_req = struct
       { sd with store = { sd.store with sched_req_pending_store = leftover } }
     in
     allocate_task_segs_for_sched_req_list to_be_scheduled_sched_reqs (sid, sd)
+      end
 end
 
 module Recur = struct
@@ -2396,7 +2410,7 @@ module Recur = struct
                   sched_req_templates
               in
               let _, sched =
-                Sched_req.enqueue_sched_req_data sched_req_data sched
+                Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched
               in
               sched)
            sched)
@@ -2441,7 +2455,7 @@ module Leftover = struct
     in
     Seq.fold_left
       (fun sched sched_req_data ->
-         let _, sched = Sched_req.enqueue_sched_req_data sched_req_data sched in
+         let _, sched = Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched in
          sched)
       sched sched_req_data_seq
 end

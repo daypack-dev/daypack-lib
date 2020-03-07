@@ -108,7 +108,7 @@ let backtracking_search_pending ~start ~end_exc
     ~include_sched_reqs_partially_within_time_period ~up_to_sched_req_id_inc
     ~base : Sched.sched Seq.t =
   let sched_req_records, base =
-    Sched.Sched_req.allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
+    Sched.Sched_req.Allocate_task_segs.allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
       ~include_sched_reqs_partially_within_time_period ~up_to_sched_req_id_inc
       base
   in
