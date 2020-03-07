@@ -186,7 +186,8 @@ module Maybe_append_to_head = struct
     map_head
       (fun hd ->
          let task_seg_place_seq =
-           Sched.Agenda.Find.find_task_seg_place_seq_by_task_inst_id task_inst_id hd
+           Sched.Agenda.Find.find_task_seg_place_seq_by_task_inst_id task_inst_id
+             hd
          in
          let no_task_seg_place_s_recorded = OSeq.is_empty task_seg_place_seq in
          let no_task_inst_progress_recorded =

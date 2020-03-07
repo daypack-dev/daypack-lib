@@ -1284,109 +1284,110 @@ end
 
 module Agenda = struct
   module Add = struct
-  let add_task_seg_place
-      (((_id1, _id2, _id3, _id4, _id5), start, _end_exc) as task_seg_place :
-         Task_ds.task_seg_place) ((sid, sd) : sched) : sched =
-    let indexed_by_start =
-      Int64_map.update start
-        (fun bucket ->
-           Some
-             (Task_seg_place_set.add task_seg_place
-                ( match bucket with
-                  | None -> Task_seg_place_set.empty
-                  | Some s -> s )))
-        sd.agenda.indexed_by_start
-    in
-    (sid, { sd with agenda = { indexed_by_start } })
-    |> Task_seg.Add.add_task_seg_via_task_seg_place task_seg_place
+    let add_task_seg_place
+        (((_id1, _id2, _id3, _id4, _id5), start, _end_exc) as task_seg_place :
+           Task_ds.task_seg_place) ((sid, sd) : sched) : sched =
+      let indexed_by_start =
+        Int64_map.update start
+          (fun bucket ->
+             Some
+               (Task_seg_place_set.add task_seg_place
+                  ( match bucket with
+                    | None -> Task_seg_place_set.empty
+                    | Some s -> s )))
+          sd.agenda.indexed_by_start
+      in
+      (sid, { sd with agenda = { indexed_by_start } })
+      |> Task_seg.Add.add_task_seg_via_task_seg_place task_seg_place
 
-  let add_task_seg_place_list (task_seg_place_s : Task_ds.task_seg_place list)
-      (sched : sched) : sched =
-    List.fold_left
-      (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
-      sched task_seg_place_s
+    let add_task_seg_place_list (task_seg_place_s : Task_ds.task_seg_place list)
+        (sched : sched) : sched =
+      List.fold_left
+        (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
+        sched task_seg_place_s
 
-  let add_task_seg_place_seq (task_seg_place_s : Task_ds.task_seg_place Seq.t)
-      (sched : sched) : sched =
-    Seq.fold_left
-      (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
-      sched task_seg_place_s
-      end
+    let add_task_seg_place_seq (task_seg_place_s : Task_ds.task_seg_place Seq.t)
+        (sched : sched) : sched =
+      Seq.fold_left
+        (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
+        sched task_seg_place_s
+  end
 
   module Filter = struct
-  let filter_task_seg_place_seq (f : Task_ds.task_seg_place -> bool)
-      ((_, sd) : sched) : Task_ds.task_seg_place Seq.t =
-    sd.agenda.indexed_by_start
-    |> Int64_map.to_seq
-    |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
-    |> Seq.filter f
-end
+    let filter_task_seg_place_seq (f : Task_ds.task_seg_place -> bool)
+        ((_, sd) : sched) : Task_ds.task_seg_place Seq.t =
+      sd.agenda.indexed_by_start
+      |> Int64_map.to_seq
+      |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
+      |> Seq.filter f
+  end
 
   module Find = struct
-  let find_task_seg_place_seq_by_task_id (task_id : Task_ds.task_id)
-      (sched : sched) : Task_ds.task_seg_place Seq.t =
-    Filter.filter_task_seg_place_seq
-      (fun ((id1, id2, _id3, _id4, _id5), _, _) -> (id1, id2) = task_id)
-      sched
+    let find_task_seg_place_seq_by_task_id (task_id : Task_ds.task_id)
+        (sched : sched) : Task_ds.task_seg_place Seq.t =
+      Filter.filter_task_seg_place_seq
+        (fun ((id1, id2, _id3, _id4, _id5), _, _) -> (id1, id2) = task_id)
+        sched
 
-  let find_task_seg_place_seq_by_task_inst_id
-      (task_inst_id : Task_ds.task_inst_id) (sched : sched) :
-    Task_ds.task_seg_place Seq.t =
-    Filter.filter_task_seg_place_seq
-      (fun ((id1, id2, id3, _id4, _id5), _, _) ->
-         (id1, id2, id3) = task_inst_id)
-      sched
+    let find_task_seg_place_seq_by_task_inst_id
+        (task_inst_id : Task_ds.task_inst_id) (sched : sched) :
+      Task_ds.task_seg_place Seq.t =
+      Filter.filter_task_seg_place_seq
+        (fun ((id1, id2, id3, _id4, _id5), _, _) ->
+           (id1, id2, id3) = task_inst_id)
+        sched
 
-  let find_task_seg_place_seq_by_task_seg_id (task_seg_id : Task_ds.task_seg_id)
-      ((_, sd) : sched) : Task_ds.task_seg_place Seq.t =
-    sd.agenda.indexed_by_start
-    |> Int64_map.to_seq
-    |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
-    |> Seq.filter (fun (id, _, _) -> task_seg_id = id)
-      end
+    let find_task_seg_place_seq_by_task_seg_id
+        (task_seg_id : Task_ds.task_seg_id) ((_, sd) : sched) :
+      Task_ds.task_seg_place Seq.t =
+      sd.agenda.indexed_by_start
+      |> Int64_map.to_seq
+      |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
+      |> Seq.filter (fun (id, _, _) -> task_seg_id = id)
+  end
 
   module Remove = struct
-  let remove_task_seg_place
-      ((task_seg_id, start, end_exc) : Task_ds.task_seg_place)
-      ((sid, sd) : sched) : sched =
-    let id1, id2, id3, _, _ = task_seg_id in
-    let indexed_by_start =
-      Int64_map.update start
-        (fun bucket ->
-           Option.map
-             (fun bucket ->
-                Task_seg_place_set.filter
-                  (fun (x, _, _) -> x <> task_seg_id)
-                  bucket)
-             bucket)
-        sd.agenda.indexed_by_start
-    in
-    let quota =
-      Task_inst_id_map.update (id1, id2, id3)
-        (Option.map (fun x -> x +^ (end_exc -^ start)))
-        sd.store.quota
-    in
-    (sid, { store = { sd.store with quota }; agenda = { indexed_by_start } })
+    let remove_task_seg_place
+        ((task_seg_id, start, end_exc) : Task_ds.task_seg_place)
+        ((sid, sd) : sched) : sched =
+      let id1, id2, id3, _, _ = task_seg_id in
+      let indexed_by_start =
+        Int64_map.update start
+          (fun bucket ->
+             Option.map
+               (fun bucket ->
+                  Task_seg_place_set.filter
+                    (fun (x, _, _) -> x <> task_seg_id)
+                    bucket)
+               bucket)
+          sd.agenda.indexed_by_start
+      in
+      let quota =
+        Task_inst_id_map.update (id1, id2, id3)
+          (Option.map (fun x -> x +^ (end_exc -^ start)))
+          sd.store.quota
+      in
+      (sid, { store = { sd.store with quota }; agenda = { indexed_by_start } })
 
-  let remove_task_seg_place_seq
-      (task_seg_place_seq : Task_ds.task_seg_place Seq.t) (sched : sched) :
-    sched =
-    Seq.fold_left
-      (fun sched task_seg_place -> remove_task_seg_place task_seg_place sched)
-      sched task_seg_place_seq
+    let remove_task_seg_place_seq
+        (task_seg_place_seq : Task_ds.task_seg_place Seq.t) (sched : sched) :
+      sched =
+      Seq.fold_left
+        (fun sched task_seg_place -> remove_task_seg_place task_seg_place sched)
+        sched task_seg_place_seq
 
-  let remove_task_seg_place_by_task_id task_id sched =
-    let s = Find.find_task_seg_place_seq_by_task_id task_id sched in
-    remove_task_seg_place_seq s sched
+    let remove_task_seg_place_by_task_id task_id sched =
+      let s = Find.find_task_seg_place_seq_by_task_id task_id sched in
+      remove_task_seg_place_seq s sched
 
-  let remove_task_seg_place_by_task_inst_id task_inst_id sched =
-    let s = Find.find_task_seg_place_seq_by_task_inst_id task_inst_id sched in
-    remove_task_seg_place_seq s sched
+    let remove_task_seg_place_by_task_inst_id task_inst_id sched =
+      let s = Find.find_task_seg_place_seq_by_task_inst_id task_inst_id sched in
+      remove_task_seg_place_seq s sched
 
-  let remove_task_seg_place_by_task_seg_id task_seg_id sched =
-    let s = Find.find_task_seg_place_seq_by_task_seg_id task_seg_id sched in
-    remove_task_seg_place_seq s sched
-      end
+    let remove_task_seg_place_by_task_seg_id task_seg_id sched =
+      let s = Find.find_task_seg_place_seq_by_task_seg_id task_seg_id sched in
+      remove_task_seg_place_seq s sched
+  end
 end
 
 module Progress = struct
