@@ -426,13 +426,71 @@ end
 
 module Task_seg = struct
   module Add = struct
-  let add_task_seg ~(parent_task_inst_id : Task_ds.task_inst_id)
-      (size : Task_ds.task_seg_size) ((sid, sd) : sched) :
-    Task_ds.task_seg * sched =
-    let task_seg_id, (sid, sd) =
-      Id.get_new_task_seg_id parent_task_inst_id (sid, sd)
-    in
-    ( (task_seg_id, size),
+    let add_task_seg ~(parent_task_inst_id : Task_ds.task_inst_id)
+        (size : Task_ds.task_seg_size) ((sid, sd) : sched) :
+      Task_ds.task_seg * sched =
+      let task_seg_id, (sid, sd) =
+        Id.get_new_task_seg_id parent_task_inst_id (sid, sd)
+      in
+      ( (task_seg_id, size),
+        ( sid,
+          {
+            sd with
+            store =
+              {
+                sd.store with
+                task_seg_uncompleted_store =
+                  Task_seg_id_map.add task_seg_id size
+                    sd.store.task_seg_uncompleted_store;
+              };
+          } ) )
+
+    let add_task_seg_via_task_seg_alloc_req
+        ((parent_task_inst_id, task_seg_size) : Task_ds.task_seg_alloc_req)
+        (sched : sched) : Task_ds.task_seg * sched =
+      let task_seg, sched =
+        add_task_seg ~parent_task_inst_id task_seg_size sched
+      in
+      (task_seg, sched)
+
+    let add_task_segs_via_task_seg_alloc_req_list
+        (reqs : Task_ds.task_seg_alloc_req list) (sched : sched) :
+      Task_ds.task_seg list * sched =
+      List.fold_left
+        (fun (acc, sched) req ->
+           let task_seg, sched = add_task_seg_via_task_seg_alloc_req req sched in
+           (task_seg :: acc, sched))
+        ([], sched) reqs
+      |> fun (l, t) -> (List.rev l, t)
+
+    let add_task_seg_via_task_seg_place ((id, _, _) : Task_ds.task_seg_place)
+        (sched : sched) : sched =
+      Id.add_task_seg_id id sched
+
+    let add_task_segs_via_task_seg_place_list
+        (place_s : Task_ds.task_seg_place list) (sched : sched) : sched =
+      List.fold_left
+        (fun sched place -> add_task_seg_via_task_seg_place place sched)
+        sched place_s
+
+    let add_task_segs_via_task_seg_place_seq
+        (place_s : Task_ds.task_seg_place Seq.t) (sched : sched) : sched =
+      Seq.fold_left
+        (fun sched place -> add_task_seg_via_task_seg_place place sched)
+        sched place_s
+
+    (*$ #use "lib/sched.cinaps";;
+
+      print_task_seg_add ();
+      print_task_seg_find ();
+      print_task_seg_ids_find_by_task_inst_id ();
+      print_task_seg_seq_find_by_task_inst_id ();
+      print_task_seg_ids_find_by_task_id ();
+      print_task_seg_seq_find_by_task_id ()
+    *)
+
+    let add_task_seg_uncompleted (id : Task_ds.task_seg_id)
+        (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
       ( sid,
         {
           sd with
@@ -440,94 +498,36 @@ module Task_seg = struct
             {
               sd.store with
               task_seg_uncompleted_store =
-                Task_seg_id_map.add task_seg_id size
-                  sd.store.task_seg_uncompleted_store;
+                Task_seg_id_map.add id size sd.store.task_seg_uncompleted_store;
             };
-        } ) )
+        } )
 
-  let add_task_seg_via_task_seg_alloc_req
-      ((parent_task_inst_id, task_seg_size) : Task_ds.task_seg_alloc_req)
-      (sched : sched) : Task_ds.task_seg * sched =
-    let task_seg, sched =
-      add_task_seg ~parent_task_inst_id task_seg_size sched
-    in
-    (task_seg, sched)
+    let add_task_seg_completed (id : Task_ds.task_seg_id)
+        (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              task_seg_completed_store =
+                Task_seg_id_map.add id size sd.store.task_seg_completed_store;
+            };
+        } )
 
-  let add_task_segs_via_task_seg_alloc_req_list
-      (reqs : Task_ds.task_seg_alloc_req list) (sched : sched) :
-    Task_ds.task_seg list * sched =
-    List.fold_left
-      (fun (acc, sched) req ->
-         let task_seg, sched = add_task_seg_via_task_seg_alloc_req req sched in
-         (task_seg :: acc, sched))
-      ([], sched) reqs
-    |> fun (l, t) -> (List.rev l, t)
-
-  let add_task_seg_via_task_seg_place ((id, _, _) : Task_ds.task_seg_place)
-      (sched : sched) : sched =
-    Id.add_task_seg_id id sched
-
-  let add_task_segs_via_task_seg_place_list
-      (place_s : Task_ds.task_seg_place list) (sched : sched) : sched =
-    List.fold_left
-      (fun sched place -> add_task_seg_via_task_seg_place place sched)
-      sched place_s
-
-  let add_task_segs_via_task_seg_place_seq
-      (place_s : Task_ds.task_seg_place Seq.t) (sched : sched) : sched =
-    Seq.fold_left
-      (fun sched place -> add_task_seg_via_task_seg_place place sched)
-      sched place_s
-
-  (*$ #use "lib/sched.cinaps";;
-
-    print_task_seg_add ();
-    print_task_seg_find ();
-    print_task_seg_ids_find_by_task_inst_id ();
-    print_task_seg_seq_find_by_task_inst_id ();
-    print_task_seg_ids_find_by_task_id ();
-    print_task_seg_seq_find_by_task_id ()
-  *)
-
-  let add_task_seg_uncompleted (id : Task_ds.task_seg_id)
-      (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_uncompleted_store =
-              Task_seg_id_map.add id size sd.store.task_seg_uncompleted_store;
-          };
-      } )
-
-  let add_task_seg_completed (id : Task_ds.task_seg_id)
-      (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_completed_store =
-              Task_seg_id_map.add id size sd.store.task_seg_completed_store;
-          };
-      } )
-
-  let add_task_seg_discarded (id : Task_ds.task_seg_id)
-      (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
-    ( sid,
-      {
-        sd with
-        store =
-          {
-            sd.store with
-            task_seg_discarded_store =
-              Task_seg_id_map.add id size sd.store.task_seg_discarded_store;
-          };
-      } )
-end
+    let add_task_seg_discarded (id : Task_ds.task_seg_id)
+        (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              task_seg_discarded_store =
+                Task_seg_id_map.add id size sd.store.task_seg_discarded_store;
+            };
+        } )
+  end
 
   let find_task_seg_uncompleted_opt (id : Task_ds.task_seg_id) ((_, sd) : sched)
     : Task_ds.task_seg_size option =
@@ -2135,8 +2135,8 @@ module Sched_req = struct
          match sched_req_data_unit with
          | Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start } ->
            let task_seg_related_data, sched =
-             Task_seg.Add.add_task_seg_via_task_seg_alloc_req task_seg_related_data
-               sched
+             Task_seg.Add.add_task_seg_via_task_seg_alloc_req
+               task_seg_related_data sched
            in
            ( Sched_req_data_unit_skeleton.Fixed { task_seg_related_data; start }
              :: acc,

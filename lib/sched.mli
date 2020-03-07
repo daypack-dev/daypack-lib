@@ -112,26 +112,27 @@ end
 
 module Task_seg : sig
   module Add : sig
-  val add_task_seg :
-    parent_task_inst_id:Task_ds.task_inst_id ->
-    Task_ds.task_seg_size ->
-    sched ->
-    Task_ds.task_seg * sched
+    val add_task_seg :
+      parent_task_inst_id:Task_ds.task_inst_id ->
+      Task_ds.task_seg_size ->
+      sched ->
+      Task_ds.task_seg * sched
 
-  val add_task_seg_via_task_seg_alloc_req :
-    Task_ds.task_seg_alloc_req -> sched -> Task_ds.task_seg * sched
+    val add_task_seg_via_task_seg_alloc_req :
+      Task_ds.task_seg_alloc_req -> sched -> Task_ds.task_seg * sched
 
-  val add_task_segs_via_task_seg_alloc_req_list :
-    Task_ds.task_seg_alloc_req list -> sched -> Task_ds.task_seg list * sched
+    val add_task_segs_via_task_seg_alloc_req_list :
+      Task_ds.task_seg_alloc_req list -> sched -> Task_ds.task_seg list * sched
 
-  val add_task_seg_via_task_seg_place : Task_ds.task_seg_place -> sched -> sched
+    val add_task_seg_via_task_seg_place :
+      Task_ds.task_seg_place -> sched -> sched
 
-  val add_task_segs_via_task_seg_place_list :
-    Task_ds.task_seg_place list -> sched -> sched
+    val add_task_segs_via_task_seg_place_list :
+      Task_ds.task_seg_place list -> sched -> sched
 
-  val add_task_segs_via_task_seg_place_seq :
-    Task_ds.task_seg_place Seq.t -> sched -> sched
-end
+    val add_task_segs_via_task_seg_place_seq :
+      Task_ds.task_seg_place Seq.t -> sched -> sched
+  end
 
   val find_task_seg_uncompleted_opt :
     Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
