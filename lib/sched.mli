@@ -205,6 +205,7 @@ module Task_seg : sig
 end
 
 module Task_inst : sig
+  module Add : sig
   val add_task_inst :
     parent_task_id:Task_ds.task_id ->
     Task_ds.task_inst_data ->
@@ -216,7 +217,9 @@ module Task_inst : sig
     Task_ds.task_inst_data list ->
     sched ->
     Task_ds.task_inst list * sched
+    end
 
+  module Find : sig
   val find_task_inst_uncompleted_opt :
     Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
@@ -243,6 +246,9 @@ module Task_inst : sig
 
   val find_task_inst_seq_any_by_task_id :
     Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
+end
+
+  module Remove : sig
 
   val remove_task_inst_uncompleted :
     ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
@@ -292,15 +298,19 @@ module Task_inst : sig
     sched ->
     sched
 end
+end
 
 module Task : sig
+  module Add : sig
   val add_task :
     parent_user_id:Task_ds.user_id ->
     Task_ds.task_data ->
     Task_ds.task_inst_data list ->
     sched ->
     Task_ds.task * Task_ds.task_inst list * sched
+    end
 
+  module Find : sig
   val find_task_uncompleted_opt :
     Task_ds.task_id -> sched -> Task_ds.task_data option
 
@@ -311,7 +321,9 @@ module Task : sig
     Task_ds.task_id -> sched -> Task_ds.task_data option
 
   val find_task_any_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
+end
 
+  module Remove : sig
   val remove_task_uncompleted :
     ?remove_children_task_insts:bool ->
     ?remove_children_task_segs:bool ->
@@ -360,6 +372,7 @@ module Task : sig
     Task_ds.task_id ->
     sched ->
     (sched, unit) result
+end
 end
 
 module Agenda : sig
