@@ -468,7 +468,7 @@ let debug_sched_usage_simulation () =
               excluded_time_slots = [];
               recur_type =
                 Arithemtic_seq
-                  ( { start = 0L; end_exc = 100L; diff = 50L },
+                  ( { start = 0L; end_exc = Some 100L; diff = 50L },
                     {
                       task_inst_data = { task_inst_type = Reminder };
                       sched_req_template =

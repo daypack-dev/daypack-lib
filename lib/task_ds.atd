@@ -6,7 +6,7 @@ type time_pattern <ocaml from="Time_pattern" t="t"> = abstract
 
 type arith_seq = {
   start : int64;
-  end_exc : int64;
+  end_exc : int64 option;
   diff : int64;
 }
 

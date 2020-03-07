@@ -2252,8 +2252,13 @@ module Recur = struct
         | Task_ds.Arithemtic_seq
             ( { start = seq_start; end_exc = seq_end_exc; diff },
               { task_inst_data; sched_req_template } ) ->
-          let rec aux cur end_exc diff task_inst_data sched_req_template =
-            if cur < end_exc then
+          let rec aux (cur : int64) (end_exc : int64 option) (diff : int64) (task_inst_data : Task_ds.task_inst_data) (sched_req_template : Task_ds.sched_req_template) : (Task_ds.task_inst_data * Task_ds.sched_req_template) Seq.t =
+            let continue =
+              match end_exc with
+              | None -> true
+              | Some end_exc -> cur < end_exc
+            in
+            if continue then
               let sched_req_template_instance =
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:cur
                   sched_req_template
@@ -2269,7 +2274,7 @@ module Recur = struct
             if start < seq_start then seq_start
             else seq_start +^ ((start -^ seq_start) /^ diff *^ diff)
           in
-          let end_exc = min seq_end_exc end_exc in
+          let end_exc = Option.map (fun x -> min x end_exc) seq_end_exc in
           aux start end_exc diff task_inst_data sched_req_template
         | Task_ds.Time_pattern_match
             (pattern, { task_inst_data; sched_req_template }) ->
