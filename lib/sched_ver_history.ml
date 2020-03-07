@@ -79,20 +79,20 @@ module In_place_head = struct
   let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t) :
     unit =
     move_task_seg_internal
-      ~move_task_seg_by_id:Sched.Progress.move_task_seg_to_completed task_seg_id
-      t
+      ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_completed
+      task_seg_id t
 
   let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id) (t : t) :
     unit =
     move_task_seg_internal
-      ~move_task_seg_by_id:Sched.Progress.move_task_seg_to_uncompleted
+      ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_uncompleted
       task_seg_id t
 
   let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id) (t : t) :
     unit =
     move_task_seg_internal
-      ~move_task_seg_by_id:Sched.Progress.move_task_seg_to_discarded task_seg_id
-      t
+      ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_discarded
+      task_seg_id t
 
   let move_task_inst_internal
       ~(move_task_inst_by_id :
@@ -107,19 +107,19 @@ module In_place_head = struct
   let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id) (t : t)
     : unit =
     move_task_inst_internal
-      ~move_task_inst_by_id:Sched.Progress.move_task_inst_to_completed
+      ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_completed
       task_inst_id t
 
   let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
       (t : t) : unit =
     move_task_inst_internal
-      ~move_task_inst_by_id:Sched.Progress.move_task_inst_to_uncompleted
+      ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_uncompleted
       task_inst_id t
 
   let move_task_inst_to_discarded (task_inst_id : Task_ds.task_inst_id) (t : t)
     : unit =
     move_task_inst_internal
-      ~move_task_inst_by_id:Sched.Progress.move_task_inst_to_discarded
+      ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_discarded
       task_inst_id t
 
   let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
@@ -127,7 +127,7 @@ module In_place_head = struct
     map_head
       (fun sched ->
          let sched =
-           Sched.Progress.add_task_seg_progress_chunk task_seg_id chunk sched
+           Sched.Progress.Add.add_task_seg_progress_chunk task_seg_id chunk sched
          in
          ((), Replace_head sched))
       t
@@ -137,7 +137,8 @@ module In_place_head = struct
     map_head
       (fun sched ->
          let sched =
-           Sched.Progress.add_task_inst_progress_chunk task_inst_id chunk sched
+           Sched.Progress.Add.add_task_inst_progress_chunk task_inst_id chunk
+             sched
          in
          ((), Replace_head sched))
       t
@@ -153,13 +154,13 @@ module Maybe_append_to_head = struct
          let no_task_seg_place_s_recorded = OSeq.is_empty task_seg_place_seq in
          let no_task_inst_progress_recorded =
            OSeq.is_empty
-             (Sched.Progress.find_task_inst_progress_chunk_seq_by_task_id task_id
-                hd)
+             (Sched.Progress.Find.find_task_inst_progress_chunk_seq_by_task_id
+                task_id hd)
          in
          let no_task_seg_progress_recorded =
            OSeq.is_empty
-             (Sched.Progress.find_task_seg_progress_chunk_seq_by_task_id task_id
-                hd)
+             (Sched.Progress.Find.find_task_seg_progress_chunk_seq_by_task_id
+                task_id hd)
          in
          let hd' =
            hd
@@ -190,12 +191,13 @@ module Maybe_append_to_head = struct
          let no_task_seg_place_s_recorded = OSeq.is_empty task_seg_place_seq in
          let no_task_inst_progress_recorded =
            OSeq.is_empty
-             (Sched.Progress.find_task_inst_progress_chunk_seq task_inst_id hd)
+             (Sched.Progress.Find.find_task_inst_progress_chunk_seq task_inst_id
+                hd)
          in
          let no_task_seg_progress_recorded =
            OSeq.is_empty
-             (Sched.Progress.find_task_seg_progress_chunk_seq_by_task_inst_id
-                task_inst_id hd)
+             (Sched.Progress.Find
+              .find_task_seg_progress_chunk_seq_by_task_inst_id task_inst_id hd)
          in
          let hd' =
            hd
@@ -225,12 +227,12 @@ module Maybe_append_to_head = struct
     map_head
       (fun sched ->
          let chunks =
-           Sched.Progress.find_task_seg_progress_chunk_set task_seg_id sched
+           Sched.Progress.Find.find_task_seg_progress_chunk_set task_seg_id sched
          in
          if Int64_int64_set.mem chunk chunks then
            let hd' =
              sched
-             |> Sched.Progress.remove_task_seg_progress_chunk task_seg_id chunk
+             |> Sched.Progress.Remove.remove_task_seg_progress_chunk task_seg_id chunk
            in
            ((), Replace_head hd')
          else ((), Do_nothing))
@@ -241,12 +243,12 @@ module Maybe_append_to_head = struct
     map_head
       (fun sched ->
          let chunks =
-           Sched.Progress.find_task_inst_progress_chunk_set task_inst_id sched
+           Sched.Progress.Find.find_task_inst_progress_chunk_set task_inst_id sched
          in
          if Int64_int64_set.mem chunk chunks then
            let hd' =
              sched
-             |> Sched.Progress.remove_task_inst_progress_chunk task_inst_id chunk
+             |> Sched.Progress.Remove.remove_task_inst_progress_chunk task_inst_id chunk
            in
            ((), Replace_head hd')
          else ((), Do_nothing))
