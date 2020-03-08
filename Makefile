@@ -26,7 +26,7 @@ debug :
 
 .PHONY: cli
 cli :
-	dune exec ./cli/main.exe
+	dune exec ./cli/daypc.exe
 
 .PHONY: doc
 doc :
