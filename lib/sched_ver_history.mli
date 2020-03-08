@@ -5,41 +5,61 @@ val make_empty : unit -> t
 val of_sched_list : Sched.sched list -> t
 
 module In_place_head : sig
-  val add_task :
-    parent_user_id:int64 ->
-    Task_ds.task_data ->
-    Task_ds.task_inst_data list ->
-    t ->
-    Task_ds.task * Task_ds.task_inst list
+  module Task : sig
+    module Add : sig
+      val add_task :
+        parent_user_id:int64 ->
+        Task_ds.task_data ->
+        Task_ds.task_inst_data list ->
+        t ->
+        Task_ds.task * Task_ds.task_inst list
+    end
+  end
 
-  val add_task_inst :
-    parent_task_id:Task_ds.task_id ->
-    Task_ds.task_inst_data ->
-    t ->
-    Task_ds.task_inst
+  module Task_inst : sig
+    module Add : sig
+      val add_task_inst :
+        parent_task_id:Task_ds.task_id ->
+        Task_ds.task_inst_data ->
+        t ->
+        Task_ds.task_inst
+    end
+  end
 
-  val enqueue_sched_req :
-    Sched_req_ds.sched_req_data -> t -> Sched_req_ds.sched_req
+  module Sched_req : sig
+    module Enqueue : sig
+      val enqueue_sched_req :
+        Sched_req_ds.sched_req_data -> t -> Sched_req_ds.sched_req
+    end
+  end
 
-  val instantiate : start:int64 -> end_exc:int64 -> t -> unit
+  module Recur : sig
+    val instantiate : start:int64 -> end_exc:int64 -> t -> unit
+  end
 
-  val move_task_seg_to_completed : Task_ds.task_seg_id -> t -> unit
+  module Progress : sig
+    module Move : sig
+      val move_task_seg_to_completed : Task_ds.task_seg_id -> t -> unit
 
-  val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> t -> unit
+      val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> t -> unit
 
-  val move_task_seg_to_discarded : Task_ds.task_seg_id -> t -> unit
+      val move_task_seg_to_discarded : Task_ds.task_seg_id -> t -> unit
 
-  val move_task_inst_to_completed : Task_ds.task_inst_id -> t -> unit
+      val move_task_inst_to_completed : Task_ds.task_inst_id -> t -> unit
 
-  val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> t -> unit
+      val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> t -> unit
 
-  val move_task_inst_to_discarded : Task_ds.task_inst_id -> t -> unit
+      val move_task_inst_to_discarded : Task_ds.task_inst_id -> t -> unit
+    end
 
-  val add_task_seg_progress_chunk :
-    Task_ds.task_seg_id -> int64 * int64 -> t -> unit
+    module Add : sig
+      val add_task_seg_progress_chunk :
+        Task_ds.task_seg_id -> int64 * int64 -> t -> unit
 
-  val add_task_inst_progress_chunk :
-    Task_ds.task_inst_id -> int64 * int64 -> t -> unit
+      val add_task_inst_progress_chunk :
+        Task_ds.task_inst_id -> int64 * int64 -> t -> unit
+    end
+  end
 end
 
 module Maybe_append_to_head : sig
