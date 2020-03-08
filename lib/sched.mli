@@ -111,448 +111,498 @@ module Quota : sig
 end
 
 module Task_seg : sig
-  val add_task_seg :
-    parent_task_inst_id:Task_ds.task_inst_id ->
-    Task_ds.task_seg_size ->
-    sched ->
-    Task_ds.task_seg * sched
+  module Add : sig
+    val add_task_seg :
+      parent_task_inst_id:Task_ds.task_inst_id ->
+      Task_ds.task_seg_size ->
+      sched ->
+      Task_ds.task_seg * sched
 
-  val add_task_seg_via_task_seg_alloc_req :
-    Task_ds.task_seg_alloc_req -> sched -> Task_ds.task_seg * sched
+    val add_task_seg_via_task_seg_alloc_req :
+      Task_ds.task_seg_alloc_req -> sched -> Task_ds.task_seg * sched
 
-  val add_task_segs_via_task_seg_alloc_req_list :
-    Task_ds.task_seg_alloc_req list -> sched -> Task_ds.task_seg list * sched
+    val add_task_segs_via_task_seg_alloc_req_list :
+      Task_ds.task_seg_alloc_req list -> sched -> Task_ds.task_seg list * sched
 
-  val add_task_seg_via_task_seg_place : Task_ds.task_seg_place -> sched -> sched
+    val add_task_seg_via_task_seg_place :
+      Task_ds.task_seg_place -> sched -> sched
 
-  val add_task_segs_via_task_seg_place_list :
-    Task_ds.task_seg_place list -> sched -> sched
+    val add_task_segs_via_task_seg_place_list :
+      Task_ds.task_seg_place list -> sched -> sched
 
-  val add_task_segs_via_task_seg_place_seq :
-    Task_ds.task_seg_place Seq.t -> sched -> sched
+    val add_task_segs_via_task_seg_place_seq :
+      Task_ds.task_seg_place Seq.t -> sched -> sched
+  end
 
-  val find_task_seg_uncompleted_opt :
-    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
+  module Find : sig
+    val find_task_seg_uncompleted_opt :
+      Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
 
-  val find_task_seg_completed_opt :
-    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
+    val find_task_seg_completed_opt :
+      Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
 
-  val find_task_seg_discarded_opt :
-    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
+    val find_task_seg_discarded_opt :
+      Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
 
-  val find_task_seg_ids_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_seg_id Seq.t
+    val find_task_seg_ids_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_seg_id Seq.t
 
-  val find_task_seg_seq_uncompleted_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
+    val find_task_seg_seq_uncompleted_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
 
-  val find_task_seg_seq_completed_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
+    val find_task_seg_seq_completed_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
 
-  val find_task_seg_seq_discarded_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
+    val find_task_seg_seq_discarded_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
 
-  val find_task_seg_seq_any_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
+    val find_task_seg_seq_any_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
 
-  val find_task_seg_ids_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_seg_id Seq.t
+    val find_task_seg_ids_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_seg_id Seq.t
 
-  val find_task_seg_seq_uncompleted_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+    val find_task_seg_seq_uncompleted_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
 
-  val find_task_seg_seq_completed_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+    val find_task_seg_seq_completed_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
 
-  val find_task_seg_seq_discarded_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+    val find_task_seg_seq_discarded_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
 
-  val find_task_seg_seq_any_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+    val find_task_seg_seq_any_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+  end
 
-  val remove_task_seg_uncompleted : Task_ds.task_seg_id -> sched -> sched
+  module Remove : sig
+    val remove_task_seg_uncompleted : Task_ds.task_seg_id -> sched -> sched
 
-  val remove_task_seg_completed : Task_ds.task_seg_id -> sched -> sched
+    val remove_task_seg_completed : Task_ds.task_seg_id -> sched -> sched
 
-  val remove_task_seg_discarded : Task_ds.task_seg_id -> sched -> sched
+    val remove_task_seg_discarded : Task_ds.task_seg_id -> sched -> sched
 
-  val remove_task_seg_all : Task_ds.task_seg_id -> sched -> sched
+    val remove_task_seg_all : Task_ds.task_seg_id -> sched -> sched
 
-  val remove_task_seg_uncompleted_strict :
-    Task_ds.task_seg_id -> sched -> (sched, unit) result
+    val remove_task_seg_uncompleted_strict :
+      Task_ds.task_seg_id -> sched -> (sched, unit) result
 
-  val remove_task_seg_completed_strict :
-    Task_ds.task_seg_id -> sched -> (sched, unit) result
+    val remove_task_seg_completed_strict :
+      Task_ds.task_seg_id -> sched -> (sched, unit) result
 
-  val remove_task_seg_discarded_strict :
-    Task_ds.task_seg_id -> sched -> (sched, unit) result
+    val remove_task_seg_discarded_strict :
+      Task_ds.task_seg_id -> sched -> (sched, unit) result
 
-  val remove_task_seg_uncompleted_seq :
-    Task_ds.task_seg_id Seq.t -> sched -> sched
+    val remove_task_seg_uncompleted_seq :
+      Task_ds.task_seg_id Seq.t -> sched -> sched
 
-  val remove_task_seg_completed_seq :
-    Task_ds.task_seg_id Seq.t -> sched -> sched
+    val remove_task_seg_completed_seq :
+      Task_ds.task_seg_id Seq.t -> sched -> sched
 
-  val remove_task_seg_discarded_seq :
-    Task_ds.task_seg_id Seq.t -> sched -> sched
+    val remove_task_seg_discarded_seq :
+      Task_ds.task_seg_id Seq.t -> sched -> sched
+  end
 end
 
 module Task_inst : sig
-  val add_task_inst :
-    parent_task_id:Task_ds.task_id ->
-    Task_ds.task_inst_data ->
-    sched ->
-    Task_ds.task_inst * sched
+  module Add : sig
+    val add_task_inst :
+      parent_task_id:Task_ds.task_id ->
+      Task_ds.task_inst_data ->
+      sched ->
+      Task_ds.task_inst * sched
 
-  val add_task_inst_list :
-    parent_task_id:Task_ds.task_id ->
-    Task_ds.task_inst_data list ->
-    sched ->
-    Task_ds.task_inst list * sched
+    val add_task_inst_list :
+      parent_task_id:Task_ds.task_id ->
+      Task_ds.task_inst_data list ->
+      sched ->
+      Task_ds.task_inst list * sched
+  end
 
-  val find_task_inst_uncompleted_opt :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
+  module Find : sig
+    val find_task_inst_uncompleted_opt :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-  val find_task_inst_completed_opt :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
+    val find_task_inst_completed_opt :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-  val find_task_inst_discarded_opt :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
+    val find_task_inst_discarded_opt :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-  val find_task_inst_any_opt :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
+    val find_task_inst_any_opt :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-  val find_task_inst_ids_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
+    val find_task_inst_ids_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
 
-  val find_task_inst_seq_uncompleted_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
+    val find_task_inst_seq_uncompleted_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
 
-  val find_task_inst_seq_completed_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
+    val find_task_inst_seq_completed_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
 
-  val find_task_inst_seq_discarded_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
+    val find_task_inst_seq_discarded_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
 
-  val find_task_inst_seq_any_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
+    val find_task_inst_seq_any_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
+  end
 
-  val remove_task_inst_uncompleted :
-    ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
+  module Remove : sig
+    val remove_task_inst_uncompleted :
+      ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_inst_completed :
-    ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
+    val remove_task_inst_completed :
+      ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_inst_discarded :
-    ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
+    val remove_task_inst_discarded :
+      ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_inst_all :
-    ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
+    val remove_task_inst_all :
+      ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_inst_uncompleted_strict :
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_inst_id ->
-    sched ->
-    (sched, unit) result
+    val remove_task_inst_uncompleted_strict :
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_inst_id ->
+      sched ->
+      (sched, unit) result
 
-  val remove_task_inst_completed_strict :
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_inst_id ->
-    sched ->
-    (sched, unit) result
+    val remove_task_inst_completed_strict :
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_inst_id ->
+      sched ->
+      (sched, unit) result
 
-  val remove_task_inst_discarded_strict :
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_inst_id ->
-    sched ->
-    (sched, unit) result
+    val remove_task_inst_discarded_strict :
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_inst_id ->
+      sched ->
+      (sched, unit) result
 
-  val remove_task_inst_uncompleted_seq :
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_inst_id Seq.t ->
-    sched ->
-    sched
+    val remove_task_inst_uncompleted_seq :
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_inst_id Seq.t ->
+      sched ->
+      sched
 
-  val remove_task_inst_completed_seq :
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_inst_id Seq.t ->
-    sched ->
-    sched
+    val remove_task_inst_completed_seq :
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_inst_id Seq.t ->
+      sched ->
+      sched
 
-  val remove_task_inst_discarded_seq :
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_inst_id Seq.t ->
-    sched ->
-    sched
+    val remove_task_inst_discarded_seq :
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_inst_id Seq.t ->
+      sched ->
+      sched
+  end
 end
 
 module Task : sig
-  val add_task :
-    parent_user_id:Task_ds.user_id ->
-    Task_ds.task_data ->
-    Task_ds.task_inst_data list ->
-    sched ->
-    Task_ds.task * Task_ds.task_inst list * sched
+  module Add : sig
+    val add_task :
+      parent_user_id:Task_ds.user_id ->
+      Task_ds.task_data ->
+      Task_ds.task_inst_data list ->
+      sched ->
+      Task_ds.task * Task_ds.task_inst list * sched
+  end
 
-  val find_task_uncompleted_opt :
-    Task_ds.task_id -> sched -> Task_ds.task_data option
+  module Find : sig
+    val find_task_uncompleted_opt :
+      Task_ds.task_id -> sched -> Task_ds.task_data option
 
-  val find_task_completed_opt :
-    Task_ds.task_id -> sched -> Task_ds.task_data option
+    val find_task_completed_opt :
+      Task_ds.task_id -> sched -> Task_ds.task_data option
 
-  val find_task_discarded_opt :
-    Task_ds.task_id -> sched -> Task_ds.task_data option
+    val find_task_discarded_opt :
+      Task_ds.task_id -> sched -> Task_ds.task_data option
 
-  val find_task_any_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
+    val find_task_any_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
+  end
 
-  val remove_task_uncompleted :
-    ?remove_children_task_insts:bool ->
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_id ->
-    sched ->
-    sched
+  module Remove : sig
+    val remove_task_uncompleted :
+      ?remove_children_task_insts:bool ->
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_id ->
+      sched ->
+      sched
 
-  val remove_task_completed :
-    ?remove_children_task_insts:bool ->
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_id ->
-    sched ->
-    sched
+    val remove_task_completed :
+      ?remove_children_task_insts:bool ->
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_id ->
+      sched ->
+      sched
 
-  val remove_task_discarded :
-    ?remove_children_task_insts:bool ->
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_id ->
-    sched ->
-    sched
+    val remove_task_discarded :
+      ?remove_children_task_insts:bool ->
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_id ->
+      sched ->
+      sched
 
-  val remove_task_all :
-    ?remove_children_task_insts:bool ->
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_id ->
-    sched ->
-    sched
+    val remove_task_all :
+      ?remove_children_task_insts:bool ->
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_id ->
+      sched ->
+      sched
 
-  val remove_task_uncompleted_strict :
-    ?remove_children_task_insts:bool ->
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_id ->
-    sched ->
-    (sched, unit) result
+    val remove_task_uncompleted_strict :
+      ?remove_children_task_insts:bool ->
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_id ->
+      sched ->
+      (sched, unit) result
 
-  val remove_task_completed_strict :
-    ?remove_children_task_insts:bool ->
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_id ->
-    sched ->
-    (sched, unit) result
+    val remove_task_completed_strict :
+      ?remove_children_task_insts:bool ->
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_id ->
+      sched ->
+      (sched, unit) result
 
-  val remove_task_discarded_strict :
-    ?remove_children_task_insts:bool ->
-    ?remove_children_task_segs:bool ->
-    Task_ds.task_id ->
-    sched ->
-    (sched, unit) result
+    val remove_task_discarded_strict :
+      ?remove_children_task_insts:bool ->
+      ?remove_children_task_segs:bool ->
+      Task_ds.task_id ->
+      sched ->
+      (sched, unit) result
+  end
 end
 
 module Agenda : sig
-  val add_task_seg_place : Task_ds.task_seg_place -> sched -> sched
+  module Add : sig
+    val add_task_seg_place : Task_ds.task_seg_place -> sched -> sched
 
-  val add_task_seg_place_list : Task_ds.task_seg_place list -> sched -> sched
+    val add_task_seg_place_list : Task_ds.task_seg_place list -> sched -> sched
 
-  val add_task_seg_place_seq : Task_ds.task_seg_place Seq.t -> sched -> sched
+    val add_task_seg_place_seq : Task_ds.task_seg_place Seq.t -> sched -> sched
+  end
 
-  val find_task_seg_place_seq_by_task_seg_id :
-    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_place Seq.t
+  module Filter : sig
+    val filter_task_seg_place_seq :
+      (Task_ds.task_seg_place -> bool) -> sched -> Task_ds.task_seg_place Seq.t
+  end
 
-  val filter_task_seg_place_seq :
-    (Task_ds.task_seg_place -> bool) -> sched -> Task_ds.task_seg_place Seq.t
+  module Find : sig
+    val find_task_seg_place_seq_by_task_seg_id :
+      Task_ds.task_seg_id -> sched -> Task_ds.task_seg_place Seq.t
 
-  val find_task_seg_place_seq_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.task_seg_place Seq.t
+    val find_task_seg_place_seq_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.task_seg_place Seq.t
 
-  val find_task_seg_place_seq_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> Task_ds.task_seg_place Seq.t
+    val find_task_seg_place_seq_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> Task_ds.task_seg_place Seq.t
 
-  val find_task_seg_place_seq_by_task_seg_id :
-    Task_ds.task_seg_id -> sched -> Task_ds.task_seg_place Seq.t
+    val find_task_seg_place_seq_by_task_seg_id :
+      Task_ds.task_seg_id -> sched -> Task_ds.task_seg_place Seq.t
+  end
 
-  val remove_task_seg_place : Task_ds.task_seg_place -> sched -> sched
+  module Remove : sig
+    val remove_task_seg_place : Task_ds.task_seg_place -> sched -> sched
 
-  val remove_task_seg_place_seq : Task_ds.task_seg_place Seq.t -> sched -> sched
+    val remove_task_seg_place_seq :
+      Task_ds.task_seg_place Seq.t -> sched -> sched
 
-  val remove_task_seg_place_by_task_id : Task_ds.task_id -> sched -> sched
+    val remove_task_seg_place_by_task_id : Task_ds.task_id -> sched -> sched
 
-  val remove_task_seg_place_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> sched
+    val remove_task_seg_place_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> sched
 
-  val remove_task_seg_place_by_task_seg_id :
-    Task_ds.task_seg_id -> sched -> sched
+    val remove_task_seg_place_by_task_seg_id :
+      Task_ds.task_seg_id -> sched -> sched
+  end
 end
 
 module Progress : sig
-  val move_task_seg_to_completed : Task_ds.task_seg_id -> sched -> sched
+  module Move : sig
+    val move_task_seg_to_completed : Task_ds.task_seg_id -> sched -> sched
 
-  val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> sched -> sched
+    val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> sched -> sched
 
-  val move_task_seg_to_discarded : Task_ds.task_seg_id -> sched -> sched
+    val move_task_seg_to_discarded : Task_ds.task_seg_id -> sched -> sched
 
-  val add_task_seg_progress_chunk :
-    Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
+    val move_task_inst_to_completed : Task_ds.task_inst_id -> sched -> sched
 
-  val find_task_seg_progress :
-    Task_ds.task_seg_id -> sched -> Task_ds.progress option
+    val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> sched -> sched
 
-  val find_task_seg_progress_chunk_set :
-    Task_ds.task_seg_id -> sched -> Int64_int64_set.t
+    val move_task_inst_to_discarded : Task_ds.task_inst_id -> sched -> sched
 
-  val find_task_seg_progress_chunk_seq :
-    Task_ds.task_seg_id -> sched -> (int64 * int64) Seq.t
+    val move_task_to_completed : Task_ds.task_id -> sched -> sched
 
-  val remove_task_seg_progress_chunk :
-    Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
+    val move_task_to_uncompleted : Task_ds.task_id -> sched -> sched
 
-  val move_task_inst_to_completed : Task_ds.task_inst_id -> sched -> sched
+    val move_task_to_discarded : Task_ds.task_id -> sched -> sched
+  end
 
-  val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> sched -> sched
+  module Add : sig
+    val add_task_seg_progress_chunk :
+      Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
 
-  val move_task_inst_to_discarded : Task_ds.task_inst_id -> sched -> sched
+    val add_task_seg_progress_chunk :
+      Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
 
-  val move_task_to_completed : Task_ds.task_id -> sched -> sched
+    val add_task_inst_progress_chunk :
+      Task_ds.task_inst_id -> int64 * int64 -> sched -> sched
+  end
 
-  val move_task_to_uncompleted : Task_ds.task_id -> sched -> sched
+  module Find : sig
+    val find_task_seg_progress :
+      Task_ds.task_seg_id -> sched -> Task_ds.progress option
 
-  val move_task_to_discarded : Task_ds.task_id -> sched -> sched
+    val find_task_seg_progress_chunk_set :
+      Task_ds.task_seg_id -> sched -> Int64_int64_set.t
 
-  val add_task_seg_progress_chunk :
-    Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
+    val find_task_seg_progress_chunk_seq :
+      Task_ds.task_seg_id -> sched -> (int64 * int64) Seq.t
 
-  val find_task_seg_progress :
-    Task_ds.task_seg_id -> sched -> Task_ds.progress option
+    val find_task_seg_progress :
+      Task_ds.task_seg_id -> sched -> Task_ds.progress option
 
-  val find_task_seg_progress_seq_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> Task_ds.progress Seq.t
+    val find_task_seg_progress_seq_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> Task_ds.progress Seq.t
 
-  val find_task_seg_progress_seq_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.progress Seq.t
+    val find_task_seg_progress_seq_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.progress Seq.t
 
-  val find_task_seg_progress_chunk_set :
-    Task_ds.task_seg_id -> sched -> Int64_int64_set.t
+    val find_task_seg_progress_chunk_set :
+      Task_ds.task_seg_id -> sched -> Int64_int64_set.t
 
-  val find_task_seg_progress_chunk_seq :
-    Task_ds.task_seg_id -> sched -> (int64 * int64) Seq.t
+    val find_task_seg_progress_chunk_seq :
+      Task_ds.task_seg_id -> sched -> (int64 * int64) Seq.t
 
-  val find_task_seg_progress_chunk_seq_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> (int64 * int64) Seq.t
+    val find_task_seg_progress_chunk_seq_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> (int64 * int64) Seq.t
 
-  val find_task_seg_progress_chunk_seq_by_task_id :
-    Task_ds.task_id -> sched -> (int64 * int64) Seq.t
+    val find_task_seg_progress_chunk_seq_by_task_id :
+      Task_ds.task_id -> sched -> (int64 * int64) Seq.t
 
-  val remove_task_seg_progress_chunk :
-    Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
+    val find_task_inst_progress :
+      Task_ds.task_inst_id -> sched -> Task_ds.progress option
 
-  val add_task_inst_progress_chunk :
-    Task_ds.task_inst_id -> int64 * int64 -> sched -> sched
+    val find_task_inst_progress_seq_by_task_id :
+      Task_ds.task_id -> sched -> Task_ds.progress Seq.t
 
-  val find_task_inst_progress :
-    Task_ds.task_inst_id -> sched -> Task_ds.progress option
+    val find_task_inst_progress_chunk_set :
+      Task_ds.task_inst_id -> sched -> Int64_int64_set.t
 
-  val find_task_inst_progress_seq_by_task_id :
-    Task_ds.task_id -> sched -> Task_ds.progress Seq.t
+    val find_task_inst_progress_chunk_seq :
+      Task_ds.task_inst_id -> sched -> (int64 * int64) Seq.t
 
-  val find_task_inst_progress_chunk_set :
-    Task_ds.task_inst_id -> sched -> Int64_int64_set.t
+    val find_task_inst_progress_chunk_seq_by_task_id :
+      Task_ds.task_id -> sched -> (int64 * int64) Seq.t
+  end
 
-  val find_task_inst_progress_chunk_seq :
-    Task_ds.task_inst_id -> sched -> (int64 * int64) Seq.t
+  module Remove : sig
+    val remove_task_seg_progress_chunk :
+      Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
 
-  val find_task_inst_progress_chunk_seq_by_task_id :
-    Task_ds.task_id -> sched -> (int64 * int64) Seq.t
+    val remove_task_seg_progress_chunk :
+      Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
 
-  val remove_task_inst_progress_chunk :
-    Task_ds.task_inst_id -> int64 * int64 -> sched -> sched
+    val remove_task_inst_progress_chunk :
+      Task_ds.task_inst_id -> int64 * int64 -> sched -> sched
+  end
 end
 
 module Sched_req : sig
-  val queue_sched_req_data :
-    Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
+  module Enqueue : sig
+    val enqueue_sched_req_data :
+      Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
 
-  val queue_sched_req_data_list :
-    Sched_req_ds.sched_req_data list ->
-    sched ->
-    Sched_req_ds.sched_req list * sched
+    val enqueue_sched_req_data_list :
+      Sched_req_ds.sched_req_data list ->
+      sched ->
+      Sched_req_ds.sched_req list * sched
+  end
 
-  val unqueue_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+  module Dequeue : sig
+    val dequeue_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+  end
 
-  val filter_sched_req_record_seq :
-    (Sched_req_ds.sched_req_record -> bool) ->
-    sched ->
-    Sched_req_ds.sched_req_record Seq.t
+  module Filter : sig
+    val filter_sched_req_record_seq :
+      (Sched_req_ds.sched_req_record -> bool) ->
+      sched ->
+      Sched_req_ds.sched_req_record Seq.t
+  end
 
-  val find_sched_req_record_by_task_id :
-    Task_ds.task_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+  module Find : sig
+    val find_sched_req_record_by_task_id :
+      Task_ds.task_id -> sched -> Sched_req_ds.sched_req_record Seq.t
 
-  val find_sched_req_record_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+    val find_sched_req_record_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> Sched_req_ds.sched_req_record Seq.t
 
-  val find_sched_req_record_by_task_seg_id :
-    Task_ds.task_seg_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+    val find_sched_req_record_by_task_seg_id :
+      Task_ds.task_seg_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+  end
 
-  val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
-    (Task_ds.task_seg_alloc_req -> bool) -> sched -> sched
+  module Remove : sig
+    val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
+      (Task_ds.task_seg_alloc_req -> bool) -> sched -> sched
 
-  val remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req :
-    (Task_ds.task_seg_alloc_req -> bool) -> sched -> sched
+    val remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req :
+      (Task_ds.task_seg_alloc_req -> bool) -> sched -> sched
 
-  val remove_sched_req_record_if_contains_matching_task_seg :
-    (Task_ds.task_seg -> bool) -> sched -> sched
+    val remove_sched_req_record_if_contains_matching_task_seg :
+      (Task_ds.task_seg -> bool) -> sched -> sched
 
-  val remove_sched_req_record_data_unit_if_contains_matching_task_seg :
-    (Task_ds.task_seg -> bool) -> sched -> sched
+    val remove_sched_req_record_data_unit_if_contains_matching_task_seg :
+      (Task_ds.task_seg -> bool) -> sched -> sched
 
-  val remove_pending_sched_req_by_task_id : Task_ds.task_id -> sched -> sched
+    val remove_pending_sched_req_by_task_id : Task_ds.task_id -> sched -> sched
 
-  val remove_pending_sched_req_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> sched
+    val remove_pending_sched_req_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> sched
 
-  val remove_pending_sched_req_by_task_seg_id :
-    Task_ds.task_seg_id -> sched -> sched
+    val remove_pending_sched_req_by_task_seg_id :
+      Task_ds.task_seg_id -> sched -> sched
 
-  val remove_pending_sched_req_data_unit_by_task_id :
-    Task_ds.task_id -> sched -> sched
+    val remove_pending_sched_req_data_unit_by_task_id :
+      Task_ds.task_id -> sched -> sched
 
-  val remove_pending_sched_req_data_unit_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> sched
+    val remove_pending_sched_req_data_unit_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> sched
 
-  val remove_pending_sched_req_data_unit_by_task_seg_id :
-    Task_ds.task_seg_id -> sched -> sched
+    val remove_pending_sched_req_data_unit_by_task_seg_id :
+      Task_ds.task_seg_id -> sched -> sched
 
-  val remove_sched_req_record_by_task_id : Task_ds.task_id -> sched -> sched
+    val remove_sched_req_record_by_task_id : Task_ds.task_id -> sched -> sched
 
-  val remove_sched_req_record_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> sched
+    val remove_sched_req_record_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> sched
 
-  val remove_sched_req_record_by_task_seg_id :
-    Task_ds.task_seg_id -> sched -> sched
+    val remove_sched_req_record_by_task_seg_id :
+      Task_ds.task_seg_id -> sched -> sched
 
-  val remove_sched_req_record_data_unit_by_task_id :
-    Task_ds.task_id -> sched -> sched
+    val remove_sched_req_record_data_unit_by_task_id :
+      Task_ds.task_id -> sched -> sched
 
-  val remove_sched_req_record_data_unit_by_task_inst_id :
-    Task_ds.task_inst_id -> sched -> sched
+    val remove_sched_req_record_data_unit_by_task_inst_id :
+      Task_ds.task_inst_id -> sched -> sched
 
-  val remove_sched_req_record_data_unit_by_task_seg_id :
-    Task_ds.task_seg_id -> sched -> sched
+    val remove_sched_req_record_data_unit_by_task_seg_id :
+      Task_ds.task_seg_id -> sched -> sched
+  end
 
-  val discard_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+  module Discard : sig
+    val discard_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+  end
 
-  val allocate_task_segs_for_pending_sched_reqs :
-    start:int64 ->
-    end_exc:int64 ->
-    include_sched_reqs_partially_within_time_period:bool ->
-    up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
-    sched ->
-    Sched_req_ds.sched_req_record list * sched
+  module Allocate_task_segs : sig
+    val allocate_task_segs_for_pending_sched_reqs :
+      start:int64 ->
+      end_exc:int64 ->
+      include_sched_reqs_partially_within_time_period:bool ->
+      up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
+      sched ->
+      Sched_req_ds.sched_req_record list * sched
+  end
 end
 
 module Recur : sig

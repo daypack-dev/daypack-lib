@@ -18,7 +18,7 @@ module In_place_head : sig
     t ->
     Task_ds.task_inst
 
-  val queue_sched_req :
+  val enqueue_sched_req :
     Sched_req_ds.sched_req_data -> t -> Sched_req_ds.sched_req
 
   val instantiate : start:int64 -> end_exc:int64 -> t -> unit
