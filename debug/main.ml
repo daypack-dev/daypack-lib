@@ -445,7 +445,7 @@ let debug_sched_backtracking_search_pending () =
 let debug_sched_usage_simulation () =
   let add_task ~parent_user_id task_data task_inst_data_list t : unit =
     let task, _task_inst_list =
-      Sched_ver_history.In_place_head.add_task ~parent_user_id task_data
+      Sched_ver_history.In_place_head.Task.Add.add_task ~parent_user_id task_data
         task_inst_data_list t
     in
     print_endline "Added task";
@@ -483,7 +483,7 @@ let debug_sched_usage_simulation () =
     sched_ver_history;
   List.iter
     (fun sched_req_data ->
-       Sched_ver_history.In_place_head.enqueue_sched_req sched_req_data
+       Sched_ver_history.In_place_head.Sched_req.Enqueue.enqueue_sched_req sched_req_data
          sched_ver_history
        |> ignore)
     [
@@ -560,7 +560,7 @@ let debug_sched_usage_simulation () =
     ];
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
-  Sched_ver_history.In_place_head.instantiate ~start:0L ~end_exc:100L
+  Sched_ver_history.In_place_head.Recur.instantiate ~start:0L ~end_exc:100L
     sched_ver_history;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
@@ -584,9 +584,9 @@ let debug_sched_usage_simulation () =
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   (* Sched_ver_history.In_place_head.move_task_seg_to_completed
    *   (0L, 1L, 0L, 0L, None) sched_ver_history; *)
-  Sched_ver_history.In_place_head.move_task_inst_to_completed (0L, 1L, 0L)
+  Sched_ver_history.In_place_head.Progress.Move.move_task_inst_to_completed (0L, 1L, 0L)
     sched_ver_history;
-  Sched_ver_history.In_place_head.add_task_seg_progress_chunk
+  Sched_ver_history.In_place_head.Progress.Add.add_task_seg_progress_chunk
     (0L, 0L, 1L, 0L, None) (0L, 100L) sched_ver_history;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";

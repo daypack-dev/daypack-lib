@@ -29,119 +29,142 @@ let map_head (f : Sched.sched -> 'a * head_choice) (t : t) : 'a =
     ret
 
 module In_place_head = struct
-  let add_task ~parent_user_id (data : Task_ds.task_data)
-      (task_inst_data_list : Task_ds.task_inst_data list) (t : t) :
-    Task_ds.task * Task_ds.task_inst list =
-    map_head
-      (fun sched ->
-         let task, task_inst_list, sched =
-           Sched.Task.Add.add_task ~parent_user_id data task_inst_data_list sched
-         in
-         ((task, task_inst_list), Replace_head sched))
-      t
+  module Task = struct
+    module Add = struct
+      let add_task ~parent_user_id (data : Task_ds.task_data)
+          (task_inst_data_list : Task_ds.task_inst_data list) (t : t) :
+        Task_ds.task * Task_ds.task_inst list =
+        map_head
+          (fun sched ->
+             let task, task_inst_list, sched =
+               Sched.Task.Add.add_task ~parent_user_id data task_inst_data_list
+                 sched
+             in
+             ((task, task_inst_list), Replace_head sched))
+          t
+    end
+  end
 
-  let add_task_inst ~parent_task_id (data : Task_ds.task_inst_data) (t : t) :
-    Task_ds.task_inst =
-    map_head
-      (fun sched ->
-         let task_inst, sched =
-           Sched.Task_inst.Add.add_task_inst ~parent_task_id data sched
-         in
-         (task_inst, Replace_head sched))
-      t
+  module Task_inst = struct
+    module Add = struct
+      let add_task_inst ~parent_task_id (data : Task_ds.task_inst_data) (t : t)
+        : Task_ds.task_inst =
+        map_head
+          (fun sched ->
+             let task_inst, sched =
+               Sched.Task_inst.Add.add_task_inst ~parent_task_id data sched
+             in
+             (task_inst, Replace_head sched))
+          t
+    end
+  end
 
-  let enqueue_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
-    Sched_req_ds.sched_req =
-    map_head
-      (fun sched ->
-         let sched_req, sched =
-           Sched.Sched_req.Enqueue.enqueue_sched_req_data data sched
-         in
-         (sched_req, Replace_head sched))
-      t
+  module Sched_req = struct
+    module Enqueue = struct
+      let enqueue_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
+        Sched_req_ds.sched_req =
+        map_head
+          (fun sched ->
+             let sched_req, sched =
+               Sched.Sched_req.Enqueue.enqueue_sched_req_data data sched
+             in
+             (sched_req, Replace_head sched))
+          t
+    end
+  end
 
-  let instantiate ~start ~end_exc (t : t) : unit =
-    map_head
-      (fun sched ->
-         let sched = Sched.Recur.instantiate ~start ~end_exc sched in
-         ((), Replace_head sched))
-      t
+  module Recur = struct
+    let instantiate ~start ~end_exc (t : t) : unit =
+      map_head
+        (fun sched ->
+           let sched = Sched.Recur.instantiate ~start ~end_exc sched in
+           ((), Replace_head sched))
+        t
+  end
 
-  let move_task_seg_internal
-      ~(move_task_seg_by_id : Task_ds.task_seg_id -> Sched.sched -> Sched.sched)
-      (task_seg_id : Task_ds.task_seg_id) (t : t) : unit =
-    map_head
-      (fun sched ->
-         let sched = move_task_seg_by_id task_seg_id sched in
-         ((), Replace_head sched))
-      t
+  module Progress = struct
+    module Move = struct
+      let move_task_seg_internal
+          ~(move_task_seg_by_id :
+              Task_ds.task_seg_id -> Sched.sched -> Sched.sched)
+          (task_seg_id : Task_ds.task_seg_id) (t : t) : unit =
+        map_head
+          (fun sched ->
+             let sched = move_task_seg_by_id task_seg_id sched in
+             ((), Replace_head sched))
+          t
 
-  let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t) :
-    unit =
-    move_task_seg_internal
-      ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_completed
-      task_seg_id t
+      let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t)
+        : unit =
+        move_task_seg_internal
+          ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_completed
+          task_seg_id t
 
-  let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id) (t : t) :
-    unit =
-    move_task_seg_internal
-      ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_uncompleted
-      task_seg_id t
+      let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
+          (t : t) : unit =
+        move_task_seg_internal
+          ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_uncompleted
+          task_seg_id t
 
-  let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id) (t : t) :
-    unit =
-    move_task_seg_internal
-      ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_discarded
-      task_seg_id t
+      let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id) (t : t)
+        : unit =
+        move_task_seg_internal
+          ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_discarded
+          task_seg_id t
 
-  let move_task_inst_internal
-      ~(move_task_inst_by_id :
-          Task_ds.task_inst_id -> Sched.sched -> Sched.sched)
-      (task_inst_id : Task_ds.task_inst_id) (t : t) : unit =
-    map_head
-      (fun sched ->
-         let sched = move_task_inst_by_id task_inst_id sched in
-         ((), Replace_head sched))
-      t
+      let move_task_inst_internal
+          ~(move_task_inst_by_id :
+              Task_ds.task_inst_id -> Sched.sched -> Sched.sched)
+          (task_inst_id : Task_ds.task_inst_id) (t : t) : unit =
+        map_head
+          (fun sched ->
+             let sched = move_task_inst_by_id task_inst_id sched in
+             ((), Replace_head sched))
+          t
 
-  let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id) (t : t)
-    : unit =
-    move_task_inst_internal
-      ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_completed
-      task_inst_id t
+      let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id)
+          (t : t) : unit =
+        move_task_inst_internal
+          ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_completed
+          task_inst_id t
 
-  let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
-      (t : t) : unit =
-    move_task_inst_internal
-      ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_uncompleted
-      task_inst_id t
+      let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
+          (t : t) : unit =
+        move_task_inst_internal
+          ~move_task_inst_by_id:
+            Sched.Progress.Move.move_task_inst_to_uncompleted task_inst_id t
 
-  let move_task_inst_to_discarded (task_inst_id : Task_ds.task_inst_id) (t : t)
-    : unit =
-    move_task_inst_internal
-      ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_discarded
-      task_inst_id t
+      let move_task_inst_to_discarded (task_inst_id : Task_ds.task_inst_id)
+          (t : t) : unit =
+        move_task_inst_internal
+          ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_discarded
+          task_inst_id t
+    end
 
-  let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
-      (chunk : int64 * int64) (t : t) : unit =
-    map_head
-      (fun sched ->
-         let sched =
-           Sched.Progress.Add.add_task_seg_progress_chunk task_seg_id chunk sched
-         in
-         ((), Replace_head sched))
-      t
+    module Add = struct
+      let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
+          (chunk : int64 * int64) (t : t) : unit =
+        map_head
+          (fun sched ->
+             let sched =
+               Sched.Progress.Add.add_task_seg_progress_chunk task_seg_id chunk
+                 sched
+             in
+             ((), Replace_head sched))
+          t
 
-  let add_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
-      (chunk : int64 * int64) (t : t) : unit =
-    map_head
-      (fun sched ->
-         let sched =
-           Sched.Progress.Add.add_task_inst_progress_chunk task_inst_id chunk
-             sched
-         in
-         ((), Replace_head sched))
-      t
+      let add_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
+          (chunk : int64 * int64) (t : t) : unit =
+        map_head
+          (fun sched ->
+             let sched =
+               Sched.Progress.Add.add_task_inst_progress_chunk task_inst_id chunk
+                 sched
+             in
+             ((), Replace_head sched))
+          t
+    end
+  end
 end
 
 module Maybe_append_to_head = struct
