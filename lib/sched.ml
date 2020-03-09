@@ -541,6 +541,13 @@ module Task_seg = struct
     let task_seg_seq_discarded ((_, sd) : sched) : Task_ds.task_seg Seq.t =
       Task_seg_id_map.to_seq sd.store.task_seg_discarded_store
 
+    let task_seg_seq_all ((_, sd) : sched) : Task_ds.task_seg Seq.t =
+      OSeq.append
+        (OSeq.append
+           (Task_seg_id_map.to_seq sd.store.task_seg_uncompleted_store)
+           (Task_seg_id_map.to_seq sd.store.task_seg_completed_store))
+        (Task_seg_id_map.to_seq sd.store.task_seg_discarded_store)
+
     (*$*)
   end
 
@@ -841,6 +848,31 @@ module Task_inst = struct
     (*$*)
   end
 
+  module To_seq = struct
+    (*$ #use "lib/sched.cinaps";;
+
+      print_task_inst_to_seq ();
+    *)
+
+    let task_inst_seq_uncompleted ((_, sd) : sched) : Task_ds.task_inst Seq.t =
+      Task_inst_id_map.to_seq sd.store.task_inst_uncompleted_store
+
+    let task_inst_seq_completed ((_, sd) : sched) : Task_ds.task_inst Seq.t =
+      Task_inst_id_map.to_seq sd.store.task_inst_completed_store
+
+    let task_inst_seq_discarded ((_, sd) : sched) : Task_ds.task_inst Seq.t =
+      Task_inst_id_map.to_seq sd.store.task_inst_discarded_store
+
+    let task_inst_seq_all ((_, sd) : sched) : Task_ds.task_inst Seq.t =
+      OSeq.append
+        (OSeq.append
+           (Task_inst_id_map.to_seq sd.store.task_inst_uncompleted_store)
+           (Task_inst_id_map.to_seq sd.store.task_inst_completed_store))
+        (Task_inst_id_map.to_seq sd.store.task_inst_discarded_store)
+
+    (*$*)
+  end
+
   module Find = struct
     (*$ #use "lib/sched.cinaps";;
 
@@ -1129,6 +1161,31 @@ module Task = struct
                 Task_id_map.add id data sd.store.task_discarded_store;
             };
         } )
+
+    (*$*)
+  end
+
+  module To_seq = struct
+    (*$ #use "lib/sched.cinaps";;
+
+      print_task_to_seq ()
+    *)
+
+    let task_seq_uncompleted ((_, sd) : sched) : Task_ds.task Seq.t =
+      Task_id_map.to_seq sd.store.task_uncompleted_store
+
+    let task_seq_completed ((_, sd) : sched) : Task_ds.task Seq.t =
+      Task_id_map.to_seq sd.store.task_completed_store
+
+    let task_seq_discarded ((_, sd) : sched) : Task_ds.task Seq.t =
+      Task_id_map.to_seq sd.store.task_discarded_store
+
+    let task_seq_all ((_, sd) : sched) : Task_ds.task Seq.t =
+      OSeq.append
+        (OSeq.append
+           (Task_id_map.to_seq sd.store.task_uncompleted_store)
+           (Task_id_map.to_seq sd.store.task_completed_store))
+        (Task_id_map.to_seq sd.store.task_discarded_store)
 
     (*$*)
   end

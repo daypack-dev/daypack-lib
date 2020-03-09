@@ -874,7 +874,18 @@ let print_task_seg_to_seq () =
        Printf.printf
          "let task_seg_seq_%s ((_, sd) : sched) : Task_ds.task_seg Seq.t =\n" s;
        Printf.printf "Task_seg_id_map.to_seq sd.store.task_seg_%s_store\n" s)
-    store_types
+    store_types;
+  Printf.printf
+    "let task_seg_seq_all ((_, sd) : sched) : Task_ds.task_seg Seq.t =\n";
+  Printf.printf
+    {|
+    OSeq.append
+      (OSeq.append
+         (Task_seg_id_map.to_seq sd.store.task_seg_uncompleted_store)
+         (Task_seg_id_map.to_seq sd.store.task_seg_completed_store)
+      )
+      (Task_seg_id_map.to_seq sd.store.task_seg_discarded_store)
+  |}
 
 let print_task_seg_find () =
   List.iter
@@ -1018,6 +1029,25 @@ let print_task_inst_add () =
        Printf.printf "|> Id.add_task_inst_id id\n")
     store_types
 
+let print_task_inst_to_seq () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let task_inst_seq_%s ((_, sd) : sched) : Task_ds.task_inst Seq.t =\n" s;
+       Printf.printf "Task_inst_id_map.to_seq sd.store.task_inst_%s_store\n" s)
+    store_types;
+  Printf.printf
+    "let task_inst_seq_all ((_, sd) : sched) : Task_ds.task_inst Seq.t =\n";
+  Printf.printf
+    {|
+    OSeq.append
+      (OSeq.append
+         (Task_inst_id_map.to_seq sd.store.task_inst_uncompleted_store)
+         (Task_inst_id_map.to_seq sd.store.task_inst_completed_store)
+      )
+      (Task_inst_id_map.to_seq sd.store.task_inst_discarded_store)
+  |}
+
 let print_task_inst_find () =
   List.iter
     (fun s ->
@@ -1147,6 +1177,24 @@ let print_task_add () =
 |}
          s s)
     store_types
+
+let print_task_to_seq () =
+  List.iter
+    (fun s ->
+       Printf.printf "let task_seq_%s ((_, sd) : sched) : Task_ds.task Seq.t =\n"
+         s;
+       Printf.printf "Task_id_map.to_seq sd.store.task_%s_store\n" s)
+    store_types;
+  Printf.printf "let task_seq_all ((_, sd) : sched) : Task_ds.task Seq.t =\n";
+  Printf.printf
+    {|
+    OSeq.append
+      (OSeq.append
+         (Task_id_map.to_seq sd.store.task_uncompleted_store)
+         (Task_id_map.to_seq sd.store.task_completed_store)
+      )
+      (Task_id_map.to_seq sd.store.task_discarded_store)
+  |}
 
 let print_task_find () =
   List.iter

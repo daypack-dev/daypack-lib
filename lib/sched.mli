@@ -134,6 +134,16 @@ module Task_seg : sig
       Task_ds.task_seg_place Seq.t -> sched -> sched
   end
 
+  module To_seq : sig
+    val task_seg_seq_uncompleted : sched -> Task_ds.task_seg Seq.t
+
+    val task_seg_seq_completed : sched -> Task_ds.task_seg Seq.t
+
+    val task_seg_seq_discarded : sched -> Task_ds.task_seg Seq.t
+
+    val task_seg_seq_all : sched -> Task_ds.task_seg Seq.t
+  end
+
   module Find : sig
     val find_task_seg_uncompleted_opt :
       Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
@@ -217,6 +227,16 @@ module Task_inst : sig
       Task_ds.task_inst_data list ->
       sched ->
       Task_ds.task_inst list * sched
+  end
+
+  module To_seq : sig
+    val task_inst_seq_uncompleted : sched -> Task_ds.task_inst Seq.t
+
+    val task_inst_seq_completed : sched -> Task_ds.task_inst Seq.t
+
+    val task_inst_seq_discarded : sched -> Task_ds.task_inst Seq.t
+
+    val task_inst_seq_all : sched -> Task_ds.task_inst Seq.t
   end
 
   module Find : sig
@@ -307,6 +327,16 @@ module Task : sig
       Task_ds.task_inst_data list ->
       sched ->
       Task_ds.task * Task_ds.task_inst list * sched
+  end
+
+  module To_seq : sig
+    val task_seq_uncompleted : sched -> Task_ds.task Seq.t
+
+    val task_seq_completed : sched -> Task_ds.task Seq.t
+
+    val task_seq_discarded : sched -> Task_ds.task Seq.t
+
+    val task_seq_all : sched -> Task_ds.task Seq.t
   end
 
   module Find : sig
