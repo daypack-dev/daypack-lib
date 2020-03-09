@@ -554,6 +554,12 @@ module Sched_req : sig
     val dequeue_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
   end
 
+  module To_seq : sig
+    val pending_sched_req_seq : sched -> Sched_req_ds.sched_req Seq.t
+
+    val sched_req_record_seq : sched -> Sched_req_ds.sched_req_record Seq.t
+  end
+
   module Filter : sig
     val filter_sched_req_record_seq :
       (Sched_req_ds.sched_req_record -> bool) ->

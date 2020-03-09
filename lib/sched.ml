@@ -1916,6 +1916,14 @@ module Sched_req = struct
           } )
   end
 
+  module To_seq = struct
+    let pending_sched_req_seq ((_, sd) : sched) : Sched_req_ds.sched_req Seq.t =
+      Sched_req_id_map.to_seq sd.store.sched_req_pending_store
+
+    let sched_req_record_seq ((_, sd) : sched) : Sched_req_ds.sched_req_record Seq.t =
+      Sched_req_id_map.to_seq sd.store.sched_req_record_store
+  end
+
   module Filter = struct
     let filter_sched_req_record_seq (f : Sched_req_ds.sched_req_record -> bool)
         ((_, sd) : sched) : Sched_req_ds.sched_req_record Seq.t =
