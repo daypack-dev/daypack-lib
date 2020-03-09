@@ -29,10 +29,7 @@ let map_head (f : Sched.sched -> 'a * head_choice) (t : t) : 'a =
     ret
 
 module Read = struct
-  let get_head (t : t) : Sched.sched =
-    map_head
-      (fun s -> (s, Do_nothing))
-      t
+  let get_head (t : t) : Sched.sched = map_head (fun s -> (s, Do_nothing)) t
 end
 
 module In_place_head = struct
