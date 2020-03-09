@@ -868,6 +868,14 @@ let print_task_seg_add () =
          s s)
     store_types
 
+let print_task_seg_to_seq () =
+  List.iter
+    (fun s ->
+       Printf.printf
+         "let task_seg_seq_%s ((_, sd) : sched) : Task_ds.task_seg Seq.t =\n" s;
+       Printf.printf "Task_seg_id_map.to_seq sd.store.task_seg_%s_store\n" s)
+    store_types
+
 let print_task_seg_find () =
   List.iter
     (fun s ->

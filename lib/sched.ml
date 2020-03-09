@@ -526,6 +526,24 @@ module Task_seg = struct
     (*$*)
   end
 
+  module To_seq = struct
+    (*$ #use "lib/sched.cinaps";;
+
+      print_task_seg_to_seq ();
+    *)
+
+    let task_seg_seq_uncompleted ((_, sd) : sched) : Task_ds.task_seg Seq.t =
+      Task_seg_id_map.to_seq sd.store.task_seg_uncompleted_store
+
+    let task_seg_seq_completed ((_, sd) : sched) : Task_ds.task_seg Seq.t =
+      Task_seg_id_map.to_seq sd.store.task_seg_completed_store
+
+    let task_seg_seq_discarded ((_, sd) : sched) : Task_ds.task_seg Seq.t =
+      Task_seg_id_map.to_seq sd.store.task_seg_discarded_store
+
+    (*$*)
+  end
+
   module Find = struct
     (*$ #use "lib/sched.cinaps";;
 
