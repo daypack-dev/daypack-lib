@@ -28,6 +28,18 @@ type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
+type task_related_status =
+  [ `Uncompleted
+  | `Completed
+  | `Discarded
+  ]
+
+type sched_req_status =
+  [ `Pending
+  | `Discarded
+  | `Recorded
+  ]
+
 type store = {
   task_uncompleted_store : task_store;
   task_completed_store : task_store;
@@ -349,7 +361,7 @@ module Task : sig
     val find_task_discarded_opt :
       Task_ds.task_id -> sched -> Task_ds.task_data option
 
-    val find_task_any_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
+    val find_task_any_opt : Task_ds.task_id -> sched -> (task_related_status * Task_ds.task_data) option
   end
 
   module Remove : sig

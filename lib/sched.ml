@@ -41,6 +41,18 @@ type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
+type task_related_status =
+  [ `Uncompleted
+  | `Completed
+  | `Discarded
+  ]
+
+type sched_req_status =
+  [ `Pending
+  | `Discarded
+  | `Recorded
+  ]
+
 type store = {
   task_uncompleted_store : task_store;
   task_completed_store : task_store;
@@ -1209,15 +1221,15 @@ module Task = struct
       Task_id_map.find_opt id sd.store.task_discarded_store
 
     let find_task_any_opt (id : Task_ds.task_id) (sched : sched) :
-      Task_ds.task_data option =
+      (task_related_status * Task_ds.task_data) option =
       match find_task_uncompleted_opt id sched with
-      | Some x -> Some x
+      | Some x -> Some (`Uncompleted, x)
       | None -> (
           match find_task_completed_opt id sched with
-          | Some x -> Some x
+          | Some x -> Some (`Completed, x)
           | None -> (
               match find_task_discarded_opt id sched with
-              | Some x -> Some x
+              | Some x -> Some (`Discarded, x)
               | None -> None ) )
 
     (*$*)
@@ -1541,7 +1553,7 @@ module Progress = struct
         (task_id : Task_ds.task_id) (sched : sched) : sched =
       match Task.Find.find_task_any_opt task_id sched with
       | None -> sched
-      | Some task_data ->
+      | Some (_, task_data) ->
         let task_inst_ids =
           Task_inst.Find.find_task_inst_ids_by_task_id task_id sched
         in
@@ -1558,7 +1570,7 @@ module Progress = struct
       sched =
       match Task.Find.find_task_any_opt task_id sched with
       | None -> sched
-      | Some task_data ->
+      | Some (_, task_data) ->
         sched
         |> Task.Remove.remove_task_all ~remove_children_task_insts:false
           ~remove_children_task_segs:false task_id
