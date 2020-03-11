@@ -2039,6 +2039,24 @@ module Sched_req = struct
         sched
   end
 
+  module Status = struct
+    let get_sched_req_status (id : Sched_req_ds.sched_req_id) ((_, sd) : sched)
+      : sched_req_status option =
+      match Sched_req_id_map.find_opt id sd.store.sched_req_pending_store with
+      | Some _ -> Some `Pending
+      | None -> (
+          match
+            Sched_req_id_map.find_opt id sd.store.sched_req_discarded_store
+          with
+          | Some _ -> Some `Discarded
+          | None -> (
+              match
+                Sched_req_id_map.find_opt id sd.store.sched_req_record_store
+              with
+              | Some _ -> Some `Recorded
+              | None -> None ) )
+  end
+
   module Remove = struct
     let remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
         (f : Task_ds.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =

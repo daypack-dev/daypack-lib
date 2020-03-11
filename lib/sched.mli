@@ -585,6 +585,11 @@ module Progress : sig
 end
 
 module Sched_req : sig
+  module Status : sig
+    val get_sched_req_status :
+      Sched_req_ds.sched_req_id -> sched -> sched_req_status option
+  end
+
   module Enqueue : sig
     val enqueue_sched_req_data :
       Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
