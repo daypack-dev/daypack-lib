@@ -484,6 +484,16 @@ module Agenda : sig
 end
 
 module Progress : sig
+  module Status : sig
+    val get_task_status : Task_ds.task_id -> sched -> task_related_status option
+
+    val get_task_inst_status :
+      Task_ds.task_inst_id -> sched -> task_related_status option
+
+    val get_task_seg_status :
+      Task_ds.task_seg_id -> sched -> task_related_status option
+  end
+
   module Move : sig
     val move_task_seg_to_completed : Task_ds.task_seg_id -> sched -> sched
 

@@ -1514,6 +1514,23 @@ module Agenda = struct
 end
 
 module Progress = struct
+  module Status = struct
+    let get_task_status (id : Task_ds.task_id) (sched : sched) :
+      task_related_status option =
+      Task.Find.find_task_any_w_status_opt id sched
+      |> Option.map (fun (status, _) -> status)
+
+    let get_task_inst_status (id : Task_ds.task_inst_id) (sched : sched) :
+      task_related_status option =
+      Task_inst.Find.find_task_inst_any_w_status_opt id sched
+      |> Option.map (fun (status, _) -> status)
+
+    let get_task_seg_status (id : Task_ds.task_seg_id) (sched : sched) :
+      task_related_status option =
+      Task_seg.Find.find_task_seg_any_w_status_opt id sched
+      |> Option.map (fun (status, _) -> status)
+  end
+
   module Move = struct
     let move_task_seg_internal
         ~(add_task_seg :
