@@ -463,7 +463,8 @@ let task_data_gen =
   map3
     (fun splittable parallelizable (task_type, name) ->
        Daypack_lib.Task_ds.{ splittable; parallelizable; task_type; name })
-    bool bool (pair task_type_gen string_readable)
+    bool bool
+    (pair task_type_gen string_readable)
 
 let task_gen = QCheck.Gen.(pair task_id_gen task_data_gen)
 

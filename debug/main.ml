@@ -454,7 +454,13 @@ let debug_sched_usage_simulation () =
   let time_profile_store = Time_profile_store.make_empty () in
   let sched_ver_history = Sched_ver_history.make_empty () in
   add_task ~parent_user_id:0L
-    Task_ds.{ splittable = false; parallelizable = false; task_type = One_off; name = "Test1" }
+    Task_ds.
+      {
+        splittable = false;
+        parallelizable = false;
+        task_type = One_off;
+        name = "Test1";
+      }
     Task_ds.[ { task_inst_type = Reminder } ]
     sched_ver_history;
   add_task ~parent_user_id:0L
@@ -479,7 +485,13 @@ let debug_sched_usage_simulation () =
       }
     [] sched_ver_history;
   add_task ~parent_user_id:0L
-    Task_ds.{ splittable = false; parallelizable = false; task_type = One_off; name = "Test3" }
+    Task_ds.
+      {
+        splittable = false;
+        parallelizable = false;
+        task_type = One_off;
+        name = "Test3";
+      }
     Task_ds.[ { task_inst_type = Reminder } ]
     sched_ver_history;
   List.iter
