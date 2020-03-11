@@ -636,13 +636,14 @@ module Task_seg = struct
       find_task_seg_ids_by_task_inst_id id sched
       |> Seq.filter_map (fun task_seg_id ->
           find_task_seg_any_w_status_opt task_seg_id sched
-          |> Option.map (fun (status, task_seg_size) ->
-              (status, (task_seg_id, task_seg_size))))
+          |> Option.map (fun (status, x) -> (status, (task_seg_id, x))))
 
     let find_task_seg_seq_any_by_task_inst_id (id : Task_ds.task_inst_id)
         (sched : sched) : Task_ds.task_seg Seq.t =
-      find_task_seg_seq_any_w_status_by_task_inst_id id sched
-      |> Seq.map (fun (_status, x) -> x)
+      find_task_seg_ids_by_task_inst_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_any_opt task_seg_id sched
+          |> Option.map (fun x -> (task_seg_id, x)))
 
     let find_task_seg_ids_by_task_id (id : Task_ds.task_id)
         ((_, sd) as sched : sched) : Task_ds.task_seg_id Seq.t =
@@ -686,8 +687,10 @@ module Task_seg = struct
 
     let find_task_seg_seq_any_by_task_id (id : Task_ds.task_id) (sched : sched)
       : Task_ds.task_seg Seq.t =
-      find_task_seg_seq_any_w_status_by_task_id id sched
-      |> Seq.map (fun (_status, x) -> x)
+      find_task_seg_ids_by_task_id id sched
+      |> Seq.filter_map (fun task_seg_id ->
+          find_task_seg_any_opt task_seg_id sched
+          |> Option.map (fun x -> (task_seg_id, x)))
 
     (*$*)
   end
@@ -976,13 +979,14 @@ module Task_inst = struct
       find_task_inst_ids_by_task_id id sched
       |> Seq.filter_map (fun task_inst_id ->
           find_task_inst_any_w_status_opt task_inst_id sched
-          |> Option.map (fun (status, task_inst_data) ->
-              (status, (task_inst_id, task_inst_data))))
+          |> Option.map (fun (status, x) -> (status, (task_inst_id, x))))
 
     let find_task_inst_seq_any_by_task_id (id : Task_ds.task_id) (sched : sched)
       : Task_ds.task_inst Seq.t =
-      find_task_inst_seq_any_w_status_by_task_id id sched
-      |> Seq.map (fun (_status, x) -> x)
+      find_task_inst_ids_by_task_id id sched
+      |> Seq.filter_map (fun task_inst_id ->
+          find_task_inst_any_opt task_inst_id sched
+          |> Option.map (fun x -> (task_inst_id, x)))
 
     (*$*)
   end
