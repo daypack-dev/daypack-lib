@@ -4,6 +4,10 @@ val make_empty : unit -> t
 
 val of_sched_list : Sched.sched list -> t
 
+module Read : sig
+  val get_head : t -> Sched.sched
+end
+
 module In_place_head : sig
   module Task : sig
     module Add : sig

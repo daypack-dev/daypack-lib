@@ -28,6 +28,18 @@ type task_seg_place_map = Task_seg_place_set.t Int64_map.t
 type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
 
+type task_related_status =
+  [ `Uncompleted
+  | `Completed
+  | `Discarded
+  ]
+
+type sched_req_status =
+  [ `Pending
+  | `Discarded
+  | `Recorded
+  ]
+
 type store = {
   task_uncompleted_store : task_store;
   task_completed_store : task_store;
@@ -134,6 +146,16 @@ module Task_seg : sig
       Task_ds.task_seg_place Seq.t -> sched -> sched
   end
 
+  module To_seq : sig
+    val task_seg_seq_uncompleted : sched -> Task_ds.task_seg Seq.t
+
+    val task_seg_seq_completed : sched -> Task_ds.task_seg Seq.t
+
+    val task_seg_seq_discarded : sched -> Task_ds.task_seg Seq.t
+
+    val task_seg_seq_all : sched -> Task_ds.task_seg Seq.t
+  end
+
   module Find : sig
     val find_task_seg_uncompleted_opt :
       Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
@@ -159,6 +181,11 @@ module Task_seg : sig
     val find_task_seg_seq_any_by_task_inst_id :
       Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
 
+    val find_task_seg_seq_any_w_status_by_task_inst_id :
+      Task_ds.task_inst_id ->
+      sched ->
+      (task_related_status * Task_ds.task_seg) Seq.t
+
     val find_task_seg_ids_by_task_id :
       Task_ds.task_id -> sched -> Task_ds.task_seg_id Seq.t
 
@@ -173,6 +200,9 @@ module Task_seg : sig
 
     val find_task_seg_seq_any_by_task_id :
       Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
+
+    val find_task_seg_seq_any_w_status_by_task_id :
+      Task_ds.task_id -> sched -> (task_related_status * Task_ds.task_seg) Seq.t
   end
 
   module Remove : sig
@@ -219,6 +249,16 @@ module Task_inst : sig
       Task_ds.task_inst list * sched
   end
 
+  module To_seq : sig
+    val task_inst_seq_uncompleted : sched -> Task_ds.task_inst Seq.t
+
+    val task_inst_seq_completed : sched -> Task_ds.task_inst Seq.t
+
+    val task_inst_seq_discarded : sched -> Task_ds.task_inst Seq.t
+
+    val task_inst_seq_all : sched -> Task_ds.task_inst Seq.t
+  end
+
   module Find : sig
     val find_task_inst_uncompleted_opt :
       Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
@@ -231,6 +271,11 @@ module Task_inst : sig
 
     val find_task_inst_any_opt :
       Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
+
+    val find_task_inst_any_w_status_opt :
+      Task_ds.task_inst_id ->
+      sched ->
+      (task_related_status * Task_ds.task_inst_data) option
 
     val find_task_inst_ids_by_task_id :
       Task_ds.task_id -> sched -> Task_ds.task_inst_id Seq.t
@@ -246,6 +291,11 @@ module Task_inst : sig
 
     val find_task_inst_seq_any_by_task_id :
       Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
+
+    val find_task_inst_seq_any_w_status_by_task_id :
+      Task_ds.task_id ->
+      sched ->
+      (task_related_status * Task_ds.task_inst) Seq.t
   end
 
   module Remove : sig
@@ -309,6 +359,16 @@ module Task : sig
       Task_ds.task * Task_ds.task_inst list * sched
   end
 
+  module To_seq : sig
+    val task_seq_uncompleted : sched -> Task_ds.task Seq.t
+
+    val task_seq_completed : sched -> Task_ds.task Seq.t
+
+    val task_seq_discarded : sched -> Task_ds.task Seq.t
+
+    val task_seq_all : sched -> Task_ds.task Seq.t
+  end
+
   module Find : sig
     val find_task_uncompleted_opt :
       Task_ds.task_id -> sched -> Task_ds.task_data option
@@ -320,6 +380,11 @@ module Task : sig
       Task_ds.task_id -> sched -> Task_ds.task_data option
 
     val find_task_any_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
+
+    val find_task_any_w_status_opt :
+      Task_ds.task_id ->
+      sched ->
+      (task_related_status * Task_ds.task_data) option
   end
 
   module Remove : sig
@@ -419,6 +484,16 @@ module Agenda : sig
 end
 
 module Progress : sig
+  module Status : sig
+    val get_task_status : Task_ds.task_id -> sched -> task_related_status option
+
+    val get_task_inst_status :
+      Task_ds.task_inst_id -> sched -> task_related_status option
+
+    val get_task_seg_status :
+      Task_ds.task_seg_id -> sched -> task_related_status option
+  end
+
   module Move : sig
     val move_task_seg_to_completed : Task_ds.task_seg_id -> sched -> sched
 
@@ -510,6 +585,11 @@ module Progress : sig
 end
 
 module Sched_req : sig
+  module Status : sig
+    val get_sched_req_status :
+      Sched_req_ds.sched_req_id -> sched -> sched_req_status option
+  end
+
   module Enqueue : sig
     val enqueue_sched_req_data :
       Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
@@ -522,6 +602,12 @@ module Sched_req : sig
 
   module Dequeue : sig
     val dequeue_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+  end
+
+  module To_seq : sig
+    val pending_sched_req_seq : sched -> Sched_req_ds.sched_req Seq.t
+
+    val sched_req_record_seq : sched -> Sched_req_ds.sched_req_record Seq.t
   end
 
   module Filter : sig

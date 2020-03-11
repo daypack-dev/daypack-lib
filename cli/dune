@@ -5,5 +5,6 @@
  (package daypc)
  (libraries daypack_lib
             cmdliner
+            fileutils
             )
  )

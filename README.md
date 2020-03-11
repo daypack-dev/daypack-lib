@@ -36,8 +36,8 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 - Time pattern (similar to cron time expression)
 
-  - This can be used to specify "fuzzy" starting and ending time of tasks in scheduling reuqests
-    and also time profiles
+  - This can be used to specify "fuzzy" starting and ending time of tasks in scheduling reuqests,
+    time profiles, and also recurrence starting times
 
 - Time profiles
 
@@ -46,11 +46,9 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
   - Some downloadable prebuilt profiles are
 
-    - `work_hours`
+    - `work_hours`: Monday to Friday 9am to 5pm
 
-      - Monday to Friday 9am to 5pm
-
-    - `sleep_hours`
+    - `sleep_hours`: Everyday 11pm to 12am, 12am to 6am
 
   - Time profiles are JSON files designed to be easily created/customised/extended by users, and Daypack processes all profiles
     provided in the profile directory (see user manual)
