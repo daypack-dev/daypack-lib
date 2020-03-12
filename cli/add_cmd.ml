@@ -13,7 +13,7 @@ let run (add_task : bool) : unit =
   | Ok context ->
     if add_task then (
       let name = Dialog.ask ~prompt:"Enter task name" (fun s ->
-          if s <> "" then Error "Task name cannot be empty" else Ok s
+          if s = "" then Error "Task name cannot be empty" else Ok s
         )
       in
       let task_type_choice = Dialog.ask_pick_choice ~prompt:"Pick task type" [("one-off", `One_off); ("recurring", `Recurring)] in
@@ -34,8 +34,9 @@ let run (add_task : bool) : unit =
         context.sched_ver_history
       |> ignore;
     );
+    Context.save context |> Result.get_ok;
     ()
 
 let cmd =
-  Term.(const ()),
+  Term.(const run $ task_arg),
   Term.info "add"

@@ -24,7 +24,7 @@ let load () : (t, string) result =
     | Ok sched_ver_history ->
       Ok { sched_ver_history; time_profile_store }
 
-let write (t : t) : (unit, string) result =
+let save (t : t) : (unit, string) result =
   (if not (Sys.file_exists Config.sched_ver_history_dir) then
      FileUtil.mkdir ~parent:true Config.sched_ver_history_dir
   );
