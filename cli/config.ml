@@ -1,4 +1,4 @@
-let default_item_dir = "~/.daypc"
+let default_item_dir = Filename.concat (Sys.getenv "HOME") ".daypc"
 
 let default_sched_ver_history_dir = Filename.concat default_item_dir "svh"
 
