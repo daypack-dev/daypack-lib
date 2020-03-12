@@ -1,7 +1,13 @@
-let ask (type a b) ~(prompt : string) (f : string -> (a, b) result) : (a, b) result =
-  Printf.printf "%s : " prompt;
-  let s = read_line () in
-  f s
+let ask (type a b) ~(prompt : string) (f : string -> (a, string) result) : a =
+  let rec aux prompt f =
+    Printf.printf "%s : " prompt;
+    let s = read_line () in
+    match f s with
+    | Ok x -> x
+    | Error msg -> Printf.printf "Error : %s\n" msg;
+      aux prompt f
+  in
+  aux prompt f
 
 let ask_pick_choice (type a) ~(prompt : string) (choices : (string * a) list) : a =
   Printf.printf "%s :\n" prompt;
@@ -9,7 +15,6 @@ let ask_pick_choice (type a) ~(prompt : string) (choices : (string * a) list) : 
     (fun (s, _) ->
        Printf.printf "  %s\n" s;
     ) choices;
-  ask ~prompt:"Please enter choice" (fun s ->
+  ask ~prompt:"Please enter choice (full string or a uniquely matching substring)" (fun s ->
       Ok (List.assoc s choices)
     )
-  |> Result.get_ok
