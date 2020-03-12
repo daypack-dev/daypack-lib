@@ -1,4 +1,4 @@
-let ask (type a b) ~(prompt : string) (f : string -> (a, string) result) : a =
+let ask (type a) ~(prompt : string) (f : string -> (a, string) result) : a =
   let rec aux prompt f =
     Printf.printf "%s : " prompt;
     let s = read_line () in
