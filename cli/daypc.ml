@@ -5,5 +5,9 @@ let cmds = [
   List_cmd.cmd;
 ]
 
+let default_cmd =
+  Term.(ret (const (`Help (`Pager, None)))),
+  Term.info "daypc"
+
 let () =
-  Term.(exit @@ Term.eval_choice List_cmd.cmd [])
+  Term.(exit @@ Term.eval_choice default_cmd cmds)
