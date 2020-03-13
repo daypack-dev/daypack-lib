@@ -210,13 +210,17 @@ let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
     |> Time_slot_ds.intersect (List.to_seq time_slots)
     |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:false
 
-let next_match_tm ~search_years_ahead ~(start : Unix.tm) (t : t) : Unix.tm option =
+let next_match_tm ~search_years_ahead ~(start : Unix.tm) (t : t) :
+  Unix.tm option =
   match (matching_tm_seq ~search_years_ahead ~start t) () with
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let next_match_int64 ~search_years_ahead ~(start : int64) (t : t) : int64 option =
-  next_match_tm ~search_years_ahead ~start:(Time.unix_time_to_tm ~time_zone_of_tm:`Local start) t
+let next_match_int64 ~search_years_ahead ~(start : int64) (t : t) : int64 option
+  =
+  next_match_tm ~search_years_ahead
+    ~start:(Time.unix_time_to_tm ~time_zone_of_tm:`Local start)
+    t
   |> Option.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
 
 module Serialize = struct
