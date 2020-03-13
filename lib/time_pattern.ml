@@ -25,7 +25,7 @@ let of_date_string (s : string) : (t, string) result =
             hours = [ hour ];
             minutes = [ minute ];
           })
-  with Scanf.Scan_failure _ -> (
+  with _ -> (
       try
         Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
             let month = Time.month_of_int month in
@@ -37,7 +37,7 @@ let of_date_string (s : string) : (t, string) result =
                 hours = [ hour ];
                 minutes = [ minute ];
               })
-      with Scanf.Scan_failure _ -> (
+      with _ -> (
           try
             Scanf.sscanf s "%d%c%d:%d" (fun day _sep hour minute ->
                 Ok
@@ -48,7 +48,7 @@ let of_date_string (s : string) : (t, string) result =
                     hours = [ hour ];
                     minutes = [ minute ];
                   })
-          with Scanf.Scan_failure _ -> (
+          with _ -> (
               try
                 Scanf.sscanf s "%d:%d" (fun hour minute ->
                     Ok
@@ -59,7 +59,7 @@ let of_date_string (s : string) : (t, string) result =
                         hours = [ hour ];
                         minutes = [ minute ];
                       })
-              with Scanf.Scan_failure _ -> Error "Failed to interpret date string" ) ) )
+              with _ -> Error "Failed to interpret date string" ) ) )
 
 (* type normalize_dir =
  *   [ `Start
