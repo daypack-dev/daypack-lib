@@ -13,22 +13,26 @@ let run (add_task : bool) : unit =
         )
       in
       let task_type_choice = Dialog.ask_pick_choice ~prompt:"Pick task type" [("one-off", `One_off); ("recurring", `Recurring)] in
-      let task_type =
-        match task_type_choice with
-        | `One_off ->
-          Daypack_lib.Task_ds.One_off
-        | `Recurring -> One_off
-      in
-      let data = Daypack_lib.Task_ds.{
-          splittable = false;
-          parallelizable = false;
-          task_type;
-          name;
-        }
-      in
-      Daypack_lib.Sched_ver_history.In_place_head.Task.Add.add_task ~parent_user_id:0L data []
-        context.sched_ver_history
-      |> ignore;
+      match task_type_choice with
+      | `One_off -> (
+          let task_data = Daypack_lib.Task_ds.{
+              splittable = false;
+              parallelizable = false;
+              task_type = Daypack_lib.Task_ds.One_off;
+              name;
+            }
+          in
+          let task_inst_data_list =
+            Daypack_lib.Task_ds.[ { task_inst_type = Reminder } ]
+          in
+          let (task_id, _task_data), _task_inst_list =
+            Daypack_lib.Sched_ver_history.In_place_head.Task.Add.add_task ~parent_user_id:0L task_data task_inst_data_list
+              context.sched_ver_history
+          in
+          Printf.printf "Allocated task under ID : %s\n" (Daypack_lib.Task_ds.task_id_to_string task_id);
+        )
+      | `Recurring ->
+        ()
     );
     Context.save context |> Result.get_ok;
     ()

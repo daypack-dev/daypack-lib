@@ -50,4 +50,9 @@ let ask_sched_req_data_unit ~(task_inst_id : Daypack_lib.Task_ds.task_inst_id) :
           }
           )
     )
+  | `Shift
+  | `Split_and_shift
+  | `Split_even
+  | `Time_share
+  | `Push_toward
   | _ -> failwith "Not implemented"
