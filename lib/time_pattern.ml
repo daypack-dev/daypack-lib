@@ -17,54 +17,49 @@ let of_date_string (s : string) : (t, string) result =
   try
     Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
         let month = Time.month_of_int month in
-        Ok {
-          years = [year];
-          months = [month];
-          days = `Month_days [day];
-          hours = [hour];
-          minutes = [minute];
-        }
-      )
-  with
-  | Scanf.Scan_failure _ ->
-    try
-      Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
-          let month = Time.month_of_int month in
-          Ok {
-            years = [];
-            months = [month];
-            days = `Month_days [day];
-            hours = [hour];
-            minutes = [minute];
-          }
-        )
-    with
-    | Scanf.Scan_failure _ ->
+        Ok
+          {
+            years = [ year ];
+            months = [ month ];
+            days = `Month_days [ day ];
+            hours = [ hour ];
+            minutes = [ minute ];
+          })
+  with Scanf.Scan_failure _ -> (
       try
-      Scanf.sscanf s "%d%c%d:%d" (fun day _sep hour minute ->
-          Ok {
-            years = [];
-            months = [];
-            days = `Month_days [day];
-            hours = [hour];
-            minutes = [minute];
-          }
-        )
-      with
-      | Scanf.Scan_failure _ ->
-        try
-      Scanf.sscanf s "%d:%d" (fun hour minute ->
-          Ok {
-            years = [];
-            months = [];
-            days = `Month_days [];
-            hours = [hour];
-            minutes = [minute];
-          }
-        )
-    with
-    | Scanf.Scan_failure _ ->
-      Error "Failed to interpret date string"
+        Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
+            let month = Time.month_of_int month in
+            Ok
+              {
+                years = [];
+                months = [ month ];
+                days = `Month_days [ day ];
+                hours = [ hour ];
+                minutes = [ minute ];
+              })
+      with Scanf.Scan_failure _ -> (
+          try
+            Scanf.sscanf s "%d%c%d:%d" (fun day _sep hour minute ->
+                Ok
+                  {
+                    years = [];
+                    months = [];
+                    days = `Month_days [ day ];
+                    hours = [ hour ];
+                    minutes = [ minute ];
+                  })
+          with Scanf.Scan_failure _ -> (
+              try
+                Scanf.sscanf s "%d:%d" (fun hour minute ->
+                    Ok
+                      {
+                        years = [];
+                        months = [];
+                        days = `Month_days [];
+                        hours = [ hour ];
+                        minutes = [ minute ];
+                      })
+              with Scanf.Scan_failure _ -> Error "Failed to interpret date string" ) ) )
 
 (* type normalize_dir =
  *   [ `Start
