@@ -188,7 +188,7 @@ let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
     |> Seq.map (fun pat_year ->
         { acc with tm_year = pat_year - Time.tm_year_offset })
 
-let matching_tm_seq ~search_years_ahead (t : t) (start : Unix.tm) :
+let matching_tm_seq ~search_years_ahead ~(start : Unix.tm) (t : t) :
   Unix.tm Seq.t =
   matching_years ~search_years_ahead t start start
   |> Seq.flat_map (fun acc -> matching_months t start acc)
@@ -213,11 +213,20 @@ let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
     let start_tm = Time.unix_time_to_tm ~time_zone_of_tm:`Local start in
     let end_exc_tm = Time.unix_time_to_tm ~time_zone_of_tm:`Local end_exc in
     let search_years_ahead = end_exc_tm.tm_year - start_tm.tm_year + 1 in
-    matching_tm_seq ~search_years_ahead t start_tm
+    matching_tm_seq ~search_years_ahead ~start:start_tm t
     |> Seq.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
     |> Seq.map (fun time -> (time, time +^ 1L))
     |> Time_slot_ds.intersect (List.to_seq time_slots)
     |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:false
+
+let next_match_tm ~search_years_ahead ~(start : Unix.tm) (t : t) : Unix.tm option =
+  match (matching_tm_seq ~search_years_ahead ~start t) () with
+  | Seq.Nil -> None
+  | Seq.Cons (x, _) -> Some x
+
+let next_match_int64 ~search_years_ahead ~(start : int64) (t : t) : int64 option =
+  next_match_tm ~search_years_ahead ~start:(Time.unix_time_to_tm ~time_zone_of_tm:`Local start) t
+  |> Option.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
 
 (* let next_match_int64 ?(time_slots : Time_slot_ds.t list = []) ~normalize_dir
  *     ~search_years_ahead (t : t) (time : int64) : int64 option =
