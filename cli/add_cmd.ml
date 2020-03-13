@@ -1,9 +1,5 @@
 open Cmdliner
 
-type task_type_choice = [
-  `One_off | `Recurring
-]
-
 let task_arg =
   Arg.(value & flag & info ["task"])
 
