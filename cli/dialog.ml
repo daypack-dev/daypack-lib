@@ -15,8 +15,22 @@ let ask_pick_choice (type a) ~(prompt : string) (choices : (string * a) list) : 
     (fun (s, _) ->
        Printf.printf "  %s\n" s;
     ) choices;
-  ask ~prompt:"Please enter choice (full string or a uniquely matching substring)" (fun s ->
-      Ok (List.assoc s choices)
+  ask ~prompt:"Please enter choice (case insensitive full/partial string of the choice)" (fun s ->
+      let regexp = Str.regexp_case_fold s in
+      let matching_choices =
+        List.filter
+          (fun (k, _v) ->
+             try
+               Str.search_forward regexp k 0 |> ignore; true
+             with
+             | Not_found -> false
+          )
+          choices
+      in
+      match matching_choices with
+      | [] -> Error "Input does not match any choice"
+      | [(_k, v)] -> Ok v
+      | _ -> Error "Input is too ambiguous and matches multiple choices"
     )
 
 let ask_sched_req_data_unit ~(task_inst_id : Daypack_lib.Task_ds.task_inst_id) : (Daypack_lib.Sched_req_ds.sched_req_data_unit, string) result =
