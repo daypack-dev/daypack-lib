@@ -196,15 +196,6 @@ let matching_tm_seq ~search_years_ahead ~(start : Unix.tm) (t : t) :
   |> Seq.flat_map (fun acc -> matching_hours t start acc)
   |> Seq.flat_map (fun acc -> matching_minutes t start acc)
 
-(* let matching_time_seq ~search_years_ahead (t : t) (start : int64) : int64 Seq.t =
- *   let start_tm = Time.time_to_tm start in
- *   matching_tm_seq ~search_years_ahead *)
-
-(* let next_match_tm ~(normalize_dir : normalize_dir) ~search_years_ahead (t : t)
- *     (tm : Unix.tm) : Unix.tm option =
- *   let s = matching_tm_seq ~search_years_ahead t tm in
- *   match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x *)
-
 let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
   Time_slot_ds.t Seq.t =
   match Time_slot_ds.min_start_and_max_end_exc_list time_slots with
@@ -227,33 +218,6 @@ let next_match_tm ~search_years_ahead ~(start : Unix.tm) (t : t) : Unix.tm optio
 let next_match_int64 ~search_years_ahead ~(start : int64) (t : t) : int64 option =
   next_match_tm ~search_years_ahead ~start:(Time.unix_time_to_tm ~time_zone_of_tm:`Local start) t
   |> Option.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
-
-(* let next_match_int64 ?(time_slots : Time_slot_ds.t list = []) ~normalize_dir
- *     ~search_years_ahead (t : t) (time : int64) : int64 option =
- *   Time.time_to_tm time
- *   |> next_match_tm ~normalize_dir ~search_years_ahead t
- *   |> Option.map Time.tm_to_time
- *   |> fun time ->
- *   match time with
- *   | None -> None
- *   | Some time -> (
- *       match time_slots with
- *       | [] -> Some time
- *       | l -> (
- *           let s =
- *             l
- *             |> List.to_seq
- *             |> fun s ->
- *             match normalize_dir with
- *             | `Start -> Time_slot_ds.slice ~start:time s
- *             | `End -> Time_slot_ds.slice ~end_exc:time s
- *           in
- *           match s () with
- *           | Seq.Nil -> None
- *           | Seq.Cons ((start, end_exc), _) -> (
- *               match normalize_dir with
- *               | `Start -> Some start
- *               | `End -> Some end_exc ) ) ) *)
 
 module Serialize = struct
   let pack_days (x : days) : Time_pattern_t.days = x
