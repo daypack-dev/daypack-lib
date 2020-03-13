@@ -17,3 +17,5 @@ let time_profile_store_dir =
   match Sys.getenv_opt time_profile_store_dir_env_var_name with
   | None -> default_time_profile_store_dir
   | Some s -> s
+
+let time_pattern_search_years_ahead = 5
