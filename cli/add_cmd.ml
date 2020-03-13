@@ -25,11 +25,19 @@ let run (add_task : bool) : unit =
           let task_inst_data_list =
             Daypack_lib.Task_ds.[ { task_inst_type = Reminder } ]
           in
-          let (task_id, _task_data), _task_inst_list =
+          let (task_id, _task_data), task_inst_list =
             Daypack_lib.Sched_ver_history.In_place_head.Task.Add.add_task ~parent_user_id:0L task_data task_inst_data_list
               context.sched_ver_history
           in
-          Printf.printf "Allocated task under ID : %s\n" (Daypack_lib.Task_ds.task_id_to_string task_id);
+          let (task_inst_id, _task_inst_data) = List.hd task_inst_list in
+          match Dialog.ask_sched_req_data_unit ~task_inst_id with
+          | Error msg -> print_endline msg
+          | Ok sched_req_data_unit ->
+            let sched_req_data = [ sched_req_data_unit ] in
+            let _sched_req = Daypack_lib.Sched_ver_history.In_place_head.Sched_req.Enqueue.enqueue_sched_req
+                sched_req_data context.sched_ver_history
+            in
+            Printf.printf "Allocated task under ID : %s\n" (Daypack_lib.Task_ds.task_id_to_string task_id);
         )
       | `Recurring ->
         ()
