@@ -13,6 +13,19 @@ type t = {
   minutes : int list;
 }
 
+let of_string (s : string) : (t, string) result =
+  try
+    Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour min ->
+        Unix.{
+          min;
+          hour;
+          day = day;
+          tm_
+        }
+      )
+  with
+  | Scanf.Scan_failure _ -> Error ""
+
 (* type normalize_dir =
  *   [ `Start
  *   | `End
