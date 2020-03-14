@@ -1,4 +1,4 @@
-SRCFILES = debug/*.ml* tests/*.ml* lib/*.ml*
+SRCFILES = debug/*.ml* tests/*.ml* cli/*.ml lib/*.ml*
 
 CINAPSFILES = lib/*.cinaps tests/*.cinaps
 
