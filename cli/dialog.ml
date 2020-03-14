@@ -60,7 +60,7 @@ let ask_sched_req_data_unit ~(task_inst_id : Daypack_lib.Task_ds.task_inst_id) :
       | None -> Error "Failed to find matching start time"
       | Some start ->
         let duration =
-          ask ~prompt:"Enter duration" (fun s ->
+          ask ~prompt:"Enter duration (minutes)" (fun s ->
               try Int64.of_string s |> Result.ok
               with Failure msg -> Error msg)
         in
