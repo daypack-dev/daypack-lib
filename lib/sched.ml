@@ -2606,6 +2606,8 @@ module Leftover = struct
     Int64_map.to_seq before
     |> Seq.flat_map (fun (_, task_seg_place_s) ->
         Task_seg_place_set.to_seq task_seg_place_s)
+    |> Seq.filter (fun (_, _place_start, place_end_exc) ->
+        place_end_exc <= start)
     |> Seq.filter (fun (task_seg_id, _, _) ->
         let id1, id2, id3, _, _ = task_seg_id in
         let task_inst_id = (id1, id2, id3) in
