@@ -2619,9 +2619,8 @@ module Leftover = struct
       )
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
-    let leftover_task_seg_ids = get_leftover_task_segs sched in
     let sched_req_data_seq =
-      leftover_task_seg_ids ~start
+      get_leftover_task_segs ~start sched
       |> Seq.map (fun ((id1, id2, id3, _, _), task_seg_size) ->
           ( let task_inst_id = (id1, id2, id3) in
             [
