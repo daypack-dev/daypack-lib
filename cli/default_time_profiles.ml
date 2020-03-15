@@ -15,16 +15,18 @@ let make_time_pattern_weekday ~hour ?(min = 0) weekday : Daypack_lib.Time_patter
     minutes = [min];
   }
 
-(* let make_time_profile_weekday ~hour ?(min = 0) weekday : Daypack_lib.Time_profile.t =
- *   ()
- *   {
- *     periods = [
- *       ( make_time_pattern_weekday ~hour ~min weekday
- *       )
- *     ]
- *   } *)
+let make_time_profile_weekday ~start_hour ?(start_min = 0) ~end_exc_hour ?(end_exc_min = 0) weekday : Daypack_lib.Time_profile.t =
+  (Daypack_lib.Time.Print.weekday_to_string weekday |> String.lowercase_ascii,
+   {
+     periods = [
+       ( make_time_pattern_weekday ~hour:start_hour ~min:start_min weekday,
+         make_time_pattern_weekday ~hour:end_exc_hour ~min:end_exc_min weekday
+       )
+     ]
+   }
+  )
 
-let profiles_9to5 : Daypack_lib.Time_profile.t list = [
+let profiles_9to5 : Daypack_lib.Time_profile.t list =
   ("weekday-9to5",
    {
      periods = List.map (fun day ->
@@ -32,8 +34,23 @@ let profiles_9to5 : Daypack_lib.Time_profile.t list = [
         make_time_pattern_weekday day ~hour:17)
      ) weekdays
    }
-  );
-]
+  )
+  ::
+  ("weekend-9to5",
+   {
+     periods = List.map (fun day ->
+       (make_time_pattern_weekday day ~hour:9,
+        make_time_pattern_weekday day ~hour:17)
+     ) weekdays
+   }
+  )
+  ::
+  (List.map
+     (fun weekday ->
+        make_time_profile_weekday ~start_hour:9 ~end_exc_hour:17 weekday
+     )
+     weekdays
+  )
 
 let profiles : Daypack_lib.Time_profile.t list = [
 ]
