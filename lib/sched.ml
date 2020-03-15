@@ -2611,12 +2611,12 @@ module Leftover = struct
         let task_inst_id = (id1, id2, id3) in
         Option.is_some
           (Task_inst.Find.find_task_inst_uncompleted_opt task_inst_id sched))
-    |> Seq.filter (fun (task_seg_id, _, _) ->
-        Option.is_some
-          (Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched))
-    |> Seq.map (fun (task_seg_id, place_start, place_end_exc) ->
-        let task_seg_size = place_end_exc -^ place_start in
-        (task_seg_id, task_seg_size))
+    |> Seq.filter_map (fun (task_seg_id, _, _) ->
+        Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched
+        |> Option.map (fun task_seg_size ->
+            (task_seg_id, task_seg_size)
+          )
+      )
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
     let leftover_task_seg_ids = get_leftover_task_segs sched in
