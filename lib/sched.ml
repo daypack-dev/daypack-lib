@@ -2613,10 +2613,7 @@ module Leftover = struct
           (Task_inst.Find.find_task_inst_uncompleted_opt task_inst_id sched))
     |> Seq.filter_map (fun (task_seg_id, _, _) ->
         Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched
-        |> Option.map (fun task_seg_size ->
-            (task_seg_id, task_seg_size)
-          )
-      )
+        |> Option.map (fun task_seg_size -> (task_seg_id, task_seg_size)))
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
     let sched_req_data_seq =
