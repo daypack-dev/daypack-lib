@@ -551,7 +551,9 @@ module Agenda : sig
 
   module To_seq : sig
     val task_seg_place_uncompleted : sched -> Task_ds.task_seg_place Seq.t
+
     val task_seg_place_completed : sched -> Task_ds.task_seg_place Seq.t
+
     val task_seg_place_discarded : sched -> Task_ds.task_seg_place Seq.t
   end
 
