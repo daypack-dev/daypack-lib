@@ -3985,19 +3985,14 @@ module Print = struct
          |> ignore)
       sd.store.task_seg_discarded_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "agenda :\n";
-    Int64_map.iter
-      (fun _start bucket ->
-         Task_seg_place_set.iter
-           (fun (id, start, end_exc) ->
-              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
-                "%s - %s | %s\n"
-                (Time.Print.time_to_date_string ~display_in_time_zone:`Local
-                   start)
-                (Time.Print.time_to_date_string ~display_in_time_zone:`Local
-                   end_exc)
-                (Task_ds.task_seg_id_to_string id))
-           bucket)
-      sd.agenda.indexed_by_start;
+    Seq.iter
+      (fun (id, start, end_exc) ->
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+           "%s - %s | %s\n"
+           (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
+           (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc)
+           (Task_ds.task_seg_id_to_string id))
+      (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "leftover quota :\n";
     Task_inst_id_map.iter
