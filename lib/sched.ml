@@ -392,31 +392,6 @@ module Id = struct
     (sid, { sd with store = { sd.store with sched_req_ids } })
 end
 
-module Time_slot = struct
-  let get_occupied_time_slots ?start ?end_exc ((_sid, sd) : sched) :
-    (int64 * int64) Seq.t =
-    sd.agenda.indexed_by_start
-    |> Int64_map.to_seq
-    |> Seq.flat_map (fun (_start, bucket) ->
-        bucket
-        |> Task_seg_place_set.to_seq
-        |> Seq.map (fun (_, start, end_exc) -> (start, end_exc)))
-    |> (fun l ->
-        Option.fold ~none:l
-          ~some:(fun start -> Time_slot_ds.slice ~start l)
-          start)
-    |> (fun l ->
-        Option.fold ~none:l
-          ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l)
-          end_exc)
-    |> Time_slot_ds.normalize ~skip_sort:true
-
-  let get_free_time_slots ~start ~end_exc (sched : sched) :
-    (int64 * int64) Seq.t =
-    get_occupied_time_slots ~start ~end_exc sched
-    |> Time_slot_ds.invert ~start ~end_exc
-end
-
 module Quota = struct
   let update_quota quota ((sid, sd) : sched) : sched =
     (sid, { sd with store = { sd.store with quota } })
@@ -1987,6 +1962,31 @@ module Agenda = struct
       let s = Find.find_task_seg_place_seq_by_task_seg_id task_seg_id sched in
       remove_task_seg_place_seq s sched
   end
+end
+
+module Time_slot = struct
+  let get_occupied_time_slots ?start ?end_exc ((_sid, sd) : sched) :
+    (int64 * int64) Seq.t =
+    sd.agenda.indexed_by_start
+    |> Int64_map.to_seq
+    |> Seq.flat_map (fun (_start, bucket) ->
+        bucket
+        |> Task_seg_place_set.to_seq
+        |> Seq.map (fun (_, start, end_exc) -> (start, end_exc)))
+    |> (fun l ->
+        Option.fold ~none:l
+          ~some:(fun start -> Time_slot_ds.slice ~start l)
+          start)
+    |> (fun l ->
+        Option.fold ~none:l
+          ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l)
+          end_exc)
+    |> Time_slot_ds.normalize ~skip_sort:true
+
+  let get_free_time_slots ~start ~end_exc (sched : sched) :
+    (int64 * int64) Seq.t =
+    get_occupied_time_slots ~start ~end_exc sched
+    |> Time_slot_ds.invert ~start ~end_exc
 end
 
 module Sched_req = struct
