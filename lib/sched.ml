@@ -1965,14 +1965,10 @@ module Agenda = struct
 end
 
 module Time_slot = struct
-  let get_occupied_time_slots ?start ?end_exc ((_sid, sd) : sched) :
+  let get_occupied_time_slots ?start ?end_exc (sched : sched) :
     (int64 * int64) Seq.t =
-    sd.agenda.indexed_by_start
-    |> Int64_map.to_seq
-    |> Seq.flat_map (fun (_start, bucket) ->
-        bucket
-        |> Task_seg_place_set.to_seq
-        |> Seq.map (fun (_, start, end_exc) -> (start, end_exc)))
+    Agenda.To_seq.task_seg_place_uncompleted sched
+    |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
     |> (fun l ->
         Option.fold ~none:l
           ~some:(fun start -> Time_slot_ds.slice ~start l)
