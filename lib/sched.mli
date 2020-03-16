@@ -569,11 +569,16 @@ module Agenda : sig
     val task_seg_place_set_indexed_by_start_discarded :
       sched -> (int64 * Task_seg_place_set.t) Seq.t
 
+    val task_seg_place_set_indexed_by_start_all :
+      sched -> (int64 * Task_seg_place_set.t) Seq.t
+
     val task_seg_place_uncompleted : sched -> Task_ds.task_seg_place Seq.t
 
     val task_seg_place_completed : sched -> Task_ds.task_seg_place Seq.t
 
     val task_seg_place_discarded : sched -> Task_ds.task_seg_place Seq.t
+
+    val task_seg_place_all : sched -> Task_ds.task_seg_place Seq.t
   end
 
   module Find : sig

@@ -1893,6 +1893,10 @@ module Agenda = struct
         (task_seg_place_is sched `Discarded)
         sched
 
+    let task_seg_place_set_indexed_by_start_all ((_sid, sd) : sched) :
+      (int64 * Task_seg_place_set.t) Seq.t =
+      sd.agenda.indexed_by_start |> Int64_map.to_seq
+
     let task_seg_place_uncompleted (sched : sched) :
       Task_ds.task_seg_place Seq.t =
       Filter.filter_task_seg_place_seq
@@ -1910,6 +1914,11 @@ module Agenda = struct
       Filter.filter_task_seg_place_seq
         (task_seg_place_is sched `Discarded)
         sched
+
+    let task_seg_place_all ((_sid, sd) : sched) : Task_ds.task_seg_place Seq.t =
+      sd.agenda.indexed_by_start
+      |> Int64_map.to_seq
+      |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
   end
 
   module Find = struct
