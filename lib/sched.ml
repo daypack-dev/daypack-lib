@@ -1855,6 +1855,13 @@ module Agenda = struct
   end
 
   module Filter = struct
+    let filter_task_seg_place_set_indexed_by_start_seq
+        (f : Task_ds.task_seg_place -> bool) ((_, sd) : sched) :
+      (int64 * Task_seg_place_set.t) Seq.t =
+      sd.agenda.indexed_by_start
+      |> Int64_map.to_seq
+      |> Seq.map (fun (start, s) -> (start, Task_seg_place_set.filter f s))
+
     let filter_task_seg_place_seq (f : Task_ds.task_seg_place -> bool)
         ((_, sd) : sched) : Task_ds.task_seg_place Seq.t =
       sd.agenda.indexed_by_start
@@ -1864,28 +1871,44 @@ module Agenda = struct
   end
 
   module To_seq = struct
+    let task_seg_place_is (sched : sched) (status : task_related_status)
+        ((task_seg_id, _, _) : Task_ds.task_seg_place) : bool =
+      Progress.Status.get_task_seg_status task_seg_id sched = Some status
+
+    let task_seg_place_set_indexed_by_start_uncompleted (sched : sched) :
+      (int64 * Task_seg_place_set.t) Seq.t =
+      Filter.filter_task_seg_place_set_indexed_by_start_seq
+        (task_seg_place_is sched `Uncompleted)
+        sched
+
+    let task_seg_place_set_indexed_by_start_completed (sched : sched) :
+      (int64 * Task_seg_place_set.t) Seq.t =
+      Filter.filter_task_seg_place_set_indexed_by_start_seq
+        (task_seg_place_is sched `Completed)
+        sched
+
+    let task_seg_place_set_indexed_by_start_discarded (sched : sched) :
+      (int64 * Task_seg_place_set.t) Seq.t =
+      Filter.filter_task_seg_place_set_indexed_by_start_seq
+        (task_seg_place_is sched `Discarded)
+        sched
+
     let task_seg_place_uncompleted (sched : sched) :
       Task_ds.task_seg_place Seq.t =
       Filter.filter_task_seg_place_seq
-        (fun (task_seg_id, _, _) ->
-           Progress.Status.get_task_seg_status task_seg_id sched
-           = Some `Uncompleted)
+        (task_seg_place_is sched `Uncompleted)
         sched
 
     let task_seg_place_completed (sched : sched) : Task_ds.task_seg_place Seq.t
       =
       Filter.filter_task_seg_place_seq
-        (fun (task_seg_id, _, _) ->
-           Progress.Status.get_task_seg_status task_seg_id sched
-           = Some `Completed)
+        (task_seg_place_is sched `Completed)
         sched
 
     let task_seg_place_discarded (sched : sched) : Task_ds.task_seg_place Seq.t
       =
       Filter.filter_task_seg_place_seq
-        (fun (task_seg_id, _, _) ->
-           Progress.Status.get_task_seg_status task_seg_id sched
-           = Some `Discarded)
+        (task_seg_place_is sched `Discarded)
         sched
   end
 
