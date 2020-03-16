@@ -1863,12 +1863,22 @@ module Agenda = struct
       |> Seq.filter f
   end
 
-  (* module To_seq = struct
-   *   let task_seg_place_uncompleted (sched : sched) : Task_ds.task_seg_place Seq.t =
-   *     Filter.filter_task_seg_place_seq (fun (task_seg_id, _, _) ->
-   *         Progress.
-   *       ) sched
-   * end *)
+  module To_seq = struct
+    let task_seg_place_uncompleted (sched : sched) : Task_ds.task_seg_place Seq.t =
+      Filter.filter_task_seg_place_seq (fun (task_seg_id, _, _) ->
+          Progress.Status.get_task_seg_status task_seg_id sched = Some `Uncompleted
+        ) sched
+
+    let task_seg_place_completed (sched : sched) : Task_ds.task_seg_place Seq.t =
+      Filter.filter_task_seg_place_seq (fun (task_seg_id, _, _) ->
+          Progress.Status.get_task_seg_status task_seg_id sched = Some `Completed
+        ) sched
+
+    let task_seg_place_discarded (sched : sched) : Task_ds.task_seg_place Seq.t =
+      Filter.filter_task_seg_place_seq (fun (task_seg_id, _, _) ->
+          Progress.Status.get_task_seg_status task_seg_id sched = Some `Discarded
+        ) sched
+  end
 
   module Find = struct
     let find_task_seg_place_seq_by_task_id (task_id : Task_ds.task_id)

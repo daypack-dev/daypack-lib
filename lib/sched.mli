@@ -549,6 +549,12 @@ module Agenda : sig
     val add_task_seg_place_seq : Task_ds.task_seg_place Seq.t -> sched -> sched
   end
 
+  module To_seq : sig
+    val task_seg_place_uncompleted : sched -> Task_ds.task_seg_place Seq.t
+    val task_seg_place_completed : sched -> Task_ds.task_seg_place Seq.t
+    val task_seg_place_discarded : sched -> Task_ds.task_seg_place Seq.t
+  end
+
   module Filter : sig
     val filter_task_seg_place_seq :
       (Task_ds.task_seg_place -> bool) -> sched -> Task_ds.task_seg_place Seq.t
