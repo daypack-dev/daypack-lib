@@ -316,8 +316,8 @@ module Print = struct
       (id, data) =
     Debug_print.bprintf ~indent_level buffer "task id : %s\n"
       (task_id_to_string id);
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
-      "name : %s\n" data.name;
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "name : %s\n"
+      data.name;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "splittable : %b\n" data.splittable;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
