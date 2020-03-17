@@ -551,34 +551,48 @@ module Agenda : sig
 
   module Filter : sig
     val filter_task_seg_place_set_indexed_by_start_seq :
+      ?start:int64 ->
       (Task_ds.task_seg_place -> bool) ->
       sched ->
       (int64 * Task_seg_place_set.t) Seq.t
 
     val filter_task_seg_place_seq :
+      ?start:int64 ->
       (Task_ds.task_seg_place -> bool) -> sched -> Task_ds.task_seg_place Seq.t
   end
 
   module To_seq : sig
     val task_seg_place_set_indexed_by_start_uncompleted :
+      ?start:int64 ->
       sched -> (int64 * Task_seg_place_set.t) Seq.t
 
     val task_seg_place_set_indexed_by_start_completed :
+      ?start:int64 ->
       sched -> (int64 * Task_seg_place_set.t) Seq.t
 
     val task_seg_place_set_indexed_by_start_discarded :
+      ?start:int64 ->
       sched -> (int64 * Task_seg_place_set.t) Seq.t
 
     val task_seg_place_set_indexed_by_start_all :
+      ?start:int64 ->
       sched -> (int64 * Task_seg_place_set.t) Seq.t
 
-    val task_seg_place_uncompleted : sched -> Task_ds.task_seg_place Seq.t
+    val task_seg_place_uncompleted :
+      ?start:int64 ->
+      sched -> Task_ds.task_seg_place Seq.t
 
-    val task_seg_place_completed : sched -> Task_ds.task_seg_place Seq.t
+    val task_seg_place_completed :
+      ?start:int64 ->
+      sched -> Task_ds.task_seg_place Seq.t
 
-    val task_seg_place_discarded : sched -> Task_ds.task_seg_place Seq.t
+    val task_seg_place_discarded :
+      ?start:int64 ->
+      sched -> Task_ds.task_seg_place Seq.t
 
-    val task_seg_place_all : sched -> Task_ds.task_seg_place Seq.t
+    val task_seg_place_all :
+      ?start:int64 ->
+      sched -> Task_ds.task_seg_place Seq.t
   end
 
   module Find : sig
