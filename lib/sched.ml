@@ -2702,8 +2702,15 @@ module Leftover = struct
         |> Option.map (fun task_seg_size -> (task_seg_id, task_seg_size)))
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
+    let leftover_task_segs = get_leftover_task_segs ~start sched in
+    let sched =
+      Seq.fold_left
+        (fun sched (task_seg_id, _) ->
+           Progress.Move.move_task_seg_to_discarded task_seg_id sched)
+        sched leftover_task_segs
+    in
     let sched_req_data_seq =
-      get_leftover_task_segs ~start sched
+      leftover_task_segs
       |> Seq.map (fun ((id1, id2, id3, _, _), task_seg_size) ->
           ( let task_inst_id = (id1, id2, id3) in
             [
