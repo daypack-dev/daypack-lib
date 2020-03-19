@@ -104,9 +104,12 @@ type store_diff = {
 type agenda = {
   (* start_and_end_exc : (int64 * int64) option; *)
   indexed_by_start : task_seg_place_map;
+  indexed_by_end_exc : task_seg_place_map;
 }
 
-type agenda_diff = { indexed_by_start_diff : task_seg_place_map_diff }
+type agenda_diff = { indexed_by_start_diff : task_seg_place_map_diff;
+                     indexed_by_end_exc_diff : task_seg_place_map_diff;
+                   }
 
 type sched_data = {
   store : store;
@@ -148,7 +151,9 @@ let store_empty =
 
 let agenda_empty =
   { (* start_and_end_exc = None; *)
-    indexed_by_start = Int64_map.empty }
+    indexed_by_start = Int64_map.empty;
+    indexed_by_end_exc = Int64_map.empty;
+  }
 
 let sched_data_empty = { store = store_empty; agenda = agenda_empty }
 
@@ -1801,7 +1806,7 @@ end
 module Agenda = struct
   module Add = struct
     let add_task_seg_place
-        (((_id1, _id2, _id3, _id4, _id5), start, _end_exc) as task_seg_place :
+        (((_id1, _id2, _id3, _id4, _id5), start, end_exc) as task_seg_place :
            Task_ds.task_seg_place) ((sid, sd) : sched) : sched =
       let indexed_by_start =
         Int64_map.update start
@@ -1813,7 +1818,20 @@ module Agenda = struct
                     | Some s -> s )))
           sd.agenda.indexed_by_start
       in
-      (sid, { sd with agenda = { indexed_by_start } })
+      let indexed_by_end_exc =
+        Int64_map.update end_exc
+          (fun bucket ->
+             Some
+               (Task_seg_place_set.add task_seg_place
+                  ( match bucket with
+                    | None -> Task_seg_place_set.empty
+                    | Some s -> s )))
+          sd.agenda.indexed_by_end_exc
+      in
+      (sid, { sd with agenda = {
+           indexed_by_start;
+           indexed_by_end_exc;
+         } })
       |> Task_seg.Add.add_task_seg_via_task_seg_place task_seg_place
 
     let add_task_seg_place_list (task_seg_place_s : Task_ds.task_seg_place list)
@@ -1966,12 +1984,23 @@ module Agenda = struct
                bucket)
           sd.agenda.indexed_by_start
       in
+      let indexed_by_end_exc =
+        Int64_map.update end_exc
+          (fun bucket ->
+             Option.map
+               (fun bucket ->
+                  Task_seg_place_set.filter
+                    (fun (x, _, _) -> x <> task_seg_id)
+                    bucket)
+               bucket)
+          sd.agenda.indexed_by_end_exc
+      in
       let quota =
         Task_inst_id_map.update (id1, id2, id3)
           (Option.map (fun x -> x +^ (end_exc -^ start)))
           sd.store.quota
       in
-      (sid, { store = { sd.store with quota }; agenda = { indexed_by_start } })
+      (sid, { store = { sd.store with quota }; agenda = { indexed_by_start; indexed_by_end_exc } })
 
     let remove_task_seg_place_seq
         (task_seg_place_seq : Task_ds.task_seg_place Seq.t) (sched : sched) :
