@@ -2684,14 +2684,14 @@ module Recur = struct
 end
 
 module Leftover = struct
-  let get_leftover_task_segs ~start ((_sid, sd) as sched : sched) :
+  let get_leftover_task_segs ~(before : int64) ((_sid, sd) as sched : sched) :
     Task_ds.task_seg Seq.t =
-    let before, _, _ = Int64_map.split start sd.agenda.indexed_by_start in
-    Int64_map.to_seq before
+    let agenda_before, _, _ = Int64_map.split before sd.agenda.indexed_by_start in
+    Int64_map.to_seq agenda_before
     |> Seq.flat_map (fun (_, task_seg_place_s) ->
         Task_seg_place_set.to_seq task_seg_place_s)
     |> Seq.filter (fun (_, _place_start, place_end_exc) ->
-        place_end_exc <= start)
+        place_end_exc <= before)
     |> Seq.filter (fun (task_seg_id, _, _) ->
         let id1, id2, id3, _, _ = task_seg_id in
         let task_inst_id = (id1, id2, id3) in
@@ -2702,7 +2702,7 @@ module Leftover = struct
         |> Option.map (fun task_seg_size -> (task_seg_id, task_seg_size)))
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
-    let leftover_task_segs = get_leftover_task_segs ~start sched in
+    let leftover_task_segs = get_leftover_task_segs ~before:start sched in
     let sched =
       Seq.fold_left
         (fun sched (task_seg_id, _) ->
