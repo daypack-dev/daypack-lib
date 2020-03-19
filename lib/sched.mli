@@ -86,9 +86,15 @@ type store_diff = {
   task_inst_id_to_progress_diff : Task_ds.progress Task_inst_id_map_utils.diff;
 }
 
-type agenda = { indexed_by_start : task_seg_place_map }
+type agenda = {
+  indexed_by_start : task_seg_place_map;
+  indexed_by_end_exc : task_seg_place_map;
+}
 
-type agenda_diff = { indexed_by_start_diff : task_seg_place_map_diff }
+type agenda_diff = {
+  indexed_by_start_diff : task_seg_place_map_diff;
+  indexed_by_end_exc_diff : task_seg_place_map_diff;
+}
 
 type sched_data = {
   store : store;
@@ -731,7 +737,7 @@ module Recur : sig
 end
 
 module Leftover : sig
-  val get_leftover_task_segs : start:int64 -> sched -> Task_ds.task_seg Seq.t
+  val get_leftover_task_segs : before:int64 -> sched -> Task_ds.task_seg Seq.t
 
   val sched_for_leftover_task_segs :
     start:int64 -> end_exc:int64 -> sched -> sched

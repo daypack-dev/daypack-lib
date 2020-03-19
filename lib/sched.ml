@@ -107,9 +107,10 @@ type agenda = {
   indexed_by_end_exc : task_seg_place_map;
 }
 
-type agenda_diff = { indexed_by_start_diff : task_seg_place_map_diff;
-                     indexed_by_end_exc_diff : task_seg_place_map_diff;
-                   }
+type agenda_diff = {
+  indexed_by_start_diff : task_seg_place_map_diff;
+  indexed_by_end_exc_diff : task_seg_place_map_diff;
+}
 
 type sched_data = {
   store : store;
@@ -150,7 +151,8 @@ let store_empty =
   }
 
 let agenda_empty =
-  { (* start_and_end_exc = None; *)
+  {
+    (* start_and_end_exc = None; *)
     indexed_by_start = Int64_map.empty;
     indexed_by_end_exc = Int64_map.empty;
   }
@@ -1828,10 +1830,7 @@ module Agenda = struct
                     | Some s -> s )))
           sd.agenda.indexed_by_end_exc
       in
-      (sid, { sd with agenda = {
-           indexed_by_start;
-           indexed_by_end_exc;
-         } })
+      (sid, { sd with agenda = { indexed_by_start; indexed_by_end_exc } })
       |> Task_seg.Add.add_task_seg_via_task_seg_place task_seg_place
 
     let add_task_seg_place_list (task_seg_place_s : Task_ds.task_seg_place list)
@@ -2000,7 +1999,11 @@ module Agenda = struct
           (Option.map (fun x -> x +^ (end_exc -^ start)))
           sd.store.quota
       in
-      (sid, { store = { sd.store with quota }; agenda = { indexed_by_start; indexed_by_end_exc } })
+      ( sid,
+        {
+          store = { sd.store with quota };
+          agenda = { indexed_by_start; indexed_by_end_exc };
+        } )
 
     let remove_task_seg_place_seq
         (task_seg_place_seq : Task_ds.task_seg_place Seq.t) (sched : sched) :
@@ -2715,7 +2718,9 @@ end
 module Leftover = struct
   let get_leftover_task_segs ~(before : int64) ((_sid, sd) as sched : sched) :
     Task_ds.task_seg Seq.t =
-    let agenda_before, _, _ = Int64_map.split before sd.agenda.indexed_by_start in
+    let agenda_before, _, _ =
+      Int64_map.split before sd.agenda.indexed_by_start
+    in
     Int64_map.to_seq agenda_before
     |> Seq.flat_map (fun (_, task_seg_place_s) ->
         Task_seg_place_set.to_seq task_seg_place_s)
@@ -3046,6 +3051,20 @@ module Serialize = struct
       removed = pack_indexed_by_start x.removed;
     }
 
+  let pack_indexed_by_end_exc (x : task_seg_place_map) :
+    (int64 * Task_ds_t.task_seg_place list) list =
+    x
+    |> Int64_map.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Serialize.pack y))
+    |> List.of_seq
+
+  let pack_indexed_by_end_exc_diff (x : task_seg_place_map_diff) :
+    (int64, Task_ds_t.task_seg_place) Map_utils_t.diff_bucketed =
+    {
+      added = pack_indexed_by_end_exc x.added;
+      removed = pack_indexed_by_end_exc x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -3161,12 +3180,17 @@ module Serialize = struct
   *)
 
   let pack_agenda (agenda : agenda) : Sched_t.agenda =
-    { indexed_by_start = pack_indexed_by_start agenda.indexed_by_start }
+    {
+      indexed_by_start = pack_indexed_by_start agenda.indexed_by_start;
+      indexed_by_end_exc = pack_indexed_by_end_exc agenda.indexed_by_end_exc;
+    }
 
   let pack_agenda_diff (diff : agenda_diff) : Sched_t.agenda_diff =
     {
       indexed_by_start_diff =
         pack_indexed_by_start_diff diff.indexed_by_start_diff;
+      indexed_by_end_exc_diff =
+        pack_indexed_by_end_exc_diff diff.indexed_by_end_exc_diff;
     }
 
   (*$*)
@@ -3491,6 +3515,21 @@ module Deserialize = struct
       removed = unpack_indexed_by_start x.removed;
     }
 
+  let unpack_indexed_by_end_exc
+      (x : (int64 * Task_ds_t.task_seg_place list) list) : task_seg_place_map =
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Deserialize.unpack y))
+    |> Int64_map.of_seq
+
+  let unpack_indexed_by_end_exc_diff
+      (x : (int64, Task_ds_t.task_seg_place) Map_utils_t.diff_bucketed) :
+    task_seg_place_map_diff =
+    {
+      added = unpack_indexed_by_end_exc x.added;
+      removed = unpack_indexed_by_end_exc x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -3607,12 +3646,17 @@ module Deserialize = struct
   *)
 
   let unpack_agenda (agenda : Sched_t.agenda) : agenda =
-    { indexed_by_start = unpack_indexed_by_start agenda.indexed_by_start }
+    {
+      indexed_by_start = unpack_indexed_by_start agenda.indexed_by_start;
+      indexed_by_end_exc = unpack_indexed_by_end_exc agenda.indexed_by_end_exc;
+    }
 
   let unpack_agenda_diff (diff : Sched_t.agenda_diff) : agenda_diff =
     {
       indexed_by_start_diff =
         unpack_indexed_by_start_diff diff.indexed_by_start_diff;
+      indexed_by_end_exc_diff =
+        unpack_indexed_by_end_exc_diff diff.indexed_by_end_exc_diff;
     }
 
   (*$*)
@@ -3700,6 +3744,8 @@ module Equal = struct
   let agenda_equal (agenda1 : agenda) (agenda2 : agenda) : bool =
     Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_start
       agenda2.indexed_by_start
+    && Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_end_exc
+      agenda2.indexed_by_end_exc
 
   (*$*)
 
@@ -3909,6 +3955,9 @@ module Diff = struct
       indexed_by_start_diff =
         Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
           ~old:agenda1.indexed_by_start agenda2.indexed_by_start;
+      indexed_by_end_exc_diff =
+        Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
+          ~old:agenda1.indexed_by_end_exc agenda2.indexed_by_end_exc;
     }
 
   let add_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
@@ -3916,6 +3965,9 @@ module Diff = struct
       indexed_by_start =
         Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed
           diff.indexed_by_start_diff agenda.indexed_by_start;
+      indexed_by_end_exc =
+        Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed
+          diff.indexed_by_end_exc_diff agenda.indexed_by_end_exc;
     }
 
   let sub_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
@@ -3923,6 +3975,9 @@ module Diff = struct
       indexed_by_start =
         Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
           diff.indexed_by_start_diff agenda.indexed_by_start;
+      indexed_by_end_exc =
+        Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
+          diff.indexed_by_end_exc_diff agenda.indexed_by_end_exc;
     }
 
   (*$*)
