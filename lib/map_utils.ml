@@ -37,7 +37,8 @@ module type S_bucketed = sig
   val sub_diff_bucketed : diff_bucketed -> set map -> set map
 end
 
-module Make (M : Map.S) : S with type key := M.key and type 'a t := 'a M.t = struct
+module Make (M : Map.S) : S with type key := M.key and type 'a t := 'a M.t =
+struct
   type 'a t = 'a M.t
 
   type 'a diff = {
@@ -130,14 +131,12 @@ module Make (M : Map.S) : S with type key := M.key and type 'a t := 'a M.t = str
     (* revert remove *)
     |> M.union (fun _key removed _ -> Some removed) diff.removed
 
-  let range ~(start : M.key option) ~(end_exc : M.key option) (m : 'a t) : 'a t =
+  let range ~(start : M.key option) ~(end_exc : M.key option) (m : 'a t) : 'a t
+    =
     let add' (key : M.key) (x : 'a option) (m : 'a t) =
-      match x with
-      | None -> m
-      | Some x ->
-        M.add key x m
+      match x with None -> m | Some x -> M.add key x m
     in
-    match start, end_exc with
+    match (start, end_exc) with
     | None, None -> m
     | Some start, None ->
       let _, eq, after = M.split start m in

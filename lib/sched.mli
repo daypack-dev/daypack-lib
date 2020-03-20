@@ -556,7 +556,12 @@ module Agenda : sig
   end
 
   module Range : sig
-    val task_seg_place_set : start:int64 option -> end_exc:int64 option -> include_task_seg_place_partially_within_time_period:bool -> sched -> Task_seg_place_set.t
+    val task_seg_place_set :
+      start:int64 option ->
+      end_exc:int64 option ->
+      include_task_seg_place_partially_within_time_period:bool ->
+      sched ->
+      Task_seg_place_set.t
   end
 
   module Filter : sig
@@ -571,20 +576,32 @@ module Agenda : sig
 
   module To_seq : sig
     val task_seg_place_uncompleted :
-      ?start:int64 -> ?end_exc:int64 ->
-      ?include_task_seg_place_partially_within_time_period:bool ->sched -> Task_ds.task_seg_place Seq.t
+      ?start:int64 ->
+      ?end_exc:int64 ->
+      ?include_task_seg_place_partially_within_time_period:bool ->
+      sched ->
+      Task_ds.task_seg_place Seq.t
 
     val task_seg_place_completed :
-      ?start:int64 -> ?end_exc:int64 ->
-      ?include_task_seg_place_partially_within_time_period:bool ->sched -> Task_ds.task_seg_place Seq.t
+      ?start:int64 ->
+      ?end_exc:int64 ->
+      ?include_task_seg_place_partially_within_time_period:bool ->
+      sched ->
+      Task_ds.task_seg_place Seq.t
 
     val task_seg_place_discarded :
-      ?start:int64 -> ?end_exc:int64 ->
-      ?include_task_seg_place_partially_within_time_period:bool ->sched -> Task_ds.task_seg_place Seq.t
+      ?start:int64 ->
+      ?end_exc:int64 ->
+      ?include_task_seg_place_partially_within_time_period:bool ->
+      sched ->
+      Task_ds.task_seg_place Seq.t
 
     val task_seg_place_all :
-      ?start:int64 -> ?end_exc:int64 ->
-      ?include_task_seg_place_partially_within_time_period:bool ->sched -> Task_ds.task_seg_place Seq.t
+      ?start:int64 ->
+      ?end_exc:int64 ->
+      ?include_task_seg_place_partially_within_time_period:bool ->
+      sched ->
+      Task_ds.task_seg_place Seq.t
   end
 
   module Find : sig
