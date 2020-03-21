@@ -129,8 +129,9 @@ type store_diff = {
 }
 
 type agenda = {
-  indexed_by_start : (int64 * task_seg_place list) list;
-  indexed_by_end_exc : (int64 * task_seg_place list) list;
+  indexed_by_task_seg_id : (task_seg_id * (int64 * int64)) list;
+  indexed_by_start : (int64 * task_seg_id list) list;
+  indexed_by_end_exc : (int64 * task_seg_id list) list;
 }
 
 type agenda_diff = {

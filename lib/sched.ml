@@ -2806,8 +2806,12 @@ module Leftover = struct
       Int64_map.split before sd.agenda.indexed_by_start
     in
     Int64_map.to_seq agenda_before
-    |> Seq.flat_map (fun (_, task_seg_place_s) ->
-        Task_seg_place_set.to_seq task_seg_place_s)
+    |> Seq.flat_map (fun (_, task_seg_ids) ->
+        Task_seg_id_set.to_seq task_seg_ids)
+    |> Seq.map (fun task_seg_id ->
+        Agenda.Find.find_task_seg_place_opt_by_task_seg_id task_seg_id sched
+        |> Option.get
+      )
     |> Seq.filter (fun (_, _place_start, place_end_exc) ->
         place_end_exc <= before)
     |> Seq.filter (fun (task_seg_id, _, _) ->
@@ -3122,10 +3126,10 @@ module Serialize = struct
     }
 
   let pack_indexed_by_start (x : task_seg_place_map) :
-    (int64 * Task_ds_t.task_seg_place list) list =
+    (int64 * Task_ds_t.task_seg_id list) list =
     x
     |> Int64_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_indexed_by_start_diff (x : task_seg_place_map_diff) :
