@@ -1,4 +1,6 @@
 module type S = sig
+  type key
+
   type 'a t
 
   type 'a diff = {
@@ -13,6 +15,8 @@ module type S = sig
   val add_diff : 'a diff -> 'a t -> 'a t
 
   val sub_diff : 'a diff -> 'a t -> 'a t
+
+  val range : start:key option -> end_exc:key option -> 'a t -> 'a t
 end
 
 module type S_bucketed = sig
@@ -33,7 +37,8 @@ module type S_bucketed = sig
   val sub_diff_bucketed : diff_bucketed -> set map -> set map
 end
 
-module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
+module Make (M : Map.S) : S with type key := M.key and type 'a t := 'a M.t =
+struct
   type 'a t = 'a M.t
 
   type 'a diff = {
@@ -125,6 +130,30 @@ module Make (M : Map.S) : S with type 'a t := 'a M.t = struct
       diff.added
     (* revert remove *)
     |> M.union (fun _key removed _ -> Some removed) diff.removed
+
+  let range ~(start : M.key option) ~(end_exc : M.key option) (m : 'a t) : 'a t
+    =
+    let add' (key : M.key) (x : 'a option) (m : 'a t) =
+      match x with None -> m | Some x -> M.add key x m
+    in
+    match (start, end_exc) with
+    | None, None -> m
+    | Some start, None ->
+      let _, eq, after = M.split start m in
+      add' start eq after
+    | None, Some end_exc ->
+      let before, eq, _ = M.split end_exc m in
+      add' end_exc eq before
+    | Some start, Some end_exc ->
+      let after_or_from_start =
+        let _, eq, after = M.split start m in
+        add' start eq after
+      in
+      let before_or_on_end_exc =
+        let before, eq, _ = M.split end_exc after_or_from_start in
+        add' end_exc eq before
+      in
+      before_or_on_end_exc
 end
 
 module Make_bucketed (Map : Map.S) (Set : Set.S) :

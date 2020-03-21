@@ -104,9 +104,13 @@ type store_diff = {
 type agenda = {
   (* start_and_end_exc : (int64 * int64) option; *)
   indexed_by_start : task_seg_place_map;
+  indexed_by_end_exc : task_seg_place_map;
 }
 
-type agenda_diff = { indexed_by_start_diff : task_seg_place_map_diff }
+type agenda_diff = {
+  indexed_by_start_diff : task_seg_place_map_diff;
+  indexed_by_end_exc_diff : task_seg_place_map_diff;
+}
 
 type sched_data = {
   store : store;
@@ -147,8 +151,11 @@ let store_empty =
   }
 
 let agenda_empty =
-  { (* start_and_end_exc = None; *)
-    indexed_by_start = Int64_map.empty }
+  {
+    (* start_and_end_exc = None; *)
+    indexed_by_start = Int64_map.empty;
+    indexed_by_end_exc = Int64_map.empty;
+  }
 
 let sched_data_empty = { store = store_empty; agenda = agenda_empty }
 
@@ -392,31 +399,6 @@ module Id = struct
     (sid, { sd with store = { sd.store with sched_req_ids } })
 end
 
-module Time_slot = struct
-  let get_occupied_time_slots ?start ?end_exc ((_sid, sd) : sched) :
-    (int64 * int64) Seq.t =
-    sd.agenda.indexed_by_start
-    |> Int64_map.to_seq
-    |> Seq.flat_map (fun (_start, bucket) ->
-        bucket
-        |> Task_seg_place_set.to_seq
-        |> Seq.map (fun (_, start, end_exc) -> (start, end_exc)))
-    |> (fun l ->
-        Option.fold ~none:l
-          ~some:(fun start -> Time_slot_ds.slice ~start l)
-          start)
-    |> (fun l ->
-        Option.fold ~none:l
-          ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l)
-          end_exc)
-    |> Time_slot_ds.normalize ~skip_sort:true
-
-  let get_free_time_slots ~start ~end_exc (sched : sched) :
-    (int64 * int64) Seq.t =
-    get_occupied_time_slots ~start ~end_exc sched
-    |> Time_slot_ds.invert ~start ~end_exc
-end
-
 module Quota = struct
   let update_quota quota ((sid, sd) : sched) : sched =
     (sid, { sd with store = { sd.store with quota } })
@@ -475,9 +457,15 @@ module Task_seg = struct
         ([], sched) reqs
       |> fun (l, t) -> (List.rev l, t)
 
-    let add_task_seg_via_task_seg_place ((id, _, _) : Task_ds.task_seg_place)
+    let add_task_seg_via_task_seg_place ((id, start, end_exc) : Task_ds.task_seg_place)
         (sched : sched) : sched =
-      Id.add_task_seg_id id sched
+      let (id1, id2, id3, _id4, _id5) = id in
+      let parent_task_inst_id = (id1, id2, id3) in
+      let task_seg_size = end_exc -^ start in
+      sched
+      |> Id.add_task_seg_id id
+      |> add_task_seg ~parent_task_inst_id task_seg_size
+      |> (fun (_, x) -> x)
 
     let add_task_segs_via_task_seg_place_list
         (place_s : Task_ds.task_seg_place list) (sched : sched) : sched =
@@ -1405,114 +1393,6 @@ module Task = struct
   end
 end
 
-module Agenda = struct
-  module Add = struct
-    let add_task_seg_place
-        (((_id1, _id2, _id3, _id4, _id5), start, _end_exc) as task_seg_place :
-           Task_ds.task_seg_place) ((sid, sd) : sched) : sched =
-      let indexed_by_start =
-        Int64_map.update start
-          (fun bucket ->
-             Some
-               (Task_seg_place_set.add task_seg_place
-                  ( match bucket with
-                    | None -> Task_seg_place_set.empty
-                    | Some s -> s )))
-          sd.agenda.indexed_by_start
-      in
-      (sid, { sd with agenda = { indexed_by_start } })
-      |> Task_seg.Add.add_task_seg_via_task_seg_place task_seg_place
-
-    let add_task_seg_place_list (task_seg_place_s : Task_ds.task_seg_place list)
-        (sched : sched) : sched =
-      List.fold_left
-        (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
-        sched task_seg_place_s
-
-    let add_task_seg_place_seq (task_seg_place_s : Task_ds.task_seg_place Seq.t)
-        (sched : sched) : sched =
-      Seq.fold_left
-        (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
-        sched task_seg_place_s
-  end
-
-  module Filter = struct
-    let filter_task_seg_place_seq (f : Task_ds.task_seg_place -> bool)
-        ((_, sd) : sched) : Task_ds.task_seg_place Seq.t =
-      sd.agenda.indexed_by_start
-      |> Int64_map.to_seq
-      |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
-      |> Seq.filter f
-  end
-
-  module Find = struct
-    let find_task_seg_place_seq_by_task_id (task_id : Task_ds.task_id)
-        (sched : sched) : Task_ds.task_seg_place Seq.t =
-      Filter.filter_task_seg_place_seq
-        (fun ((id1, id2, _id3, _id4, _id5), _, _) -> (id1, id2) = task_id)
-        sched
-
-    let find_task_seg_place_seq_by_task_inst_id
-        (task_inst_id : Task_ds.task_inst_id) (sched : sched) :
-      Task_ds.task_seg_place Seq.t =
-      Filter.filter_task_seg_place_seq
-        (fun ((id1, id2, id3, _id4, _id5), _, _) ->
-           (id1, id2, id3) = task_inst_id)
-        sched
-
-    let find_task_seg_place_seq_by_task_seg_id
-        (task_seg_id : Task_ds.task_seg_id) ((_, sd) : sched) :
-      Task_ds.task_seg_place Seq.t =
-      sd.agenda.indexed_by_start
-      |> Int64_map.to_seq
-      |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
-      |> Seq.filter (fun (id, _, _) -> task_seg_id = id)
-  end
-
-  module Remove = struct
-    let remove_task_seg_place
-        ((task_seg_id, start, end_exc) : Task_ds.task_seg_place)
-        ((sid, sd) : sched) : sched =
-      let id1, id2, id3, _, _ = task_seg_id in
-      let indexed_by_start =
-        Int64_map.update start
-          (fun bucket ->
-             Option.map
-               (fun bucket ->
-                  Task_seg_place_set.filter
-                    (fun (x, _, _) -> x <> task_seg_id)
-                    bucket)
-               bucket)
-          sd.agenda.indexed_by_start
-      in
-      let quota =
-        Task_inst_id_map.update (id1, id2, id3)
-          (Option.map (fun x -> x +^ (end_exc -^ start)))
-          sd.store.quota
-      in
-      (sid, { store = { sd.store with quota }; agenda = { indexed_by_start } })
-
-    let remove_task_seg_place_seq
-        (task_seg_place_seq : Task_ds.task_seg_place Seq.t) (sched : sched) :
-      sched =
-      Seq.fold_left
-        (fun sched task_seg_place -> remove_task_seg_place task_seg_place sched)
-        sched task_seg_place_seq
-
-    let remove_task_seg_place_by_task_id task_id sched =
-      let s = Find.find_task_seg_place_seq_by_task_id task_id sched in
-      remove_task_seg_place_seq s sched
-
-    let remove_task_seg_place_by_task_inst_id task_inst_id sched =
-      let s = Find.find_task_seg_place_seq_by_task_inst_id task_inst_id sched in
-      remove_task_seg_place_seq s sched
-
-    let remove_task_seg_place_by_task_seg_id task_seg_id sched =
-      let s = Find.find_task_seg_place_seq_by_task_seg_id task_seg_id sched in
-      remove_task_seg_place_seq s sched
-  end
-end
-
 module Progress = struct
   module Status = struct
     let get_task_status (id : Task_ds.task_id) (sched : sched) :
@@ -1929,6 +1809,298 @@ module Progress = struct
 
     (*$*)
   end
+end
+
+module Agenda = struct
+  module Add = struct
+    let add_task_seg_place
+        (((_id1, _id2, _id3, _id4, _id5), start, end_exc) as task_seg_place :
+           Task_ds.task_seg_place) ((sid, sd) : sched) : sched =
+      let indexed_by_start =
+        Int64_map.update start
+          (fun bucket ->
+             Some
+               (Task_seg_place_set.add task_seg_place
+                  ( match bucket with
+                    | None -> Task_seg_place_set.empty
+                    | Some s -> s )))
+          sd.agenda.indexed_by_start
+      in
+      let indexed_by_end_exc =
+        Int64_map.update end_exc
+          (fun bucket ->
+             Some
+               (Task_seg_place_set.add task_seg_place
+                  ( match bucket with
+                    | None -> Task_seg_place_set.empty
+                    | Some s -> s )))
+          sd.agenda.indexed_by_end_exc
+      in
+      (sid, { sd with agenda = { indexed_by_start; indexed_by_end_exc } })
+      |> Task_seg.Add.add_task_seg_via_task_seg_place task_seg_place
+
+    let add_task_seg_place_list (task_seg_place_s : Task_ds.task_seg_place list)
+        (sched : sched) : sched =
+      List.fold_left
+        (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
+        sched task_seg_place_s
+
+    let add_task_seg_place_seq (task_seg_place_s : Task_ds.task_seg_place Seq.t)
+        (sched : sched) : sched =
+      Seq.fold_left
+        (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
+        sched task_seg_place_s
+  end
+
+  module Range = struct
+    let task_seg_place_set ~(start : int64 option) ~(end_exc : int64 option)
+        ~(include_task_seg_place_partially_within_time_period : bool)
+        ((_, sd) : sched) : Task_seg_place_set.t =
+      let start_fully_within_range =
+        let m =
+          Int64_map_utils.range ~start ~end_exc sd.agenda.indexed_by_start
+        in
+        Int64_map.fold
+          (fun _k acc s -> Task_seg_place_set.union acc s)
+          m Task_seg_place_set.empty
+      in
+      let end_exc_fully_within_range =
+        let m =
+          Int64_map_utils.range ~start ~end_exc sd.agenda.indexed_by_end_exc
+        in
+        Int64_map.fold
+          (fun _k acc s -> Task_seg_place_set.union acc s)
+          m Task_seg_place_set.empty
+      in
+      let task_seg_place_fully_within_range =
+        Task_seg_place_set.inter start_fully_within_range
+          end_exc_fully_within_range
+      in
+      if include_task_seg_place_partially_within_time_period then
+        let crossing_start =
+          match start with
+          | None -> None
+          | Some start ->
+            let before, _, _ =
+              Int64_map.split start sd.agenda.indexed_by_start
+            in
+            Int64_map.max_binding_opt before
+            |> Option.map (fun (_, s) -> s)
+            |> Option.map (fun s ->
+                Task_seg_place_set.filter
+                  (fun (_task_seg_id, _place_start, place_end_exc) ->
+                     start < place_end_exc)
+                  s)
+        in
+        let crossing_end_exc =
+          match end_exc with
+          | None -> None
+          | Some end_exc ->
+            let _, _, after =
+              Int64_map.split end_exc sd.agenda.indexed_by_end_exc
+            in
+            Int64_map.min_binding_opt after
+            |> Option.map (fun (_, s) -> s)
+            |> Option.map (fun s ->
+                Task_seg_place_set.filter
+                  (fun (_task_seg_id, place_start, _place_end_exc) ->
+                     place_start < end_exc)
+                  s)
+        in
+        task_seg_place_fully_within_range
+        |> (fun s ->
+            match crossing_start with
+            | None -> s
+            | Some s' -> Task_seg_place_set.union s s')
+        |> fun s ->
+        match crossing_end_exc with
+        | None -> s
+        | Some s' -> Task_seg_place_set.union s s'
+      else task_seg_place_fully_within_range
+  end
+
+  module To_seq_internal = struct
+    let task_seg_place ~(start : int64 option) ~(end_exc : int64 option)
+        ~(include_task_seg_place_partially_within_time_period : bool option)
+        (sched : sched) : Task_ds.task_seg_place Seq.t =
+      let include_task_seg_place_partially_within_time_period =
+        Option.fold ~none:false
+          ~some:(fun x -> x)
+          include_task_seg_place_partially_within_time_period
+      in
+      Range.task_seg_place_set ~start ~end_exc
+        ~include_task_seg_place_partially_within_time_period sched
+      |> Task_seg_place_set.to_seq
+  end
+
+  module Filter_internal = struct
+    let filter_task_seg_place_seq ~(start : int64 option)
+        ~(end_exc : int64 option)
+        ~(include_task_seg_place_partially_within_time_period : bool option)
+        (f : Task_ds.task_seg_place -> bool) (sched : sched) :
+      Task_ds.task_seg_place Seq.t =
+      To_seq_internal.task_seg_place ~start ~end_exc
+        ~include_task_seg_place_partially_within_time_period sched
+      |> Seq.filter f
+  end
+
+  module Filter = struct
+    let filter_task_seg_place_seq ?(start : int64 option)
+        ?(end_exc : int64 option)
+        ?(include_task_seg_place_partially_within_time_period : bool option)
+        (f : Task_ds.task_seg_place -> bool) (sched : sched) :
+      Task_ds.task_seg_place Seq.t =
+      Filter_internal.filter_task_seg_place_seq ~start ~end_exc
+        ~include_task_seg_place_partially_within_time_period f sched
+  end
+
+  module To_seq = struct
+    let task_seg_place ?(start : int64 option) ?(end_exc : int64 option)
+        ?(include_task_seg_place_partially_within_time_period : bool option)
+        (sched : sched) : Task_ds.task_seg_place Seq.t =
+      To_seq_internal.task_seg_place ~start ~end_exc
+        ~include_task_seg_place_partially_within_time_period sched
+
+    let task_seg_place_is (sched : sched) (status : task_related_status)
+        ((task_seg_id, _, _) : Task_ds.task_seg_place) : bool =
+      Progress.Status.get_task_seg_status task_seg_id sched = Some status
+
+    let task_seg_place_uncompleted ?(start : int64 option)
+        ?(end_exc : int64 option)
+        ?(include_task_seg_place_partially_within_time_period : bool option)
+        (sched : sched) : Task_ds.task_seg_place Seq.t =
+      Filter_internal.filter_task_seg_place_seq ~start ~end_exc
+        ~include_task_seg_place_partially_within_time_period
+        (task_seg_place_is sched `Uncompleted)
+        sched
+
+    let task_seg_place_completed ?(start : int64 option)
+        ?(end_exc : int64 option)
+        ?(include_task_seg_place_partially_within_time_period : bool option)
+        (sched : sched) : Task_ds.task_seg_place Seq.t =
+      Filter_internal.filter_task_seg_place_seq ~start ~end_exc
+        ~include_task_seg_place_partially_within_time_period
+        (task_seg_place_is sched `Completed)
+        sched
+
+    let task_seg_place_discarded ?(start : int64 option)
+        ?(end_exc : int64 option)
+        ?(include_task_seg_place_partially_within_time_period : bool option)
+        (sched : sched) : Task_ds.task_seg_place Seq.t =
+      Filter_internal.filter_task_seg_place_seq ~start ~end_exc
+        ~include_task_seg_place_partially_within_time_period
+        (task_seg_place_is sched `Discarded)
+        sched
+
+    let task_seg_place_all ?(start : int64 option) ?(end_exc : int64 option)
+        ?(include_task_seg_place_partially_within_time_period : bool option)
+        (sched : sched) : Task_ds.task_seg_place Seq.t =
+      To_seq_internal.task_seg_place ~start ~end_exc
+        ~include_task_seg_place_partially_within_time_period sched
+  end
+
+  module Find = struct
+    let find_task_seg_place_seq_by_task_id (task_id : Task_ds.task_id)
+        (sched : sched) : Task_ds.task_seg_place Seq.t =
+      Filter.filter_task_seg_place_seq
+        (fun ((id1, id2, _id3, _id4, _id5), _, _) -> (id1, id2) = task_id)
+        sched
+
+    let find_task_seg_place_seq_by_task_inst_id
+        (task_inst_id : Task_ds.task_inst_id) (sched : sched) :
+      Task_ds.task_seg_place Seq.t =
+      Filter.filter_task_seg_place_seq
+        (fun ((id1, id2, id3, _id4, _id5), _, _) ->
+           (id1, id2, id3) = task_inst_id)
+        sched
+
+    let find_task_seg_place_seq_by_task_seg_id
+        (task_seg_id : Task_ds.task_seg_id) ((_, sd) : sched) :
+      Task_ds.task_seg_place Seq.t =
+      sd.agenda.indexed_by_start
+      |> Int64_map.to_seq
+      |> Seq.flat_map (fun (_, s) -> Task_seg_place_set.to_seq s)
+      |> Seq.filter (fun (id, _, _) -> task_seg_id = id)
+  end
+
+  module Remove = struct
+    let remove_task_seg_place
+        ((task_seg_id, start, end_exc) : Task_ds.task_seg_place)
+        ((sid, sd) : sched) : sched =
+      let id1, id2, id3, _, _ = task_seg_id in
+      let indexed_by_start =
+        Int64_map.update start
+          (fun bucket ->
+             Option.map
+               (fun bucket ->
+                  Task_seg_place_set.filter
+                    (fun (x, _, _) -> x <> task_seg_id)
+                    bucket)
+               bucket)
+          sd.agenda.indexed_by_start
+      in
+      let indexed_by_end_exc =
+        Int64_map.update end_exc
+          (fun bucket ->
+             Option.map
+               (fun bucket ->
+                  Task_seg_place_set.filter
+                    (fun (x, _, _) -> x <> task_seg_id)
+                    bucket)
+               bucket)
+          sd.agenda.indexed_by_end_exc
+      in
+      let quota =
+        Task_inst_id_map.update (id1, id2, id3)
+          (Option.map (fun x -> x +^ (end_exc -^ start)))
+          sd.store.quota
+      in
+      ( sid,
+        {
+          store = { sd.store with quota };
+          agenda = { indexed_by_start; indexed_by_end_exc };
+        } )
+
+    let remove_task_seg_place_seq
+        (task_seg_place_seq : Task_ds.task_seg_place Seq.t) (sched : sched) :
+      sched =
+      Seq.fold_left
+        (fun sched task_seg_place -> remove_task_seg_place task_seg_place sched)
+        sched task_seg_place_seq
+
+    let remove_task_seg_place_by_task_id task_id sched =
+      let s = Find.find_task_seg_place_seq_by_task_id task_id sched in
+      remove_task_seg_place_seq s sched
+
+    let remove_task_seg_place_by_task_inst_id task_inst_id sched =
+      let s = Find.find_task_seg_place_seq_by_task_inst_id task_inst_id sched in
+      remove_task_seg_place_seq s sched
+
+    let remove_task_seg_place_by_task_seg_id task_seg_id sched =
+      let s = Find.find_task_seg_place_seq_by_task_seg_id task_seg_id sched in
+      remove_task_seg_place_seq s sched
+  end
+end
+
+module Time_slot = struct
+  let get_occupied_time_slots ?start ?end_exc (sched : sched) :
+    (int64 * int64) Seq.t =
+    Agenda.To_seq.task_seg_place_uncompleted sched
+    |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
+    |> (fun l ->
+        Option.fold ~none:l
+          ~some:(fun start -> Time_slot_ds.slice ~start l)
+          start)
+    |> (fun l ->
+        Option.fold ~none:l
+          ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l)
+          end_exc)
+    |> Time_slot_ds.normalize ~skip_sort:true
+
+  let get_free_time_slots ~start ~end_exc (sched : sched) :
+    (int64 * int64) Seq.t =
+    get_occupied_time_slots ~start ~end_exc sched
+    |> Time_slot_ds.invert ~start ~end_exc
 end
 
 module Sched_req = struct
@@ -2600,28 +2772,35 @@ module Recur = struct
 end
 
 module Leftover = struct
-  let get_leftover_task_segs ~start ((_sid, sd) as sched : sched) :
+  let get_leftover_task_segs ~(before : int64) ((_sid, sd) as sched : sched) :
     Task_ds.task_seg Seq.t =
-    let before, _, _ = Int64_map.split start sd.agenda.indexed_by_start in
-    Int64_map.to_seq before
+    let agenda_before, _, _ =
+      Int64_map.split before sd.agenda.indexed_by_start
+    in
+    Int64_map.to_seq agenda_before
     |> Seq.flat_map (fun (_, task_seg_place_s) ->
         Task_seg_place_set.to_seq task_seg_place_s)
+    |> Seq.filter (fun (_, _place_start, place_end_exc) ->
+        place_end_exc <= before)
     |> Seq.filter (fun (task_seg_id, _, _) ->
         let id1, id2, id3, _, _ = task_seg_id in
         let task_inst_id = (id1, id2, id3) in
         Option.is_some
           (Task_inst.Find.find_task_inst_uncompleted_opt task_inst_id sched))
-    |> Seq.filter (fun (task_seg_id, _, _) ->
-        Option.is_some
-          (Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched))
-    |> Seq.map (fun (task_seg_id, place_start, place_end_exc) ->
-        let task_seg_size = place_end_exc -^ place_start in
-        (task_seg_id, task_seg_size))
+    |> Seq.filter_map (fun (task_seg_id, _, _) ->
+        Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched
+        |> Option.map (fun task_seg_size -> (task_seg_id, task_seg_size)))
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
-    let leftover_task_seg_ids = get_leftover_task_segs sched in
+    let leftover_task_segs = get_leftover_task_segs ~before:start sched in
+    let sched =
+      Seq.fold_left
+        (fun sched (task_seg_id, _) ->
+           Progress.Move.move_task_seg_to_discarded task_seg_id sched)
+        sched leftover_task_segs
+    in
     let sched_req_data_seq =
-      leftover_task_seg_ids ~start
+      leftover_task_segs
       |> Seq.map (fun ((id1, id2, id3, _, _), task_seg_size) ->
           ( let task_inst_id = (id1, id2, id3) in
             [
@@ -2928,6 +3107,20 @@ module Serialize = struct
       removed = pack_indexed_by_start x.removed;
     }
 
+  let pack_indexed_by_end_exc (x : task_seg_place_map) :
+    (int64 * Task_ds_t.task_seg_place list) list =
+    x
+    |> Int64_map.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Serialize.pack y))
+    |> List.of_seq
+
+  let pack_indexed_by_end_exc_diff (x : task_seg_place_map_diff) :
+    (int64, Task_ds_t.task_seg_place) Map_utils_t.diff_bucketed =
+    {
+      added = pack_indexed_by_end_exc x.added;
+      removed = pack_indexed_by_end_exc x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -3043,12 +3236,17 @@ module Serialize = struct
   *)
 
   let pack_agenda (agenda : agenda) : Sched_t.agenda =
-    { indexed_by_start = pack_indexed_by_start agenda.indexed_by_start }
+    {
+      indexed_by_start = pack_indexed_by_start agenda.indexed_by_start;
+      indexed_by_end_exc = pack_indexed_by_end_exc agenda.indexed_by_end_exc;
+    }
 
   let pack_agenda_diff (diff : agenda_diff) : Sched_t.agenda_diff =
     {
       indexed_by_start_diff =
         pack_indexed_by_start_diff diff.indexed_by_start_diff;
+      indexed_by_end_exc_diff =
+        pack_indexed_by_end_exc_diff diff.indexed_by_end_exc_diff;
     }
 
   (*$*)
@@ -3373,6 +3571,21 @@ module Deserialize = struct
       removed = unpack_indexed_by_start x.removed;
     }
 
+  let unpack_indexed_by_end_exc
+      (x : (int64 * Task_ds_t.task_seg_place list) list) : task_seg_place_map =
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Deserialize.unpack y))
+    |> Int64_map.of_seq
+
+  let unpack_indexed_by_end_exc_diff
+      (x : (int64, Task_ds_t.task_seg_place) Map_utils_t.diff_bucketed) :
+    task_seg_place_map_diff =
+    {
+      added = unpack_indexed_by_end_exc x.added;
+      removed = unpack_indexed_by_end_exc x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -3489,12 +3702,17 @@ module Deserialize = struct
   *)
 
   let unpack_agenda (agenda : Sched_t.agenda) : agenda =
-    { indexed_by_start = unpack_indexed_by_start agenda.indexed_by_start }
+    {
+      indexed_by_start = unpack_indexed_by_start agenda.indexed_by_start;
+      indexed_by_end_exc = unpack_indexed_by_end_exc agenda.indexed_by_end_exc;
+    }
 
   let unpack_agenda_diff (diff : Sched_t.agenda_diff) : agenda_diff =
     {
       indexed_by_start_diff =
         unpack_indexed_by_start_diff diff.indexed_by_start_diff;
+      indexed_by_end_exc_diff =
+        unpack_indexed_by_end_exc_diff diff.indexed_by_end_exc_diff;
     }
 
   (*$*)
@@ -3582,6 +3800,8 @@ module Equal = struct
   let agenda_equal (agenda1 : agenda) (agenda2 : agenda) : bool =
     Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_start
       agenda2.indexed_by_start
+    && Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_end_exc
+      agenda2.indexed_by_end_exc
 
   (*$*)
 
@@ -3791,6 +4011,9 @@ module Diff = struct
       indexed_by_start_diff =
         Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
           ~old:agenda1.indexed_by_start agenda2.indexed_by_start;
+      indexed_by_end_exc_diff =
+        Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
+          ~old:agenda1.indexed_by_end_exc agenda2.indexed_by_end_exc;
     }
 
   let add_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
@@ -3798,6 +4021,9 @@ module Diff = struct
       indexed_by_start =
         Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed
           diff.indexed_by_start_diff agenda.indexed_by_start;
+      indexed_by_end_exc =
+        Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed
+          diff.indexed_by_end_exc_diff agenda.indexed_by_end_exc;
     }
 
   let sub_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
@@ -3805,6 +4031,9 @@ module Diff = struct
       indexed_by_start =
         Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
           diff.indexed_by_start_diff agenda.indexed_by_start;
+      indexed_by_end_exc =
+        Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
+          diff.indexed_by_end_exc_diff agenda.indexed_by_end_exc;
     }
 
   (*$*)
@@ -3938,19 +4167,14 @@ module Print = struct
          |> ignore)
       sd.store.task_seg_discarded_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "agenda :\n";
-    Int64_map.iter
-      (fun _start bucket ->
-         Task_seg_place_set.iter
-           (fun (id, start, end_exc) ->
-              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
-                "%s - %s | %s\n"
-                (Time.Print.time_to_date_string ~display_in_time_zone:`Local
-                   start)
-                (Time.Print.time_to_date_string ~display_in_time_zone:`Local
-                   end_exc)
-                (Task_ds.task_seg_id_to_string id))
-           bucket)
-      sd.agenda.indexed_by_start;
+    Seq.iter
+      (fun (id, start, end_exc) ->
+         Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
+           "%s - %s | %s\n"
+           (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
+           (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc)
+           (Task_ds.task_seg_id_to_string id))
+      (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "leftover quota :\n";
     Task_inst_id_map.iter

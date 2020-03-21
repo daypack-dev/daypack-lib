@@ -24,6 +24,7 @@ type task_data = {
   splittable : bool;
   parallelizable : bool;
   task_type : task_type;
+  name : string;
 }
 
 type task_type = [

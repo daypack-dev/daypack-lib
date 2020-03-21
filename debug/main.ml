@@ -442,6 +442,14 @@ let debug_sched_backtracking_search_pending () =
   |> OSeq.take 1
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
 
+(* let debug_sched_agenda_range () =
+ *   let sched = Sched.empty
+ *             |> Sched.Agenda.Add.add_task_seg_place_list [
+ *       ((0L, 1L, 0L, ))
+ *     ]
+ *   in *)
+
+
 let debug_sched_usage_simulation () =
   let add_task ~parent_user_id task_data task_inst_data_list t : unit =
     let task, _task_inst_list =
@@ -454,7 +462,13 @@ let debug_sched_usage_simulation () =
   let time_profile_store = Time_profile_store.make_empty () in
   let sched_ver_history = Sched_ver_history.make_empty () in
   add_task ~parent_user_id:0L
-    Task_ds.{ splittable = false; parallelizable = false; task_type = One_off }
+    Task_ds.
+      {
+        splittable = false;
+        parallelizable = false;
+        task_type = One_off;
+        name = "Test1";
+      }
     Task_ds.[ { task_inst_type = Reminder } ]
     sched_ver_history;
   add_task ~parent_user_id:0L
@@ -475,10 +489,17 @@ let debug_sched_usage_simulation () =
                         [ Fixed { task_seg_related_data = 1L; start = 0L } ];
                     } );
             };
+        name = "Test2";
       }
     [] sched_ver_history;
   add_task ~parent_user_id:0L
-    Task_ds.{ splittable = false; parallelizable = false; task_type = One_off }
+    Task_ds.
+      {
+        splittable = false;
+        parallelizable = false;
+        task_type = One_off;
+        name = "Test3";
+      }
     Task_ds.[ { task_inst_type = Reminder } ]
     sched_ver_history;
   List.iter
@@ -697,7 +718,8 @@ let debug_time_pattern_matching_tm_seq () =
   let search_years_ahead = 100 in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   let s =
-    Daypack_lib.Time_pattern.matching_tm_seq ~search_years_ahead pattern tm
+    Daypack_lib.Time_pattern.matching_tm_seq ~search_years_ahead ~start:tm
+      pattern
   in
   s
   |> OSeq.take 10

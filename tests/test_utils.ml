@@ -461,9 +461,10 @@ let task_id = QCheck.make task_id_gen
 let task_data_gen =
   let open QCheck.Gen in
   map3
-    (fun splittable parallelizable task_type ->
-       Daypack_lib.Task_ds.{ splittable; parallelizable; task_type })
-    bool bool task_type_gen
+    (fun splittable parallelizable (task_type, name) ->
+       Daypack_lib.Task_ds.{ splittable; parallelizable; task_type; name })
+    bool bool
+    (pair task_type_gen string_readable)
 
 let task_gen = QCheck.Gen.(pair task_id_gen task_data_gen)
 
@@ -609,6 +610,11 @@ let progress = QCheck.make ~print:Print_utils.progress progress_gen
         "(QCheck.Print.pair Daypack_lib.Task_ds.task_inst_id_to_string \
          Print_utils.int64_int64_option_set)" );
       ( "indexed_by_start",
+        "Daypack_lib.Int64_map.of_seq",
+        "Daypack_lib.Int64_map.to_seq",
+        "(pair pos_int64_gen task_seg_places_gen)",
+        "(QCheck.Print.pair Print_utils.int64 Print_utils.task_seg_places)" );
+      ( "indexed_by_end_exc",
         "Daypack_lib.Int64_map.of_seq",
         "Daypack_lib.Int64_map.to_seq",
         "(pair pos_int64_gen task_seg_places_gen)",
@@ -795,6 +801,22 @@ let indexed_by_start =
           (QCheck.Print.pair Print_utils.int64 Print_utils.task_seg_places))
     indexed_by_start_gen
 
+let indexed_by_end_exc_gen =
+  let open QCheck.Gen in
+  map
+    (fun l -> l |> List.to_seq |> Daypack_lib.Int64_map.of_seq)
+    (list_size (int_bound 20) (pair pos_int64_gen task_seg_places_gen))
+
+let indexed_by_end_exc =
+  QCheck.make
+    ~print:(fun s ->
+        s
+        |> Daypack_lib.Int64_map.to_seq
+        |> List.of_seq
+        |> QCheck.Print.list
+          (QCheck.Print.pair Print_utils.int64 Print_utils.task_seg_places))
+    indexed_by_end_exc_gen
+
 let task_seg_id_to_progress_gen =
   let open QCheck.Gen in
   map
@@ -883,9 +905,10 @@ let store_gen =
 
 let agenda_gen =
   let open QCheck.Gen in
-  map
-    (fun indexed_by_start -> Daypack_lib.Sched.{ indexed_by_start })
-    indexed_by_start_gen
+  map2
+    (fun indexed_by_start indexed_by_end_exc ->
+       Daypack_lib.Sched.{ indexed_by_start; indexed_by_end_exc })
+    indexed_by_start_gen indexed_by_end_exc_gen
 
 let sched_gen =
   QCheck.Gen.map3

@@ -20,6 +20,7 @@ and task_data = {
   splittable : bool;
   parallelizable : bool;
   task_type : task_type;
+  name : string;
 }
 
 and task_type =
@@ -129,6 +130,7 @@ module Serialize = struct
       splittable = task_data.splittable;
       parallelizable = task_data.parallelizable;
       task_type = pack_task_type task_data.task_type;
+      name = task_data.name;
     }
 
   and pack_task_type (task_type : task_type) : Task_ds_t.task_type =
@@ -212,6 +214,7 @@ module Deserialize = struct
       splittable = task_data.splittable;
       parallelizable = task_data.parallelizable;
       task_type = unpack_task_type task_data.task_type;
+      name = task_data.name;
     }
 
   and unpack_task_type (task_type : Task_ds_t.task_type) : task_type =
@@ -313,6 +316,8 @@ module Print = struct
       (id, data) =
     Debug_print.bprintf ~indent_level buffer "task id : %s\n"
       (task_id_to_string id);
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "name : %s\n"
+      data.name;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "splittable : %b\n" data.splittable;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer

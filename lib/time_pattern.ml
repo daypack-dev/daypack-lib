@@ -13,6 +13,54 @@ type t = {
   minutes : int list;
 }
 
+let of_date_string (s : string) : (t, string) result =
+  try
+    Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
+        let month = Time.month_of_int month in
+        Ok
+          {
+            years = [ year ];
+            months = [ month ];
+            days = `Month_days [ day ];
+            hours = [ hour ];
+            minutes = [ minute ];
+          })
+  with _ -> (
+      try
+        Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
+            let month = Time.month_of_int month in
+            Ok
+              {
+                years = [];
+                months = [ month ];
+                days = `Month_days [ day ];
+                hours = [ hour ];
+                minutes = [ minute ];
+              })
+      with _ -> (
+          try
+            Scanf.sscanf s "%d%c%d:%d" (fun day _sep hour minute ->
+                Ok
+                  {
+                    years = [];
+                    months = [];
+                    days = `Month_days [ day ];
+                    hours = [ hour ];
+                    minutes = [ minute ];
+                  })
+          with _ -> (
+              try
+                Scanf.sscanf s "%d:%d" (fun hour minute ->
+                    Ok
+                      {
+                        years = [];
+                        months = [];
+                        days = `Month_days [];
+                        hours = [ hour ];
+                        minutes = [ minute ];
+                      })
+              with _ -> Error "Failed to interpret date string" ) ) )
+
 (* type normalize_dir =
  *   [ `Start
  *   | `End
@@ -140,22 +188,13 @@ let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
     |> Seq.map (fun pat_year ->
         { acc with tm_year = pat_year - Time.tm_year_offset })
 
-let matching_tm_seq ~search_years_ahead (t : t) (start : Unix.tm) :
+let matching_tm_seq ~search_years_ahead ~(start : Unix.tm) (t : t) :
   Unix.tm Seq.t =
   matching_years ~search_years_ahead t start start
   |> Seq.flat_map (fun acc -> matching_months t start acc)
   |> Seq.flat_map (fun acc -> matching_days t start acc)
   |> Seq.flat_map (fun acc -> matching_hours t start acc)
   |> Seq.flat_map (fun acc -> matching_minutes t start acc)
-
-(* let matching_time_seq ~search_years_ahead (t : t) (start : int64) : int64 Seq.t =
- *   let start_tm = Time.time_to_tm start in
- *   matching_tm_seq ~search_years_ahead *)
-
-(* let next_match_tm ~(normalize_dir : normalize_dir) ~search_years_ahead (t : t)
- *     (tm : Unix.tm) : Unix.tm option =
- *   let s = matching_tm_seq ~search_years_ahead t tm in
- *   match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x *)
 
 let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
   Time_slot_ds.t Seq.t =
@@ -165,38 +204,24 @@ let matching_time_slots (t : t) (time_slots : Time_slot_ds.t list) :
     let start_tm = Time.unix_time_to_tm ~time_zone_of_tm:`Local start in
     let end_exc_tm = Time.unix_time_to_tm ~time_zone_of_tm:`Local end_exc in
     let search_years_ahead = end_exc_tm.tm_year - start_tm.tm_year + 1 in
-    matching_tm_seq ~search_years_ahead t start_tm
+    matching_tm_seq ~search_years_ahead ~start:start_tm t
     |> Seq.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
     |> Seq.map (fun time -> (time, time +^ 1L))
     |> Time_slot_ds.intersect (List.to_seq time_slots)
     |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:false
 
-(* let next_match_int64 ?(time_slots : Time_slot_ds.t list = []) ~normalize_dir
- *     ~search_years_ahead (t : t) (time : int64) : int64 option =
- *   Time.time_to_tm time
- *   |> next_match_tm ~normalize_dir ~search_years_ahead t
- *   |> Option.map Time.tm_to_time
- *   |> fun time ->
- *   match time with
- *   | None -> None
- *   | Some time -> (
- *       match time_slots with
- *       | [] -> Some time
- *       | l -> (
- *           let s =
- *             l
- *             |> List.to_seq
- *             |> fun s ->
- *             match normalize_dir with
- *             | `Start -> Time_slot_ds.slice ~start:time s
- *             | `End -> Time_slot_ds.slice ~end_exc:time s
- *           in
- *           match s () with
- *           | Seq.Nil -> None
- *           | Seq.Cons ((start, end_exc), _) -> (
- *               match normalize_dir with
- *               | `Start -> Some start
- *               | `End -> Some end_exc ) ) ) *)
+let next_match_tm ~search_years_ahead ~(start : Unix.tm) (t : t) :
+  Unix.tm option =
+  match (matching_tm_seq ~search_years_ahead ~start t) () with
+  | Seq.Nil -> None
+  | Seq.Cons (x, _) -> Some x
+
+let next_match_int64 ~search_years_ahead ~(start : int64) (t : t) : int64 option
+  =
+  next_match_tm ~search_years_ahead
+    ~start:(Time.unix_time_to_tm ~time_zone_of_tm:`Local start)
+    t
+  |> Option.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
 
 module Serialize = struct
   let pack_days (x : days) : Time_pattern_t.days = x
