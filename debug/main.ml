@@ -442,6 +442,14 @@ let debug_sched_backtracking_search_pending () =
   |> OSeq.take 1
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
 
+(* let debug_sched_agenda_range () =
+ *   let sched = Sched.empty
+ *             |> Sched.Agenda.Add.add_task_seg_place_list [
+ *       ((0L, 1L, 0L, ))
+ *     ]
+ *   in *)
+
+
 let debug_sched_usage_simulation () =
   let add_task ~parent_user_id task_data task_inst_data_list t : unit =
     let task, _task_inst_list =
