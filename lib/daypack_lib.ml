@@ -15,6 +15,7 @@ module Task_id_map = Task_id_map
 module Task_id_map_utils = Task_id_map_utils
 module Task_seg_id_map = Task_seg_id_map
 module Task_seg_id_map_utils = Task_seg_id_map_utils
+module Task_seg_id_set = Task_seg_id_set
 module Task_inst_id_map = Task_inst_id_map
 module Task_inst_id_map_utils = Task_inst_id_map_utils
 module Int64_map = Int64_map

@@ -131,11 +131,11 @@ open Test_utils
     );
     ("indexed_by_start",
      "task_seg_place_map",
-     "Daypack_lib.Int64_map_utils.Task_seg_place_bucketed.diff_bucketed",
-     "Daypack_lib.Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed",
-     "Daypack_lib.Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed",
+     "Daypack_lib.Int64_map_utils.Task_seg_id_bucketed.diff_bucketed",
+     "Daypack_lib.Int64_map_utils.Task_seg_id_bucketed.add_diff_bucketed",
+     "Daypack_lib.Int64_map_utils.Task_seg_id_bucketed.sub_diff_bucketed",
      "Daypack_lib.Int64_map.equal",
-     "Daypack_lib.Task_seg_place_set.equal"
+     "Daypack_lib.Task_seg_id_set.equal"
     );
   ] in
 
