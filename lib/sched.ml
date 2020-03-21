@@ -1992,12 +1992,6 @@ module Agenda = struct
   end
 
   module To_seq = struct
-    let task_seg_place ?(start : int64 option) ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
-        (sched : sched) : Task_ds.task_seg_place Seq.t =
-      To_seq_internal.task_seg_places ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
-
     let task_seg_place_is (sched : sched) (status : task_related_status)
         ((task_seg_id, _, _) : Task_ds.task_seg_place) : bool =
       Progress.Status.get_task_seg_status task_seg_id sched = Some status
