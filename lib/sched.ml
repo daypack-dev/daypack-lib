@@ -36,7 +36,7 @@ type sched_req_record_store =
 type sched_req_record_store_diff =
   Sched_req_ds.sched_req_record_data Sched_req_id_map_utils.diff
 
-type task_seg_place_map = Task_seg_place_set.t Int64_map.t
+type task_seg_place_map = Task_seg_id_set.t Int64_map.t
 
 type task_seg_place_map_diff =
   Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
@@ -103,11 +103,13 @@ type store_diff = {
 
 type agenda = {
   (* start_and_end_exc : (int64 * int64) option; *)
+  indexed_by_task_seg_id : (int64 * int64) Task_seg_id_map.t;
   indexed_by_start : task_seg_place_map;
   indexed_by_end_exc : task_seg_place_map;
 }
 
 type agenda_diff = {
+  indexed_by_task_seg_id_diff : (int64 * int64) Task_seg_id_map.t;
   indexed_by_start_diff : task_seg_place_map_diff;
   indexed_by_end_exc_diff : task_seg_place_map_diff;
 }
@@ -153,6 +155,7 @@ let store_empty =
 let agenda_empty =
   {
     (* start_and_end_exc = None; *)
+    indexed_by_task_seg_id = Task_seg_id_map.empty;
     indexed_by_start = Int64_map.empty;
     indexed_by_end_exc = Int64_map.empty;
   }
