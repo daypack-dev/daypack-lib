@@ -259,6 +259,20 @@ module Store = struct
              progress))";
         f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_progress";
       };
+      {
+        f_pack_suffix = "indexed_by_task_seg_id";
+        f_unpack_suffix = "indexed_by_task_seg_id";
+        store_typ = "(int64 * int64) Task_seg_id_map.t";
+        diff_typ = "(int64 * int64) Task_seg_id_map_utils.diff";
+        ret_typ = "(Task_ds_t.task_seg_id * (int64 * int64)) list";
+        diff_ret_typ = "(Task_ds_t.task_seg_id, int64 * int64) Map_utils_t.diff";
+        f_to_seq = "Task_seg_id_map.to_seq";
+        f_of_seq = "Task_seg_id_map.of_seq";
+        f_inner_pack = Some "(fun x -> x)";
+        f_inner_pack_data = Some "(fun x -> x)";
+        f_inner_unpack = Some "(fun x -> x)";
+        f_inner_unpack_data = Some "(fun x -> x)";
+      };
     ]
 
   let get_pack_f_name e = Printf.sprintf "pack_%s" e.f_pack_suffix
@@ -403,23 +417,10 @@ module Bucket_store = struct
        *   f_inner_unpack = Some "Task_inst_progress_set.Deserialize.unpack";
        * }; *)
       {
-        f_pack_suffix = "indexed_by_task_seg_id";
-        f_unpack_suffix = "indexed_by_task_seg_id";
-        store_typ = "(int64 * int64) task_seg_id_map";
-        diff_typ = "task_seg_id_map_diff";
-        ret_typ = "(Task_ds_t.task_seg_id * (int64 * int64)) list";
-        diff_ret_typ =
-          "(Task_ds_t.task_seg_id, int64 * int64) Map_utils_t.diff_bucketed";
-        f_to_seq = "Int64_map.to_seq";
-        f_of_seq = "Int64_map.of_seq";
-        f_inner_pack = Some "Task_seg_id_set.Serialize.pack";
-        f_inner_unpack = Some "Task_seg_id_set.Deserialize.unpack";
-      };
-      {
         f_pack_suffix = "indexed_by_start";
         f_unpack_suffix = "indexed_by_start";
-        store_typ = "task_seg_id_map";
-        diff_typ = "task_seg_id_map_diff";
+        store_typ = "task_seg_place_map";
+        diff_typ = "task_seg_place_map_diff";
         ret_typ = "(int64 * Task_ds_t.task_seg_id list) list";
         diff_ret_typ =
           "(int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed";
@@ -431,8 +432,8 @@ module Bucket_store = struct
       {
         f_pack_suffix = "indexed_by_end_exc";
         f_unpack_suffix = "indexed_by_end_exc";
-        store_typ = "task_seg_id_map";
-        diff_typ = "task_seg_id_map_diff";
+        store_typ = "task_seg_place_map";
+        diff_typ = "task_seg_place_map_diff";
         ret_typ = "(int64 * Task_ds_t.task_seg_id list) list";
         diff_ret_typ =
           "(int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed";
@@ -790,18 +791,24 @@ let print_store_equal () =
 
 let agenda_fields =
   [
+    ( "indexed_by_task_seg_id",
+      "indexed_by_task_seg_id",
+      "Task_seg_id_map.equal (=)",
+      "Task_seg_id_map_utils.diff",
+      "Task_seg_id_map_utils.add_diff",
+      "Task_seg_id_map_utils.sub_diff" );
     ( "indexed_by_start",
       "indexed_by_start",
-      "Int64_map.equal Task_seg_place_set.equal",
-      "Int64_map_utils.Task_seg_place_bucketed.diff_bucketed",
-      "Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed",
-      "Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed" );
+      "Int64_map.equal Task_seg_id_set.equal",
+      "Int64_map_utils.Task_seg_id_bucketed.diff_bucketed",
+      "Int64_map_utils.Task_seg_id_bucketed.add_diff_bucketed",
+      "Int64_map_utils.Task_seg_id_bucketed.sub_diff_bucketed" );
     ( "indexed_by_end_exc",
       "indexed_by_end_exc",
-      "Int64_map.equal Task_seg_place_set.equal",
-      "Int64_map_utils.Task_seg_place_bucketed.diff_bucketed",
-      "Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed",
-      "Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed" );
+      "Int64_map.equal Task_seg_id_set.equal",
+      "Int64_map_utils.Task_seg_id_bucketed.diff_bucketed",
+      "Int64_map_utils.Task_seg_id_bucketed.add_diff_bucketed",
+      "Int64_map_utils.Task_seg_id_bucketed.sub_diff_bucketed" );
   ]
 
 let print_pack_agenda () =

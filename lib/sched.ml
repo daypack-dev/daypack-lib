@@ -39,7 +39,7 @@ type sched_req_record_store_diff =
 type task_seg_place_map = Task_seg_id_set.t Int64_map.t
 
 type task_seg_place_map_diff =
-  Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
+  Int64_map_utils.Task_seg_id_bucketed.diff_bucketed
 
 type task_related_status =
   [ `Uncompleted
@@ -109,7 +109,7 @@ type agenda = {
 }
 
 type agenda_diff = {
-  indexed_by_task_seg_id_diff : (int64 * int64) Task_seg_id_map.t;
+  indexed_by_task_seg_id_diff : (int64 * int64) Task_seg_id_map_utils.diff;
   indexed_by_start_diff : task_seg_place_map_diff;
   indexed_by_end_exc_diff : task_seg_place_map_diff;
 }
@@ -3082,6 +3082,18 @@ module Serialize = struct
       removed = pack_task_inst_id_to_progress x.removed;
     }
 
+  let pack_indexed_by_task_seg_id (x : (int64 * int64) Task_seg_id_map.t) :
+    (Task_ds_t.task_seg_id * (int64 * int64)) list =
+    x |> Task_seg_id_map.to_seq |> Seq.map (fun x -> x) |> List.of_seq
+
+  let pack_indexed_by_task_seg_id_diff
+      (x : (int64 * int64) Task_seg_id_map_utils.diff) :
+    (Task_ds_t.task_seg_id, int64 * int64) Map_utils_t.diff =
+    {
+      added = pack_indexed_by_task_seg_id x.added;
+      removed = pack_indexed_by_task_seg_id x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -3143,21 +3155,21 @@ module Serialize = struct
     |> List.of_seq
 
   let pack_indexed_by_start_diff (x : task_seg_place_map_diff) :
-    (int64, Task_ds_t.task_seg_place) Map_utils_t.diff_bucketed =
+    (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
     {
       added = pack_indexed_by_start x.added;
       removed = pack_indexed_by_start x.removed;
     }
 
   let pack_indexed_by_end_exc (x : task_seg_place_map) :
-    (int64 * Task_ds_t.task_seg_place list) list =
+    (int64 * Task_ds_t.task_seg_id list) list =
     x
     |> Int64_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_indexed_by_end_exc_diff (x : task_seg_place_map_diff) :
-    (int64, Task_ds_t.task_seg_place) Map_utils_t.diff_bucketed =
+    (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
     {
       added = pack_indexed_by_end_exc x.added;
       removed = pack_indexed_by_end_exc x.removed;
@@ -3279,12 +3291,16 @@ module Serialize = struct
 
   let pack_agenda (agenda : agenda) : Sched_t.agenda =
     {
+      indexed_by_task_seg_id =
+        pack_indexed_by_task_seg_id agenda.indexed_by_task_seg_id;
       indexed_by_start = pack_indexed_by_start agenda.indexed_by_start;
       indexed_by_end_exc = pack_indexed_by_end_exc agenda.indexed_by_end_exc;
     }
 
   let pack_agenda_diff (diff : agenda_diff) : Sched_t.agenda_diff =
     {
+      indexed_by_task_seg_id_diff =
+        pack_indexed_by_task_seg_id_diff diff.indexed_by_task_seg_id_diff;
       indexed_by_start_diff =
         pack_indexed_by_start_diff diff.indexed_by_start_diff;
       indexed_by_end_exc_diff =
@@ -3543,6 +3559,19 @@ module Deserialize = struct
       removed = unpack_task_inst_id_to_progress x.removed;
     }
 
+  let unpack_indexed_by_task_seg_id
+      (x : (Task_ds_t.task_seg_id * (int64 * int64)) list) :
+    (int64 * int64) Task_seg_id_map.t =
+    x |> List.to_seq |> Seq.map (fun x -> x) |> Task_seg_id_map.of_seq
+
+  let unpack_indexed_by_task_seg_id_diff
+      (x : (Task_ds_t.task_seg_id, int64 * int64) Map_utils_t.diff) :
+    (int64 * int64) Task_seg_id_map_utils.diff =
+    {
+      added = unpack_indexed_by_task_seg_id x.added;
+      removed = unpack_indexed_by_task_seg_id x.removed;
+    }
+
   (*$*)
 
   (*$ #use "lib/sched.cinaps";;
@@ -3598,30 +3627,30 @@ module Deserialize = struct
       removed = unpack_task_inst_id_to_task_seg_ids x.removed;
     }
 
-  let unpack_indexed_by_start (x : (int64 * Task_ds_t.task_seg_place list) list)
-    : task_seg_place_map =
+  let unpack_indexed_by_start (x : (int64 * Task_ds_t.task_seg_id list) list) :
+    task_seg_place_map =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Deserialize.unpack y))
     |> Int64_map.of_seq
 
   let unpack_indexed_by_start_diff
-      (x : (int64, Task_ds_t.task_seg_place) Map_utils_t.diff_bucketed) :
+      (x : (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
     task_seg_place_map_diff =
     {
       added = unpack_indexed_by_start x.added;
       removed = unpack_indexed_by_start x.removed;
     }
 
-  let unpack_indexed_by_end_exc
-      (x : (int64 * Task_ds_t.task_seg_place list) list) : task_seg_place_map =
+  let unpack_indexed_by_end_exc (x : (int64 * Task_ds_t.task_seg_id list) list)
+    : task_seg_place_map =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_place_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Deserialize.unpack y))
     |> Int64_map.of_seq
 
   let unpack_indexed_by_end_exc_diff
-      (x : (int64, Task_ds_t.task_seg_place) Map_utils_t.diff_bucketed) :
+      (x : (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
     task_seg_place_map_diff =
     {
       added = unpack_indexed_by_end_exc x.added;
@@ -3745,12 +3774,16 @@ module Deserialize = struct
 
   let unpack_agenda (agenda : Sched_t.agenda) : agenda =
     {
+      indexed_by_task_seg_id =
+        unpack_indexed_by_task_seg_id agenda.indexed_by_task_seg_id;
       indexed_by_start = unpack_indexed_by_start agenda.indexed_by_start;
       indexed_by_end_exc = unpack_indexed_by_end_exc agenda.indexed_by_end_exc;
     }
 
   let unpack_agenda_diff (diff : Sched_t.agenda_diff) : agenda_diff =
     {
+      indexed_by_task_seg_id_diff =
+        unpack_indexed_by_task_seg_id_diff diff.indexed_by_task_seg_id_diff;
       indexed_by_start_diff =
         unpack_indexed_by_start_diff diff.indexed_by_start_diff;
       indexed_by_end_exc_diff =
@@ -3840,9 +3873,11 @@ module Equal = struct
       store1.task_inst_id_to_progress store2.task_inst_id_to_progress
 
   let agenda_equal (agenda1 : agenda) (agenda2 : agenda) : bool =
-    Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_start
+    Task_seg_id_map.equal ( = ) agenda1.indexed_by_task_seg_id
+      agenda2.indexed_by_task_seg_id
+    && Int64_map.equal Task_seg_id_set.equal agenda1.indexed_by_start
       agenda2.indexed_by_start
-    && Int64_map.equal Task_seg_place_set.equal agenda1.indexed_by_end_exc
+    && Int64_map.equal Task_seg_id_set.equal agenda1.indexed_by_end_exc
       agenda2.indexed_by_end_exc
 
   (*$*)
@@ -4050,31 +4085,40 @@ module Diff = struct
 
   let diff_agenda (agenda1 : agenda) (agenda2 : agenda) : agenda_diff =
     {
+      indexed_by_task_seg_id_diff =
+        Task_seg_id_map_utils.diff ~old:agenda1.indexed_by_task_seg_id
+          agenda2.indexed_by_task_seg_id;
       indexed_by_start_diff =
-        Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
+        Int64_map_utils.Task_seg_id_bucketed.diff_bucketed
           ~old:agenda1.indexed_by_start agenda2.indexed_by_start;
       indexed_by_end_exc_diff =
-        Int64_map_utils.Task_seg_place_bucketed.diff_bucketed
+        Int64_map_utils.Task_seg_id_bucketed.diff_bucketed
           ~old:agenda1.indexed_by_end_exc agenda2.indexed_by_end_exc;
     }
 
   let add_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
     {
+      indexed_by_task_seg_id =
+        Task_seg_id_map_utils.add_diff diff.indexed_by_task_seg_id_diff
+          agenda.indexed_by_task_seg_id;
       indexed_by_start =
-        Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed
+        Int64_map_utils.Task_seg_id_bucketed.add_diff_bucketed
           diff.indexed_by_start_diff agenda.indexed_by_start;
       indexed_by_end_exc =
-        Int64_map_utils.Task_seg_place_bucketed.add_diff_bucketed
+        Int64_map_utils.Task_seg_id_bucketed.add_diff_bucketed
           diff.indexed_by_end_exc_diff agenda.indexed_by_end_exc;
     }
 
   let sub_diff_agenda (diff : agenda_diff) (agenda : agenda) : agenda =
     {
+      indexed_by_task_seg_id =
+        Task_seg_id_map_utils.sub_diff diff.indexed_by_task_seg_id_diff
+          agenda.indexed_by_task_seg_id;
       indexed_by_start =
-        Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
+        Int64_map_utils.Task_seg_id_bucketed.sub_diff_bucketed
           diff.indexed_by_start_diff agenda.indexed_by_start;
       indexed_by_end_exc =
-        Int64_map_utils.Task_seg_place_bucketed.sub_diff_bucketed
+        Int64_map_utils.Task_seg_id_bucketed.sub_diff_bucketed
           diff.indexed_by_end_exc_diff agenda.indexed_by_end_exc;
     }
 
