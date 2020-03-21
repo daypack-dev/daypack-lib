@@ -419,7 +419,6 @@ module Quota = struct
 end
 
 module Task_seg = struct
-
   module To_seq = struct
     (*$ #use "lib/sched.cinaps";;
 
@@ -713,16 +712,17 @@ module Task_seg = struct
         ([], sched) reqs
       |> fun (l, t) -> (List.rev l, t)
 
-    let add_task_seg_via_task_seg_place ((id, start, end_exc) : Task_ds.task_seg_place)
-        (sched : sched) : sched =
-      let (id1, id2, id3, id4, _sub_id) = id in
+    let add_task_seg_via_task_seg_place
+        ((id, start, end_exc) : Task_ds.task_seg_place) (sched : sched) : sched
+      =
+      let id1, id2, id3, id4, _sub_id = id in
       let parent_task_inst_id = (id1, id2, id3) in
       let task_seg_size = end_exc -^ start in
       sched
       |> Remove.remove_task_seg_all (id1, id2, id3, id4, None)
       |> Id.add_task_seg_id id
       |> add_task_seg ~parent_task_inst_id task_seg_size
-      |> (fun (_, x) -> x)
+      |> fun (_, x) -> x
 
     let add_task_segs_via_task_seg_place_list
         (place_s : Task_ds.task_seg_place list) (sched : sched) : sched =
