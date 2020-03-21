@@ -715,11 +715,15 @@ module Task_seg = struct
     let add_task_seg_via_task_seg_place
         ((id, start, end_exc) : Task_ds.task_seg_place) (sched : sched) : sched
       =
-      let id1, id2, id3, id4, _sub_id = id in
+      let id1, id2, id3, id4, sub_id = id in
       let parent_task_inst_id = (id1, id2, id3) in
       let task_seg_size = end_exc -^ start in
       sched
-      |> Remove.remove_task_seg_all (id1, id2, id3, id4, None)
+      |> (fun sched ->
+          match sub_id with
+          | None -> sched
+          | Some _ ->
+            Remove.remove_task_seg_all (id1, id2, id3, id4, None) sched)
       |> Id.add_task_seg_id id
       |> add_task_seg ~parent_task_inst_id task_seg_size
       |> fun (_, x) -> x
