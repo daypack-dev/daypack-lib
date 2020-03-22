@@ -25,6 +25,33 @@ type month =
   | `Dec
   ]
 
+let weekdays : (string * weekday) list =
+  [
+    ("sunday", `Sun);
+    ("monday", `Mon);
+    ("tuesday", `Tue);
+    ("wednesday", `Wed);
+    ("thursday", `Thu);
+    ("friday", `Fri);
+    ("saturday", `Sat);
+  ]
+
+let months : (string * month) list =
+  [
+    ("january", `Jan);
+    ("february", `Feb);
+    ("march", `Mar);
+    ("april", `Apr);
+    ("may", `May);
+    ("june", `Jun);
+    ("july", `Jul);
+    ("august", `Aug);
+    ("september", `Sep);
+    ("october", `Oct);
+    ("november", `Nov);
+    ("december", `Dec);
+  ]
+
 let first_mday = 1
 
 let tm_year_offset = 1900
@@ -49,6 +76,9 @@ let weekday_of_int (x : int) : weekday =
   | 5 -> `Fri
   | 6 -> `Sat
   | _ -> failwith "Invalid wday int"
+
+let weekday_of_string (s : string) : (weekday, unit) result =
+  Misc_utils.substring_match weekdays s
 
 let cal_weekday_of_weekday (weekday : weekday) : CalendarLib.Calendar.day =
   match weekday with
@@ -100,6 +130,9 @@ let month_of_int (x : int) : month =
   | 10 -> `Nov
   | 11 -> `Dec
   | _ -> failwith "Invalid month int"
+
+let month_of_string (s : string) : (month, unit) result =
+  Misc_utils.substring_match months s
 
 let cal_month_of_month (month : month) : CalendarLib.Calendar.month =
   match month with

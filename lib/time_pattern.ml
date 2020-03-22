@@ -13,53 +13,91 @@ type t = {
   minutes : int list;
 }
 
-let of_date_string (s : string) : (t, string) result =
-  try
-    Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
-        let month = Time.month_of_int month in
-        Ok
-          {
-            years = [ year ];
-            months = [ month ];
-            days = `Month_days [ day ];
-            hours = [ hour ];
-            minutes = [ minute ];
-          })
-  with _ -> (
-      try
-        Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
-            let month = Time.month_of_int month in
-            Ok
-              {
-                years = [];
-                months = [ month ];
-                days = `Month_days [ day ];
-                hours = [ hour ];
-                minutes = [ minute ];
-              })
-      with _ -> (
-          try
-            Scanf.sscanf s "%d%c%d:%d" (fun day _sep hour minute ->
-                Ok
-                  {
-                    years = [];
-                    months = [];
-                    days = `Month_days [ day ];
-                    hours = [ hour ];
-                    minutes = [ minute ];
-                  })
-          with _ -> (
-              try
-                Scanf.sscanf s "%d:%d" (fun hour minute ->
-                    Ok
-                      {
-                        years = [];
-                        months = [];
-                        days = `Month_days [];
-                        hours = [ hour ];
-                        minutes = [ minute ];
-                      })
-              with _ -> Error "Failed to interpret date string" ) ) )
+module Interpret_string = struct
+  let check_hour x = assert (x < 24)
+
+  let check_minute x = assert (x < 60)
+
+  let of_date_string (s : string) : (t, unit) result =
+    try
+      Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
+          check_hour hour;
+          check_minute minute;
+          let month = Time.month_of_int month in
+          Ok
+            {
+              years = [ year ];
+              months = [ month ];
+              days = `Month_days [ day ];
+              hours = [ hour ];
+              minutes = [ minute ];
+            })
+    with _ -> (
+        try
+          Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
+              check_hour hour;
+              check_minute minute;
+              let month = Time.month_of_int month in
+              Ok
+                {
+                  years = [];
+                  months = [ month ];
+                  days = `Month_days [ day ];
+                  hours = [ hour ];
+                  minutes = [ minute ];
+                })
+        with _ -> (
+            try
+              Scanf.sscanf s "%d%c%d:%d" (fun day _sep hour minute ->
+                  check_hour hour;
+                  check_minute minute;
+                  Ok
+                    {
+                      years = [];
+                      months = [];
+                      days = `Month_days [ day ];
+                      hours = [ hour ];
+                      minutes = [ minute ];
+                    })
+            with _ -> (
+                try
+                  Scanf.sscanf s "%d:%d" (fun hour minute ->
+                      check_hour hour;
+                      check_minute minute;
+                      Ok
+                        {
+                          years = [];
+                          months = [];
+                          days = `Month_days [];
+                          hours = [ hour ];
+                          minutes = [ minute ];
+                        })
+                with _ -> Error () ) ) )
+
+  let of_weekday_time_string (s : string) : (t, unit) result =
+    try
+      Scanf.sscanf s "%s-%d:%d" (fun maybe_weekday hour minute ->
+          check_hour hour;
+          check_minute minute;
+          let weekday = Time.weekday_of_string maybe_weekday |> Result.get_ok in
+          Ok
+            {
+              years = [];
+              months = [];
+              days = `Weekdays [ weekday ];
+              hours = [ hour ];
+              minutes = [ minute ];
+            })
+    with _ -> Error ()
+
+  let of_string (s : string) : (t, string) result =
+    match of_date_string s with
+    | Ok x -> Ok x
+    | Error () -> (
+        match of_weekday_time_string s with
+        | Ok x -> Ok x
+        | Error () -> Error "Failed to interpret string as a time pattern" )
+end
 
 (* type normalize_dir =
  *   [ `Start
