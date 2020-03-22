@@ -49,7 +49,8 @@ let ask_sched_req_data_unit ~(task_inst_id : Daypack_lib.Task_ds.task_inst_id) :
   match sched_req_choice with
   | `Fixed -> (
       let start_pat =
-        ask ~prompt:"Enter start time" Daypack_lib.Time_pattern.of_date_string
+        ask ~prompt:"Enter start time"
+          Daypack_lib.Time_pattern.Interpret_string.of_string
       in
       match
         Daypack_lib.Time_pattern.next_match_int64
