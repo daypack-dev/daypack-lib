@@ -442,12 +442,17 @@ let debug_sched_backtracking_search_pending () =
   |> OSeq.take 1
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
 
-(* let debug_sched_agenda_range () =
- *   let sched = Sched.empty
- *             |> Sched.Agenda.Add.add_task_seg_place_list [
- *       ((0L, 1L, 0L, ))
- *     ]
- *   in *)
+let debug_sched_agenda_range () =
+  let sched = Sched.empty
+            |> Sched.Agenda.Add.add_task_seg_place_list [
+      ((0L, 1L, 0L, 0L, None), 0L, 10L)
+    ]
+  in
+  sched
+  |> Sched.Agenda.To_seq.task_seg_place_all ~start:0L ~end_exc:50L
+  |> Seq.iter (fun task_seg_place ->
+      Task_ds.Print.debug_print_task_seg_place task_seg_place
+    )
 
 let debug_sched_usage_simulation () =
   let add_task ~parent_user_id task_data task_inst_data_list t : unit =
@@ -967,8 +972,12 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   print_newline () *)
 
 let () =
-  debug_sched_usage_simulation ();
+  debug_sched_agenda_range ();
   print_newline ()
+
+(* let () =
+ *   debug_sched_usage_simulation ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_matching_tm_seq ();
