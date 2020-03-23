@@ -676,16 +676,6 @@ let debug_sched_usage_simulation () =
    *   | Error () -> print_endline "Scheduling failed" ); *)
   print_newline ()
 
-(* let debug_time_pattern_normalize_pattern () =
- *   print_endline "Debug print for Time_pattern.normalize_pattern";
- *   let dir = `End in
- *   let pattern =
- *     let open Daypack_lib.Time_pattern in
- *     { year = Some 2021; mon = None; day = None; hour = Some 2; min = None }
- *     |> normalize_pattern dir
- *   in
- *   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern *)
-
 let debug_time_pattern_matching_tm_seq () =
   print_endline "Debug print for Time_pattern.matching_tm_seq";
   let tm =
@@ -979,10 +969,6 @@ let debug_time_profile_matching_time_slots_of_periods () =
 let () =
   debug_sched_usage_simulation ();
   print_newline ()
-
-(* let () =
- *   debug_time_pattern_normalize_pattern ();
- *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_matching_tm_seq ();
