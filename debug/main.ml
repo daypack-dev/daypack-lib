@@ -445,11 +445,16 @@ let debug_sched_backtracking_search_pending () =
 let debug_sched_agenda_range () =
   let sched = Sched.empty
             |> Sched.Agenda.Add.add_task_seg_place_list [
-      ((0L, 1L, 0L, 0L, None), 0L, 10L)
+      ((0L, 1L, 0L, 0L, None), 0L, 10L);
+      ((0L, 1L, 1L, 0L, None), 10L, 20L);
+      ((0L, 2L, 0L, 0L, Some 1L), 20L, 30L);
+      ((0L, 3L, 0L, 0L, None), 30L, 50L);
+      ((0L, 4L, 0L, 0L, None), 60L, 90L);
     ]
   in
   sched
-  |> Sched.Agenda.To_seq.task_seg_place_all ~start:0L ~end_exc:50L
+  |> Sched.Agenda.To_seq.task_seg_place_all ~start:0L ~end_exc:40L
+    ~include_task_seg_place_partially_within_time_period:false
   |> Seq.iter (fun task_seg_place ->
       Task_ds.Print.debug_print_task_seg_place task_seg_place
     )
