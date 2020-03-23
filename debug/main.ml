@@ -455,8 +455,8 @@ let debug_sched_agenda_range () =
       ]
   in
   sched
-  |> Sched.Agenda.To_seq.task_seg_place_all ~start:0L ~end_exc:40L
-    ~include_task_seg_place_partially_within_time_period:false
+  |> Sched.Agenda.To_seq.task_seg_place_all ~start:9L ~end_exc:40L
+    ~include_task_seg_place_partially_within_time_period:true
   |> Seq.iter (fun task_seg_place ->
       Task_ds.Print.debug_print_task_seg_place task_seg_place)
 
