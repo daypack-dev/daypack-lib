@@ -249,9 +249,7 @@ let weekday_of_month_day ~(year : int) ~(month : month) ~(mday : int) : weekday
     (CalendarLib.Date.make year (int_of_month month) mday)
   |> weekday_of_cal_weekday
 
-let cur_unix_time_sec () : int64 = Unix.time () |> Int64.of_float
-
-let cur_unix_time_min () : int64 = cur_unix_time_sec () /^ 60L
+let cur_unix_time_min () : int64 = (Unix.time () |> Int64.of_float) /^ 60L
 
 let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
 
