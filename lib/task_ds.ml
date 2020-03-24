@@ -77,14 +77,35 @@ let succ_task_seg_sub_id ((id1, id2, id3, id4, id5) : task_seg_id) =
 
 let user_id_to_string (id : user_id) = Printf.sprintf "%Ld" id
 
+let string_to_user_id (s : string) : (user_id, unit) result =
+  try Ok (Int64.of_string s) with _ -> Error ()
+
 let task_id_to_string ((id1, id2) : task_id) = Printf.sprintf "%Ld.%Ld" id1 id2
+
+let string_to_task_id (s : string) : (task_id, unit) result =
+  try Scanf.sscanf s "%Ld.%Ld" (fun id1 id2 -> Ok (id1, id2))
+  with _ -> Error ()
 
 let task_inst_id_to_string ((id1, id2, id3) : task_inst_id) =
   Printf.sprintf "%Ld.%Ld.%Ld" id1 id2 id3
 
+let string_to_task_inst_id (s : string) : (task_inst_id, unit) result =
+  try Scanf.sscanf s "%Ld.%Ld.%Ld" (fun id1 id2 id3 -> Ok (id1, id2, id3))
+  with _ -> Error ()
+
 let task_seg_id_to_string ((id1, id2, id3, id4, id5) : task_seg_id) =
   Printf.sprintf "%Ld.%Ld.%Ld.%Ld.%s" id1 id2 id3 id4
     (match id5 with None -> "X" | Some x -> Int64.to_string x)
+
+let string_to_task_seg_id (s : string) : (task_seg_id, unit) result =
+  try
+    Scanf.sscanf s "%Ld.%Ld.%Ld.%Ld.X" (fun id1 id2 id3 id4 ->
+        Ok (id1, id2, id3, id4, None))
+  with _ -> (
+      try
+        Scanf.sscanf s "%Ld.%Ld.%Ld.%Ld.%Ld" (fun id1 id2 id3 id4 id5 ->
+            Ok (id1, id2, id3, id4, Some id5))
+      with _ -> Error () )
 
 let task_seg_alloc_req_sum_length reqs =
   List.fold_left (fun acc (_, size) -> acc +^ size) 0L reqs
