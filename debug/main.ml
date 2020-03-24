@@ -442,12 +442,23 @@ let debug_sched_backtracking_search_pending () =
   |> OSeq.take 1
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
 
-(* let debug_sched_agenda_range () =
- *   let sched = Sched.empty
- *             |> Sched.Agenda.Add.add_task_seg_place_list [
- *       ((0L, 1L, 0L, ))
- *     ]
- *   in *)
+let debug_sched_agenda_range () =
+  let sched =
+    Sched.empty
+    |> Sched.Agenda.Add.add_task_seg_place_list
+      [
+        ((0L, 1L, 0L, 0L, None), 0L, 10L);
+        ((0L, 1L, 1L, 0L, None), 10L, 20L);
+        ((0L, 2L, 0L, 0L, Some 1L), 20L, 30L);
+        ((0L, 3L, 0L, 0L, None), 30L, 50L);
+        ((0L, 4L, 0L, 0L, None), 60L, 90L);
+      ]
+  in
+  sched
+  |> Sched.Agenda.To_seq.task_seg_place_all ~start:9L ~end_exc:40L
+    ~include_task_seg_place_partially_within_time_period:true
+  |> Seq.iter (fun task_seg_place ->
+      Task_ds.Print.debug_print_task_seg_place task_seg_place)
 
 let debug_sched_usage_simulation () =
   let add_task ~parent_user_id task_data task_inst_data_list t : unit =
@@ -675,16 +686,6 @@ let debug_sched_usage_simulation () =
    *     Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history
    *   | Error () -> print_endline "Scheduling failed" ); *)
   print_newline ()
-
-(* let debug_time_pattern_normalize_pattern () =
- *   print_endline "Debug print for Time_pattern.normalize_pattern";
- *   let dir = `End in
- *   let pattern =
- *     let open Daypack_lib.Time_pattern in
- *     { year = Some 2021; mon = None; day = None; hour = Some 2; min = None }
- *     |> normalize_pattern dir
- *   in
- *   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern *)
 
 let debug_time_pattern_matching_tm_seq () =
   print_endline "Debug print for Time_pattern.matching_tm_seq";
@@ -977,11 +978,11 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   print_newline () *)
 
 let () =
-  debug_sched_usage_simulation ();
+  debug_sched_agenda_range ();
   print_newline ()
 
 (* let () =
- *   debug_time_pattern_normalize_pattern ();
+ *   debug_sched_usage_simulation ();
  *   print_newline () *)
 
 (* let () =
