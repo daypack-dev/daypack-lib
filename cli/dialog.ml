@@ -91,18 +91,17 @@ let ask_int64 ~(prompt : string) : int64 =
 let process_time_string (s : string) : (int64, string) result =
   match Daypack_lib.Time_pattern.Interpret_string.of_string s with
   | Error msg -> Error msg
-  | Ok pat ->
-    match
-      Daypack_lib.Time_pattern.next_match_int64
-        ~search_years_ahead:Config.time_pattern_search_years_ahead
-        ~start:(Daypack_lib.Time.cur_unix_time_min ())
-        pat
-    with
-    | None -> Error "Failed to find matching time"
-    | Some time -> Ok time
+  | Ok pat -> (
+      match
+        Daypack_lib.Time_pattern.next_match_int64
+          ~search_years_ahead:Config.time_pattern_search_years_ahead
+          ~start:(Daypack_lib.Time.cur_unix_time_min ())
+          pat
+      with
+      | None -> Error "Failed to find matching time"
+      | Some time -> Ok time )
 
-let ask_time ~(prompt : string) : int64 =
-  ask ~prompt process_time_string
+let ask_time ~(prompt : string) : int64 = ask ~prompt process_time_string
 
 let ask_time_slot ~(prompt : string) : int64 * int64 =
   let start = ask_time ~prompt:(prompt ^ " (start)") in
@@ -115,14 +114,11 @@ let ask_time_slots ~(prompt : string) : (int64 * int64) list =
         Scanf.sscanf s "%[^,],%[^,]" (fun start_string end_exc_string ->
             match process_time_string start_string with
             | Error msg -> Error msg
-            | Ok start ->
-              match process_time_string end_exc_string with
-                Error msg -> Error msg
-              | Ok end_exc -> Ok (start, end_exc)
-          )
-      with
-      _ -> Error "Failed to parse time slot string"
-    )
+            | Ok start -> (
+                match process_time_string end_exc_string with
+                | Error msg -> Error msg
+                | Ok end_exc -> Ok (start, end_exc) ))
+      with _ -> Error "Failed to parse time slot string")
 
 let ask_sched_req_data_unit
     ?(task_inst_id : Daypack_lib.Task_ds.task_inst_id option) () :
