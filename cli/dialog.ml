@@ -14,6 +14,21 @@ let ask (type a) ~(prompt : string) (f : string -> (a, string) result) : a =
       let s = read_line () in
       f s)
 
+let ask_id (type a) ~(name : string) (f : string -> (a, unit) result) : a =
+  ask ~prompt:("Please enter " ^ name) (fun s ->
+      match f s with
+      | Ok x -> Ok x
+      | Error () -> Error (Printf.sprintf "Failed to parse %s string" name))
+
+let ask_task_id () : Daypack_lib.Task_ds.task_id =
+  ask_id ~name:"task ID" Daypack_lib.Task_ds.string_to_task_id
+
+let ask_task_inst_id () : Daypack_lib.Task_ds.task_inst_id =
+  ask_id ~name:"task inst ID" Daypack_lib.Task_ds.string_to_task_inst_id
+
+let ask_task_seg_id () : Daypack_lib.Task_ds.task_seg_id =
+  ask_id ~name:"task seg ID" Daypack_lib.Task_ds.string_to_task_seg_id
+
 let ask_pick_choice (type a) ~(prompt : string) (choices : (string * a) list) :
   a =
   Printf.printf "%s :\n" prompt;
@@ -64,7 +79,7 @@ let ask_time_slot ~(prompt : string) : int64 * int64 =
   let end_exc = ask_time ~prompt:(prompt ^ " (end exc)") in
   (start, end_exc)
 
-let ask_sched_req_data_unit ~(task_inst_id : Daypack_lib.Task_ds.task_inst_id) :
+let ask_sched_req_data_unit () :
   (Daypack_lib.Sched_req_ds.sched_req_data_unit, string) result =
   let sched_req_choice =
     ask_pick_choice ~prompt:"Pick scheduling request type"
@@ -79,6 +94,7 @@ let ask_sched_req_data_unit ~(task_inst_id : Daypack_lib.Task_ds.task_inst_id) :
   in
   match sched_req_choice with
   | `Fixed ->
+    let task_inst_id = ask_task_inst_id () in
     let start = ask_time ~prompt:"Enter start time" in
     let duration = ask_int64 ~prompt:"Enter duration (minutes)" in
     Ok
