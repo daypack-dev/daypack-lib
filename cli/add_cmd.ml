@@ -35,7 +35,7 @@ let run (add_task : bool) : unit =
                 context.sched_ver_history
             in
             let task_inst_id, _task_inst_data = List.hd task_inst_list in
-            match Dialog.ask_sched_req_data_unit ~task_inst_id with
+            match Dialog.ask_sched_req_data_unit ~task_inst_id () with
             | Error msg -> print_endline msg
             | Ok sched_req_data_unit ->
               let sched_req_data = [ sched_req_data_unit ] in
