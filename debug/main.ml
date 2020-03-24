@@ -771,7 +771,7 @@ let debug_time_pattern_matching_time_slots () =
     }
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
-  let s = Daypack_lib.Time_pattern.matching_time_slots pattern time_slots in
+  let s = Daypack_lib.Time_pattern.matching_time_slots pattern (`Time_slots time_slots) in
   s
   |> OSeq.take 30
   |> OSeq.iteri (fun i (start, end_exc) ->
