@@ -101,12 +101,39 @@ let process_time_string (s : string) : (int64, string) result =
       | None -> Error "Failed to find matching time"
       | Some time -> Ok time )
 
+let process_time_slot_string (s : string) : (int64 * int64, string) result =
+  let cur_time =
+    Daypack_lib.Time.cur_unix_time_min ()
+  in
+  try
+    Scanf.sscanf s "%[^,],%[^,]" (fun start_str end_exc_str ->
+        match Daypack_lib.Time_pattern.Interpret_string.of_string start_str with
+        | Error _ -> Error "Failed to process start time pattern string"
+        | Ok start_pat ->
+          match Daypack_lib.Time_pattern.Interpret_string.of_string end_exc_str with
+          | Error _ -> Error "Failed to process end exc time pattern string"
+          | Ok end_exc_pat ->
+            match Daypack_lib.Time_pattern.next_match_time_slot ~search_years_ahead:Config.time_pattern_search_years_ahead
+                    ~start:cur_time start_pat with
+            | None -> Error "Failed to find match for start pattern"
+            | Some (start, _) ->
+              match Daypack_lib.Time_pattern.next_match_time_slot ~search_years_ahead:Config.time_pattern_search_years_ahead ~start:cur_time end_exc_pat with
+              | None -> Error "Failed to find match for end exc pattern"
+              | Some (_, end_exc) -> Ok (start, end_exc)
+
+        )
+  with _ ->
+  match Daypack_lib.Time_pattern.Interpret_string.of_string s with
+  | Error msg -> Error msg
+  | Ok pat ->
+    match Daypack_lib.Time_pattern.next_match_time_slot ~search_years_ahead:Config.time_pattern_search_years_ahead ~start:cur_time pat with
+    | None -> Error "Failed to find match for pattern"
+    | Some x -> Ok x
+
 let ask_time ~(prompt : string) : int64 = ask ~prompt process_time_string
 
 let ask_time_slot ~(prompt : string) : int64 * int64 =
-  let start = ask_time ~prompt:(prompt ^ " (start)") in
-  let end_exc = ask_time ~prompt:(prompt ^ " (end exc)") in
-  (start, end_exc)
+  ask ~prompt:(prompt ^ " (single or pair of time pattern)") process_time_slot_string
 
 let ask_time_slots ~(prompt : string) : (int64 * int64) list =
   ask_multiple ~prompt:(prompt ^ " (format = start,end_exc) : ") (fun s ->
