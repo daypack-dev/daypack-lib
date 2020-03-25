@@ -8,11 +8,11 @@ let run (add_task : bool) : unit =
   | Ok context ->
     ( if add_task then
         let name =
-          Dialog.ask ~indent:0 ~prompt:"Enter task name" (fun s ->
+          Dialog.ask ~indent_level:0 ~prompt:"Enter task name" (fun s ->
               if s = "" then Error "Task name cannot be empty" else Ok s)
         in
         let task_type_choice =
-          Dialog.ask_pick_choice ~indent:0 ~prompt:"Pick task type"
+          Dialog.ask_pick_choice ~indent_level:0 ~prompt:"Pick task type"
             [ ("one-off", `One_off); ("recurring", `Recurring) ]
         in
         match task_type_choice with
@@ -35,7 +35,7 @@ let run (add_task : bool) : unit =
                 context.sched_ver_history
             in
             let task_inst_id, _task_inst_data = List.hd task_inst_list in
-            match Dialog.ask_sched_req_data_unit ~indent:0 ~task_inst_id () with
+            match Dialog.ask_sched_req_data_unit ~indent_level:0 ~task_inst_id () with
             | Error msg -> print_endline msg
             | Ok sched_req_data_unit ->
               let sched_req_data = [ sched_req_data_unit ] in

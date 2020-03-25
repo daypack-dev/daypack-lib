@@ -8,21 +8,21 @@ let loop_until_success (type a) (f : unit -> (a, string) result) : a =
   in
   aux ()
 
-let indent_str ~indent = String.make (indent * 2) ' '
+let indent_str ~indent_level = String.make (indent_level * 2) ' '
 
-let ask (type a) ?(skip_colon : bool = false) ~indent ~(prompt : string)
+let ask (type a) ?(skip_colon : bool = false) ~indent_level ~(prompt : string)
     (f : string -> (a, string) result) : a =
   loop_until_success (fun () ->
-      let indent_str = String.make (indent * 2) ' ' in
+      let indent_str = String.make (indent_level * 2) ' ' in
       if skip_colon then Printf.printf "%s%s " indent_str prompt
       else Printf.printf "%s%s : " indent_str prompt;
       let s = read_line () in
       f s)
 
-let ask_multiple (type a) ~indent ~(prompt : string)
+let ask_multiple (type a) ~indent_level ~(prompt : string)
     (f : string -> (a, string) result) : a list =
   let rec aux acc =
-    print_string (indent_str ~indent ^ "- ");
+    print_string (indent_str ~indent_level ^ "- ");
     match read_line () with
     | "" -> List.rev acc
     | s -> (
@@ -35,38 +35,38 @@ let ask_multiple (type a) ~indent ~(prompt : string)
   Printf.printf "%s (empty to end loop) :\n" prompt;
   aux []
 
-let ask_id (type a) ~indent ~(name : string) (f : string -> (a, unit) result) :
+let ask_id (type a) ~indent_level ~(name : string) (f : string -> (a, unit) result) :
   a =
-  ask ~indent ~prompt:("Please enter " ^ name) (fun s ->
+  ask ~indent_level ~prompt:("Please enter " ^ name) (fun s ->
       match f s with
       | Ok x -> Ok x
       | Error () -> Error (Printf.sprintf "Failed to parse %s string" name))
 
-let ask_ids (type a) ~indent ~(name : string) (f : string -> (a, unit) result) :
+let ask_ids (type a) ~indent_level ~(name : string) (f : string -> (a, unit) result) :
   a list =
-  ask_multiple ~indent ~prompt:("Please enter " ^ name) (fun s ->
+  ask_multiple ~indent_level ~prompt:("Please enter " ^ name) (fun s ->
       match f s with
       | Ok x -> Ok x
       | Error () -> Error (Printf.sprintf "Failed to parse %s string" name))
 
-let ask_task_id ~indent : Daypack_lib.Task_ds.task_id =
-  ask_id ~indent ~name:"task ID" Daypack_lib.Task_ds.string_to_task_id
+let ask_task_id ~indent_level : Daypack_lib.Task_ds.task_id =
+  ask_id ~indent_level ~name:"task ID" Daypack_lib.Task_ds.string_to_task_id
 
-let ask_task_inst_id ~indent : Daypack_lib.Task_ds.task_inst_id =
-  ask_id ~indent ~name:"task inst ID" Daypack_lib.Task_ds.string_to_task_inst_id
+let ask_task_inst_id ~indent_level : Daypack_lib.Task_ds.task_inst_id =
+  ask_id ~indent_level ~name:"task inst ID" Daypack_lib.Task_ds.string_to_task_inst_id
 
-let ask_task_inst_ids ~indent : Daypack_lib.Task_ds.task_inst_id list =
-  ask_ids ~indent ~name:"task inst IDs"
+let ask_task_inst_ids ~indent_level : Daypack_lib.Task_ds.task_inst_id list =
+  ask_ids ~indent_level ~name:"task inst IDs"
     Daypack_lib.Task_ds.string_to_task_inst_id
 
-let ask_task_seg_id ~indent : Daypack_lib.Task_ds.task_seg_id =
-  ask_id ~indent ~name:"task seg ID" Daypack_lib.Task_ds.string_to_task_seg_id
+let ask_task_seg_id ~indent_level : Daypack_lib.Task_ds.task_seg_id =
+  ask_id ~indent_level ~name:"task seg ID" Daypack_lib.Task_ds.string_to_task_seg_id
 
-let ask_pick_choice (type a) ~indent ~(prompt : string)
+let ask_pick_choice (type a) ~indent_level ~(prompt : string)
     (choices : (string * a) list) : a =
-  Printf.printf "%s%s :\n" (indent_str ~indent) prompt;
+  Printf.printf "%s%s :\n" (indent_str ~indent_level) prompt;
   List.iter (fun (s, _) -> Printf.printf "  %s\n" s) choices;
-  ask ~indent:(indent + 1)
+  ask ~indent_level:(indent_level + 1)
     ~prompt:
       "Please enter choice (case insensitive full/partial string of the choice)"
     (fun s ->
@@ -85,12 +85,12 @@ let ask_pick_choice (type a) ~indent ~(prompt : string)
        | [ (_k, v) ] -> Ok v
        | _ -> Error "Input is too ambiguous and matches multiple choices")
 
-let ask_int ~indent ~(prompt : string) : int =
-  ask ~indent ~prompt (fun s ->
+let ask_int ~indent_level ~(prompt : string) : int =
+  ask ~indent_level ~prompt (fun s ->
       try int_of_string s |> Result.ok with Failure msg -> Error msg)
 
-let ask_int64 ~indent ~(prompt : string) : int64 =
-  ask ~indent ~prompt (fun s ->
+let ask_int64 ~indent_level ~(prompt : string) : int64 =
+  ask ~indent_level ~prompt (fun s ->
       try Int64.of_string s |> Result.ok with Failure msg -> Error msg)
 
 let process_time_string (s : string) : (int64, string) result =
@@ -145,16 +145,16 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
           | None -> Error "Failed to find match for pattern"
           | Some x -> Ok x ) )
 
-let ask_time ~indent ~(prompt : string) : int64 =
-  ask ~indent ~prompt process_time_string
+let ask_time ~indent_level ~(prompt : string) : int64 =
+  ask ~indent_level ~prompt process_time_string
 
-let ask_time_slot ~indent ~(prompt : string) : int64 * int64 =
-  ask ~indent
+let ask_time_slot ~indent_level ~(prompt : string) : int64 * int64 =
+  ask ~indent_level
     ~prompt:(prompt ^ " (single or pair of time pattern)")
     process_time_slot_string
 
-let ask_time_slots ~indent ~(prompt : string) : (int64 * int64) list =
-  ask_multiple ~indent ~prompt:(prompt ^ " (format = start,end_exc) : ")
+let ask_time_slots ~indent_level ~(prompt : string) : (int64 * int64) list =
+  ask_multiple ~indent_level ~prompt:(prompt ^ " (format = start,end_exc) : ")
     (fun s ->
        try
          Scanf.sscanf s "%[^,],%[^,]" (fun start_string end_exc_string ->
@@ -175,24 +175,24 @@ let process_task_inst_alloc_req_string (s : string) :
         | Ok task_inst_id -> Ok (task_inst_id, task_seg_size))
   with _ -> Error "Failed to parse task inst alloc req"
 
-let ask_task_inst_alloc_req ~indent : Daypack_lib.Task_ds.task_seg_alloc_req =
-  ask ~indent
+let ask_task_inst_alloc_req ~indent_level : Daypack_lib.Task_ds.task_seg_alloc_req =
+  ask ~indent_level
     ~prompt:
       "Please enter task inst alloc req (format = task_inst_id,task_seg_size)"
     process_task_inst_alloc_req_string
 
-let ask_task_inst_alloc_reqs ~indent :
+let ask_task_inst_alloc_reqs ~indent_level :
   Daypack_lib.Task_ds.task_seg_alloc_req list =
-  ask_multiple ~indent
+  ask_multiple ~indent_level
     ~prompt:
       "Please enter task inst alloc reqs (format = task_inst_id,task_seg_size)"
     process_task_inst_alloc_req_string
 
-let ask_sched_req_data_unit ~indent
+let ask_sched_req_data_unit ~indent_level
     ?(task_inst_id : Daypack_lib.Task_ds.task_inst_id option) () :
   (Daypack_lib.Sched_req_ds.sched_req_data_unit, string) result =
   let sched_req_choice =
-    ask_pick_choice ~indent ~prompt:"Pick scheduling request type"
+    ask_pick_choice ~indent_level ~prompt:"Pick scheduling request type"
       [
         ("fixed", `Fixed);
         ("shift", `Shift);
@@ -205,17 +205,17 @@ let ask_sched_req_data_unit ~indent
   match sched_req_choice with
   | `Fixed ->
     let task_inst_id =
-      match task_inst_id with None -> ask_task_inst_id ~indent | Some x -> x
+      match task_inst_id with None -> ask_task_inst_id ~indent_level | Some x -> x
     in
-    let start = ask_time ~indent ~prompt:"Enter start time" in
-    let duration = ask_int64 ~indent ~prompt:"Enter duration (minutes)" in
+    let start = ask_time ~indent_level ~prompt:"Enter start time" in
+    let duration = ask_int64 ~indent_level ~prompt:"Enter duration (minutes)" in
     Ok
       (Daypack_lib.Sched_req_data_unit_skeleton.Fixed
          { task_seg_related_data = (task_inst_id, duration); start })
   | `Shift ->
-    let task_inst_alloc_reqs = ask_task_inst_alloc_reqs ~indent in
+    let task_inst_alloc_reqs = ask_task_inst_alloc_reqs ~indent_level in
     let time_slots =
-      ask_time_slots ~indent ~prompt:"Please enter usable time slots"
+      ask_time_slots ~indent_level ~prompt:"Please enter usable time slots"
     in
     Ok
       (Daypack_lib.Sched_req_data_unit_skeleton.Shift
