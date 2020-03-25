@@ -96,13 +96,29 @@ module Interpret_string = struct
             })
     with _ -> Error ()
 
+  let of_weekday_string (s : string) : (t, unit) result =
+    try
+      let weekday = Time.weekday_of_string s |> Result.get_ok in
+      Ok
+        {
+          years = [];
+          months = [];
+          days = `Weekdays [ weekday ];
+          hours = [ ];
+          minutes = [ ];
+        }
+    with _ -> Error ()
+
   let of_string (s : string) : (t, string) result =
     match of_date_string s with
     | Ok x -> Ok x
     | Error () -> (
         match of_weekday_time_string s with
         | Ok x -> Ok x
-        | Error () -> Error "Failed to interpret string as a time pattern" )
+        | Error () ->
+          match of_weekday_string s with
+          | Ok x -> Ok x
+          | Error () -> Error "Failed to interpret string as a time pattern" )
 end
 
 let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
