@@ -8,8 +8,7 @@ let loop_until_success (type a) (f : unit -> (a, string) result) : a =
   in
   aux ()
 
-let indent_str ~indent =
-  String.make (indent * 2) ' '
+let indent_str ~indent = String.make (indent * 2) ' '
 
 let ask (type a) ?(skip_colon : bool = false) ~indent ~(prompt : string)
     (f : string -> (a, string) result) : a =
@@ -20,8 +19,8 @@ let ask (type a) ?(skip_colon : bool = false) ~indent ~(prompt : string)
       let s = read_line () in
       f s)
 
-let ask_multiple (type a) ~indent ~(prompt : string) (f : string -> (a, string) result)
-  : a list =
+let ask_multiple (type a) ~indent ~(prompt : string)
+    (f : string -> (a, string) result) : a list =
   let rec aux acc =
     print_string (indent_str ~indent ^ "- ");
     match read_line () with
@@ -36,14 +35,15 @@ let ask_multiple (type a) ~indent ~(prompt : string) (f : string -> (a, string) 
   Printf.printf "%s (empty to end loop) :\n" prompt;
   aux []
 
-let ask_id (type a) ~indent ~(name : string) (f : string -> (a, unit) result) : a =
+let ask_id (type a) ~indent ~(name : string) (f : string -> (a, unit) result) :
+  a =
   ask ~indent ~prompt:("Please enter " ^ name) (fun s ->
       match f s with
       | Ok x -> Ok x
       | Error () -> Error (Printf.sprintf "Failed to parse %s string" name))
 
-let ask_ids (type a) ~indent ~(name : string) (f : string -> (a, unit) result) : a list
-  =
+let ask_ids (type a) ~indent ~(name : string) (f : string -> (a, unit) result) :
+  a list =
   ask_multiple ~indent ~prompt:("Please enter " ^ name) (fun s ->
       match f s with
       | Ok x -> Ok x
@@ -56,17 +56,17 @@ let ask_task_inst_id ~indent : Daypack_lib.Task_ds.task_inst_id =
   ask_id ~indent ~name:"task inst ID" Daypack_lib.Task_ds.string_to_task_inst_id
 
 let ask_task_inst_ids ~indent : Daypack_lib.Task_ds.task_inst_id list =
-  ask_ids ~indent ~name:"task inst IDs" Daypack_lib.Task_ds.string_to_task_inst_id
+  ask_ids ~indent ~name:"task inst IDs"
+    Daypack_lib.Task_ds.string_to_task_inst_id
 
 let ask_task_seg_id ~indent : Daypack_lib.Task_ds.task_seg_id =
   ask_id ~indent ~name:"task seg ID" Daypack_lib.Task_ds.string_to_task_seg_id
 
-let ask_pick_choice (type a) ~indent ~(prompt : string) (choices : (string * a) list) :
-  a =
+let ask_pick_choice (type a) ~indent ~(prompt : string)
+    (choices : (string * a) list) : a =
   Printf.printf "%s%s :\n" (indent_str ~indent) prompt;
   List.iter (fun (s, _) -> Printf.printf "  %s\n" s) choices;
-  ask
-    ~indent:(indent + 1)
+  ask ~indent:(indent + 1)
     ~prompt:
       "Please enter choice (case insensitive full/partial string of the choice)"
     (fun s ->
@@ -145,47 +145,50 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
           | None -> Error "Failed to find match for pattern"
           | Some x -> Ok x ) )
 
-let ask_time ~indent ~(prompt : string) : int64 = ask ~indent ~prompt process_time_string
+let ask_time ~indent ~(prompt : string) : int64 =
+  ask ~indent ~prompt process_time_string
 
 let ask_time_slot ~indent ~(prompt : string) : int64 * int64 =
-  ask
-    ~indent
+  ask ~indent
     ~prompt:(prompt ^ " (single or pair of time pattern)")
     process_time_slot_string
 
 let ask_time_slots ~indent ~(prompt : string) : (int64 * int64) list =
-  ask_multiple ~indent ~prompt:(prompt ^ " (format = start,end_exc) : ") (fun s ->
-      try
-        Scanf.sscanf s "%[^,],%[^,]" (fun start_string end_exc_string ->
-            match process_time_string start_string with
-            | Error msg -> Error msg
-            | Ok start -> (
-                match process_time_string end_exc_string with
-                | Error msg -> Error msg
-                | Ok end_exc -> Ok (start, end_exc) ))
-      with _ -> Error "Failed to parse time slot string")
+  ask_multiple ~indent ~prompt:(prompt ^ " (format = start,end_exc) : ")
+    (fun s ->
+       try
+         Scanf.sscanf s "%[^,],%[^,]" (fun start_string end_exc_string ->
+             match process_time_string start_string with
+             | Error msg -> Error msg
+             | Ok start -> (
+                 match process_time_string end_exc_string with
+                 | Error msg -> Error msg
+                 | Ok end_exc -> Ok (start, end_exc) ))
+       with _ -> Error "Failed to parse time slot string")
 
-let process_task_inst_alloc_req_string (s : string) : (Daypack_lib.Task_ds.task_seg_alloc_req, string) result =
+let process_task_inst_alloc_req_string (s : string) :
+  (Daypack_lib.Task_ds.task_seg_alloc_req, string) result =
   try
     Scanf.sscanf s "%[^,],%Ld" (fun maybe_task_inst_id task_seg_size ->
         match Daypack_lib.Task_ds.string_to_task_inst_id maybe_task_inst_id with
         | Error () -> Error "Failed to parse task inst id string"
-        | Ok task_inst_id ->
-          Ok (task_inst_id, task_seg_size)
-      )
-  with
-    _ -> Error "Failed to parse task inst alloc req"
+        | Ok task_inst_id -> Ok (task_inst_id, task_seg_size))
+  with _ -> Error "Failed to parse task inst alloc req"
 
 let ask_task_inst_alloc_req ~indent : Daypack_lib.Task_ds.task_seg_alloc_req =
-  ask ~indent ~prompt:"Please enter task inst alloc req (format = task_inst_id,task_seg_size)"
+  ask ~indent
+    ~prompt:
+      "Please enter task inst alloc req (format = task_inst_id,task_seg_size)"
     process_task_inst_alloc_req_string
 
-let ask_task_inst_alloc_reqs ~indent : Daypack_lib.Task_ds.task_seg_alloc_req list =
-  ask_multiple ~indent ~prompt:"Please enter task inst alloc reqs (format = task_inst_id,task_seg_size)"
+let ask_task_inst_alloc_reqs ~indent :
+  Daypack_lib.Task_ds.task_seg_alloc_req list =
+  ask_multiple ~indent
+    ~prompt:
+      "Please enter task inst alloc reqs (format = task_inst_id,task_seg_size)"
     process_task_inst_alloc_req_string
 
-let ask_sched_req_data_unit
-  ~indent
+let ask_sched_req_data_unit ~indent
     ?(task_inst_id : Daypack_lib.Task_ds.task_inst_id option) () :
   (Daypack_lib.Sched_req_ds.sched_req_data_unit, string) result =
   let sched_req_choice =
@@ -210,16 +213,16 @@ let ask_sched_req_data_unit
       (Daypack_lib.Sched_req_data_unit_skeleton.Fixed
          { task_seg_related_data = (task_inst_id, duration); start })
   | `Shift ->
-    let task_inst_alloc_reqs =
-      ask_task_inst_alloc_reqs ~indent
-    in
+    let task_inst_alloc_reqs = ask_task_inst_alloc_reqs ~indent in
     let time_slots =
       ask_time_slots ~indent ~prompt:"Please enter usable time slots"
     in
     Ok
       (Daypack_lib.Sched_req_data_unit_skeleton.Shift
-         { task_seg_related_data_list = task_inst_alloc_reqs;
+         {
+           task_seg_related_data_list = task_inst_alloc_reqs;
            time_slots;
-         incre = 1L })
+           incre = 1L;
+         })
   | `Split_and_shift | `Split_even | `Time_share | `Push_toward | _ ->
     failwith "Not implemented"
