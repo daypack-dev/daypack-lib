@@ -35,15 +35,15 @@ let ask_multiple (type a) ~indent_level ~(prompt : string)
   Printf.printf "%s (empty to end loop) :\n" prompt;
   aux []
 
-let ask_id (type a) ~indent_level ~(name : string) (f : string -> (a, unit) result) :
-  a =
+let ask_id (type a) ~indent_level ~(name : string)
+    (f : string -> (a, unit) result) : a =
   ask ~indent_level ~prompt:("Please enter " ^ name) (fun s ->
       match f s with
       | Ok x -> Ok x
       | Error () -> Error (Printf.sprintf "Failed to parse %s string" name))
 
-let ask_ids (type a) ~indent_level ~(name : string) (f : string -> (a, unit) result) :
-  a list =
+let ask_ids (type a) ~indent_level ~(name : string)
+    (f : string -> (a, unit) result) : a list =
   ask_multiple ~indent_level ~prompt:("Please enter " ^ name) (fun s ->
       match f s with
       | Ok x -> Ok x
@@ -53,14 +53,16 @@ let ask_task_id ~indent_level : Daypack_lib.Task_ds.task_id =
   ask_id ~indent_level ~name:"task ID" Daypack_lib.Task_ds.string_to_task_id
 
 let ask_task_inst_id ~indent_level : Daypack_lib.Task_ds.task_inst_id =
-  ask_id ~indent_level ~name:"task inst ID" Daypack_lib.Task_ds.string_to_task_inst_id
+  ask_id ~indent_level ~name:"task inst ID"
+    Daypack_lib.Task_ds.string_to_task_inst_id
 
 let ask_task_inst_ids ~indent_level : Daypack_lib.Task_ds.task_inst_id list =
   ask_ids ~indent_level ~name:"task inst IDs"
     Daypack_lib.Task_ds.string_to_task_inst_id
 
 let ask_task_seg_id ~indent_level : Daypack_lib.Task_ds.task_seg_id =
-  ask_id ~indent_level ~name:"task seg ID" Daypack_lib.Task_ds.string_to_task_seg_id
+  ask_id ~indent_level ~name:"task seg ID"
+    Daypack_lib.Task_ds.string_to_task_seg_id
 
 let ask_pick_choice (type a) ~indent_level ~(prompt : string)
     (choices : (string * a) list) : a =
@@ -175,7 +177,8 @@ let process_task_inst_alloc_req_string (s : string) :
         | Ok task_inst_id -> Ok (task_inst_id, task_seg_size))
   with _ -> Error "Failed to parse task inst alloc req"
 
-let ask_task_inst_alloc_req ~indent_level : Daypack_lib.Task_ds.task_seg_alloc_req =
+let ask_task_inst_alloc_req ~indent_level :
+  Daypack_lib.Task_ds.task_seg_alloc_req =
   ask ~indent_level
     ~prompt:
       "Please enter task inst alloc req (format = task_inst_id,task_seg_size)"
@@ -205,10 +208,14 @@ let ask_sched_req_data_unit ~indent_level
   match sched_req_choice with
   | `Fixed ->
     let task_inst_id =
-      match task_inst_id with None -> ask_task_inst_id ~indent_level | Some x -> x
+      match task_inst_id with
+      | None -> ask_task_inst_id ~indent_level
+      | Some x -> x
     in
     let start = ask_time ~indent_level ~prompt:"Enter start time" in
-    let duration = ask_int64 ~indent_level ~prompt:"Enter duration (minutes)" in
+    let duration =
+      ask_int64 ~indent_level ~prompt:"Enter duration (minutes)"
+    in
     Ok
       (Daypack_lib.Sched_req_data_unit_skeleton.Fixed
          { task_seg_related_data = (task_inst_id, duration); start })
