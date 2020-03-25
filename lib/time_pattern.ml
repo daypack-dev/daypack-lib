@@ -104,8 +104,8 @@ module Interpret_string = struct
           years = [];
           months = [];
           days = `Weekdays [ weekday ];
-          hours = [ ];
-          minutes = [ ];
+          hours = [];
+          minutes = [];
         }
     with _ -> Error ()
 
@@ -115,10 +115,11 @@ module Interpret_string = struct
     | Error () -> (
         match of_weekday_time_string s with
         | Ok x -> Ok x
-        | Error () ->
-          match of_weekday_string s with
-          | Ok x -> Ok x
-          | Error () -> Error "Failed to interpret string as a time pattern" )
+        | Error () -> (
+            match of_weekday_string s with
+            | Ok x -> Ok x
+            | Error () -> Error "Failed to interpret string as a time pattern" )
+      )
 end
 
 let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
