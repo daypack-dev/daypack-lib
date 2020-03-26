@@ -548,7 +548,7 @@ let progress_gen =
   map
     (fun chunks ->
        let open Daypack_lib.Task_ds in
-       { chunks = Daypack_lib.Int64_int64_set.Deserialize.unpack chunks })
+       { chunks = chunks |> List.map (fun (x, y) -> (Int64.to_float x, Int64.to_float y)) |> Daypack_lib.Int64_int64_set.Deserialize.unpack })
     tiny_sorted_time_slots_gen
 
 let progress = QCheck.make ~print:Print_utils.progress progress_gen
