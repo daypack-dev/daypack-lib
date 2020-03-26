@@ -115,53 +115,53 @@ let sched_req_partially_within_time_period ~start ~end_exc
 
 module Serialize = struct
   let rec pack_sched_req (id, data) : Sched_req_ds_t.sched_req =
-    (id, List.map pack_sched_req_data_unit data)
+    (Int64.to_float id, List.map pack_sched_req_data_unit data)
 
   and pack_sched_req_data_unit (sched_req_data_unit : sched_req_data_unit) :
     Sched_req_ds_t.sched_req_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:(fun x -> x)
-      ~pack_time:(fun x -> x)
-      ~pack_time_slot:(fun x -> x)
+      ~pack_data:Task_ds.Serialize.pack_task_seg_alloc_req
+      ~pack_time:Int64.to_float
+      ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
       sched_req_data_unit
 
   let rec pack_sched_req_record (id, data_list) :
     Sched_req_ds_t.sched_req_record =
-    (id, List.map pack_sched_req_record_data_unit data_list)
+    (Int64.to_float id, List.map pack_sched_req_record_data_unit data_list)
 
   and pack_sched_req_record_data_unit
       (sched_req_record_data : sched_req_record_data_unit) :
     Sched_req_ds_t.sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:(fun x -> x)
-      ~pack_time:(fun x -> x)
-      ~pack_time_slot:(fun x -> x)
+      ~pack_data:Task_ds.Serialize.pack_task_seg
+      ~pack_time:Int64.to_float
+      ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
       sched_req_record_data
 end
 
 module Deserialize = struct
   let rec unpack_sched_req (id, data) : sched_req =
-    (id, List.map unpack_sched_req_data_unit data)
+    (Int64.of_float id, List.map unpack_sched_req_data_unit data)
 
   and unpack_sched_req_data_unit
       (sched_req_data_unit : Sched_req_ds_t.sched_req_data_unit) :
     sched_req_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
-      ~unpack_data:(fun x -> x)
-      ~unpack_time:(fun x -> x)
-      ~unpack_time_slot:(fun x -> x)
+      ~unpack_data:Task_ds.Deserialize.unpack_task_seg_alloc_req
+      ~unpack_time:Int64.of_float
+      ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
       sched_req_data_unit
 
   let rec unpack_sched_req_record (id, data) : sched_req_record =
-    (id, List.map unpack_sched_req_record_data_unit data)
+    (Int64.of_float id, List.map unpack_sched_req_record_data_unit data)
 
   and unpack_sched_req_record_data_unit
       (sched_req_record_data_unit : Sched_req_ds_t.sched_req_record_data_unit) :
     sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
-      ~unpack_data:(fun x -> x)
-      ~unpack_time:(fun x -> x)
-      ~unpack_time_slot:(fun x -> x)
+      ~unpack_data:Task_ds.Deserialize.unpack_task_seg
+      ~unpack_time:Int64.of_float
+      ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
       sched_req_record_data_unit
 end
 

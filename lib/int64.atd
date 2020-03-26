@@ -1,1 +1,1 @@
-type int64 = int <ocaml repr="int64">
+type int64 = float

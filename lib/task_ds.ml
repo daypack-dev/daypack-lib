@@ -138,13 +138,26 @@ let sched_req_template_bound_on_start_and_end_exc
 module Serialize = struct
   let pack_arith_seq (arith_seq : arith_seq) : Task_ds_t.arith_seq =
     {
-      start = arith_seq.start;
-      end_exc = arith_seq.end_exc;
-      diff = arith_seq.diff;
+      start = Int64.to_float arith_seq.start;
+      end_exc = Option.map Int64.to_float arith_seq.end_exc;
+      diff = Int64.to_float arith_seq.diff;
     }
 
+  let pack_user_id = Int64.to_float
+
+  let pack_task_id (id1, id2) =
+    (Int64.to_float id1, Int64.to_float id2)
+
+  let pack_task_inst_id (id1, id2, id3) =
+    (Int64.to_float id1, Int64.to_float id2, Int64.to_float id3)
+
+  let pack_task_seg_id (id1, id2, id3, id4, id5) =
+    (Int64.to_float id1, Int64.to_float id2, Int64.to_float id3, Int64.to_float id4,
+     Option.map Int64.to_float id5
+    )
+
   let rec pack_task ((id, data) : task) : Task_ds_t.task =
-    (id, pack_task_data data)
+    (pack_task_id id, pack_task_data data)
 
   and pack_task_data (task_data : task_data) : Task_ds_t.task_data =
     {
@@ -170,7 +183,7 @@ module Serialize = struct
 
   and pack_recur (recur : recur) : Task_ds_t.recur =
     {
-      excluded_time_slots = recur.excluded_time_slots;
+      excluded_time_slots = Time_slot_ds.Serialize.pack_time_slots recur.excluded_time_slots;
       recur_type = pack_recur_type recur.recur_type;
     }
 
@@ -178,9 +191,9 @@ module Serialize = struct
       (sched_req_template_data_unit : sched_req_template_data_unit) :
     Task_ds_t.sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:(fun x -> x)
-      ~pack_time:(fun x -> x)
-      ~pack_time_slot:(fun x -> x)
+      ~pack_data:Int64.to_float
+      ~pack_time:Int64.to_float
+      ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
       sched_req_template_data_unit
 
   and pack_sched_req_template (sched_req_template : sched_req_template) :
@@ -194,7 +207,7 @@ module Serialize = struct
     }
 
   and pack_task_inst ((id, data) : task_inst) : Task_ds_t.task_inst =
-    (id, pack_task_inst_data data)
+    (pack_task_inst_id id, pack_task_inst_data data)
 
   and pack_task_inst_data (task_inst_data : task_inst_data) :
     Task_ds_t.task_inst_data =
@@ -204,12 +217,12 @@ module Serialize = struct
     Task_ds_t.task_inst_type =
     match task_inst_type with
     | Reminder -> `Reminder
-    | Reminder_quota_counting { quota } -> `Reminder_quota_counting quota
+    | Reminder_quota_counting { quota } -> `Reminder_quota_counting (Int64.to_float quota)
     | Passing -> `Passing
 
-  and pack_task_seg x = x
+  and pack_task_seg (id, size) = (pack_task_seg_id id, Int64.to_float size)
 
-  and pack_task_seg_alloc_req x = x
+  and pack_task_seg_alloc_req (id, size) = (pack_task_inst_id id, Int64.to_float size)
 
   and pack_task_seg_size x = x
 
@@ -222,13 +235,26 @@ end
 module Deserialize = struct
   let unpack_arith_seq (arith_seq : Task_ds_t.arith_seq) : arith_seq =
     {
-      start = arith_seq.start;
-      end_exc = arith_seq.end_exc;
-      diff = arith_seq.diff;
+      start = Int64.of_float arith_seq.start;
+      end_exc = Option.map Int64.of_float arith_seq.end_exc;
+      diff = Int64.of_float arith_seq.diff;
     }
 
+  let unpack_user_id = Int64.to_float
+
+  let unpack_task_id (id1, id2) =
+    (Int64.of_float id1, Int64.of_float id2)
+
+  let unpack_task_inst_id (id1, id2, id3) =
+    (Int64.of_float id1, Int64.of_float id2, Int64.of_float id3)
+
+  let unpack_task_seg_id (id1, id2, id3, id4, id5) =
+    (Int64.of_float id1, Int64.of_float id2, Int64.of_float id3, Int64.of_float id4,
+     Option.map Int64.of_float id5
+    )
+
   let rec unpack_task ((id, data) : Task_ds_t.task) : task =
-    (id, unpack_task_data data)
+    (unpack_task_id id, unpack_task_data data)
 
   and unpack_task_data (task_data : Task_ds_t.task_data) : task_data =
     {
@@ -254,7 +280,7 @@ module Deserialize = struct
 
   and unpack_recur (recur : Task_ds_t.recur) : recur =
     {
-      excluded_time_slots = recur.excluded_time_slots;
+      excluded_time_slots = Time_slot_ds.Deserialize.unpack_time_slots recur.excluded_time_slots;
       recur_type = unpack_recur_type recur.recur_type;
     }
 
@@ -262,9 +288,9 @@ module Deserialize = struct
       (sched_req_template_data_unit : Task_ds_t.sched_req_template_data_unit) :
     sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
-      ~unpack_data:(fun x -> x)
-      ~unpack_time:(fun x -> x)
-      ~unpack_time_slot:(fun x -> x)
+      ~unpack_data:Int64.of_float
+      ~unpack_time:Int64.of_float
+      ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
       sched_req_template_data_unit
 
   and unpack_sched_req_template
@@ -279,7 +305,7 @@ module Deserialize = struct
     }
 
   and unpack_task_inst ((id, data) : Task_ds_t.task_inst) : task_inst =
-    (id, unpack_task_inst_data data)
+    (unpack_task_inst_id id, unpack_task_inst_data data)
 
   and unpack_task_inst_data (task_inst_data : Task_ds_t.task_inst_data) :
     task_inst_data =
@@ -289,12 +315,12 @@ module Deserialize = struct
     task_inst_type =
     match task_inst_type with
     | `Reminder -> Reminder
-    | `Reminder_quota_counting quota -> Reminder_quota_counting { quota }
+    | `Reminder_quota_counting quota -> Reminder_quota_counting { quota = Int64.of_float quota }
     | `Passing -> Passing
 
-  and unpack_task_seg x = x
+  and unpack_task_seg (id, size) = (unpack_task_seg_id id, Int64.of_float size)
 
-  and unpack_task_seg_alloc_req x = x
+  and unpack_task_seg_alloc_req (id, size) = (unpack_task_inst_id id, Int64.of_float size)
 
   and unpack_task_seg_size x = x
 

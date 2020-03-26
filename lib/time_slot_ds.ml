@@ -300,3 +300,19 @@ let a_is_subset_of_b ~(a : t Seq.t) ~(b : t Seq.t) : bool =
 
 let to_string ((start, end_exc) : t) : string =
   Printf.sprintf "[%Ld, %Ld)" start end_exc
+
+module Serialize = struct
+  let pack_time_slot (start, end_exc) =
+    (Int64.to_float start, Int64.to_float end_exc)
+
+  let pack_time_slots time_slots =
+    List.map pack_time_slot time_slots
+end
+
+module Deserialize = struct
+  let unpack_time_slot (start, end_exc) =
+    (Int64.of_float start, Int64.of_float end_exc)
+
+  let unpack_time_slots time_slots =
+    List.map unpack_time_slot time_slots
+end
