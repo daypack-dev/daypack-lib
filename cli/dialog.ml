@@ -89,15 +89,8 @@ let ask_pick_choice (type a) ~indent_level ~(prompt : string)
     ~prompt:
       "Please enter choice (case insensitive full/partial string of the choice)"
     (fun s ->
-       let regexp = Str.regexp_case_fold s in
        let matching_choices =
-         List.filter
-           (fun (k, _v) ->
-              try
-                Str.search_forward regexp k 0 |> ignore;
-                true
-              with Not_found -> false)
-           choices
+         Daypack_lib.Misc_utils.prefix_string_match choices s
        in
        match matching_choices with
        | [] -> Error "Input does not match any choice"
