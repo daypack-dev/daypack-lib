@@ -26,15 +26,10 @@ let ask (type a) ?(skip_colon : bool = false) ~indent_level ~(prompt : string)
 
 let ask_yn ~indent_level ~prompt : yn =
   ask ~indent_level ~prompt:(prompt ^ " (yes/no)") (fun s ->
-      let regexp = Str.regexp_case_fold s in
       let matching_choices =
-        List.filter
-          (fun (k, _v) ->
-             try
-               Str.search_forward regexp k 0 |> ignore;
-               true
-             with Not_found -> false)
+        Daypack_lib.Misc_utils.prefix_string_match
           [ ("yes", `Yes); ("no", `No) ]
+          s
       in
       match matching_choices with
       | [] -> Error "Input doesn't match yes or no"
@@ -90,7 +85,7 @@ let ask_pick_choice (type a) ~indent_level ~(prompt : string)
     (choices : (string * a) list) : a =
   Printf.printf "%s%s :\n" (indent_str ~indent_level) prompt;
   List.iter (fun (s, _) -> Printf.printf "  %s\n" s) choices;
-  ask ~indent_level:(indent_level + 1)
+  ask ~indent_level
     ~prompt:
       "Please enter choice (case insensitive full/partial string of the choice)"
     (fun s ->
