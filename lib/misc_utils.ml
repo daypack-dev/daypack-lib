@@ -11,4 +11,4 @@ let int64_to_int32_int32 (x : int64) : int32 * int32 =
 let int32_int32_to_int64 ((x, y) : int32 * int32) : int64 =
   let left = Int64.shift_left (Int64.of_int32 x) 32 in
   let right = Int64.of_int32 y in
-  Int64.add left right
+  Int64.logor left right
