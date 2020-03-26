@@ -105,6 +105,10 @@ let ask_int64 ~indent_level ~(prompt : string) : int64 =
   ask ~indent_level ~prompt (fun s ->
       try Int64.of_string s |> Result.ok with Failure msg -> Error msg)
 
+let ask_int64_multi ~indent_level ~(prompt : string) : int64 list =
+  ask_multiple ~indent_level ~prompt (fun s ->
+      try Int64.of_string s |> Result.ok with Failure msg -> Error msg)
+
 let process_time_string (s : string) : (int64, string) result =
   match Daypack_lib.Time_pattern.Interpret_string.of_string s with
   | Error msg -> Error msg
@@ -166,7 +170,7 @@ let ask_time_slot ~indent_level ~(prompt : string) : int64 * int64 =
     process_time_slot_string
 
 let ask_time_slots ~indent_level ~(prompt : string) : (int64 * int64) list =
-  ask_multiple ~indent_level ~prompt:(prompt ^ " (format = start,end_exc) : ")
+  ask_multiple ~indent_level ~prompt:(prompt ^ " (format = start,end_exc)")
     (fun s ->
        try
          Scanf.sscanf s "%[^,],%[^,]" (fun start_string end_exc_string ->
@@ -187,19 +191,35 @@ let process_task_inst_alloc_req_string (s : string) :
         | Ok task_inst_id -> Ok (task_inst_id, task_seg_size))
   with _ -> Error "Failed to parse task inst alloc req"
 
-let ask_task_inst_alloc_req ~indent_level :
+let ask_task_inst_alloc_req ~indent_level ~task_inst_id :
   Daypack_lib.Task_ds.task_seg_alloc_req =
+  match task_inst_id with
+  | None ->
   ask ~indent_level
     ~prompt:
       "Please enter task inst alloc req (format = task_inst_id,task_seg_size)"
     process_task_inst_alloc_req_string
+  | Some task_inst_id ->
+    let task_seg_size =
+      ask_int64 ~indent_level ~prompt:"Please enter task seg size to allocate"
+    in
+    (task_inst_id, task_seg_size)
 
-let ask_task_inst_alloc_reqs ~indent_level :
+let ask_task_inst_alloc_reqs ~indent_level ~task_inst_id :
   Daypack_lib.Task_ds.task_seg_alloc_req list =
-  ask_multiple ~indent_level
-    ~prompt:
-      "Please enter task inst alloc reqs (format = task_inst_id,task_seg_size)"
-    process_task_inst_alloc_req_string
+  match task_inst_id with
+  | None ->
+    ask_multiple ~indent_level
+      ~prompt:
+        "Please enter task inst alloc reqs (format = task_inst_id,task_seg_size)"
+      process_task_inst_alloc_req_string
+  | Some task_inst_id ->
+    ask_int64_multi ~indent_level
+      ~prompt:
+        "Please enter task seg sizes to allocate"
+    |> List.map (fun task_seg_size ->
+        (task_inst_id, task_seg_size)
+      )
 
 let ask_sched_req_data_unit ~indent_level
     ?(task_inst_id : Daypack_lib.Task_ds.task_inst_id option) () :
@@ -230,7 +250,7 @@ let ask_sched_req_data_unit ~indent_level
       (Daypack_lib.Sched_req_data_unit_skeleton.Fixed
          { task_seg_related_data = (task_inst_id, duration); start })
   | `Shift ->
-    let task_inst_alloc_reqs = ask_task_inst_alloc_reqs ~indent_level in
+    let task_inst_alloc_reqs = ask_task_inst_alloc_reqs ~indent_level ~task_inst_id in
     let time_slots =
       ask_time_slots ~indent_level ~prompt:"Please enter usable time slots"
     in
