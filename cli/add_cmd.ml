@@ -36,17 +36,25 @@ let run (add_task : bool) : unit =
             in
             let task_inst_id, _task_inst_data = List.hd task_inst_list in
             match
-              Dialog.ask_sched_req_data_unit ~indent_level:0 ~task_inst_id ()
+              Dialog.ask_yn ~indent_level:0 ~prompt:"Lodge scheduling request?"
             with
-            | Error msg -> print_endline msg
-            | Ok sched_req_data_unit ->
-              let sched_req_data = [ sched_req_data_unit ] in
-              let _sched_req =
-                Daypack_lib.Sched_ver_history.In_place_head.Sched_req.Enqueue
-                .enqueue_sched_req sched_req_data context.sched_ver_history
-              in
-              Printf.printf "Allocated task under ID : %s\n"
-                (Daypack_lib.Task_ds.task_id_to_string task_id) )
+            | `Yes -> (
+                match
+                  Dialog.ask_sched_req_data_unit ~indent_level:0 ~task_inst_id
+                    ()
+                with
+                | Error msg -> print_endline msg
+                | Ok sched_req_data_unit ->
+                  let sched_req_data = [ sched_req_data_unit ] in
+                  let _sched_req =
+                    Daypack_lib.Sched_ver_history.In_place_head.Sched_req
+                    .Enqueue
+                    .enqueue_sched_req sched_req_data
+                      context.sched_ver_history
+                  in
+                  Printf.printf "Allocated task under ID : %s\n"
+                    (Daypack_lib.Task_ds.task_id_to_string task_id) )
+            | `No -> () )
         | `Recurring -> () );
     Context.save context |> Result.get_ok;
     ()

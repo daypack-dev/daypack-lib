@@ -1,3 +1,8 @@
+type yn =
+  [ `Yes
+  | `No
+  ]
+
 let loop_until_success (type a) (f : unit -> (a, string) result) : a =
   let rec aux () =
     match f () with
@@ -18,6 +23,23 @@ let ask (type a) ?(skip_colon : bool = false) ~indent_level ~(prompt : string)
       else Printf.printf "%s%s : " indent_str prompt;
       let s = read_line () in
       f s)
+
+let ask_yn ~indent_level ~prompt : yn =
+  ask ~indent_level ~prompt:(prompt ^ " (yes/no)") (fun s ->
+      let regexp = Str.regexp_case_fold s in
+      let matching_choices =
+        List.filter
+          (fun (k, _v) ->
+             try
+               Str.search_forward regexp k 0 |> ignore;
+               true
+             with Not_found -> false)
+          [ ("yes", `Yes); ("no", `No) ]
+      in
+      match matching_choices with
+      | [] -> Error "Input doesn't match yes or no"
+      | [ (_k, v) ] -> Ok v
+      | _ -> Error "Input is too ambiguous")
 
 let ask_multiple (type a) ~indent_level ~(prompt : string)
     (f : string -> (a, string) result) : a list =
