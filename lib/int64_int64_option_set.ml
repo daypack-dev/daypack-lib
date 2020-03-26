@@ -5,17 +5,21 @@ include Set.Make (struct
   end)
 
 module Serialize = struct
-  let pack (set : t) : (float * float option) list =
+  let pack (set : t) : ((int32 * int32) * (int32 * int32) option) list =
     set
     |> to_seq
-    |> Seq.map (fun (x, y) -> (Int64.to_float x, Option.map Int64.to_float y))
+    |> Seq.map (fun (x, y) ->
+        ( Misc_utils.int64_to_int32_int32 x,
+          Option.map Misc_utils.int64_to_int32_int32 y ))
     |> List.of_seq
 end
 
 module Deserialize = struct
-  let unpack (l : (float * float option) list) : t =
+  let unpack (l : ((int32 * int32) * (int32 * int32) option) list) : t =
     l
     |> List.to_seq
-    |> Seq.map (fun (x, y) -> (Int64.of_float x, Option.map Int64.of_float y))
+    |> Seq.map (fun (x, y) ->
+        ( Misc_utils.int32_int32_to_int64 x,
+          Option.map Misc_utils.int32_int32_to_int64 y ))
     |> of_seq
 end

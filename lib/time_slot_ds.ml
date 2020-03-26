@@ -303,14 +303,16 @@ let to_string ((start, end_exc) : t) : string =
 
 module Serialize = struct
   let pack_time_slot (start, end_exc) =
-    (Int64.to_float start, Int64.to_float end_exc)
+    ( Misc_utils.int64_to_int32_int32 start,
+      Misc_utils.int64_to_int32_int32 end_exc )
 
   let pack_time_slots time_slots = List.map pack_time_slot time_slots
 end
 
 module Deserialize = struct
   let unpack_time_slot (start, end_exc) =
-    (Int64.of_float start, Int64.of_float end_exc)
+    ( Misc_utils.int32_int32_to_int64 start,
+      Misc_utils.int32_int32_to_int64 end_exc )
 
   let unpack_time_slots time_slots = List.map unpack_time_slot time_slots
 end
