@@ -31,3 +31,4 @@ module Time_pattern = Time_pattern
 module Time_profile = Time_profile
 module Time_profile_store = Time_profile_store
 module String_map = String_map
+module Misc_utils = Misc_utils
