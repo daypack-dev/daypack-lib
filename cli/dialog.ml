@@ -195,10 +195,11 @@ let ask_task_inst_alloc_req ~indent_level ~task_inst_id :
   Daypack_lib.Task_ds.task_seg_alloc_req =
   match task_inst_id with
   | None ->
-  ask ~indent_level
-    ~prompt:
-      "Please enter task inst alloc req (format = task_inst_id,task_seg_size)"
-    process_task_inst_alloc_req_string
+    ask ~indent_level
+      ~prompt:
+        "Please enter task inst alloc req (format = \
+         task_inst_id,task_seg_size)"
+      process_task_inst_alloc_req_string
   | Some task_inst_id ->
     let task_seg_size =
       ask_int64 ~indent_level ~prompt:"Please enter task seg size to allocate"
@@ -211,15 +212,13 @@ let ask_task_inst_alloc_reqs ~indent_level ~task_inst_id :
   | None ->
     ask_multiple ~indent_level
       ~prompt:
-        "Please enter task inst alloc reqs (format = task_inst_id,task_seg_size)"
+        "Please enter task inst alloc reqs (format = \
+         task_inst_id,task_seg_size)"
       process_task_inst_alloc_req_string
   | Some task_inst_id ->
     ask_int64_multi ~indent_level
-      ~prompt:
-        "Please enter task seg sizes to allocate"
-    |> List.map (fun task_seg_size ->
-        (task_inst_id, task_seg_size)
-      )
+      ~prompt:"Please enter task seg sizes to allocate"
+    |> List.map (fun task_seg_size -> (task_inst_id, task_seg_size))
 
 let ask_sched_req_data_unit ~indent_level
     ?(task_inst_id : Daypack_lib.Task_ds.task_inst_id option) () :
@@ -250,7 +249,9 @@ let ask_sched_req_data_unit ~indent_level
       (Daypack_lib.Sched_req_data_unit_skeleton.Fixed
          { task_seg_related_data = (task_inst_id, duration); start })
   | `Shift ->
-    let task_inst_alloc_reqs = ask_task_inst_alloc_reqs ~indent_level ~task_inst_id in
+    let task_inst_alloc_reqs =
+      ask_task_inst_alloc_reqs ~indent_level ~task_inst_id
+    in
     let time_slots =
       ask_time_slots ~indent_level ~prompt:"Please enter usable time slots"
     in

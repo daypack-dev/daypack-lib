@@ -3039,8 +3039,10 @@ module Serialize = struct
 
   let pack_quota (x : int64 Task_inst_id_map.t) :
     (Task_ds_t.task_inst_id * float) list =
-    x |> Task_inst_id_map.to_seq
-    |> Seq.map (fun (id, quota) -> (Task_ds.Serialize.pack_task_inst_id id, Int64.to_float quota))
+    x
+    |> Task_inst_id_map.to_seq
+    |> Seq.map (fun (id, quota) ->
+        (Task_ds.Serialize.pack_task_inst_id id, Int64.to_float quota))
     |> List.of_seq
 
   let pack_quota_diff (x : int64 Task_inst_id_map_utils.diff) :

@@ -122,8 +122,7 @@ module Serialize = struct
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:Task_ds.Serialize.pack_task_seg_alloc_req
       ~pack_time:Int64.to_float
-      ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
-      sched_req_data_unit
+      ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot sched_req_data_unit
 
   let rec pack_sched_req_record (id, data_list) :
     Sched_req_ds_t.sched_req_record =
@@ -133,8 +132,7 @@ module Serialize = struct
       (sched_req_record_data : sched_req_record_data_unit) :
     Sched_req_ds_t.sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:Task_ds.Serialize.pack_task_seg
-      ~pack_time:Int64.to_float
+      ~pack_data:Task_ds.Serialize.pack_task_seg ~pack_time:Int64.to_float
       ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
       sched_req_record_data
 end

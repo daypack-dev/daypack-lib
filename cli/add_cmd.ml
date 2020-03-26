@@ -36,7 +36,8 @@ let run (add_task : bool) : unit =
             in
             let task_inst_id, _task_inst_data = List.hd task_inst_list in
             match
-              Dialog.ask_yn ~indent_level:0 ~prompt:"Lodge scheduling request for above task?"
+              Dialog.ask_yn ~indent_level:0
+                ~prompt:"Lodge scheduling request for above task?"
             with
             | `Yes -> (
                 match

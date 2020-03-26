@@ -41,7 +41,7 @@ module Serialize : sig
   val pack_time_slot : int64 * int64 -> float * float
 
   val pack_time_slots : (int64 * int64) list -> (float * float) list
-  end
+end
 
 module Deserialize : sig
   val unpack_time_slot : float * float -> int64 * int64
