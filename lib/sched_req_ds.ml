@@ -154,7 +154,8 @@ module Deserialize = struct
       sched_req_data_unit
 
   let rec unpack_sched_req_record (id, data) : sched_req_record =
-    (Misc_utils.int32_int32_to_int64 id, List.map unpack_sched_req_record_data_unit data)
+    ( Misc_utils.int32_int32_to_int64 id,
+      List.map unpack_sched_req_record_data_unit data )
 
   and unpack_sched_req_record_data_unit
       (sched_req_record_data_unit : Sched_req_ds_t.sched_req_record_data_unit) :
