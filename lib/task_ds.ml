@@ -243,7 +243,7 @@ module Deserialize = struct
       diff = Int64.of_float arith_seq.diff;
     }
 
-  let unpack_user_id = Int64.to_float
+  let unpack_user_id = Int64.of_float
 
   let unpack_task_id (id1, id2) = (Int64.of_float id1, Int64.of_float id2)
 

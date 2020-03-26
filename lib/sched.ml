@@ -3046,7 +3046,7 @@ module Serialize = struct
     |> List.of_seq
 
   let pack_quota_diff (x : int64 Task_inst_id_map_utils.diff) :
-    (Task_ds_t.task_inst_id, int64) Map_utils_t.diff =
+    (Task_ds_t.task_inst_id, float) Map_utils_t.diff =
     { added = pack_quota x.added; removed = pack_quota x.removed }
 
   let pack_task_seg_id_to_progress (x : Task_ds.progress Task_seg_id_map.t) :
@@ -3054,7 +3054,8 @@ module Serialize = struct
     x
     |> Task_seg_id_map.to_seq
     |> Seq.map (fun (id, progress) ->
-        (id, Task_ds.Serialize.pack_progress progress))
+        ( Task_ds.Serialize.pack_task_seg_id id,
+          Task_ds.Serialize.pack_progress progress ))
     |> List.of_seq
 
   let pack_task_seg_id_to_progress_diff
@@ -3070,7 +3071,8 @@ module Serialize = struct
     x
     |> Task_inst_id_map.to_seq
     |> Seq.map (fun (id, progress) ->
-        (id, Task_ds.Serialize.pack_progress progress))
+        ( Task_ds.Serialize.pack_task_inst_id id,
+          Task_ds.Serialize.pack_progress progress ))
     |> List.of_seq
 
   let pack_task_inst_id_to_progress_diff
@@ -3082,12 +3084,17 @@ module Serialize = struct
     }
 
   let pack_indexed_by_task_seg_id (x : (int64 * int64) Task_seg_id_map.t) :
-    (Task_ds_t.task_seg_id * (int64 * int64)) list =
-    x |> Task_seg_id_map.to_seq |> Seq.map (fun x -> x) |> List.of_seq
+    (Task_ds_t.task_seg_id * (float * float)) list =
+    x
+    |> Task_seg_id_map.to_seq
+    |> Seq.map (fun (id, (start, end_exc)) ->
+        ( Task_ds.Serialize.pack_task_seg_id id,
+          (Int64.to_float start, Int64.to_float end_exc) ))
+    |> List.of_seq
 
   let pack_indexed_by_task_seg_id_diff
       (x : (int64 * int64) Task_seg_id_map_utils.diff) :
-    (Task_ds_t.task_seg_id, int64 * int64) Map_utils_t.diff =
+    (Task_ds_t.task_seg_id, float * float) Map_utils_t.diff =
     {
       added = pack_indexed_by_task_seg_id x.added;
       removed = pack_indexed_by_task_seg_id x.removed;
@@ -3101,30 +3108,32 @@ module Serialize = struct
   *)
 
   let pack_user_id_to_task_ids (x : Int64_set.t User_id_map.t) :
-    (Task_ds_t.user_id * int64 list) list =
+    (Task_ds_t.user_id * float list) list =
     x
     |> User_id_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        (Task_ds.Serialize.pack_user_id id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_user_id_to_task_ids_diff
       (x : User_id_map_utils.Int64_bucketed.diff_bucketed) :
-    (Task_ds_t.user_id, int64) Map_utils_t.diff_bucketed =
+    (Task_ds_t.user_id, float) Map_utils_t.diff_bucketed =
     {
       added = pack_user_id_to_task_ids x.added;
       removed = pack_user_id_to_task_ids x.removed;
     }
 
   let pack_task_id_to_task_inst_ids (x : Int64_set.t Task_id_map.t) :
-    (Task_ds_t.task_id * int64 list) list =
+    (Task_ds_t.task_id * float list) list =
     x
     |> Task_id_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        (Task_ds.Serialize.pack_task_id id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_task_id_to_task_inst_ids_diff
       (x : Task_id_map_utils.Int64_bucketed.diff_bucketed) :
-    (Task_ds_t.task_id, int64) Map_utils_t.diff_bucketed =
+    (Task_ds_t.task_id, float) Map_utils_t.diff_bucketed =
     {
       added = pack_task_id_to_task_inst_ids x.added;
       removed = pack_task_id_to_task_inst_ids x.removed;
@@ -3132,43 +3141,47 @@ module Serialize = struct
 
   let pack_task_inst_id_to_task_seg_ids
       (x : Int64_int64_option_set.t Task_inst_id_map.t) :
-    (Task_ds_t.task_inst_id * (int64 * int64 option) list) list =
+    (Task_ds_t.task_inst_id * (float * float option) list) list =
     x
     |> Task_inst_id_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_int64_option_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        ( Task_ds.Serialize.pack_task_inst_id id,
+          Int64_int64_option_set.Serialize.pack y ))
     |> List.of_seq
 
   let pack_task_inst_id_to_task_seg_ids_diff
       (x : Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed) :
-    (Task_ds_t.task_inst_id, int64 * int64 option) Map_utils_t.diff_bucketed =
+    (Task_ds_t.task_inst_id, float * float option) Map_utils_t.diff_bucketed =
     {
       added = pack_task_inst_id_to_task_seg_ids x.added;
       removed = pack_task_inst_id_to_task_seg_ids x.removed;
     }
 
   let pack_indexed_by_start (x : task_seg_place_map) :
-    (int64 * Task_ds_t.task_seg_id list) list =
+    (float * Task_ds_t.task_seg_id list) list =
     x
     |> Int64_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        (Int64.to_float id, Task_seg_id_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_indexed_by_start_diff (x : task_seg_place_map_diff) :
-    (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
+    (float, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
     {
       added = pack_indexed_by_start x.added;
       removed = pack_indexed_by_start x.removed;
     }
 
   let pack_indexed_by_end_exc (x : task_seg_place_map) :
-    (int64 * Task_ds_t.task_seg_id list) list =
+    (float * Task_ds_t.task_seg_id list) list =
     x
     |> Int64_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        (Int64.to_float id, Task_seg_id_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_indexed_by_end_exc_diff (x : task_seg_place_map_diff) :
-    (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
+    (float, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
     {
       added = pack_indexed_by_end_exc x.added;
       removed = pack_indexed_by_end_exc x.removed;
@@ -3181,11 +3194,11 @@ module Serialize = struct
     Set_store.print_pack_related_functions ()
   *)
 
-  let pack_sched_req_ids (x : Int64_set.t) : int64 list =
-    x |> Int64_set.to_seq |> List.of_seq
+  let pack_sched_req_ids (x : Int64_set.t) : float list =
+    x |> Int64_set.to_seq |> Seq.map Int64.to_float |> List.of_seq
 
   let pack_sched_req_ids_diff (x : Int64_set_utils.diff) :
-    int64 Set_utils_t.diff =
+    float Set_utils_t.diff =
     {
       added = pack_sched_req_ids x.added;
       removed = pack_sched_req_ids x.removed;
@@ -3516,11 +3529,15 @@ module Deserialize = struct
       removed = unpack_sched_req_record_list x.removed;
     }
 
-  let unpack_quota (x : (Task_ds.task_inst_id * int64) list) :
+  let unpack_quota (x : (Task_ds_t.task_inst_id * float) list) :
     int64 Task_inst_id_map.t =
-    x |> List.to_seq |> Task_inst_id_map.of_seq
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, quota) ->
+        (Task_ds.Deserialize.unpack_task_inst_id id, Int64.of_float quota))
+    |> Task_inst_id_map.of_seq
 
-  let unpack_quota_diff (x : (Task_ds_t.task_inst_id, int64) Map_utils_t.diff) :
+  let unpack_quota_diff (x : (Task_ds_t.task_inst_id, float) Map_utils_t.diff) :
     int64 Task_inst_id_map_utils.diff =
     { added = unpack_quota x.added; removed = unpack_quota x.removed }
 
@@ -3530,7 +3547,8 @@ module Deserialize = struct
     x
     |> List.to_seq
     |> Seq.map (fun (id, progress) ->
-        (id, Task_ds.Deserialize.unpack_progress progress))
+        ( Task_ds.Deserialize.unpack_task_seg_id id,
+          Task_ds.Deserialize.unpack_progress progress ))
     |> Task_seg_id_map.of_seq
 
   let unpack_task_seg_id_to_progress_diff
@@ -3547,7 +3565,8 @@ module Deserialize = struct
     x
     |> List.to_seq
     |> Seq.map (fun (id, progress) ->
-        (id, Task_ds.Deserialize.unpack_progress progress))
+        ( Task_ds.Deserialize.unpack_task_inst_id id,
+          Task_ds.Deserialize.unpack_progress progress ))
     |> Task_inst_id_map.of_seq
 
   let unpack_task_inst_id_to_progress_diff
@@ -3559,12 +3578,17 @@ module Deserialize = struct
     }
 
   let unpack_indexed_by_task_seg_id
-      (x : (Task_ds_t.task_seg_id * (int64 * int64)) list) :
+      (x : (Task_ds_t.task_seg_id * (float * float)) list) :
     (int64 * int64) Task_seg_id_map.t =
-    x |> List.to_seq |> Seq.map (fun x -> x) |> Task_seg_id_map.of_seq
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, (start, end_exc)) ->
+        ( Task_ds.Deserialize.unpack_task_seg_id id,
+          (Int64.of_float start, Int64.of_float end_exc) ))
+    |> Task_seg_id_map.of_seq
 
   let unpack_indexed_by_task_seg_id_diff
-      (x : (Task_ds_t.task_seg_id, int64 * int64) Map_utils_t.diff) :
+      (x : (Task_ds_t.task_seg_id, float * float) Map_utils_t.diff) :
     (int64 * int64) Task_seg_id_map_utils.diff =
     {
       added = unpack_indexed_by_task_seg_id x.added;
@@ -3578,15 +3602,17 @@ module Deserialize = struct
     Bucket_store.print_unpack_related_functions ()
   *)
 
-  let unpack_user_id_to_task_ids (x : (Task_ds_t.user_id * int64 list) list) :
+  let unpack_user_id_to_task_ids (x : (Task_ds_t.user_id * float list) list) :
     Int64_set.t User_id_map.t =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        ( Task_ds.Deserialize.unpack_user_id id,
+          Int64_set.Deserialize.unpack y ))
     |> User_id_map.of_seq
 
   let unpack_user_id_to_task_ids_diff
-      (x : (Task_ds_t.user_id, int64) Map_utils_t.diff_bucketed) :
+      (x : (Task_ds_t.user_id, float) Map_utils_t.diff_bucketed) :
     User_id_map_utils.Int64_bucketed.diff_bucketed =
     {
       added = unpack_user_id_to_task_ids x.added;
@@ -3594,14 +3620,16 @@ module Deserialize = struct
     }
 
   let unpack_task_id_to_task_inst_ids
-      (x : (Task_ds_t.task_id * int64 list) list) : Int64_set.t Task_id_map.t =
+      (x : (Task_ds_t.task_id * float list) list) : Int64_set.t Task_id_map.t =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        ( Task_ds.Deserialize.unpack_task_id id,
+          Int64_set.Deserialize.unpack y ))
     |> Task_id_map.of_seq
 
   let unpack_task_id_to_task_inst_ids_diff
-      (x : (Task_ds_t.task_id, int64) Map_utils_t.diff_bucketed) :
+      (x : (Task_ds_t.task_id, float) Map_utils_t.diff_bucketed) :
     Task_id_map_utils.Int64_bucketed.diff_bucketed =
     {
       added = unpack_task_id_to_task_inst_ids x.added;
@@ -3609,47 +3637,50 @@ module Deserialize = struct
     }
 
   let unpack_task_inst_id_to_task_seg_ids
-      (x : (Task_ds_t.task_inst_id * (int64 * int64 option) list) list) :
+      (x : (Task_ds_t.task_inst_id * (float * float option) list) list) :
     Int64_int64_option_set.t Task_inst_id_map.t =
     x
     |> List.to_seq
     |> Seq.map (fun (id, y) ->
-        (id, Int64_int64_option_set.Deserialize.unpack y))
+        ( Task_ds.Deserialize.unpack_task_inst_id id,
+          Int64_int64_option_set.Deserialize.unpack y ))
     |> Task_inst_id_map.of_seq
 
   let unpack_task_inst_id_to_task_seg_ids_diff
       (x :
-         (Task_ds_t.task_inst_id, int64 * int64 option) Map_utils_t.diff_bucketed)
+         (Task_ds_t.task_inst_id, float * float option) Map_utils_t.diff_bucketed)
     : Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed =
     {
       added = unpack_task_inst_id_to_task_seg_ids x.added;
       removed = unpack_task_inst_id_to_task_seg_ids x.removed;
     }
 
-  let unpack_indexed_by_start (x : (int64 * Task_ds_t.task_seg_id list) list) :
+  let unpack_indexed_by_start (x : (float * Task_ds_t.task_seg_id list) list) :
     task_seg_place_map =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        (Int64.of_float id, Task_seg_id_set.Deserialize.unpack y))
     |> Int64_map.of_seq
 
   let unpack_indexed_by_start_diff
-      (x : (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
+      (x : (float, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
     task_seg_place_map_diff =
     {
       added = unpack_indexed_by_start x.added;
       removed = unpack_indexed_by_start x.removed;
     }
 
-  let unpack_indexed_by_end_exc (x : (int64 * Task_ds_t.task_seg_id list) list)
+  let unpack_indexed_by_end_exc (x : (float * Task_ds_t.task_seg_id list) list)
     : task_seg_place_map =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        (Int64.of_float id, Task_seg_id_set.Deserialize.unpack y))
     |> Int64_map.of_seq
 
   let unpack_indexed_by_end_exc_diff
-      (x : (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
+      (x : (float, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
     task_seg_place_map_diff =
     {
       added = unpack_indexed_by_end_exc x.added;
@@ -3663,10 +3694,10 @@ module Deserialize = struct
     Set_store.print_unpack_related_functions ()
   *)
 
-  let unpack_sched_req_ids (x : int64 list) : Int64_set.t =
-    x |> List.to_seq |> Int64_set.of_seq
+  let unpack_sched_req_ids (x : float list) : Int64_set.t =
+    x |> List.to_seq |> Seq.map Int64.of_float |> Int64_set.of_seq
 
-  let unpack_sched_req_ids_diff (x : int64 Set_utils_t.diff) :
+  let unpack_sched_req_ids_diff (x : float Set_utils_t.diff) :
     Int64_set_utils.diff =
     {
       added = unpack_sched_req_ids x.added;
