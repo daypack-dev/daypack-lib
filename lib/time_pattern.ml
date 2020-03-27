@@ -257,7 +257,7 @@ let matching_time_slots (t : t) (search_type : search_type) :
         | None -> l
         | Some time_slots ->
           Time_slot_ds.intersect (List.to_seq time_slots) l)
-    |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:false
+    |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
 
 let next_match_tm ~search_years_ahead ~(start : Unix.tm) (t : t) :
   Unix.tm option =
