@@ -980,9 +980,9 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_sched_backtracking_search_pending ();
  *   print_newline () *)
 
-let () =
-  debug_sched_agenda_range ();
-  print_newline ()
+(* let () =
+ *   debug_sched_agenda_range ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_sched_usage_simulation ();
@@ -992,9 +992,9 @@ let () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_pattern_matching_time_slots ();
- *   print_newline () *)
+let () =
+  debug_time_pattern_matching_time_slots ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
