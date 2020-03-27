@@ -2716,7 +2716,7 @@ module Recur = struct
         | Task_ds.Time_pattern_match
             (pattern, { task_inst_data; sched_req_template }) ->
           Time_pattern.matching_time_slots pattern
-            (`Time_slots usable_time_slot_list)
+            (Time_slots usable_time_slot_list)
           |> Seq.map (fun (start', _end_exc) ->
               ( task_inst_data,
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:start'
