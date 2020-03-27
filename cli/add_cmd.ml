@@ -16,26 +16,26 @@ let run (add_task : bool) : unit =
             [ ("one-off", `One_off); ("recurring", `Recurring) ]
         in
         match task_type_choice with
-        | `One_off -> (
-            let task_data =
-              let open Daypack_lib.Task_ds in
-              {
-                splittable = false;
-                parallelizable = false;
-                task_type = Daypack_lib.Task_ds.One_off;
-                name;
-              }
-            in
-            let task_inst_data_list =
-              Daypack_lib.Task_ds.[ { task_inst_type = Reminder } ]
-            in
-            let (task_id, _task_data), task_inst_list =
-              Daypack_lib.Sched_ver_history.In_place_head.Task.Add.add_task
-                ~parent_user_id:0L task_data task_inst_data_list
-                context.sched_ver_history
-            in
-            let task_inst_id, _task_inst_data = List.hd task_inst_list in
-            (match
+        | `One_off ->
+          let task_data =
+            let open Daypack_lib.Task_ds in
+            {
+              splittable = false;
+              parallelizable = false;
+              task_type = Daypack_lib.Task_ds.One_off;
+              name;
+            }
+          in
+          let task_inst_data_list =
+            Daypack_lib.Task_ds.[ { task_inst_type = Reminder } ]
+          in
+          let (task_id, _task_data), task_inst_list =
+            Daypack_lib.Sched_ver_history.In_place_head.Task.Add.add_task
+              ~parent_user_id:0L task_data task_inst_data_list
+              context.sched_ver_history
+          in
+          let task_inst_id, _task_inst_data = List.hd task_inst_list in
+          ( match
               Dialog.ask_yn ~indent_level:0
                 ~prompt:"Lodge scheduling request for above task?"
             with
@@ -49,16 +49,13 @@ let run (add_task : bool) : unit =
                   let sched_req_data = [ sched_req_data_unit ] in
                   Daypack_lib.Sched_ver_history.In_place_head.Sched_req
                   .Enqueue
-                  .enqueue_sched_req sched_req_data
-                    context.sched_ver_history
-                  |> ignore;
-                     )
-            | `No -> ());
-            Printf.printf "Allocated task under ID : %s\n"
-              (Daypack_lib.Task_ds.task_id_to_string task_id);
-            Printf.printf "Allocated task inst under ID : %s\n"
-              (Daypack_lib.Task_ds.task_inst_id_to_string task_inst_id)
-          )
+                  .enqueue_sched_req sched_req_data context.sched_ver_history
+                  |> ignore )
+            | `No -> () );
+          Printf.printf "Allocated task under ID : %s\n"
+            (Daypack_lib.Task_ds.task_id_to_string task_id);
+          Printf.printf "Allocated task inst under ID : %s\n"
+            (Daypack_lib.Task_ds.task_inst_id_to_string task_inst_id)
         | `Recurring -> print_endline "Not implemented" );
     Context.save context |> Result.get_ok;
     ()

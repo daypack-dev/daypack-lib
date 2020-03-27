@@ -99,20 +99,24 @@ let ask_pick_choice (type a) ~indent_level ~(prompt : string)
 
 let ask_uint ~indent_level ~(prompt : string) : int =
   ask ~indent_level ~prompt (fun s ->
-      try let x = int_of_string s in
-        if x >= 0 then Ok x else Error "Input is negative" with Failure msg -> Error msg)
+      try
+        let x = int_of_string s in
+        if x >= 0 then Ok x else Error "Input is negative"
+      with Failure msg -> Error msg)
 
 let ask_uint64 ~indent_level ~(prompt : string) : int64 =
   ask ~indent_level ~prompt (fun s ->
       try
         let x = Int64.of_string s in
-        if x >= 0L then Ok x else Error "Input is negative" with Failure msg -> Error msg)
+        if x >= 0L then Ok x else Error "Input is negative"
+      with Failure msg -> Error msg)
 
 let ask_uint64_multi ~indent_level ~(prompt : string) : int64 list =
   ask_multiple ~indent_level ~prompt (fun s ->
       try
         let x = Int64.of_string s in
-        if x >= 0L then Ok x else Error "Input is negative" with Failure msg -> Error msg)
+        if x >= 0L then Ok x else Error "Input is negative"
+      with Failure msg -> Error msg)
 
 let process_time_string (s : string) : (int64, string) result =
   match Daypack_lib.Time_pattern.Interpret_string.of_string s with
@@ -207,7 +211,8 @@ let ask_task_inst_alloc_req ~indent_level ~task_inst_id :
       process_task_inst_alloc_req_string
   | Some task_inst_id ->
     let task_seg_size =
-      ask_uint64 ~indent_level ~prompt:"Please enter task seg size to allocate"
+      ask_uint64 ~indent_level
+        ~prompt:"Please enter task seg size to allocate"
     in
     (task_inst_id, task_seg_size)
 
@@ -275,12 +280,18 @@ let ask_sched_req_data_unit ~indent_level
       ask_time_slots ~indent_level ~prompt:"Please enter usable time slots"
     in
     let min_seg_size =
-      ask_uint64 ~indent_level ~prompt:"Please enter the minimum size of each split"
+      ask_uint64 ~indent_level
+        ~prompt:"Please enter the minimum size of each split"
     in
     let max_seg_size =
-      match ask_yn ~indent_level ~prompt:"Do you want to specify a maximum size for each split?" with
+      match
+        ask_yn ~indent_level
+          ~prompt:"Do you want to specify a maximum size for each split?"
+      with
       | `Yes ->
-        Some (ask_uint64 ~indent_level ~prompt:"Please enter the maximum size of each split")
+        Some
+          (ask_uint64 ~indent_level
+             ~prompt:"Please enter the maximum size of each split")
       | `No -> None
     in
     Ok
@@ -333,7 +344,8 @@ let ask_sched_req_data_unit ~indent_level
       ask_task_inst_alloc_req ~indent_level ~task_inst_id
     in
     let target =
-      ask_time ~indent_level ~prompt:"Please enter the target time to push toward"
+      ask_time ~indent_level
+        ~prompt:"Please enter the target time to push toward"
     in
     let time_slots =
       ask_time_slots ~indent_level ~prompt:"Please enter usable time slots"
