@@ -293,6 +293,56 @@ let ask_sched_req_data_unit ~indent_level
            min_seg_size;
            max_seg_size;
          })
-
-  | `Split_even | `Time_share | `Push_toward | _ ->
-    failwith "Not implemented"
+  | `Split_even ->
+    let task_inst_alloc_req =
+      ask_task_inst_alloc_req ~indent_level ~task_inst_id
+    in
+    let time_slots =
+      ask_time_slots ~indent_level ~prompt:"Please enter usable time slots"
+    in
+    let buckets =
+      ask_time_slots ~indent_level ~prompt:"Please enter buckets/boundaries"
+    in
+    Ok
+      (Daypack_lib.Sched_req_data_unit_skeleton.Split_even
+         {
+           task_seg_related_data = task_inst_alloc_req;
+           time_slots;
+           buckets;
+           incre = 1L;
+         })
+  | `Time_share ->
+    let task_inst_alloc_reqs =
+      ask_task_inst_alloc_reqs ~indent_level ~task_inst_id
+    in
+    let time_slots =
+      ask_time_slots ~indent_level ~prompt:"Please enter usable time slots"
+    in
+    let interval_size =
+      ask_uint64 ~indent_level ~prompt:"Please enter interval size"
+    in
+    Ok
+      (Daypack_lib.Sched_req_data_unit_skeleton.Time_share
+         {
+           task_seg_related_data_list = task_inst_alloc_reqs;
+           time_slots;
+           interval_size;
+         })
+  | `Push_toward ->
+    let task_inst_alloc_req =
+      ask_task_inst_alloc_req ~indent_level ~task_inst_id
+    in
+    let target =
+      ask_time ~indent_level ~prompt:"Please enter the target time to push toward"
+    in
+    let time_slots =
+      ask_time_slots ~indent_level ~prompt:"Please enter usable time slots"
+    in
+    Ok
+      (Daypack_lib.Sched_req_data_unit_skeleton.Push_toward
+         {
+           task_seg_related_data = task_inst_alloc_req;
+           target;
+           time_slots;
+           incre = 1L;
+         })
