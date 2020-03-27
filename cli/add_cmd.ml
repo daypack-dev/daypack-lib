@@ -35,7 +35,7 @@ let run (add_task : bool) : unit =
                 context.sched_ver_history
             in
             let task_inst_id, _task_inst_data = List.hd task_inst_list in
-            match
+            (match
               Dialog.ask_yn ~indent_level:0
                 ~prompt:"Lodge scheduling request for above task?"
             with
@@ -47,16 +47,19 @@ let run (add_task : bool) : unit =
                 | Error msg -> print_endline msg
                 | Ok sched_req_data_unit ->
                   let sched_req_data = [ sched_req_data_unit ] in
-                  let _sched_req =
-                    Daypack_lib.Sched_ver_history.In_place_head.Sched_req
-                    .Enqueue
-                    .enqueue_sched_req sched_req_data
-                      context.sched_ver_history
-                  in
-                  Printf.printf "Allocated task under ID : %s\n"
-                    (Daypack_lib.Task_ds.task_id_to_string task_id) )
-            | `No -> () )
-        | `Recurring -> () );
+                  Daypack_lib.Sched_ver_history.In_place_head.Sched_req
+                  .Enqueue
+                  .enqueue_sched_req sched_req_data
+                    context.sched_ver_history
+                  |> ignore;
+                     )
+            | `No -> ());
+            Printf.printf "Allocated task under ID : %s\n"
+              (Daypack_lib.Task_ds.task_id_to_string task_id);
+            Printf.printf "Allocated task inst under ID : %s\n"
+              (Daypack_lib.Task_ds.task_inst_id_to_string task_inst_id)
+          )
+        | `Recurring -> print_endline "Not implemented" );
     Context.save context |> Result.get_ok;
     ()
 
