@@ -1,7 +1,7 @@
 open Test_utils
 
 let qc_int32_int32_to_int64_is_inverse_of_int64_to_int32_int32 =
-  QCheck.Test.make ~count:5000
+  QCheck.Test.make ~count:10_000
     ~name:"qc_int32_int32_to_int64_is_inverse_of_int64_to_int32_int32" pos_int64
     (fun x ->
        let y =
