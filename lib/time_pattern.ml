@@ -296,8 +296,8 @@ let next_match_time_slot_paired_pattern ~search_years_ahead ~(start : int64) (t1
     |> (fun s ->
         match s () with
         | Seq.Nil -> None
-        | Seq.Cons ((_, end_exc), _) ->
-          Some (start, end_exc)
+        | Seq.Cons ((_, ts_end_exc), _) ->
+          Some (ts_start, ts_end_exc)
       )
 
 module Serialize = struct
