@@ -150,8 +150,7 @@ module Check = struct
     && id4 >= 0L
     && match id5 with None -> true | Some x -> x >= 0L
 
-  let check_task_seg_size (size : task_seg_size) : bool =
-    size > 0L
+  let check_task_seg_size (size : task_seg_size) : bool = size > 0L
 
   let check_task_seg_alloc_req ((id, size) : task_seg_alloc_req) : bool =
     check_task_inst_id id && check_task_seg_size size

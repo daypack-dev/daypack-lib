@@ -116,14 +116,6 @@ val sched_data_empty : sched_data
 
 val empty : sched
 
-module Time_slot : sig
-  val get_occupied_time_slots :
-    ?start:int64 -> ?end_exc:int64 -> sched -> (int64 * int64) Seq.t
-
-  val get_free_time_slots :
-    start:int64 -> end_exc:int64 -> sched -> (int64 * int64) Seq.t
-end
-
 module Quota : sig
   val update_quota : int64 Task_inst_id_map.t -> sched -> sched
 
@@ -630,6 +622,14 @@ module Agenda : sig
 
     val remove_task_seg_place_by_task_seg_id :
       Task_ds.task_seg_id -> sched -> sched
+  end
+
+  module Time_slot : sig
+    val get_occupied_time_slots :
+      ?start:int64 -> ?end_exc:int64 -> sched -> (int64 * int64) Seq.t
+
+    val get_free_time_slots :
+      start:int64 -> end_exc:int64 -> sched -> (int64 * int64) Seq.t
   end
 end
 

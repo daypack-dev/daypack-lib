@@ -4,7 +4,7 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     ((_sched_req_id, sched_req_record_data_list) :
        Sched_req_ds.sched_req_record) : Sched.sched Seq.t =
   let free_time_slots =
-    Sched.Time_slot.get_free_time_slots ~start ~end_exc base
+    Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc base
   in
   let get_usable_time_slots time_slots =
     time_slots

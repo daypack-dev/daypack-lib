@@ -2113,27 +2113,27 @@ module Agenda = struct
       | Some (start, end_exc) ->
         remove_task_seg_place (task_seg_id, start, end_exc) sched
   end
-end
 
-module Time_slot = struct
-  let get_occupied_time_slots ?start ?end_exc (sched : sched) :
-    (int64 * int64) Seq.t =
-    Agenda.To_seq.task_seg_place_uncompleted sched
-    |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
-    |> (fun l ->
-        Option.fold ~none:l
-          ~some:(fun start -> Time_slot_ds.slice ~start l)
-          start)
-    |> (fun l ->
-        Option.fold ~none:l
-          ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l)
-          end_exc)
-    |> Time_slot_ds.normalize ~skip_sort:true
+  module Time_slot = struct
+    let get_occupied_time_slots ?start ?end_exc (sched : sched) :
+      (int64 * int64) Seq.t =
+      To_seq.task_seg_place_uncompleted sched
+      |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
+      |> (fun l ->
+          Option.fold ~none:l
+            ~some:(fun start -> Time_slot_ds.slice ~start l)
+            start)
+      |> (fun l ->
+          Option.fold ~none:l
+            ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l)
+            end_exc)
+      |> Time_slot_ds.normalize ~skip_sort:true
 
-  let get_free_time_slots ~start ~end_exc (sched : sched) :
-    (int64 * int64) Seq.t =
-    get_occupied_time_slots ~start ~end_exc sched
-    |> Time_slot_ds.invert ~start ~end_exc
+    let get_free_time_slots ~start ~end_exc (sched : sched) :
+      (int64 * int64) Seq.t =
+      get_occupied_time_slots ~start ~end_exc sched
+      |> Time_slot_ds.invert ~start ~end_exc
+  end
 end
 
 module Sched_req = struct
