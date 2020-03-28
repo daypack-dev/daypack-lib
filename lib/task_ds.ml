@@ -135,6 +135,28 @@ let sched_req_template_bound_on_start_and_end_exc
              Some (min start cur_start, max end_exc cur_end_exc) ))
     None sched_req_template
 
+module Check = struct
+  let check_user_id (id : user_id) = id >= 0L
+
+  let check_task_id ((id1, id2) : task_id) = id1 >= 0L && id2 >= 0L
+
+  let check_task_inst_id ((id1, id2, id3) : task_inst_id) =
+    id1 >= 0L && id2 >= 0L && id3 >= 0L
+
+  let check_task_seg_id ((id1, id2, id3, id4, id5) : task_seg_id) =
+    id1 >= 0L
+    && id2 >= 0L
+    && id3 >= 0L
+    && id4 >= 0L
+    && match id5 with None -> true | Some x -> x >= 0L
+
+  let check_task_seg_alloc_req ((id, size) : task_seg_alloc_req) : bool =
+    check_task_inst_id id && size > 0L
+
+  let check_task_seg ((id, size) : task_seg) : bool =
+    check_task_seg_id id && size > 0L
+end
+
 module Serialize = struct
   let pack_arith_seq (arith_seq : arith_seq) : Task_ds_t.arith_seq =
     {

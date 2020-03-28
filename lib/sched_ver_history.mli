@@ -33,7 +33,7 @@ module In_place_head : sig
   module Sched_req : sig
     module Enqueue : sig
       val enqueue_sched_req :
-        Sched_req_ds.sched_req_data -> t -> Sched_req_ds.sched_req
+        Sched_req_ds.sched_req_data -> t -> (Sched_req_ds.sched_req, unit) result
     end
   end
 

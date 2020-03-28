@@ -113,6 +113,38 @@ let sched_req_partially_within_time_period ~start ~end_exc
     (start' < start && start < end_exc')
     || (start' < end_exc && end_exc < end_exc')
 
+module Check = struct
+  let check_sched_req_data (data : sched_req_data) : bool =
+    List.for_all
+      (fun x ->
+         Sched_req_data_unit_skeleton.Check.check
+           ~f_data:Task_ds.Check.check_task_seg_alloc_req
+           ~f_time:Time.Check.check_unix_time
+           ~f_time_slot:Time_slot_ds.Check.check_time_slot x)
+      data
+
+  let check_sched_req_data_list (l : sched_req_data list) : bool =
+    List.for_all check_sched_req_data l
+
+  let check_sched_req ((id, data) : sched_req) : bool =
+    id >= 0L && check_sched_req_data data
+
+  let check_sched_req_record_data (data : sched_req_record_data) : bool =
+    List.for_all
+      (fun x ->
+         Sched_req_data_unit_skeleton.Check.check
+           ~f_data:Task_ds.Check.check_task_seg
+           ~f_time:Time.Check.check_unix_time
+           ~f_time_slot:Time_slot_ds.Check.check_time_slot x)
+      data
+
+  let check_sched_req_record_data_list (l : sched_req_record_data list) : bool =
+    List.for_all check_sched_req_record_data l
+
+  let check_sched_req_record ((id, data) : sched_req_record) : bool =
+    id >= 0L && check_sched_req_record_data data
+end
+
 module Serialize = struct
   let rec pack_sched_req (id, data) : Sched_req_ds_t.sched_req =
     (Misc_utils.int64_to_int32_int32 id, List.map pack_sched_req_data_unit data)

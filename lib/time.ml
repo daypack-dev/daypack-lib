@@ -263,6 +263,10 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
   Unix.gmtime timestamp
 
+module Check = struct
+  let check_unix_time (x : int64) = x >= 0L
+end
+
 module Serialize = struct
   let pack_weekday (x : weekday) : Time_t.weekday = x
 

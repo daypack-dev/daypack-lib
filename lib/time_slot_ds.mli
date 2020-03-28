@@ -37,6 +37,10 @@ val a_is_subset_of_b : a:t Seq.t -> b:t Seq.t -> bool
 
 val to_string : t -> string
 
+module Check : sig
+  val check_time_slot : t -> bool
+end
+
 module Serialize : sig
   val pack_time_slot : int64 * int64 -> (int32 * int32) * (int32 * int32)
 

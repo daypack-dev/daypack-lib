@@ -66,13 +66,16 @@ module In_place_head = struct
   module Sched_req = struct
     module Enqueue = struct
       let enqueue_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
-        Sched_req_ds.sched_req =
+        (Sched_req_ds.sched_req, unit) result =
         map_head
           (fun sched ->
-             let sched_req, sched =
-               Sched.Sched_req.Enqueue.enqueue_sched_req_data data sched
-             in
-             (sched_req, Replace_head sched))
+             match
+               Sched.Sched_req.Enqueue.enqueue_sched_req_data data sched with
+             | Ok (sched_req, sched) ->
+               (Ok sched_req, Replace_head sched)
+             | Error () ->
+               (Error (), Do_nothing)
+          )
           t
     end
   end

@@ -136,42 +136,48 @@ let map (type a b c d e f) ~(f_data : a -> d) ~(f_time : b -> e)
 let map_list ~f_data ~f_time ~f_time_slot ts =
   List.map (map ~f_data ~f_time ~f_time_slot) ts
 
-let check (type a b c) ~(f_data : a -> bool) ~(f_time : b -> bool)
-    ~(f_time_slot : c -> bool) (t : (a, b, c) t) : bool =
-  match t with
-  | Fixed { task_seg_related_data; start } ->
-    f_data task_seg_related_data
-      && f_time start
-  | Shift { task_seg_related_data_list; time_slots; incre } ->
-    List.for_all f_data task_seg_related_data_list
+module Check = struct
+  let check (type a b c) ~(f_data : a -> bool) ~(f_time : b -> bool)
+      ~(f_time_slot : c -> bool) (t : (a, b, c) t) : bool =
+    match t with
+    | Fixed { task_seg_related_data; start } ->
+      f_data task_seg_related_data && f_time start
+    | Shift { task_seg_related_data_list; time_slots; incre } ->
+      List.for_all f_data task_seg_related_data_list
       && List.for_all f_time_slot time_slots
       && incre > 0L
-  | Split_and_shift { task_seg_related_data; time_slots; incre; split_count; min_seg_size; max_seg_size } ->
-    f_data task_seg_related_data
-      && List.for_all f_time_slot time_slots
-      && incre > 0L
-      && (match split_count with
-          | Max_split x -> x >= 0L
-          | Exact_split x -> x >= 0L
-        )
-      && min_seg_size > 0L
-      && (match max_seg_size with
-          | None -> true
-          | Some x -> x >= min_seg_size)
-  | Split_even { task_seg_related_data; time_slots; buckets; incre } ->
-    f_data task_seg_related_data
+    | Split_and_shift
+        {
+          task_seg_related_data;
+          time_slots;
+          incre;
+          split_count;
+          min_seg_size;
+          max_seg_size;
+        } -> (
+        f_data task_seg_related_data
+        && List.for_all f_time_slot time_slots
+        && incre > 0L
+        && ( match split_count with
+            | Max_split x -> x >= 0L
+            | Exact_split x -> x >= 0L )
+        && min_seg_size > 0L
+        && match max_seg_size with None -> true | Some x -> x >= min_seg_size )
+    | Split_even { task_seg_related_data; time_slots; buckets; incre } ->
+      f_data task_seg_related_data
       && List.for_all f_time_slot time_slots
       && List.for_all f_time_slot buckets
       && incre > 0L
-  | Time_share { task_seg_related_data_list; time_slots; interval_size } ->
-    List.for_all f_data task_seg_related_data_list
+    | Time_share { task_seg_related_data_list; time_slots; interval_size } ->
+      List.for_all f_data task_seg_related_data_list
       && List.for_all f_time_slot time_slots
       && interval_size > 0L
-  | Push_toward { task_seg_related_data; target; time_slots; incre } ->
-    f_data task_seg_related_data
+    | Push_toward { task_seg_related_data; target; time_slots; incre } ->
+      f_data task_seg_related_data
       && f_time target
       && List.for_all f_time_slot time_slots
       && incre > 0L
+end
 
 let get_inner_data (type a b c) (t : (a, b, c) t) : a list =
   match t with

@@ -301,6 +301,11 @@ let a_is_subset_of_b ~(a : t Seq.t) ~(b : t Seq.t) : bool =
 let to_string ((start, end_exc) : t) : string =
   Printf.sprintf "[%Ld, %Ld)" start end_exc
 
+module Check = struct
+  let check_time_slot ((start, end_exc) : t) : bool =
+    0L <= start && start <= end_exc
+end
+
 module Serialize = struct
   let pack_time_slot (start, end_exc) =
     ( Misc_utils.int64_to_int32_int32 start,
