@@ -219,6 +219,7 @@ let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
 
 let matching_tm_seq ~search_years_ahead ~(start : Unix.tm) (t : t) :
   Unix.tm Seq.t =
+  let start = Time.zero_tm_sec start in
   matching_years ~search_years_ahead t start start
   |> Seq.flat_map (fun acc -> matching_months t start acc)
   |> Seq.flat_map (fun acc -> matching_days t start acc)
