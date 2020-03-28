@@ -253,15 +253,28 @@ let weekday_of_month_day ~(year : int) ~(month : month) ~(mday : int) : weekday
     (CalendarLib.Date.make year (int_of_month month) mday)
   |> weekday_of_cal_weekday
 
-let cur_unix_time_min () : int64 = (Unix.time () |> Int64.of_float) /^ 60L
-
-let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
-
-let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.gmtime
-
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
   Unix.gmtime timestamp
+
+module Current = struct
+  let cur_unix_time_min () : int64 = (Unix.time () |> Int64.of_float) /^ 60L
+
+  let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
+
+  let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.gmtime
+end
+
+module Add = struct
+  let add_days_unix_time_min ~(days : int) (x : int64) : int64 =
+    unix_time_to_tm ~time_zone_of_tm:`Local x
+    |> (fun tm ->
+        { tm with
+          tm_mday = tm.tm_mday + days
+        }
+      )
+    |> tm_to_unix_time ~time_zone_of_tm:`Local
+end
 
 module Check = struct
   let check_unix_time (x : int64) = x >= 0L
