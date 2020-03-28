@@ -144,20 +144,12 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
             | Error _ -> Error "Failed to process end exc time pattern string"
             | Ok end_exc_pat -> (
                 match
-                  Daypack_lib.Time_pattern.next_match_time_slot
+                  Daypack_lib.Time_pattern.next_match_time_slot_paired_pattern
                     ~search_years_ahead:Config.time_pattern_search_years_ahead
-                    ~start:cur_time start_pat
+                    ~start:cur_time start_pat end_exc_pat
                 with
                 | None -> Error "Failed to find match for start pattern"
-                | Some (start, _) -> (
-                    match
-                      Daypack_lib.Time_pattern.next_match_time_slot
-                        ~search_years_ahead:
-                          Config.time_pattern_search_years_ahead ~start:cur_time
-                        end_exc_pat
-                    with
-                    | None -> Error "Failed to find match for end exc pattern"
-                    | Some (_, end_exc) -> Ok (start, end_exc) ) ) ))
+                | Some (start, end_exc) -> Ok (start, end_exc) ) ))
   with _ -> (
       match Daypack_lib.Time_pattern.Interpret_string.of_string s with
       | Error msg -> Error msg
