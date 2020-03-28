@@ -195,6 +195,8 @@ type time_zone =
   | `UTC
   ]
 
+let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
+
 let unix_time_to_tm ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
   time *^ 60L
   |> Int64.to_float
@@ -205,6 +207,7 @@ let unix_time_to_tm ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
 
 let tm_to_unix_time ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
   tm
+  |> zero_tm_sec
   |> (fun x ->
       match time_zone_of_tm with
       | `Local ->
@@ -218,9 +221,10 @@ let tm_to_unix_time ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
   |> fun time -> (time |> Int64.of_float) /^ 60L
 
 let normalize_tm tm =
-  tm |> CalendarLib.Calendar.from_unixtm |> CalendarLib.Calendar.to_unixtm
-
-let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
+  tm
+  |> zero_tm_sec
+  |> CalendarLib.Calendar.from_unixtm
+  |> CalendarLib.Calendar.to_unixtm
 
 let is_leap_year ~year =
   assert (year > 0);
