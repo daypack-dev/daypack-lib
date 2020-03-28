@@ -24,6 +24,34 @@ type t = {
   minutes : int list;
 }
 
+let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
+  : search_type =
+  match search_type with
+  | Time_slots time_slots -> (
+      match Time_slot_ds.min_start_and_max_end_exc_list time_slots with
+      | None -> search_type
+      | Some (start', end_exc') ->
+        let start = max start' start in
+        let time_slots =
+          time_slots
+          |> List.to_seq
+          |> Time_slot_ds.intersect (Seq.return (start, end_exc'))
+          |> List.of_seq
+        in
+        Time_slots time_slots )
+  | Years_ahead_start_int64 { start = start'; search_years_ahead } ->
+    let start = max start' start in
+    Years_ahead_start_int64 { start; search_years_ahead }
+  | Years_ahead_start_tm { start = start'; search_years_ahead } ->
+    let start =
+      max (Time.tm_to_unix_time ~time_zone_of_tm:`Local start') start
+    in
+    Years_ahead_start_tm
+      {
+        start = Time.unix_time_to_tm ~time_zone_of_tm:`Local start;
+        search_years_ahead;
+      }
+
 let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
     if
@@ -123,7 +151,7 @@ let matching_tm_seq ~search_years_ahead ~(start : Unix.tm) (t : t) :
   |> Seq.flat_map (fun acc -> matching_hours t start acc)
   |> Seq.flat_map (fun acc -> matching_minutes t start acc)
 
-let matching_time_slots (t : t) (search_type : search_type) :
+let matching_time_slots (search_type : search_type) (t : t) :
   Time_slot_ds.t Seq.t =
   let time_slots =
     match search_type with
@@ -179,28 +207,31 @@ let next_match_int64 ~search_years_ahead ~(start : int64) (t : t) : int64 option
 let next_match_time_slot ~search_years_ahead ~(start : int64) (t : t) :
   (int64 * int64) option =
   match
-    matching_time_slots t
+    matching_time_slots
       (Years_ahead_start_int64 { start; search_years_ahead })
-      ()
+      t ()
   with
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
+let matching_time_slots_paired_pattern (search_type : search_type) (t1 : t)
+    (t2 : t) : Time_slot_ds.t Seq.t =
+  matching_time_slots search_type t1
+  |> Seq.filter_map (fun (start, _) ->
+      let search_type = push_search_type_to_later_start ~start search_type in
+      match matching_time_slots search_type t2 () with
+      | Seq.Nil -> None
+      | Seq.Cons ((_, end_exc), _) -> Some (start, end_exc))
+
 let next_match_time_slot_paired_pattern ~search_years_ahead ~(start : int64)
     (t1 : t) (t2 : t) : (int64 * int64) option =
   match
-    matching_time_slots t1
+    matching_time_slots_paired_pattern
       (Years_ahead_start_int64 { start; search_years_ahead })
-      ()
+      t1 t2 ()
   with
   | Seq.Nil -> None
-  | Seq.Cons ((ts_start, _), _) -> (
-      matching_time_slots t2
-        (Years_ahead_start_int64 { start = ts_start; search_years_ahead })
-      |> fun s ->
-      match s () with
-      | Seq.Nil -> None
-      | Seq.Cons ((_, ts_end_exc), _) -> Some (ts_start, ts_end_exc) )
+  | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
 module Serialize = struct
   let pack_days (x : days) : Time_pattern_t.days = x

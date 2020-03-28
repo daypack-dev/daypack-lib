@@ -25,7 +25,7 @@ type t = {
 val matching_tm_seq :
   search_years_ahead:int -> start:Unix.tm -> t -> Unix.tm Seq.t
 
-val matching_time_slots : t -> search_type -> Time_slot_ds.t Seq.t
+val matching_time_slots : search_type -> t -> Time_slot_ds.t Seq.t
 
 val next_match_tm :
   search_years_ahead:int -> start:Unix.tm -> t -> Unix.tm option
@@ -35,6 +35,9 @@ val next_match_int64 :
 
 val next_match_time_slot :
   search_years_ahead:int -> start:int64 -> t -> (int64 * int64) option
+
+val matching_time_slots_paired_pattern :
+  search_type -> t -> t -> Time_slot_ds.t Seq.t
 
 val next_match_time_slot_paired_pattern :
   search_years_ahead:int -> start:int64 -> t -> t -> (int64 * int64) option
