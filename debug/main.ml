@@ -434,7 +434,8 @@ let debug_sched_backtracking_search_pending () =
   let _, base =
     Sched.empty
     |> Sched.Quota.update_quota quota
-    |> Sched.Sched_req.Enqueue.enqueue_sched_req_data_list sched_req_data_list |> Result.get_ok
+    |> Sched.Sched_req.Enqueue.enqueue_sched_req_data_list sched_req_data_list
+    |> Result.get_ok
   in
   Sched_search.backtracking_search_pending ~start:0L ~end_exc:50L
     ~include_sched_reqs_partially_within_time_period:true

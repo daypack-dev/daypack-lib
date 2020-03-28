@@ -2141,21 +2141,21 @@ module Sched_req = struct
     let enqueue_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
         (sched : sched) : (Sched_req_ds.sched_req * sched, unit) result =
       if Sched_req_ds.Check.check_sched_req_data sched_req_data then
-      let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
-      Ok ( (sched_req_id, sched_req_data),
-        ( sid,
-          {
-            sd with
-            store =
+        let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
+        Ok
+          ( (sched_req_id, sched_req_data),
+            ( sid,
               {
-                sd.store with
-                sched_req_pending_store =
-                  Sched_req_id_map.add sched_req_id sched_req_data
-                    sd.store.sched_req_pending_store;
-              };
-          } ) )
-      else
-        Error ()
+                sd with
+                store =
+                  {
+                    sd.store with
+                    sched_req_pending_store =
+                      Sched_req_id_map.add sched_req_id sched_req_data
+                        sd.store.sched_req_pending_store;
+                  };
+              } ) )
+      else Error ()
 
     let enqueue_sched_req_data_list
         (sched_req_data_list : Sched_req_ds.sched_req_data list) (sched : sched)
@@ -2163,13 +2163,13 @@ module Sched_req = struct
       if Sched_req_ds.Check.check_sched_req_data_list sched_req_data_list then
         List.fold_left
           (fun (sched_reqs, sched) sched_req_data ->
-             let sched_req, sched = enqueue_sched_req_data sched_req_data sched |> Result.get_ok in
+             let sched_req, sched =
+               enqueue_sched_req_data sched_req_data sched |> Result.get_ok
+             in
              (sched_req :: sched_reqs, sched))
           ([], sched) sched_req_data_list
-        |> fun (l, s) -> (List.rev l, s)
-                       |> Result.ok
-      else
-        Error ()
+        |> fun (l, s) -> (List.rev l, s) |> Result.ok
+      else Error ()
   end
 
   module Dequeue = struct
@@ -2805,7 +2805,8 @@ module Recur = struct
                   sched_req_templates
               in
               let _, sched =
-                Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched |> Result.get_ok
+                Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched
+                |> Result.get_ok
               in
               sched)
            sched)
@@ -2861,7 +2862,8 @@ module Leftover = struct
     Seq.fold_left
       (fun sched sched_req_data ->
          let _, sched =
-           Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched |> Result.get_ok
+           Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched
+           |> Result.get_ok
          in
          sched)
       sched sched_req_data_seq
