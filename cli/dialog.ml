@@ -125,14 +125,14 @@ let process_time_string (s : string) : (int64, string) result =
       match
         Daypack_lib.Time_pattern.next_match_int64
           ~search_years_ahead:Config.time_pattern_search_years_ahead
-          ~start:(Daypack_lib.Time.cur_unix_time_min ())
+          ~start:(Daypack_lib.Time.Current.cur_unix_time_min ())
           pat
       with
       | None -> Error "Failed to find matching time"
       | Some time -> Ok time )
 
 let process_time_slot_string (s : string) : (int64 * int64, string) result =
-  let cur_time = Daypack_lib.Time.cur_unix_time_min () in
+  let cur_time = Daypack_lib.Time.Current.cur_unix_time_min () in
   try
     Scanf.sscanf s "%[^,],%[^,]" (fun start_str end_exc_str ->
         match Daypack_lib.Time_pattern.Interpret_string.of_string start_str with
