@@ -15,7 +15,7 @@ let run (list_free_time_slots : bool) : unit =
       |> Seq.iter (fun (start, end_exc) ->
           let start_str = Daypack_lib.Time.Print.time_to_date_string ~display_in_time_zone:`Local start in
           let end_exc_str = Daypack_lib.Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc in
-          Printf.printf "| %s - %s |" start_str end_exc_str
+          Printf.printf "| %s - %s |\n" start_str end_exc_str
         )
 
 let cmd = (Term.(const run $ free_time_slots_arg), Term.info "agenda")
