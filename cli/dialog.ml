@@ -124,8 +124,9 @@ let process_time_string (s : string) : (int64, string) result =
   | Ok pat -> (
       match
         Daypack_lib.Time_pattern.next_match_int64
-          ~search_years_ahead:Config.time_pattern_search_years_ahead
-          ~start:(Daypack_lib.Time.Current.cur_unix_time_min ())
+          (Years_ahead_start_unix_time {
+              start = (Daypack_lib.Time.Current.cur_unix_time_min ());
+              search_years_ahead = Config.time_pattern_search_years_ahead })
           pat
       with
       | None -> Error "Failed to find matching time"
@@ -145,8 +146,10 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
             | Ok end_exc_pat -> (
                 match
                   Daypack_lib.Time_pattern.next_match_time_slot_paired_pattern
-                    ~search_years_ahead:Config.time_pattern_search_years_ahead
-                    ~start:cur_time start_pat end_exc_pat
+                    (Years_ahead_start_unix_time {
+                        start = cur_time;
+                        search_years_ahead = Config.time_pattern_search_years_ahead })
+                    start_pat end_exc_pat
                 with
                 | None -> Error "Failed to find match for start pattern"
                 | Some (start, end_exc) -> Ok (start, end_exc) ) ))
@@ -156,8 +159,10 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
       | Ok pat -> (
           match
             Daypack_lib.Time_pattern.next_match_time_slot
-              ~search_years_ahead:Config.time_pattern_search_years_ahead
-              ~start:cur_time pat
+              (Years_ahead_start_unix_time {
+                  start = cur_time;
+                  search_years_ahead = Config.time_pattern_search_years_ahead })
+              pat
           with
           | None -> Error "Failed to find match for pattern"
           | Some x -> Ok x ) )

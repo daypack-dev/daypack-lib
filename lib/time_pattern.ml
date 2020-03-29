@@ -2,11 +2,12 @@ open Int64_utils
 
 type search_type =
   | Time_slots of Time_slot_ds.t list
-  | Years_ahead_start_int64 of {
+  | Years_ahead_start_unix_time of {
       start : int64;
       search_years_ahead : int;
     }
   | Years_ahead_start_tm of {
+      time_zone_of_tm : Time.time_zone;
       start : Unix.tm;
       search_years_ahead : int;
     }
@@ -39,16 +40,17 @@ let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
           |> List.of_seq
         in
         Time_slots time_slots )
-  | Years_ahead_start_int64 { start = start'; search_years_ahead } ->
+  | Years_ahead_start_unix_time { start = start'; search_years_ahead } ->
     let start = max start' start in
-    Years_ahead_start_int64 { start; search_years_ahead }
-  | Years_ahead_start_tm { start = start'; search_years_ahead } ->
+    Years_ahead_start_unix_time { start; search_years_ahead }
+  | Years_ahead_start_tm { time_zone_of_tm; start = start'; search_years_ahead } ->
     let start =
-      max (Time.tm_to_unix_time ~time_zone_of_tm:`Local start') start
+      max (Time.tm_to_unix_time ~time_zone_of_tm start') start
     in
     Years_ahead_start_tm
       {
-        start = Time.unix_time_to_tm ~time_zone_of_tm:`Local start;
+        time_zone_of_tm;
+        start = Time.unix_time_to_tm ~time_zone_of_tm start;
         search_years_ahead;
       }
 
@@ -142,23 +144,7 @@ let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
     |> Seq.map (fun pat_year ->
         { acc with tm_year = pat_year - Time.tm_year_offset })
 
-let matching_tm_seq ~search_years_ahead ~(start : Unix.tm) (t : t) :
-  Unix.tm Seq.t =
-  let start = Time.zero_tm_sec start in
-  matching_years ~search_years_ahead t start start
-  |> Seq.flat_map (fun acc -> matching_months t start acc)
-  |> Seq.flat_map (fun acc -> matching_days t start acc)
-  |> Seq.flat_map (fun acc -> matching_hours t start acc)
-  |> Seq.flat_map (fun acc -> matching_minutes t start acc)
-
-let matching_time_slots (search_type : search_type) (t : t) :
-  Time_slot_ds.t Seq.t =
-  let time_slots =
-    match search_type with
-    | Time_slots time_slots -> Some time_slots
-    | _ -> None
-  in
-  let start_tm_and_search_years_ahead =
+let local_start_tm_and_search_years_ahead_of_search_type (search_type : search_type) : (Unix.tm * int) option =
     match search_type with
     | Time_slots time_slots -> (
         match Time_slot_ds.min_start_and_max_end_exc_list time_slots with
@@ -172,43 +158,63 @@ let matching_time_slots (search_type : search_type) (t : t) :
             end_exc_tm.tm_year - start_tm.tm_year + 1
           in
           Some (start_tm, search_years_ahead) )
-    | Years_ahead_start_int64 { start; search_years_ahead } ->
+    | Years_ahead_start_unix_time { start; search_years_ahead } ->
       let start_tm = Time.unix_time_to_tm ~time_zone_of_tm:`Local start in
       Some (start_tm, search_years_ahead)
-    | Years_ahead_start_tm { start; search_years_ahead } ->
+    | Years_ahead_start_tm { time_zone_of_tm; start; search_years_ahead } ->
+      let start =
+        start
+        |> Time.tm_to_unix_time ~time_zone_of_tm
+        |> Time.unix_time_to_tm ~time_zone_of_tm:`Local
+      in
       Some (start, search_years_ahead)
-  in
-  match start_tm_and_search_years_ahead with
-  | None -> Seq.empty
-  | Some (start_tm, search_years_ahead) ->
-    matching_tm_seq ~search_years_ahead ~start:start_tm t
-    |> Seq.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
-    |> Seq.map (fun time -> (time, time +^ 1L))
-    |> (fun l ->
-        match time_slots with
-        | None -> l
-        | Some time_slots ->
-          Time_slot_ds.intersect (List.to_seq time_slots) l)
-    |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
 
-let next_match_tm ~search_years_ahead ~(start : Unix.tm) (t : t) :
+let matching_tm_seq (search_type : search_type) (t : t) :
+  Unix.tm Seq.t =
+  match local_start_tm_and_search_years_ahead_of_search_type search_type with
+  | None -> Seq.empty
+  | Some (start, search_years_ahead) ->
+    let start = Time.zero_tm_sec start in
+    matching_years ~search_years_ahead t start start
+    |> Seq.flat_map (fun acc -> matching_months t start acc)
+    |> Seq.flat_map (fun acc -> matching_days t start acc)
+    |> Seq.flat_map (fun acc -> matching_hours t start acc)
+    |> Seq.flat_map (fun acc -> matching_minutes t start acc)
+
+let matching_time_slots (search_type : search_type) (t : t) :
+  Time_slot_ds.t Seq.t =
+  let time_slots =
+    match search_type with
+    | Time_slots time_slots -> Some time_slots
+    | _ -> None
+  in
+  matching_tm_seq search_type t
+  |> Seq.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
+  |> Seq.map (fun time -> (time, time +^ 1L))
+  |> (fun l ->
+      match time_slots with
+      | None -> l
+      | Some time_slots ->
+        Time_slot_ds.intersect (List.to_seq time_slots) l)
+  |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
+
+let next_match_tm (search_type : search_type) (t : t) :
   Unix.tm option =
-  match (matching_tm_seq ~search_years_ahead ~start t) () with
+  match (matching_tm_seq search_type t) () with
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let next_match_int64 ~search_years_ahead ~(start : int64) (t : t) : int64 option
+let next_match_int64 (search_type : search_type) (t : t) : int64 option
   =
-  next_match_tm ~search_years_ahead
-    ~start:(Time.unix_time_to_tm ~time_zone_of_tm:`Local start)
+  next_match_tm search_type
     t
   |> Option.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
 
-let next_match_time_slot ~search_years_ahead ~(start : int64) (t : t) :
+let next_match_time_slot (search_type : search_type) (t : t) :
   (int64 * int64) option =
   match
     matching_time_slots
-      (Years_ahead_start_int64 { start; search_years_ahead })
+      search_type
       t ()
   with
   | Seq.Nil -> None
@@ -223,11 +229,11 @@ let matching_time_slots_paired_pattern (search_type : search_type) (t1 : t)
       | Seq.Nil -> None
       | Seq.Cons ((_, end_exc), _) -> Some (start, end_exc))
 
-let next_match_time_slot_paired_pattern ~search_years_ahead ~(start : int64)
+let next_match_time_slot_paired_pattern (search_type : search_type)
     (t1 : t) (t2 : t) : (int64 * int64) option =
   match
     matching_time_slots_paired_pattern
-      (Years_ahead_start_int64 { start; search_years_ahead })
+      search_type
       t1 t2 ()
   with
   | Seq.Nil -> None

@@ -1,10 +1,11 @@
 type search_type =
   | Time_slots of Time_slot_ds.t list
-  | Years_ahead_start_int64 of {
+  | Years_ahead_start_unix_time of {
       start : int64;
       search_years_ahead : int;
     }
   | Years_ahead_start_tm of {
+      time_zone_of_tm : Time.time_zone;
       start : Unix.tm;
       search_years_ahead : int;
     }
@@ -23,24 +24,24 @@ type t = {
 }
 
 val matching_tm_seq :
-  search_years_ahead:int -> start:Unix.tm -> t -> Unix.tm Seq.t
+  search_type -> t -> Unix.tm Seq.t
 
 val matching_time_slots : search_type -> t -> Time_slot_ds.t Seq.t
 
 val next_match_tm :
-  search_years_ahead:int -> start:Unix.tm -> t -> Unix.tm option
+  search_type -> t -> Unix.tm option
 
 val next_match_int64 :
-  search_years_ahead:int -> start:int64 -> t -> int64 option
+  search_type -> t -> int64 option
 
 val next_match_time_slot :
-  search_years_ahead:int -> start:int64 -> t -> (int64 * int64) option
+  search_type -> t -> (int64 * int64) option
 
 val matching_time_slots_paired_pattern :
   search_type -> t -> t -> Time_slot_ds.t Seq.t
 
 val next_match_time_slot_paired_pattern :
-  search_years_ahead:int -> start:int64 -> t -> t -> (int64 * int64) option
+  search_type -> t -> t -> (int64 * int64) option
 
 module Interpret_string : sig
   val of_string : string -> (t, string) result
