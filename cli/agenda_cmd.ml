@@ -12,7 +12,7 @@ let run (list_free_time_slots : bool) : unit =
       in
       let start = Daypack_lib.Time.Current.cur_unix_time () in
       let end_exc =
-        Daypack_lib.Time.Add.add_days_unix_time_min ~days:3 start
+        Daypack_lib.Time.Add.add_days_unix_time ~days:3 start
       in
       Daypack_lib.Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc
         hd

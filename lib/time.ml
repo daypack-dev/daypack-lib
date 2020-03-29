@@ -268,7 +268,7 @@ module Current = struct
 end
 
 module Add = struct
-  let add_days_unix_time_min ~(days : int) (x : int64) : int64 =
+  let add_days_unix_time ~(days : int) (x : int64) : int64 =
     unix_time_to_tm ~time_zone_of_tm:`Local x
     |> (fun tm -> { tm with tm_mday = tm.tm_mday + days })
     |> tm_to_unix_time ~time_zone_of_tm:`Local

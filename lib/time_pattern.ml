@@ -23,6 +23,7 @@ type t = {
   days : days;
   hours : int list;
   minutes : int list;
+  seconds : int list;
 }
 
 let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
@@ -52,6 +53,25 @@ let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
         start = Time.unix_time_to_tm ~time_zone_of_tm start;
         search_years_ahead;
       }
+
+let matching_seconds (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+  let start =
+    if
+      acc.tm_year = start.tm_year
+      && acc.tm_mon = start.tm_mon
+      && acc.tm_mday = start.tm_mday
+      && acc.tm_hour = start.tm_hour
+      && acc.tm_min = start.tm_min
+    then start.tm_min
+    else 0
+  in
+  match t.seconds with
+  | [] -> Seq.map (fun tm_sec -> { acc with tm_sec }) OSeq.(start --^ 60)
+  | pat_min_list ->
+    pat_min_list
+    |> List.to_seq
+    |> Seq.filter (fun pat_min -> start <= pat_min)
+    |> Seq.map (fun pat_min -> { acc with tm_min = pat_min })
 
 let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
@@ -177,6 +197,7 @@ let matching_tm_seq (search_type : search_type) (t : t) : Unix.tm Seq.t =
     |> Seq.flat_map (fun acc -> matching_days t start acc)
     |> Seq.flat_map (fun acc -> matching_hours t start acc)
     |> Seq.flat_map (fun acc -> matching_minutes t start acc)
+    |> Seq.flat_map (fun acc -> matching_seconds t start acc)
 
 let matching_time_slots (search_type : search_type) (t : t) :
   Time_slot_ds.t Seq.t =
@@ -234,6 +255,7 @@ module Serialize = struct
       days = pack_days t.days;
       hours = t.hours;
       minutes = t.minutes;
+      seconds = t.seconds;
     }
 end
 
@@ -247,6 +269,7 @@ module Deserialize = struct
       days = unpack_days t.days;
       hours = t.hours;
       minutes = t.minutes;
+      seconds = t.seconds;
     }
 end
 
@@ -268,6 +291,7 @@ module Interpret_string = struct
               days = `Month_days [ day ];
               hours = [ hour ];
               minutes = [ minute ];
+              seconds = [ ];
             })
     with _ -> (
         try
@@ -282,6 +306,7 @@ module Interpret_string = struct
                   days = `Month_days [ day ];
                   hours = [ hour ];
                   minutes = [ minute ];
+                  seconds = [];
                 })
         with _ -> (
             try
@@ -295,6 +320,7 @@ module Interpret_string = struct
                       days = `Month_days [ day ];
                       hours = [ hour ];
                       minutes = [ minute ];
+                      seconds = [];
                     })
             with _ -> (
                 try
@@ -308,6 +334,7 @@ module Interpret_string = struct
                           days = `Month_days [];
                           hours = [ hour ];
                           minutes = [ minute ];
+                          seconds = [];
                         })
                 with _ -> Error () ) ) )
 
@@ -324,6 +351,7 @@ module Interpret_string = struct
               days = `Weekdays [ weekday ];
               hours = [ hour ];
               minutes = [ minute ];
+              seconds = [];
             })
     with _ -> Error ()
 
@@ -337,6 +365,7 @@ module Interpret_string = struct
           days = `Weekdays [ weekday ];
           hours = [];
           minutes = [];
+          seconds = [];
         }
     with _ -> Error ()
 

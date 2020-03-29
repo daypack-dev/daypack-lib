@@ -714,6 +714,7 @@ let debug_time_pattern_matching_tm_seq () =
       days = `Month_days [];
       hours = [ 11 ];
       minutes = [ 0 ];
+      seconds = [];
     }
   in
   let search_years_ahead = 100 in
@@ -771,6 +772,7 @@ let debug_time_pattern_matching_time_slots () =
       days = `Month_days [];
       hours = [ 13 ];
       minutes = [];
+      seconds = [];
     }
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
@@ -798,6 +800,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
         days = `Month_days [ 1 ];
         hours = [];
         minutes = [];
+        seconds = [];
       },
         {
           years = [];
@@ -805,6 +808,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
           days = `Month_days [ 1 ];
           hours = [];
           minutes = [];
+          seconds = [];
         } );
     ]
   in

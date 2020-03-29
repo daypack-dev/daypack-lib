@@ -21,6 +21,7 @@ type t = {
   days : days;
   hours : int list;
   minutes : int list;
+  seconds : int list;
 }
 
 val matching_tm_seq : search_type -> t -> Unix.tm Seq.t

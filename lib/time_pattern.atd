@@ -13,4 +13,5 @@ type t = {
   days : days;
   hours : int list;
   minutes : int list;
+  seconds : int list;
 }

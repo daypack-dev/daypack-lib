@@ -233,15 +233,17 @@ let days =
 let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
   let open QCheck.Gen in
   map
-    (fun (years, months, days, (hours, minutes)) ->
-       Daypack_lib.Time_pattern.{ years; months; days; hours; minutes })
+    (fun (years, months, days, (hours, minutes, seconds)) ->
+       Daypack_lib.Time_pattern.{ years; months; days; hours; minutes; seconds })
     (quad
        (list_size (int_bound 5) (int_range 1980 2100))
        (list_size (int_bound 5) month_gen)
        days_gen
-       (pair
+       (triple
           (list_size (int_bound 5) (int_bound 24))
-          (list_size (int_bound 5) (int_bound 60))))
+          (list_size (int_bound 5) (int_bound 60))
+          (list_size (int_bound 5) (int_bound 60))
+       ))
 
 let time_pattern =
   QCheck.make ~print:Daypack_lib.Time_pattern.Print.debug_string_of_pattern
