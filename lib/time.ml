@@ -216,7 +216,7 @@ let tm_to_unix_time ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
         |> CalendarLib.Calendar.from_unixtm
         |> CalendarLib.Calendar.from_gmt
         |> CalendarLib.Calendar.to_unixfloat)
-  |> fun time -> (time |> Int64.of_float)
+  |> fun time -> time |> Int64.of_float
 
 let normalize_tm tm =
   tm
@@ -260,7 +260,7 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   Unix.gmtime timestamp
 
 module Current = struct
-  let cur_unix_time () : int64 = (Unix.time () |> Int64.of_float)
+  let cur_unix_time () : int64 = Unix.time () |> Int64.of_float
 
   let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
 
