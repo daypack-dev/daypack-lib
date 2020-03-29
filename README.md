@@ -5,7 +5,7 @@ Daypack is a basic constraint solving automatic personal task scheduler
 This repo contains the core library of Daypack `daypack_lib`, and the cli frontend `daypc`.
 Other frontends (e.g. Electron, web) are underway.
 
-`daypack_lib` was primarily developed for basic personal task scheduling (or day planning) and progress tracking,
+`Daypack_lib` was primarily developed for basic personal task scheduling (or day planning) and progress tracking,
 but we are open to exploration of its use in more general scheduling scenarios as well
 
 ## Note: Daypack is still WIP
@@ -19,6 +19,10 @@ are still underway
 Daypack as a user-facing personal task scheduler program aims to be ergonomic to use, and relatively featureful
 
 Daypack as a library aims to be powerful enough to accomodate everyday personal task scheduling needs
+
+## Demos
+
+__TODO__
 
 ## Features
 
@@ -38,6 +42,8 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
   - This can be used to specify "fuzzy" starting and ending time of tasks in scheduling reuqests,
     time profiles, and also recurrence starting times
+
+  - Interpretation functions of time pattern string are included in `Daypack_lib`
 
 - Time profiles
 
@@ -79,6 +85,12 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 - (WIP) Taking transit time into account during scheduling
 
   - This feature is unlikely to land any time soon
+
+- `Daypack_lib` is offline (maybe a feature?)
+
+  - `Daypack_lib` contains implementation of all functionalities, and has zero dependency on any online service
+
+  - This is not novel/unexpected or necessarily desirable, and is listed more for clarity's sake, as some similar software make use of online services
 
 #### Constraints (or scheduling strategies) supported
 
@@ -185,10 +197,6 @@ It is recommended that you at least read through the first chapter to understand
 
 This will allow you to understand the behaviour of Daypack more precisely, whether as a user of the frontends
 a user of the library
-
-__TODO__
-
-## Demos
 
 __TODO__
 
