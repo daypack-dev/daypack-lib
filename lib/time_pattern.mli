@@ -23,19 +23,15 @@ type t = {
   minutes : int list;
 }
 
-val matching_tm_seq :
-  search_type -> t -> Unix.tm Seq.t
+val matching_tm_seq : search_type -> t -> Unix.tm Seq.t
 
 val matching_time_slots : search_type -> t -> Time_slot_ds.t Seq.t
 
-val next_match_tm :
-  search_type -> t -> Unix.tm option
+val next_match_tm : search_type -> t -> Unix.tm option
 
-val next_match_int64 :
-  search_type -> t -> int64 option
+val next_match_int64 : search_type -> t -> int64 option
 
-val next_match_time_slot :
-  search_type -> t -> (int64 * int64) option
+val next_match_time_slot : search_type -> t -> (int64 * int64) option
 
 val matching_time_slots_paired_pattern :
   search_type -> t -> t -> Time_slot_ds.t Seq.t

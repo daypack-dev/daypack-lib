@@ -719,7 +719,9 @@ let debug_time_pattern_matching_tm_seq () =
   let search_years_ahead = 100 in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   let s =
-    Daypack_lib.Time_pattern.matching_tm_seq (Years_ahead_start_tm { time_zone_of_tm = `Local; start = tm; search_years_ahead })
+    Daypack_lib.Time_pattern.matching_tm_seq
+      (Years_ahead_start_tm
+         { time_zone_of_tm = `Local; start = tm; search_years_ahead })
       pattern
   in
   s
