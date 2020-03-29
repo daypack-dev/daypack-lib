@@ -11,9 +11,7 @@ let run (list_free_time_slots : bool) : unit =
         Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
       in
       let start = Daypack_lib.Time.Current.cur_unix_time () in
-      let end_exc =
-        Daypack_lib.Time.Add.add_days_unix_time ~days:3 start
-      in
+      let end_exc = Daypack_lib.Time.Add.add_days_unix_time ~days:3 start in
       Daypack_lib.Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc
         hd
       |> Seq.iter (fun (start, end_exc) ->

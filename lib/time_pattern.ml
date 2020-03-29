@@ -291,7 +291,7 @@ module Interpret_string = struct
               days = `Month_days [ day ];
               hours = [ hour ];
               minutes = [ minute ];
-              seconds = [ ];
+              seconds = [];
             })
     with _ -> (
         try

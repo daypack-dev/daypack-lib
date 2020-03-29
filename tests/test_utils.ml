@@ -242,8 +242,7 @@ let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
        (triple
           (list_size (int_bound 5) (int_bound 24))
           (list_size (int_bound 5) (int_bound 60))
-          (list_size (int_bound 5) (int_bound 60))
-       ))
+          (list_size (int_bound 5) (int_bound 60))))
 
 let time_pattern =
   QCheck.make ~print:Daypack_lib.Time_pattern.Print.debug_string_of_pattern
