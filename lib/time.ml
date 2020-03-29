@@ -1,5 +1,3 @@
-open Int64_utils
-
 type weekday =
   [ `Sun
   | `Mon

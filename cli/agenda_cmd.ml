@@ -10,7 +10,7 @@ let run (list_free_time_slots : bool) : unit =
       let hd =
         Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
       in
-      let start = Daypack_lib.Time.Current.cur_unix_time_min () in
+      let start = Daypack_lib.Time.Current.cur_unix_time () in
       let end_exc =
         Daypack_lib.Time.Add.add_days_unix_time_min ~days:3 start
       in
