@@ -28,15 +28,19 @@ let run (list_free_time_slots : bool) : unit =
                (Int64.sub end_exc start)))
     else
       Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start
-        ~end_exc ~include_task_seg_place_partially_within_time_period:true hd
-      |> Seq.iter (fun (task_seg_id, start, end_exc) ->
+        ~include_task_seg_place_partially_within_time_period:true hd
+      (* |> OSeq.take_while (fun (_task_seg_id, _place_start, place_end_exc) ->
+       *     place_end_exc <= end_exc
+       *   ) *)
+      |> OSeq.take 10
+      |> Seq.iter (fun (task_seg_id, place_start, place_end_exc) ->
           let start_str =
             Daypack_lib.Time.Print.date_string_of_time
-              ~display_in_time_zone:`Local start
+              ~display_in_time_zone:`Local place_start
           in
           let end_exc_str =
             Daypack_lib.Time.Print.date_string_of_time
-              ~display_in_time_zone:`Local end_exc
+              ~display_in_time_zone:`Local place_end_exc
           in
           Printf.printf "| %s - %s | %s\n" start_str end_exc_str
             (Daypack_lib.Task_ds.string_of_task_seg_id task_seg_id))
