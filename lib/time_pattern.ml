@@ -400,7 +400,7 @@ module Print = struct
   let debug_string_of_days (days : days) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_weekdays l =
-      String.concat "," (List.map Time.Print.weekday_to_string l)
+      String.concat "," (List.map Time.Print.string_of_weekday l)
     in
     match days with
     | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)

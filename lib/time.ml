@@ -291,7 +291,7 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let weekday_to_string (wday : weekday) : string =
+  let string_of_weekday (wday : weekday) : string =
     match wday with
     | `Sun -> "Sun"
     | `Mon -> "Mon"
