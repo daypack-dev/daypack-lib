@@ -162,27 +162,27 @@ end
 module Serialize = struct
   let pack_arith_seq (arith_seq : arith_seq) : Task_ds_t.arith_seq =
     {
-      start = Misc_utils.int64_to_int32_int32 arith_seq.start;
-      end_exc = Option.map Misc_utils.int64_to_int32_int32 arith_seq.end_exc;
-      diff = Misc_utils.int64_to_int32_int32 arith_seq.diff;
+      start = Misc_utils.int32_int32_of_int64 arith_seq.start;
+      end_exc = Option.map Misc_utils.int32_int32_of_int64 arith_seq.end_exc;
+      diff = Misc_utils.int32_int32_of_int64 arith_seq.diff;
     }
 
-  let pack_user_id = Misc_utils.int64_to_int32_int32
+  let pack_user_id = Misc_utils.int32_int32_of_int64
 
   let pack_task_id (id1, id2) =
-    (Misc_utils.int64_to_int32_int32 id1, Misc_utils.int64_to_int32_int32 id2)
+    (Misc_utils.int32_int32_of_int64 id1, Misc_utils.int32_int32_of_int64 id2)
 
   let pack_task_inst_id (id1, id2, id3) =
-    ( Misc_utils.int64_to_int32_int32 id1,
-      Misc_utils.int64_to_int32_int32 id2,
-      Misc_utils.int64_to_int32_int32 id3 )
+    ( Misc_utils.int32_int32_of_int64 id1,
+      Misc_utils.int32_int32_of_int64 id2,
+      Misc_utils.int32_int32_of_int64 id3 )
 
   let pack_task_seg_id (id1, id2, id3, id4, id5) =
-    ( Misc_utils.int64_to_int32_int32 id1,
-      Misc_utils.int64_to_int32_int32 id2,
-      Misc_utils.int64_to_int32_int32 id3,
-      Misc_utils.int64_to_int32_int32 id4,
-      Option.map Misc_utils.int64_to_int32_int32 id5 )
+    ( Misc_utils.int32_int32_of_int64 id1,
+      Misc_utils.int32_int32_of_int64 id2,
+      Misc_utils.int32_int32_of_int64 id3,
+      Misc_utils.int32_int32_of_int64 id4,
+      Option.map Misc_utils.int32_int32_of_int64 id5 )
 
   let rec pack_task ((id, data) : task) : Task_ds_t.task =
     (pack_task_id id, pack_task_data data)
@@ -220,8 +220,8 @@ module Serialize = struct
       (sched_req_template_data_unit : sched_req_template_data_unit) :
     Task_ds_t.sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:Misc_utils.int64_to_int32_int32
-      ~pack_time:Misc_utils.int64_to_int32_int32
+      ~pack_data:Misc_utils.int32_int32_of_int64
+      ~pack_time:Misc_utils.int32_int32_of_int64
       ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
       sched_req_template_data_unit
 
@@ -247,14 +247,14 @@ module Serialize = struct
     match task_inst_type with
     | Reminder -> `Reminder
     | Reminder_quota_counting { quota } ->
-      `Reminder_quota_counting (Misc_utils.int64_to_int32_int32 quota)
+      `Reminder_quota_counting (Misc_utils.int32_int32_of_int64 quota)
     | Passing -> `Passing
 
   and pack_task_seg (id, size) =
-    (pack_task_seg_id id, Misc_utils.int64_to_int32_int32 size)
+    (pack_task_seg_id id, Misc_utils.int32_int32_of_int64 size)
 
   and pack_task_seg_alloc_req (id, size) =
-    (pack_task_inst_id id, Misc_utils.int64_to_int32_int32 size)
+    (pack_task_inst_id id, Misc_utils.int32_int32_of_int64 size)
 
   and pack_task_seg_size x = x
 

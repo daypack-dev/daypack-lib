@@ -147,18 +147,18 @@ end
 
 module Serialize = struct
   let rec pack_sched_req (id, data) : Sched_req_ds_t.sched_req =
-    (Misc_utils.int64_to_int32_int32 id, List.map pack_sched_req_data_unit data)
+    (Misc_utils.int32_int32_of_int64 id, List.map pack_sched_req_data_unit data)
 
   and pack_sched_req_data_unit (sched_req_data_unit : sched_req_data_unit) :
     Sched_req_ds_t.sched_req_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:Task_ds.Serialize.pack_task_seg_alloc_req
-      ~pack_time:Misc_utils.int64_to_int32_int32
+      ~pack_time:Misc_utils.int32_int32_of_int64
       ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot sched_req_data_unit
 
   let rec pack_sched_req_record (id, data_list) :
     Sched_req_ds_t.sched_req_record =
-    ( Misc_utils.int64_to_int32_int32 id,
+    ( Misc_utils.int32_int32_of_int64 id,
       List.map pack_sched_req_record_data_unit data_list )
 
   and pack_sched_req_record_data_unit
@@ -166,7 +166,7 @@ module Serialize = struct
     Sched_req_ds_t.sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:Task_ds.Serialize.pack_task_seg
-      ~pack_time:Misc_utils.int64_to_int32_int32
+      ~pack_time:Misc_utils.int32_int32_of_int64
       ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
       sched_req_record_data
 end

@@ -9,8 +9,8 @@ module Serialize = struct
     set
     |> to_seq
     |> Seq.map (fun (x, y) ->
-        ( Misc_utils.int64_to_int32_int32 x,
-          Option.map Misc_utils.int64_to_int32_int32 y ))
+        ( Misc_utils.int32_int32_of_int64 x,
+          Option.map Misc_utils.int32_int32_of_int64 y ))
     |> List.of_seq
 end
 

@@ -307,22 +307,22 @@ module Serialize = struct
         {
           task_seg_related_data_list =
             List.map pack_data x.task_seg_related_data_list;
-          incre = Misc_utils.int64_to_int32_int32 x.incre;
+          incre = Misc_utils.int32_int32_of_int64 x.incre;
           time_slots = List.map pack_time_slot x.time_slots;
         }
     | Split_and_shift x ->
       `Split_and_shift
         {
           task_seg_related_data = pack_data x.task_seg_related_data;
-          incre = Misc_utils.int64_to_int32_int32 x.incre;
+          incre = Misc_utils.int32_int32_of_int64 x.incre;
           split_count =
             ( match x.split_count with
-              | Max_split x -> `Max_split (Misc_utils.int64_to_int32_int32 x)
+              | Max_split x -> `Max_split (Misc_utils.int32_int32_of_int64 x)
               | Exact_split x ->
-                `Exact_split (Misc_utils.int64_to_int32_int32 x) );
-          min_seg_size = Misc_utils.int64_to_int32_int32 x.min_seg_size;
+                `Exact_split (Misc_utils.int32_int32_of_int64 x) );
+          min_seg_size = Misc_utils.int32_int32_of_int64 x.min_seg_size;
           max_seg_size =
-            Option.map Misc_utils.int64_to_int32_int32 x.max_seg_size;
+            Option.map Misc_utils.int32_int32_of_int64 x.max_seg_size;
           time_slots = List.map pack_time_slot x.time_slots;
         }
     | Split_even x ->
@@ -331,14 +331,14 @@ module Serialize = struct
           task_seg_related_data = pack_data x.task_seg_related_data;
           time_slots = List.map pack_time_slot x.time_slots;
           buckets = List.map pack_time_slot x.buckets;
-          incre = Misc_utils.int64_to_int32_int32 x.incre;
+          incre = Misc_utils.int32_int32_of_int64 x.incre;
         }
     | Time_share x ->
       `Time_share
         {
           task_seg_related_data_list =
             List.map pack_data x.task_seg_related_data_list;
-          interval_size = Misc_utils.int64_to_int32_int32 x.interval_size;
+          interval_size = Misc_utils.int32_int32_of_int64 x.interval_size;
           time_slots = List.map pack_time_slot x.time_slots;
         }
     | Push_toward x ->
@@ -347,7 +347,7 @@ module Serialize = struct
           task_seg_related_data = pack_data x.task_seg_related_data;
           target = pack_time x.target;
           time_slots = List.map pack_time_slot x.time_slots;
-          incre = Misc_utils.int64_to_int32_int32 x.incre;
+          incre = Misc_utils.int32_int32_of_int64 x.incre;
         }
 end
 

@@ -553,8 +553,8 @@ let progress_gen =
          chunks =
            chunks
            |> List.map (fun (x, y) ->
-               ( Daypack_lib.Misc_utils.int64_to_int32_int32 x,
-                 Daypack_lib.Misc_utils.int64_to_int32_int32 y ))
+               ( Daypack_lib.Misc_utils.int32_int32_of_int64 x,
+                 Daypack_lib.Misc_utils.int32_int32_of_int64 y ))
            |> Daypack_lib.Int64_int64_set.Deserialize.unpack;
        })
     tiny_sorted_time_slots_gen

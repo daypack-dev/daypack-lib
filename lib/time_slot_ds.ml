@@ -308,8 +308,8 @@ end
 
 module Serialize = struct
   let pack_time_slot (start, end_exc) =
-    ( Misc_utils.int64_to_int32_int32 start,
-      Misc_utils.int64_to_int32_int32 end_exc )
+    ( Misc_utils.int32_int32_of_int64 start,
+      Misc_utils.int32_int32_of_int64 end_exc )
 
   let pack_time_slots time_slots = List.map pack_time_slot time_slots
 end

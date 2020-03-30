@@ -3052,7 +3052,7 @@ module Serialize = struct
     |> Task_inst_id_map.to_seq
     |> Seq.map (fun (id, quota) ->
         ( Task_ds.Serialize.pack_task_inst_id id,
-          Misc_utils.int64_to_int32_int32 quota ))
+          Misc_utils.int32_int32_of_int64 quota ))
     |> List.of_seq
 
   let pack_quota_diff (x : int64 Task_inst_id_map_utils.diff) :
@@ -3099,8 +3099,8 @@ module Serialize = struct
     |> Task_seg_id_map.to_seq
     |> Seq.map (fun (id, (start, end_exc)) ->
         ( Task_ds.Serialize.pack_task_seg_id id,
-          ( Misc_utils.int64_to_int32_int32 start,
-            Misc_utils.int64_to_int32_int32 end_exc ) ))
+          ( Misc_utils.int32_int32_of_int64 start,
+            Misc_utils.int32_int32_of_int64 end_exc ) ))
     |> List.of_seq
 
   let pack_indexed_by_task_seg_id_diff
@@ -3178,7 +3178,7 @@ module Serialize = struct
     x
     |> Int64_map.to_seq
     |> Seq.map (fun (id, y) ->
-        (Misc_utils.int64_to_int32_int32 id, Task_seg_id_set.Serialize.pack y))
+        (Misc_utils.int32_int32_of_int64 id, Task_seg_id_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_indexed_by_start_diff (x : task_seg_place_map_diff) :
@@ -3193,7 +3193,7 @@ module Serialize = struct
     x
     |> Int64_map.to_seq
     |> Seq.map (fun (id, y) ->
-        (Misc_utils.int64_to_int32_int32 id, Task_seg_id_set.Serialize.pack y))
+        (Misc_utils.int32_int32_of_int64 id, Task_seg_id_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_indexed_by_end_exc_diff (x : task_seg_place_map_diff) :
@@ -3213,7 +3213,7 @@ module Serialize = struct
   let pack_sched_req_ids (x : Int64_set.t) : (int32 * int32) list =
     x
     |> Int64_set.to_seq
-    |> Seq.map Misc_utils.int64_to_int32_int32
+    |> Seq.map Misc_utils.int32_int32_of_int64
     |> List.of_seq
 
   let pack_sched_req_ids_diff (x : Int64_set_utils.diff) :
