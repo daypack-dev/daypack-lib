@@ -97,7 +97,7 @@ module Equal : sig
 end
 
 module Serialize : sig
-  val list_to_base_and_diffs :
+  val base_and_diffs_of_list :
     Sched.sched list -> (Sched.sched * Sched.sched_diff list) option
 
   val to_base_and_diffs : t -> (Sched.sched * Sched.sched_diff list) option
