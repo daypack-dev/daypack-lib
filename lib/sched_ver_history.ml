@@ -322,7 +322,7 @@ module Equal = struct
 end
 
 module Serialize = struct
-  let list_to_base_and_diffs (l : Sched.sched list) :
+  let base_and_diffs_of_list (l : Sched.sched list) :
     (Sched.sched * Sched.sched_diff list) option =
     let rec aux
         (base_and_last_and_diffs :
@@ -343,7 +343,7 @@ module Serialize = struct
     aux None (List.rev l)
 
   let to_base_and_diffs (t : t) : (Sched.sched * Sched.sched_diff list) option =
-    list_to_base_and_diffs t.history
+    base_and_diffs_of_list t.history
 
   let write_to_dir ~(dir : string) (t : t) : (unit, string) result =
     try
