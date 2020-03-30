@@ -195,7 +195,7 @@ type time_zone =
 
 let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
 
-let unix_time_to_tm ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
+let tm_of_unix_time ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
   time
   |> Int64.to_float
   |> fun x ->
@@ -269,7 +269,7 @@ end
 
 module Add = struct
   let add_days_unix_time ~(days : int) (x : int64) : int64 =
-    unix_time_to_tm ~time_zone_of_tm:`Local x
+    tm_of_unix_time ~time_zone_of_tm:`Local x
     |> (fun tm -> { tm with tm_mday = tm.tm_mday + days })
     |> unix_time_of_tm ~time_zone_of_tm:`Local
 end
@@ -323,7 +323,7 @@ module Print = struct
 
   let time_to_date_string ~(display_in_time_zone : time_zone) (time : int64) :
     string =
-    let tm = unix_time_to_tm ~time_zone_of_tm:display_in_time_zone time in
+    let tm = tm_of_unix_time ~time_zone_of_tm:display_in_time_zone time in
     tm_to_date_string tm
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)

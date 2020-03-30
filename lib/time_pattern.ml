@@ -50,7 +50,7 @@ let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
     Years_ahead_start_tm
       {
         time_zone_of_tm;
-        start = Time.unix_time_to_tm ~time_zone_of_tm start;
+        start = Time.tm_of_unix_time ~time_zone_of_tm start;
         search_years_ahead;
       }
 
@@ -170,20 +170,20 @@ let local_start_tm_and_search_years_ahead_of_search_type
       match Time_slot_ds.min_start_and_max_end_exc_list time_slots with
       | None -> None
       | Some (start, end_exc) ->
-        let start_tm = Time.unix_time_to_tm ~time_zone_of_tm:`Local start in
+        let start_tm = Time.tm_of_unix_time ~time_zone_of_tm:`Local start in
         let end_exc_tm =
-          Time.unix_time_to_tm ~time_zone_of_tm:`Local end_exc
+          Time.tm_of_unix_time ~time_zone_of_tm:`Local end_exc
         in
         let search_years_ahead = end_exc_tm.tm_year - start_tm.tm_year + 1 in
         Some (start_tm, search_years_ahead) )
   | Years_ahead_start_unix_time { start; search_years_ahead } ->
-    let start_tm = Time.unix_time_to_tm ~time_zone_of_tm:`Local start in
+    let start_tm = Time.tm_of_unix_time ~time_zone_of_tm:`Local start in
     Some (start_tm, search_years_ahead)
   | Years_ahead_start_tm { time_zone_of_tm; start; search_years_ahead } ->
     let start =
       start
       |> Time.unix_time_of_tm ~time_zone_of_tm
-      |> Time.unix_time_to_tm ~time_zone_of_tm:`Local
+      |> Time.tm_of_unix_time ~time_zone_of_tm:`Local
     in
     Some (start, search_years_ahead)
 
