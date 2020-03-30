@@ -191,7 +191,7 @@ let matching_tm_seq (search_type : search_type) (t : t) : Unix.tm Seq.t =
   match local_start_tm_and_search_years_ahead_of_search_type search_type with
   | None -> Seq.empty
   | Some (start, search_years_ahead) ->
-    let start = Time.zero_tm_sec start in
+    (* let start = Time.zero_tm_sec start in *)
     matching_years ~search_years_ahead t start start
     |> Seq.flat_map (fun acc -> matching_months t start acc)
     |> Seq.flat_map (fun acc -> matching_days t start acc)
