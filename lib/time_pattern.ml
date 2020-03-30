@@ -423,6 +423,8 @@ module Print = struct
       (aux t.hours);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "min : [%s]\n"
       (aux t.minutes);
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "sec : [%s]\n"
+      (aux t.seconds);
     Buffer.contents buffer
 
   let debug_print_pattern ?(indent_level = 0) t =
