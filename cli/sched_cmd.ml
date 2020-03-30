@@ -12,7 +12,9 @@ let run () : unit =
       ~up_to_sched_req_id_inc:None
       context.sched_ver_history
     with
-    | Ok () -> ()
+    | Ok () ->
+      Context.save context |> Result.get_ok;
+      ()
     | Error () ->
       print_endline "Failed to schedule"
 
