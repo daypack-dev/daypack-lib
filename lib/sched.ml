@@ -4326,7 +4326,7 @@ module Print = struct
            "%s - %s | %s\n"
            (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
            (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc)
-           (Task_ds.task_seg_id_to_string id))
+           (Task_ds.string_of_task_seg_id id))
       (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "leftover quota :\n";
@@ -4341,7 +4341,7 @@ module Print = struct
     Task_seg_id_map.iter
       (fun id progress ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
-           (Task_ds.task_seg_id_to_string id);
+           (Task_ds.string_of_task_seg_id id);
          Task_ds.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
            ~buffer progress
          |> ignore)

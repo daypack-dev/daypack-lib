@@ -21,13 +21,13 @@ module Print_utils = struct
 
   let task_inst_id = Daypack_lib.Task_ds.task_inst_id_to_string
 
-  let task_seg_id = Daypack_lib.Task_ds.task_seg_id_to_string
+  let task_seg_id = Daypack_lib.Task_ds.string_of_task_seg_id
 
   let task_seg_id_set s =
     s
     |> Daypack_lib.Task_seg_id_set.to_seq
     |> List.of_seq
-    |> QCheck.Print.list Daypack_lib.Task_ds.task_seg_id_to_string
+    |> QCheck.Print.list Daypack_lib.Task_ds.string_of_task_seg_id
 
   let task_seg = QCheck.Print.(pair task_seg_id int64)
 

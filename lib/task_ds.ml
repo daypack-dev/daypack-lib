@@ -93,7 +93,7 @@ let string_to_task_inst_id (s : string) : (task_inst_id, unit) result =
   try Scanf.sscanf s "%Ld.%Ld.%Ld" (fun id1 id2 id3 -> Ok (id1, id2, id3))
   with _ -> Error ()
 
-let task_seg_id_to_string ((id1, id2, id3, id4, id5) : task_seg_id) =
+let string_of_task_seg_id ((id1, id2, id3, id4, id5) : task_seg_id) =
   Printf.sprintf "%Ld.%Ld.%Ld.%Ld.%s" id1 id2 id3 id4
     (match id5 with None -> "X" | Some x -> Int64.to_string x)
 
@@ -471,7 +471,7 @@ module Print = struct
   let debug_string_of_task_seg ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, size) =
     Debug_print.bprintf ~indent_level buffer "task seg id : %s\n"
-      (task_seg_id_to_string id);
+      (string_of_task_seg_id id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "size : %Ld\n"
       size;
     Buffer.contents buffer
@@ -479,7 +479,7 @@ module Print = struct
   let debug_string_of_task_seg_place ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, start, end_exc) =
     Debug_print.bprintf ~indent_level buffer "task seg id : %s\n"
-      (task_seg_id_to_string id);
+      (string_of_task_seg_id id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "[%Ld, %Ld)\n"
       start end_exc;
     Buffer.contents buffer

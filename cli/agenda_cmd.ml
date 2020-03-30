@@ -40,7 +40,7 @@ let run (list_free_time_slots : bool) : unit =
             Daypack_lib.Time.Print.time_to_date_string
               ~display_in_time_zone:`Local end_exc
           in
-          Printf.printf "| %s - %s | %s\n" start_str end_exc_str (Daypack_lib.Task_ds.task_seg_id_to_string task_seg_id)
+          Printf.printf "| %s - %s | %s\n" start_str end_exc_str (Daypack_lib.Task_ds.string_of_task_seg_id task_seg_id)
         )
 
 let cmd = (Term.(const run $ free_time_slots_arg), Term.info "agenda")
