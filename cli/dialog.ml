@@ -87,7 +87,7 @@ let ask_pick_choice (type a) ~indent_level ~(prompt : string)
   List.iter (fun (s, _) -> Printf.printf "  %s\n" s) choices;
   ask ~indent_level
     ~prompt:
-      "Please enter choice (case insensitive full/partial string of the choice)"
+      "Please enter choice (case insensitive full/prefix string of the choice)"
     (fun s ->
        let matching_choices =
          Daypack_lib.Misc_utils.prefix_string_match choices s
