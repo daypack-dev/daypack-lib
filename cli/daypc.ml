@@ -1,6 +1,6 @@
 open Cmdliner
 
-let cmds = [ Add_cmd.cmd; List_cmd.cmd; Agenda_cmd.cmd ]
+let cmds = [ Add_cmd.cmd; List_cmd.cmd; Agenda_cmd.cmd; Sched_cmd.cmd ]
 
 let default_cmd = (Term.(ret (const (`Help (`Pager, None)))), Term.info "daypc")
 
