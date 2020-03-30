@@ -16,11 +16,11 @@ let run (list_free_time_slots : bool) : unit =
         hd
       |> Seq.iter (fun (start, end_exc) ->
           let start_str =
-            Daypack_lib.Time.Print.time_to_date_string
+            Daypack_lib.Time.Print.date_string_of_time
               ~display_in_time_zone:`Local start
           in
           let end_exc_str =
-            Daypack_lib.Time.Print.time_to_date_string
+            Daypack_lib.Time.Print.date_string_of_time
               ~display_in_time_zone:`Local end_exc
           in
           Printf.printf "| %s - %s | %s\n" start_str end_exc_str
@@ -33,11 +33,11 @@ let run (list_free_time_slots : bool) : unit =
         hd
       |> Seq.iter (fun (task_seg_id, start, end_exc) ->
           let start_str =
-            Daypack_lib.Time.Print.time_to_date_string
+            Daypack_lib.Time.Print.date_string_of_time
               ~display_in_time_zone:`Local start
           in
           let end_exc_str =
-            Daypack_lib.Time.Print.time_to_date_string
+            Daypack_lib.Time.Print.date_string_of_time
               ~display_in_time_zone:`Local end_exc
           in
           Printf.printf "| %s - %s | %s\n" start_str end_exc_str (Daypack_lib.Task_ds.string_of_task_seg_id task_seg_id)

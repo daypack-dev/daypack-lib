@@ -321,7 +321,7 @@ module Print = struct
       (tm.tm_year + tm_year_offset)
       (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min
 
-  let time_to_date_string ~(display_in_time_zone : time_zone) (time : int64) :
+  let date_string_of_time ~(display_in_time_zone : time_zone) (time : int64) :
     string =
     let tm = tm_of_unix_time ~time_zone_of_tm:display_in_time_zone time in
     tm_to_date_string tm
@@ -329,7 +329,7 @@ module Print = struct
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_in_time_zone : time_zone) (time : int64) : string =
     Debug_print.bprintf ~indent_level buffer "%s\n"
-      (time_to_date_string ~display_in_time_zone time);
+      (date_string_of_time ~display_in_time_zone time);
     Buffer.contents buffer
 
   let debug_print_time ?(indent_level = 0) ~(display_in_time_zone : time_zone)

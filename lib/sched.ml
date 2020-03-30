@@ -4324,8 +4324,8 @@ module Print = struct
       (fun (id, start, end_exc) ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
            "%s - %s | %s\n"
-           (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
-           (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc)
+           (Time.Print.date_string_of_time ~display_in_time_zone:`Local start)
+           (Time.Print.date_string_of_time ~display_in_time_zone:`Local end_exc)
            (Task_ds.string_of_task_seg_id id))
       (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
