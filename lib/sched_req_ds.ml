@@ -173,7 +173,7 @@ end
 
 module Deserialize = struct
   let rec unpack_sched_req (id, data) : sched_req =
-    ( Misc_utils.int32_int32_to_int64 id,
+    ( Misc_utils.int64_of_int32_int32 id,
       List.map unpack_sched_req_data_unit data )
 
   and unpack_sched_req_data_unit
@@ -181,12 +181,12 @@ module Deserialize = struct
     sched_req_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:Task_ds.Deserialize.unpack_task_seg_alloc_req
-      ~unpack_time:Misc_utils.int32_int32_to_int64
+      ~unpack_time:Misc_utils.int64_of_int32_int32
       ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
       sched_req_data_unit
 
   let rec unpack_sched_req_record (id, data) : sched_req_record =
-    ( Misc_utils.int32_int32_to_int64 id,
+    ( Misc_utils.int64_of_int32_int32 id,
       List.map unpack_sched_req_record_data_unit data )
 
   and unpack_sched_req_record_data_unit
@@ -194,7 +194,7 @@ module Deserialize = struct
     sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:Task_ds.Deserialize.unpack_task_seg
-      ~unpack_time:Misc_utils.int32_int32_to_int64
+      ~unpack_time:Misc_utils.int64_of_int32_int32
       ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
       sched_req_record_data_unit
 end

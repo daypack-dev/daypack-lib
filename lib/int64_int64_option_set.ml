@@ -19,7 +19,7 @@ module Deserialize = struct
     l
     |> List.to_seq
     |> Seq.map (fun (x, y) ->
-        ( Misc_utils.int32_int32_to_int64 x,
-          Option.map Misc_utils.int32_int32_to_int64 y ))
+        ( Misc_utils.int64_of_int32_int32 x,
+          Option.map Misc_utils.int64_of_int32_int32 y ))
     |> of_seq
 end

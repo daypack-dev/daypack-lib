@@ -3554,7 +3554,7 @@ module Deserialize = struct
     |> List.to_seq
     |> Seq.map (fun (id, quota) ->
         ( Task_ds.Deserialize.unpack_task_inst_id id,
-          Misc_utils.int32_int32_to_int64 quota ))
+          Misc_utils.int64_of_int32_int32 quota ))
     |> Task_inst_id_map.of_seq
 
   let unpack_quota_diff
@@ -3605,8 +3605,8 @@ module Deserialize = struct
     |> List.to_seq
     |> Seq.map (fun (id, (start, end_exc)) ->
         ( Task_ds.Deserialize.unpack_task_seg_id id,
-          ( Misc_utils.int32_int32_to_int64 start,
-            Misc_utils.int32_int32_to_int64 end_exc ) ))
+          ( Misc_utils.int64_of_int32_int32 start,
+            Misc_utils.int64_of_int32_int32 end_exc ) ))
     |> Task_seg_id_map.of_seq
 
   let unpack_indexed_by_task_seg_id_diff
@@ -3691,7 +3691,7 @@ module Deserialize = struct
     x
     |> List.to_seq
     |> Seq.map (fun (id, y) ->
-        ( Misc_utils.int32_int32_to_int64 id,
+        ( Misc_utils.int64_of_int32_int32 id,
           Task_seg_id_set.Deserialize.unpack y ))
     |> Int64_map.of_seq
 
@@ -3709,7 +3709,7 @@ module Deserialize = struct
     x
     |> List.to_seq
     |> Seq.map (fun (id, y) ->
-        ( Misc_utils.int32_int32_to_int64 id,
+        ( Misc_utils.int64_of_int32_int32 id,
           Task_seg_id_set.Deserialize.unpack y ))
     |> Int64_map.of_seq
 
@@ -3731,7 +3731,7 @@ module Deserialize = struct
   let unpack_sched_req_ids (x : (int32 * int32) list) : Int64_set.t =
     x
     |> List.to_seq
-    |> Seq.map Misc_utils.int32_int32_to_int64
+    |> Seq.map Misc_utils.int64_of_int32_int32
     |> Int64_set.of_seq
 
   let unpack_sched_req_ids_diff (x : (int32 * int32) Set_utils_t.diff) :

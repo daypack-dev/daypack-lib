@@ -267,27 +267,27 @@ end
 module Deserialize = struct
   let unpack_arith_seq (arith_seq : Task_ds_t.arith_seq) : arith_seq =
     {
-      start = Misc_utils.int32_int32_to_int64 arith_seq.start;
-      end_exc = Option.map Misc_utils.int32_int32_to_int64 arith_seq.end_exc;
-      diff = Misc_utils.int32_int32_to_int64 arith_seq.diff;
+      start = Misc_utils.int64_of_int32_int32 arith_seq.start;
+      end_exc = Option.map Misc_utils.int64_of_int32_int32 arith_seq.end_exc;
+      diff = Misc_utils.int64_of_int32_int32 arith_seq.diff;
     }
 
-  let unpack_user_id = Misc_utils.int32_int32_to_int64
+  let unpack_user_id = Misc_utils.int64_of_int32_int32
 
   let unpack_task_id (id1, id2) =
-    (Misc_utils.int32_int32_to_int64 id1, Misc_utils.int32_int32_to_int64 id2)
+    (Misc_utils.int64_of_int32_int32 id1, Misc_utils.int64_of_int32_int32 id2)
 
   let unpack_task_inst_id (id1, id2, id3) =
-    ( Misc_utils.int32_int32_to_int64 id1,
-      Misc_utils.int32_int32_to_int64 id2,
-      Misc_utils.int32_int32_to_int64 id3 )
+    ( Misc_utils.int64_of_int32_int32 id1,
+      Misc_utils.int64_of_int32_int32 id2,
+      Misc_utils.int64_of_int32_int32 id3 )
 
   let unpack_task_seg_id (id1, id2, id3, id4, id5) =
-    ( Misc_utils.int32_int32_to_int64 id1,
-      Misc_utils.int32_int32_to_int64 id2,
-      Misc_utils.int32_int32_to_int64 id3,
-      Misc_utils.int32_int32_to_int64 id4,
-      Option.map Misc_utils.int32_int32_to_int64 id5 )
+    ( Misc_utils.int64_of_int32_int32 id1,
+      Misc_utils.int64_of_int32_int32 id2,
+      Misc_utils.int64_of_int32_int32 id3,
+      Misc_utils.int64_of_int32_int32 id4,
+      Option.map Misc_utils.int64_of_int32_int32 id5 )
 
   let rec unpack_task ((id, data) : Task_ds_t.task) : task =
     (unpack_task_id id, unpack_task_data data)
@@ -325,8 +325,8 @@ module Deserialize = struct
       (sched_req_template_data_unit : Task_ds_t.sched_req_template_data_unit) :
     sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
-      ~unpack_data:Misc_utils.int32_int32_to_int64
-      ~unpack_time:Misc_utils.int32_int32_to_int64
+      ~unpack_data:Misc_utils.int64_of_int32_int32
+      ~unpack_time:Misc_utils.int64_of_int32_int32
       ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
       sched_req_template_data_unit
 
@@ -354,14 +354,14 @@ module Deserialize = struct
     | `Reminder -> Reminder
     | `Reminder_quota_counting quota ->
       Reminder_quota_counting
-        { quota = Misc_utils.int32_int32_to_int64 quota }
+        { quota = Misc_utils.int64_of_int32_int32 quota }
     | `Passing -> Passing
 
   and unpack_task_seg (id, size) =
-    (unpack_task_seg_id id, Misc_utils.int32_int32_to_int64 size)
+    (unpack_task_seg_id id, Misc_utils.int64_of_int32_int32 size)
 
   and unpack_task_seg_alloc_req (id, size) =
-    (unpack_task_inst_id id, Misc_utils.int32_int32_to_int64 size)
+    (unpack_task_inst_id id, Misc_utils.int64_of_int32_int32 size)
 
   and unpack_task_seg_size x = x
 

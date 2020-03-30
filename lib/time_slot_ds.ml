@@ -316,8 +316,8 @@ end
 
 module Deserialize = struct
   let unpack_time_slot (start, end_exc) =
-    ( Misc_utils.int32_int32_to_int64 start,
-      Misc_utils.int32_int32_to_int64 end_exc )
+    ( Misc_utils.int64_of_int32_int32 start,
+      Misc_utils.int64_of_int32_int32 end_exc )
 
   let unpack_time_slots time_slots = List.map unpack_time_slot time_slots
 end

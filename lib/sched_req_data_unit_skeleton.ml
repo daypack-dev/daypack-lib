@@ -370,22 +370,22 @@ module Deserialize = struct
           task_seg_related_data_list =
             List.map unpack_data x.task_seg_related_data_list;
           time_slots = List.map unpack_time_slot x.time_slots;
-          incre = Misc_utils.int32_int32_to_int64 x.incre;
+          incre = Misc_utils.int64_of_int32_int32 x.incre;
         }
     | `Split_and_shift x ->
       Split_and_shift
         {
           task_seg_related_data = unpack_data x.task_seg_related_data;
           time_slots = List.map unpack_time_slot x.time_slots;
-          incre = Misc_utils.int32_int32_to_int64 x.incre;
+          incre = Misc_utils.int64_of_int32_int32 x.incre;
           split_count =
             ( match x.split_count with
-              | `Max_split x -> Max_split (Misc_utils.int32_int32_to_int64 x)
+              | `Max_split x -> Max_split (Misc_utils.int64_of_int32_int32 x)
               | `Exact_split x ->
-                Exact_split (Misc_utils.int32_int32_to_int64 x) );
-          min_seg_size = Misc_utils.int32_int32_to_int64 x.min_seg_size;
+                Exact_split (Misc_utils.int64_of_int32_int32 x) );
+          min_seg_size = Misc_utils.int64_of_int32_int32 x.min_seg_size;
           max_seg_size =
-            Option.map Misc_utils.int32_int32_to_int64 x.max_seg_size;
+            Option.map Misc_utils.int64_of_int32_int32 x.max_seg_size;
         }
     | `Split_even x ->
       Split_even
@@ -393,7 +393,7 @@ module Deserialize = struct
           task_seg_related_data = unpack_data x.task_seg_related_data;
           time_slots = List.map unpack_time_slot x.time_slots;
           buckets = List.map unpack_time_slot x.buckets;
-          incre = Misc_utils.int32_int32_to_int64 x.incre;
+          incre = Misc_utils.int64_of_int32_int32 x.incre;
         }
     | `Time_share x ->
       Time_share
@@ -401,7 +401,7 @@ module Deserialize = struct
           task_seg_related_data_list =
             List.map unpack_data x.task_seg_related_data_list;
           time_slots = List.map unpack_time_slot x.time_slots;
-          interval_size = Misc_utils.int32_int32_to_int64 x.interval_size;
+          interval_size = Misc_utils.int64_of_int32_int32 x.interval_size;
         }
     | `Push_toward x ->
       Push_toward
@@ -409,6 +409,6 @@ module Deserialize = struct
           task_seg_related_data = unpack_data x.task_seg_related_data;
           target = unpack_time x.target;
           time_slots = List.map unpack_time_slot x.time_slots;
-          incre = Misc_utils.int32_int32_to_int64 x.incre;
+          incre = Misc_utils.int64_of_int32_int32 x.incre;
         }
 end
