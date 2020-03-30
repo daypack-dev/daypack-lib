@@ -2816,17 +2816,14 @@ end
 module Leftover = struct
   let get_leftover_task_segs ~(before : int64) (sched : sched) :
     Task_ds.task_seg Seq.t =
-    Agenda.To_seq.task_seg_place_uncompleted
-      ~end_exc:before
-      ~include_task_seg_place_partially_within_time_period:false
-      sched
+    Agenda.To_seq.task_seg_place_uncompleted ~end_exc:before
+      ~include_task_seg_place_partially_within_time_period:false sched
     |> Seq.map (fun (task_seg_id, _, _) ->
         let task_seg_size =
           Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched
           |> Option.get
         in
-        (task_seg_id, task_seg_size)
-      )
+        (task_seg_id, task_seg_size))
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
     let leftover_task_segs = get_leftover_task_segs ~before:start sched in

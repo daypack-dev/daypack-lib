@@ -24,13 +24,11 @@ let run (list_free_time_slots : bool) : unit =
               ~display_in_time_zone:`Local end_exc
           in
           Printf.printf "| %s - %s | %s\n" start_str end_exc_str
-            (Daypack_lib.Time.Print.human_readable_string_of_duration (Int64.sub end_exc start)))
+            (Daypack_lib.Time.Print.human_readable_string_of_duration
+               (Int64.sub end_exc start)))
     else
-      Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted
-        ~start
-        ~end_exc
-        ~include_task_seg_place_partially_within_time_period:true
-        hd
+      Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start
+        ~end_exc ~include_task_seg_place_partially_within_time_period:true hd
       |> Seq.iter (fun (task_seg_id, start, end_exc) ->
           let start_str =
             Daypack_lib.Time.Print.date_string_of_time
@@ -40,7 +38,7 @@ let run (list_free_time_slots : bool) : unit =
             Daypack_lib.Time.Print.date_string_of_time
               ~display_in_time_zone:`Local end_exc
           in
-          Printf.printf "| %s - %s | %s\n" start_str end_exc_str (Daypack_lib.Task_ds.string_of_task_seg_id task_seg_id)
-        )
+          Printf.printf "| %s - %s | %s\n" start_str end_exc_str
+            (Daypack_lib.Task_ds.string_of_task_seg_id task_seg_id))
 
 let cmd = (Term.(const run $ free_time_slots_arg), Term.info "agenda")
