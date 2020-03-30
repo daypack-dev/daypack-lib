@@ -46,7 +46,7 @@ let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
     Years_ahead_start_unix_time { start; search_years_ahead }
   | Years_ahead_start_tm { time_zone_of_tm; start = start'; search_years_ahead }
     ->
-    let start = max (Time.tm_to_unix_time ~time_zone_of_tm start') start in
+    let start = max (Time.unix_time_of_tm ~time_zone_of_tm start') start in
     Years_ahead_start_tm
       {
         time_zone_of_tm;
@@ -182,7 +182,7 @@ let local_start_tm_and_search_years_ahead_of_search_type
   | Years_ahead_start_tm { time_zone_of_tm; start; search_years_ahead } ->
     let start =
       start
-      |> Time.tm_to_unix_time ~time_zone_of_tm
+      |> Time.unix_time_of_tm ~time_zone_of_tm
       |> Time.unix_time_to_tm ~time_zone_of_tm:`Local
     in
     Some (start, search_years_ahead)
@@ -207,7 +207,7 @@ let matching_time_slots (search_type : search_type) (t : t) :
     | _ -> None
   in
   matching_tm_seq search_type t
-  |> Seq.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
+  |> Seq.map (Time.unix_time_of_tm ~time_zone_of_tm:`Local)
   |> Seq.map (fun time -> (time, time +^ 1L))
   |> (fun l ->
       match time_slots with
@@ -222,7 +222,7 @@ let next_match_tm (search_type : search_type) (t : t) : Unix.tm option =
 
 let next_match_int64 (search_type : search_type) (t : t) : int64 option =
   next_match_tm search_type t
-  |> Option.map (Time.tm_to_unix_time ~time_zone_of_tm:`Local)
+  |> Option.map (Time.unix_time_of_tm ~time_zone_of_tm:`Local)
 
 let next_match_time_slot (search_type : search_type) (t : t) :
   (int64 * int64) option =

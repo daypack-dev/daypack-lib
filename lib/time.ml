@@ -203,7 +203,7 @@ let unix_time_to_tm ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
   | `Local -> Unix.localtime x
   | `UTC -> Unix.gmtime x
 
-let tm_to_unix_time ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
+let unix_time_of_tm ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
   tm
   |> zero_tm_sec
   |> (fun x ->
@@ -271,7 +271,7 @@ module Add = struct
   let add_days_unix_time ~(days : int) (x : int64) : int64 =
     unix_time_to_tm ~time_zone_of_tm:`Local x
     |> (fun tm -> { tm with tm_mday = tm.tm_mday + days })
-    |> tm_to_unix_time ~time_zone_of_tm:`Local
+    |> unix_time_of_tm ~time_zone_of_tm:`Local
 end
 
 module Check = struct

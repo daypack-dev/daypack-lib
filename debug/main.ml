@@ -758,9 +758,9 @@ let debug_time_pattern_matching_time_slots () =
      *      }) *)
     Unix.time () |> Unix.localtime
   in
-  let start = Time.tm_to_unix_time ~time_zone_of_tm:`Local tm in
+  let start = Time.unix_time_of_tm ~time_zone_of_tm:`Local tm in
   let end_exc =
-    Time.tm_to_unix_time ~time_zone_of_tm:`Local
+    Time.unix_time_of_tm ~time_zone_of_tm:`Local
       { tm with tm_year = tm.tm_year + 1 }
   in
   let time_slots = [ (start, end_exc) ] in
