@@ -23,3 +23,5 @@ let time_profile_store_dir =
   | Some s -> Some s
 
 let time_pattern_search_years_ahead = 5
+
+let agenda_display_task_seg_place_count = 100
