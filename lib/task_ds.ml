@@ -86,7 +86,7 @@ let string_to_task_id (s : string) : (task_id, unit) result =
   try Scanf.sscanf s "%Ld.%Ld" (fun id1 id2 -> Ok (id1, id2))
   with _ -> Error ()
 
-let task_inst_id_to_string ((id1, id2, id3) : task_inst_id) =
+let string_of_task_inst_id ((id1, id2, id3) : task_inst_id) =
   Printf.sprintf "%Ld.%Ld.%Ld" id1 id2 id3
 
 let string_to_task_inst_id (s : string) : (task_inst_id, unit) result =
@@ -459,7 +459,7 @@ module Print = struct
   let debug_string_of_task_inst ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, data) =
     Debug_print.bprintf ~indent_level buffer "task inst id : %s\n"
-      (task_inst_id_to_string id);
+      (string_of_task_inst_id id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "type : %s\n"
       ( match data.task_inst_type with
         | Reminder -> "reminder"

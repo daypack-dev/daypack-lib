@@ -4333,7 +4333,7 @@ module Print = struct
     Task_inst_id_map.iter
       (fun id quota ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s : %Ld\n"
-           (Task_ds.task_inst_id_to_string id)
+           (Task_ds.string_of_task_inst_id id)
            quota)
       sd.store.quota;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
@@ -4351,7 +4351,7 @@ module Print = struct
     Task_inst_id_map.iter
       (fun id progress ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
-           (Task_ds.task_inst_id_to_string id);
+           (Task_ds.string_of_task_inst_id id);
          Task_ds.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
            ~buffer progress
          |> ignore)
