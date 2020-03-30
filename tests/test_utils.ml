@@ -630,7 +630,7 @@ let progress = QCheck.make ~print:Print_utils.progress progress_gen
         "Daypack_lib.Task_id_map.of_seq",
         "Daypack_lib.Task_id_map.to_seq",
         "(pair task_id_gen pos_int64_set_gen)",
-        "(QCheck.Print.pair Daypack_lib.Task_ds.task_id_to_string \
+        "(QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_id \
          Print_utils.int64_set)" );
       ( "task_inst_id_to_task_seg_ids",
         "Daypack_lib.Task_inst_id_map.of_seq",
@@ -797,7 +797,7 @@ let task_id_to_task_inst_ids =
         |> Daypack_lib.Task_id_map.to_seq
         |> List.of_seq
         |> QCheck.Print.list
-          (QCheck.Print.pair Daypack_lib.Task_ds.task_id_to_string
+          (QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_id
              Print_utils.int64_set))
     task_id_to_task_inst_ids_gen
 

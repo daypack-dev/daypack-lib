@@ -53,7 +53,7 @@ let run (add_task : bool) : unit =
                   |> ignore )
             | `No -> () );
           Printf.printf "Allocated task under ID : %s\n"
-            (Daypack_lib.Task_ds.task_id_to_string task_id);
+            (Daypack_lib.Task_ds.string_of_task_id task_id);
           Printf.printf "Allocated task inst under ID : %s\n"
             (Daypack_lib.Task_ds.string_of_task_inst_id task_inst_id)
         | `Recurring -> print_endline "Not implemented" );

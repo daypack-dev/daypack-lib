@@ -80,7 +80,7 @@ let user_id_to_string (id : user_id) = Printf.sprintf "%Ld" id
 let string_to_user_id (s : string) : (user_id, unit) result =
   try Ok (Int64.of_string s) with _ -> Error ()
 
-let task_id_to_string ((id1, id2) : task_id) = Printf.sprintf "%Ld.%Ld" id1 id2
+let string_of_task_id ((id1, id2) : task_id) = Printf.sprintf "%Ld.%Ld" id1 id2
 
 let string_to_task_id (s : string) : (task_id, unit) result =
   try Scanf.sscanf s "%Ld.%Ld" (fun id1 id2 -> Ok (id1, id2))
@@ -403,7 +403,7 @@ module Print = struct
   let debug_string_of_task ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (id, data) =
     Debug_print.bprintf ~indent_level buffer "task id : %s\n"
-      (task_id_to_string id);
+      (string_of_task_id id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "name : %s\n"
       data.name;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
