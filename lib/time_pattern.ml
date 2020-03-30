@@ -410,7 +410,7 @@ module Print = struct
       (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_months l =
-      String.concat "," (List.map Time.Print.month_to_string l)
+      String.concat "," (List.map Time.Print.string_of_month l)
     in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : [%s]\n"

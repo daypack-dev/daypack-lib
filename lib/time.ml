@@ -301,7 +301,7 @@ module Print = struct
     | `Fri -> "Fri"
     | `Sat -> "Sat"
 
-  let month_to_string (month : month) : string =
+  let string_of_month (month : month) : string =
     match month with
     | `Jan -> "Jan"
     | `Feb -> "Feb"
