@@ -2814,27 +2814,19 @@ module Recur = struct
 end
 
 module Leftover = struct
-  let get_leftover_task_segs ~(before : int64) ((_sid, sd) as sched : sched) :
+  let get_leftover_task_segs ~(before : int64) (sched : sched) :
     Task_ds.task_seg Seq.t =
-    let agenda_before, _, _ =
-      Int64_map.split before sd.agenda.indexed_by_start
-    in
-    Int64_map.to_seq agenda_before
-    |> Seq.flat_map (fun (_, task_seg_ids) ->
-        Task_seg_id_set.to_seq task_seg_ids)
-    |> Seq.map (fun task_seg_id ->
-        Agenda.Find.find_task_seg_place_opt_by_task_seg_id task_seg_id sched
-        |> Option.get)
-    |> Seq.filter (fun (_, _place_start, place_end_exc) ->
-        place_end_exc <= before)
-    |> Seq.filter (fun (task_seg_id, _, _) ->
-        let id1, id2, id3, _, _ = task_seg_id in
-        let task_inst_id = (id1, id2, id3) in
-        Option.is_some
-          (Task_inst.Find.find_task_inst_uncompleted_opt task_inst_id sched))
-    |> Seq.filter_map (fun (task_seg_id, _, _) ->
-        Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched
-        |> Option.map (fun task_seg_size -> (task_seg_id, task_seg_size)))
+    Agenda.To_seq.task_seg_place_uncompleted
+      ~end_exc:before
+      ~include_task_seg_place_partially_within_time_period:false
+      sched
+    |> Seq.map (fun (task_seg_id, _, _) ->
+        let task_seg_size =
+          Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched
+          |> Option.get
+        in
+        (task_seg_id, task_seg_size)
+      )
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
     let leftover_task_segs = get_leftover_task_segs ~before:start sched in
