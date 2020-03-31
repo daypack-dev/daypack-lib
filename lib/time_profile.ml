@@ -26,11 +26,11 @@ let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
   |> List.to_seq
   |> Seq.map (fun (start_pat, end_exc_pat) ->
       let start_seq =
-        Time_pattern.matching_time_slots (Time_slots time_slots) start_pat
+        Time_pattern.matching_time_slots ~search_in_time_zone:`Local (Time_slots time_slots) start_pat
         |> Seq.map (fun (x, _) -> x)
       in
       let end_exc_seq =
-        Time_pattern.matching_time_slots (Time_slots time_slots) end_exc_pat
+        Time_pattern.matching_time_slots ~search_in_time_zone:`Local (Time_slots time_slots) end_exc_pat
         |> Seq.map (fun (_, y) -> y)
       in
       OSeq.map2 (fun start end_exc -> (start, end_exc)) start_seq end_exc_seq)

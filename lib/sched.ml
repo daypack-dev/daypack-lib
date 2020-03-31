@@ -2722,7 +2722,7 @@ module Recur = struct
           aux start end_exc diff task_inst_data sched_req_template
         | Task_ds.Time_pattern_match
             (pattern, { task_inst_data; sched_req_template }) ->
-          Time_pattern.matching_time_slots (Time_slots usable_time_slot_list)
+          Time_pattern.matching_time_slots ~search_in_time_zone:`Local (Time_slots usable_time_slot_list)
             pattern
           |> Seq.map (fun (start', _end_exc) ->
               ( task_inst_data,

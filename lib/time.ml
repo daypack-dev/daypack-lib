@@ -187,6 +187,13 @@ let normalize_tm tm =
   |> CalendarLib.Calendar.from_unixtm
   |> CalendarLib.Calendar.to_unixtm
 
+let tm_change_time_zone ~(from_time_zone : time_zone) ~(to_time_zone : time_zone) (tm : Unix.tm) : Unix.tm =
+  if from_time_zone = to_time_zone then
+    tm
+  else
+    let time = unix_time_of_tm ~time_zone_of_tm:from_time_zone tm in
+    tm_of_unix_time ~time_zone_of_tm:to_time_zone time
+
 let is_leap_year ~year =
   assert (year > 0);
   let divisible_by_4 = year mod 4 = 0 in
