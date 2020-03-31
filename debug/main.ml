@@ -720,8 +720,7 @@ let debug_time_pattern_matching_tm_seq () =
   let search_years_ahead = 100 in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   let s =
-    Daypack_lib.Time_pattern.matching_tm_seq
-      ~search_in_time_zone:`Local
+    Daypack_lib.Time_pattern.matching_tm_seq ~search_in_time_zone:`Local
       (Years_ahead_start_tm
          { time_zone_of_tm = `Local; start = tm; search_years_ahead })
       pattern
@@ -778,7 +777,8 @@ let debug_time_pattern_matching_time_slots () =
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   let s =
-    Daypack_lib.Time_pattern.matching_time_slots ~search_in_time_zone:`Local (Time_slots time_slots) pattern
+    Daypack_lib.Time_pattern.matching_time_slots ~search_in_time_zone:`Local
+      (Time_slots time_slots) pattern
   in
   s
   |> OSeq.take 30

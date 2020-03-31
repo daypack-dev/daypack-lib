@@ -123,8 +123,7 @@ let process_time_string (s : string) : (int64, string) result =
   | Error msg -> Error msg
   | Ok pat -> (
       match
-        Daypack_lib.Time_pattern.next_match_int64
-          ~search_in_time_zone:`Local
+        Daypack_lib.Time_pattern.next_match_int64 ~search_in_time_zone:`Local
           (Years_ahead_start_unix_time
              {
                start = Daypack_lib.Time.Current.cur_unix_time ();
