@@ -23,33 +23,6 @@ type month =
   | `Dec
   ]
 
-let weekdays : (string * weekday) list =
-  [
-    ("sunday", `Sun);
-    ("monday", `Mon);
-    ("tuesday", `Tue);
-    ("wednesday", `Wed);
-    ("thursday", `Thu);
-    ("friday", `Fri);
-    ("saturday", `Sat);
-  ]
-
-let months : (string * month) list =
-  [
-    ("january", `Jan);
-    ("february", `Feb);
-    ("march", `Mar);
-    ("april", `Apr);
-    ("may", `May);
-    ("june", `Jun);
-    ("july", `Jul);
-    ("august", `Aug);
-    ("september", `Sep);
-    ("october", `Oct);
-    ("november", `Nov);
-    ("december", `Dec);
-  ]
-
 let first_mday = 1
 
 let tm_year_offset = 1900
@@ -258,6 +231,33 @@ module Current = struct
 end
 
 module Interpret_string = struct
+  let weekdays : (string * weekday) list =
+    [
+      ("sunday", `Sun);
+      ("monday", `Mon);
+      ("tuesday", `Tue);
+      ("wednesday", `Wed);
+      ("thursday", `Thu);
+      ("friday", `Fri);
+      ("saturday", `Sat);
+    ]
+
+  let months : (string * month) list =
+    [
+      ("january", `Jan);
+      ("february", `Feb);
+      ("march", `Mar);
+      ("april", `Apr);
+      ("may", `May);
+      ("june", `Jun);
+      ("july", `Jul);
+      ("august", `Aug);
+      ("september", `Sep);
+      ("october", `Oct);
+      ("november", `Nov);
+      ("december", `Dec);
+    ]
+
   let weekday_of_string (s : string) : (weekday, unit) result =
     match Misc_utils.prefix_string_match weekdays s with
     | [ (_, x) ] -> Ok x
