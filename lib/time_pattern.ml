@@ -353,7 +353,7 @@ module Interpret_string = struct
 
   let of_weekday_time_string (s : string) : (t, unit) result =
     try
-      Scanf.sscanf s "%[^-]-%d:%d" (fun maybe_weekday hour minute ->
+      Scanf.sscanf s "%[a-zA-Z]%c%d:%d" (fun maybe_weekday _sep hour minute ->
           check_hour hour;
           check_minute minute;
           let weekday =
