@@ -398,6 +398,19 @@ module Interpret_string = struct
             | Ok x -> Ok x
             | Error () -> Error "Failed to interpret string as a time pattern" )
       )
+
+  let paired_pattern_of_string (s : string) : (t * t, string) result =
+    try
+      Scanf.sscanf s "%[^, ]%[, ]%[^, ]" (fun start _sep end_exc ->
+          match of_string start with
+          | Error _ -> Error "Failed to interpret start string as a time pattern"
+          | Ok start ->
+            match of_string end_exc with
+            | Error _ -> Error "Failed to interpret end exc string as a time pattern"
+            | Ok end_exc -> Ok (start, end_exc)
+        )
+    with
+    _ -> Error "Failed to interpret string as time pattern pair"
 end
 
 module Equal = struct
