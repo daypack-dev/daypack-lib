@@ -75,11 +75,6 @@ let weekday_of_int (x : int) : weekday =
   | 6 -> `Sat
   | _ -> failwith "Invalid wday int"
 
-let weekday_of_string (s : string) : (weekday, unit) result =
-  match Misc_utils.prefix_string_match weekdays s with
-  | [ (_, x) ] -> Ok x
-  | _ -> Error ()
-
 let cal_weekday_of_weekday (weekday : weekday) : CalendarLib.Calendar.day =
   match weekday with
   | `Sun -> Sun
@@ -130,11 +125,6 @@ let month_of_int (x : int) : month =
   | 10 -> `Nov
   | 11 -> `Dec
   | _ -> failwith "Invalid month int"
-
-let month_of_string (s : string) : (month, unit) result =
-  match Misc_utils.prefix_string_match months s with
-  | [ (_, x) ] -> Ok x
-  | _ -> Error ()
 
 let cal_month_of_month (month : month) : CalendarLib.Calendar.month =
   match month with
@@ -265,6 +255,18 @@ module Current = struct
   let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
 
   let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.gmtime
+end
+
+module Interpret_string = struct
+  let weekday_of_string (s : string) : (weekday, unit) result =
+    match Misc_utils.prefix_string_match weekdays s with
+    | [ (_, x) ] -> Ok x
+    | _ -> Error ()
+
+  let month_of_string (s : string) : (month, unit) result =
+    match Misc_utils.prefix_string_match months s with
+    | [ (_, x) ] -> Ok x
+    | _ -> Error ()
 end
 
 module Add = struct
