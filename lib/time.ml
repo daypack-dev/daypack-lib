@@ -23,33 +23,6 @@ type month =
   | `Dec
   ]
 
-let weekdays : (string * weekday) list =
-  [
-    ("sunday", `Sun);
-    ("monday", `Mon);
-    ("tuesday", `Tue);
-    ("wednesday", `Wed);
-    ("thursday", `Thu);
-    ("friday", `Fri);
-    ("saturday", `Sat);
-  ]
-
-let months : (string * month) list =
-  [
-    ("january", `Jan);
-    ("february", `Feb);
-    ("march", `Mar);
-    ("april", `Apr);
-    ("may", `May);
-    ("june", `Jun);
-    ("july", `Jul);
-    ("august", `Aug);
-    ("september", `Sep);
-    ("october", `Oct);
-    ("november", `Nov);
-    ("december", `Dec);
-  ]
-
 let first_mday = 1
 
 let tm_year_offset = 1900
@@ -214,6 +187,13 @@ let normalize_tm tm =
   |> CalendarLib.Calendar.from_unixtm
   |> CalendarLib.Calendar.to_unixtm
 
+let tm_change_time_zone ~(from_time_zone : time_zone)
+    ~(to_time_zone : time_zone) (tm : Unix.tm) : Unix.tm =
+  if from_time_zone = to_time_zone then tm
+  else
+    let time = unix_time_of_tm ~time_zone_of_tm:from_time_zone tm in
+    tm_of_unix_time ~time_zone_of_tm:to_time_zone time
+
 let is_leap_year ~year =
   assert (year > 0);
   let divisible_by_4 = year mod 4 = 0 in
@@ -258,6 +238,33 @@ module Current = struct
 end
 
 module Interpret_string = struct
+  let weekdays : (string * weekday) list =
+    [
+      ("sunday", `Sun);
+      ("monday", `Mon);
+      ("tuesday", `Tue);
+      ("wednesday", `Wed);
+      ("thursday", `Thu);
+      ("friday", `Fri);
+      ("saturday", `Sat);
+    ]
+
+  let months : (string * month) list =
+    [
+      ("january", `Jan);
+      ("february", `Feb);
+      ("march", `Mar);
+      ("april", `Apr);
+      ("may", `May);
+      ("june", `Jun);
+      ("july", `Jul);
+      ("august", `Aug);
+      ("september", `Sep);
+      ("october", `Oct);
+      ("november", `Nov);
+      ("december", `Dec);
+    ]
+
   let weekday_of_string (s : string) : (weekday, unit) result =
     match Misc_utils.prefix_string_match weekdays s with
     | [ (_, x) ] -> Ok x
