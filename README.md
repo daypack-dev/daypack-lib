@@ -22,7 +22,13 @@ Daypack as a library aims to be powerful enough to accomodate everyday personal 
 
 ## Demos
 
+#### Daypc (cli frontend)
+
 __TODO__
+
+#### Daypack\_lib (core library)
+
+See here __TODO__
 
 ## Features
 
@@ -193,12 +199,9 @@ __TODO__
 
 #### User guide
 
-It is recommended that you at least read through the first chapter to understand how Daypack works internally
+See here __TODO__ for `daypc` user guide
 
-This will allow you to understand the behaviour of Daypack more precisely, whether as a user of the frontends
-a user of the library
-
-__TODO__
+See here __TODO__ for `daypack_lib` library documentation
 
 ## Contributions
 
