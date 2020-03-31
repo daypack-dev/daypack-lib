@@ -1,5 +1,5 @@
 
-module To_string = struct
+module Print = struct
   let human_readable_string_of_duration (duration : int64) : string =
     let minutes = Int64.div duration 60L in
     let hours = Int64.div minutes 60L in
