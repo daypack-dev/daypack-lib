@@ -257,7 +257,8 @@ let ask_sched_req_data_unit ~indent_level
     in
     let start = ask_time ~indent_level ~prompt:"Enter start time" in
     let duration =
-      ask_uint64 ~indent_level ~prompt:"Enter duration (minutes)"
+      ask ~indent_level ~prompt:"Enter duration"
+        Daypack_lib.Duration.Interpret_string.of_string
     in
     Ok
       (Daypack_lib.Sched_req_data_unit_skeleton.Fixed
