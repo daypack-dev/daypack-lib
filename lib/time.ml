@@ -1,5 +1,3 @@
-open Int64_utils
-
 type weekday =
   [ `Sun
   | `Mon
@@ -78,7 +76,9 @@ let weekday_of_int (x : int) : weekday =
   | _ -> failwith "Invalid wday int"
 
 let weekday_of_string (s : string) : (weekday, unit) result =
-  Misc_utils.substring_match weekdays s
+  match Misc_utils.prefix_string_match weekdays s with
+  | [ (_, x) ] -> Ok x
+  | _ -> Error ()
 
 let cal_weekday_of_weekday (weekday : weekday) : CalendarLib.Calendar.day =
   match weekday with
@@ -132,7 +132,9 @@ let month_of_int (x : int) : month =
   | _ -> failwith "Invalid month int"
 
 let month_of_string (s : string) : (month, unit) result =
-  Misc_utils.substring_match months s
+  match Misc_utils.prefix_string_match months s with
+  | [ (_, x) ] -> Ok x
+  | _ -> Error ()
 
 let cal_month_of_month (month : month) : CalendarLib.Calendar.month =
   match month with
@@ -191,16 +193,19 @@ type time_zone =
   | `UTC
   ]
 
-let unix_time_to_tm ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
-  time *^ 60L
+let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
+
+let tm_of_unix_time ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
+  time
   |> Int64.to_float
   |> fun x ->
   match time_zone_of_tm with
   | `Local -> Unix.localtime x
   | `UTC -> Unix.gmtime x
 
-let tm_to_unix_time ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
+let unix_time_of_tm ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
   tm
+  |> zero_tm_sec
   |> (fun x ->
       match time_zone_of_tm with
       | `Local ->
@@ -211,12 +216,13 @@ let tm_to_unix_time ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
         |> CalendarLib.Calendar.from_unixtm
         |> CalendarLib.Calendar.from_gmt
         |> CalendarLib.Calendar.to_unixfloat)
-  |> fun time -> (time |> Int64.of_float) /^ 60L
+  |> fun time -> time |> Int64.of_float
 
 let normalize_tm tm =
-  tm |> CalendarLib.Calendar.from_unixtm |> CalendarLib.Calendar.to_unixtm
-
-let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
+  tm
+  |> zero_tm_sec
+  |> CalendarLib.Calendar.from_unixtm
+  |> CalendarLib.Calendar.to_unixtm
 
 let is_leap_year ~year =
   assert (year > 0);
@@ -249,17 +255,28 @@ let weekday_of_month_day ~(year : int) ~(month : month) ~(mday : int) : weekday
     (CalendarLib.Date.make year (int_of_month month) mday)
   |> weekday_of_cal_weekday
 
-let cur_unix_time_sec () : int64 = Unix.time () |> Int64.of_float
-
-let cur_unix_time_min () : int64 = cur_unix_time_sec () /^ 60L
-
-let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
-
-let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.gmtime
-
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
   Unix.gmtime timestamp
+
+module Current = struct
+  let cur_unix_time () : int64 = Unix.time () |> Int64.of_float
+
+  let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
+
+  let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.gmtime
+end
+
+module Add = struct
+  let add_days_unix_time ~(days : int) (x : int64) : int64 =
+    tm_of_unix_time ~time_zone_of_tm:`Local x
+    |> (fun tm -> { tm with tm_mday = tm.tm_mday + days })
+    |> unix_time_of_tm ~time_zone_of_tm:`Local
+end
+
+module Check = struct
+  let check_unix_time (x : int64) = x >= 0L
+end
 
 module Serialize = struct
   let pack_weekday (x : weekday) : Time_t.weekday = x
@@ -274,7 +291,7 @@ module Deserialize = struct
 end
 
 module Print = struct
-  let weekday_to_string (wday : weekday) : string =
+  let string_of_weekday (wday : weekday) : string =
     match wday with
     | `Sun -> "Sun"
     | `Mon -> "Mon"
@@ -284,7 +301,7 @@ module Print = struct
     | `Fri -> "Fri"
     | `Sat -> "Sat"
 
-  let month_to_string (month : month) : string =
+  let string_of_month (month : month) : string =
     match month with
     | `Jan -> "Jan"
     | `Feb -> "Feb"
@@ -304,15 +321,15 @@ module Print = struct
       (tm.tm_year + tm_year_offset)
       (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min
 
-  let time_to_date_string ~(display_in_time_zone : time_zone) (time : int64) :
+  let date_string_of_time ~(display_in_time_zone : time_zone) (time : int64) :
     string =
-    let tm = unix_time_to_tm ~time_zone_of_tm:display_in_time_zone time in
+    let tm = tm_of_unix_time ~time_zone_of_tm:display_in_time_zone time in
     tm_to_date_string tm
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_in_time_zone : time_zone) (time : int64) : string =
     Debug_print.bprintf ~indent_level buffer "%s\n"
-      (time_to_date_string ~display_in_time_zone time);
+      (date_string_of_time ~display_in_time_zone time);
     Buffer.contents buffer
 
   let debug_print_time ?(indent_level = 0) ~(display_in_time_zone : time_zone)

@@ -19,15 +19,15 @@ module Print_utils = struct
 
   let time_slots = QCheck.Print.list time_slot
 
-  let task_inst_id = Daypack_lib.Task_ds.task_inst_id_to_string
+  let task_inst_id = Daypack_lib.Task_ds.string_of_task_inst_id
 
-  let task_seg_id = Daypack_lib.Task_ds.task_seg_id_to_string
+  let task_seg_id = Daypack_lib.Task_ds.string_of_task_seg_id
 
   let task_seg_id_set s =
     s
     |> Daypack_lib.Task_seg_id_set.to_seq
     |> List.of_seq
-    |> QCheck.Print.list Daypack_lib.Task_ds.task_seg_id_to_string
+    |> QCheck.Print.list Daypack_lib.Task_ds.string_of_task_seg_id
 
   let task_seg = QCheck.Print.(pair task_seg_id int64)
 
@@ -233,14 +233,15 @@ let days =
 let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
   let open QCheck.Gen in
   map
-    (fun (years, months, days, (hours, minutes)) ->
-       Daypack_lib.Time_pattern.{ years; months; days; hours; minutes })
+    (fun (years, months, days, (hours, minutes, seconds)) ->
+       Daypack_lib.Time_pattern.{ years; months; days; hours; minutes; seconds })
     (quad
        (list_size (int_bound 5) (int_range 1980 2100))
        (list_size (int_bound 5) month_gen)
        days_gen
-       (pair
+       (triple
           (list_size (int_bound 5) (int_bound 24))
+          (list_size (int_bound 5) (int_bound 60))
           (list_size (int_bound 5) (int_bound 60))))
 
 let time_pattern =
@@ -548,7 +549,14 @@ let progress_gen =
   map
     (fun chunks ->
        let open Daypack_lib.Task_ds in
-       { chunks = Daypack_lib.Int64_int64_set.Deserialize.unpack chunks })
+       {
+         chunks =
+           chunks
+           |> List.map (fun (x, y) ->
+               ( Daypack_lib.Misc_utils.int32_int32_of_int64 x,
+                 Daypack_lib.Misc_utils.int32_int32_of_int64 y ))
+           |> Daypack_lib.Int64_int64_set.Deserialize.unpack;
+       })
     tiny_sorted_time_slots_gen
 
 let progress = QCheck.make ~print:Print_utils.progress progress_gen
@@ -610,7 +618,7 @@ let progress = QCheck.make ~print:Print_utils.progress progress_gen
         "Daypack_lib.Task_inst_id_map.of_seq",
         "Daypack_lib.Task_inst_id_map.to_seq",
         "(pair task_inst_id_gen pos_int64_gen)",
-        "(QCheck.Print.pair Daypack_lib.Task_ds.task_inst_id_to_string \
+        "(QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_inst_id \
          Print_utils.int64)" );
       ( "user_id_to_task_ids",
         "Daypack_lib.User_id_map.of_seq",
@@ -622,13 +630,13 @@ let progress = QCheck.make ~print:Print_utils.progress progress_gen
         "Daypack_lib.Task_id_map.of_seq",
         "Daypack_lib.Task_id_map.to_seq",
         "(pair task_id_gen pos_int64_set_gen)",
-        "(QCheck.Print.pair Daypack_lib.Task_ds.task_id_to_string \
+        "(QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_id \
          Print_utils.int64_set)" );
       ( "task_inst_id_to_task_seg_ids",
         "Daypack_lib.Task_inst_id_map.of_seq",
         "Daypack_lib.Task_inst_id_map.to_seq",
         "(pair task_inst_id_gen pos_int64_int64_option_set_gen)",
-        "(QCheck.Print.pair Daypack_lib.Task_ds.task_inst_id_to_string \
+        "(QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_inst_id \
          Print_utils.int64_int64_option_set)" );
       ( "indexed_by_task_seg_id",
         "Daypack_lib.Task_seg_id_map.of_seq",
@@ -755,7 +763,7 @@ let quota =
         |> Daypack_lib.Task_inst_id_map.to_seq
         |> List.of_seq
         |> QCheck.Print.list
-          (QCheck.Print.pair Daypack_lib.Task_ds.task_inst_id_to_string
+          (QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_inst_id
              Print_utils.int64))
     quota_gen
 
@@ -789,7 +797,7 @@ let task_id_to_task_inst_ids =
         |> Daypack_lib.Task_id_map.to_seq
         |> List.of_seq
         |> QCheck.Print.list
-          (QCheck.Print.pair Daypack_lib.Task_ds.task_id_to_string
+          (QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_id
              Print_utils.int64_set))
     task_id_to_task_inst_ids_gen
 
@@ -807,7 +815,7 @@ let task_inst_id_to_task_seg_ids =
         |> Daypack_lib.Task_inst_id_map.to_seq
         |> List.of_seq
         |> QCheck.Print.list
-          (QCheck.Print.pair Daypack_lib.Task_ds.task_inst_id_to_string
+          (QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_inst_id
              Print_utils.int64_int64_option_set))
     task_inst_id_to_task_seg_ids_gen
 

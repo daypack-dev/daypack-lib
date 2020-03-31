@@ -208,14 +208,21 @@ module Store = struct
         f_unpack_suffix = "quota";
         store_typ = "int64 Task_inst_id_map.t";
         diff_typ = "int64 Task_inst_id_map_utils.diff";
-        ret_typ = "(Task_ds.task_inst_id * int64) list";
-        diff_ret_typ = "(Task_ds_t.task_inst_id, int64) Map_utils_t.diff";
+        ret_typ = "(Task_ds_t.task_inst_id * (int32 * int32)) list";
+        diff_ret_typ =
+          "(Task_ds_t.task_inst_id, (int32 * int32)) Map_utils_t.diff";
         f_to_seq = "Task_inst_id_map.to_seq";
         f_of_seq = "Task_inst_id_map.of_seq";
-        f_inner_pack = None;
-        f_inner_pack_data = None;
-        f_inner_unpack = None;
-        f_inner_unpack_data = None;
+        f_inner_pack =
+          Some
+            "(fun (id, quota) -> (Task_ds.Serialize.pack_task_inst_id id, \
+             Misc_utils.int64_to_int32_int32 quota))";
+        f_inner_pack_data = Some "Misc_utils.int64_to_int32_int32";
+        f_inner_unpack =
+          Some
+            "(fun (id, quota) -> (Task_ds.Deserialize.unpack_task_inst_id id, \
+             Misc_utils.int32_int32_to_int64 quota))";
+        f_inner_unpack_data = Some "Misc_utils.int32_int32_to_int64";
       };
       {
         f_pack_suffix = "task_seg_id_to_progress";
@@ -229,13 +236,13 @@ module Store = struct
         f_of_seq = "Task_seg_id_map.of_seq";
         f_inner_pack =
           Some
-            "(fun (id, progress) -> (id, Task_ds.Serialize.pack_progress \
-             progress))";
+            "(fun (id, progress) -> (Task_ds.Serialize.pack_task_seg_id id, \
+             Task_ds.Serialize.pack_progress progress))";
         f_inner_pack_data = Some "Task_ds.Serialize.pack_progress";
         f_inner_unpack =
           Some
-            "(fun (id, progress) -> (id, Task_ds.Deserialize.unpack_progress \
-             progress))";
+            "(fun (id, progress) -> (Task_ds.Deserialize.unpack_task_seg_id \
+             id, Task_ds.Deserialize.unpack_progress progress))";
         f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_progress";
       };
       {
@@ -250,13 +257,13 @@ module Store = struct
         f_of_seq = "Task_inst_id_map.of_seq";
         f_inner_pack =
           Some
-            "(fun (id, progress) -> (id, Task_ds.Serialize.pack_progress \
-             progress))";
+            "(fun (id, progress) -> (Task_ds.Serialize.pack_task_inst_id id, \
+             Task_ds.Serialize.pack_progress progress))";
         f_inner_pack_data = Some "Task_ds.Serialize.pack_progress";
         f_inner_unpack =
           Some
-            "(fun (id, progress) -> (id, Task_ds.Deserialize.unpack_progress \
-             progress))";
+            "(fun (id, progress) -> (Task_ds.Deserialize.unpack_task_inst_id \
+             id, Task_ds.Deserialize.unpack_progress progress))";
         f_inner_unpack_data = Some "Task_ds.Deserialize.unpack_progress";
       };
       {
@@ -264,13 +271,26 @@ module Store = struct
         f_unpack_suffix = "indexed_by_task_seg_id";
         store_typ = "(int64 * int64) Task_seg_id_map.t";
         diff_typ = "(int64 * int64) Task_seg_id_map_utils.diff";
-        ret_typ = "(Task_ds_t.task_seg_id * (int64 * int64)) list";
-        diff_ret_typ = "(Task_ds_t.task_seg_id, int64 * int64) Map_utils_t.diff";
+        ret_typ =
+          "(Task_ds_t.task_seg_id * ((int32 * int32) * (int32 * int32))) list";
+        diff_ret_typ =
+          "(Task_ds_t.task_seg_id, (int32 * int32) * (int32 * int32)) \
+           Map_utils_t.diff";
         f_to_seq = "Task_seg_id_map.to_seq";
         f_of_seq = "Task_seg_id_map.of_seq";
-        f_inner_pack = Some "(fun x -> x)";
+        f_inner_pack =
+          Some
+            "(fun (id, (start, end_exc)) -> \
+             (Task_ds.Serialize.pack_task_seg_id id, \
+             (Misc_utils.int64_to_int32_int32 start, \
+             Misc_utils.int64_to_int32_int32 end_exc)))";
         f_inner_pack_data = Some "(fun x -> x)";
-        f_inner_unpack = Some "(fun x -> x)";
+        f_inner_unpack =
+          Some
+            "(fun (id, (start, end_exc)) -> \
+             (Task_ds.Deserialize.unpack_task_seg_id id, \
+             (Misc_utils.int32_int32_to_int64 start, \
+             Misc_utils.int32_int32_to_int64 end_exc)))";
         f_inner_unpack_data = Some "(fun x -> x)";
       };
     ]
@@ -358,8 +378,10 @@ module Bucket_store = struct
     diff_ret_typ : string;
     f_to_seq : string;
     f_of_seq : string;
-    f_inner_pack : string option;
-    f_inner_unpack : string option;
+    f_id_pack : string option;
+    f_id_unpack : string option;
+    f_data_pack : string option;
+    f_data_unpack : string option;
   }
 
   let pack_bucket_store_list =
@@ -369,24 +391,30 @@ module Bucket_store = struct
         f_unpack_suffix = "user_id_to_task_ids";
         store_typ = "Int64_set.t User_id_map.t";
         diff_typ = "User_id_map_utils.Int64_bucketed.diff_bucketed";
-        ret_typ = "(Task_ds_t.user_id * int64 list) list";
-        diff_ret_typ = "(Task_ds_t.user_id, int64) Map_utils_t.diff_bucketed";
+        ret_typ = "(Task_ds_t.user_id * (int32 * int32) list) list";
+        diff_ret_typ =
+          "(Task_ds_t.user_id, (int32 * int32)) Map_utils_t.diff_bucketed";
         f_to_seq = "User_id_map.to_seq";
         f_of_seq = "User_id_map.of_seq";
-        f_inner_pack = Some "Int64_set.Serialize.pack";
-        f_inner_unpack = Some "Int64_set.Deserialize.unpack";
+        f_id_pack = Some "Task_ds.Serialize.pack_user_id";
+        f_id_unpack = Some "Task_ds.Deserialize.unpack_user_id";
+        f_data_pack = Some "Int64_set.Serialize.pack";
+        f_data_unpack = Some "Int64_set.Deserialize.unpack";
       };
       {
         f_pack_suffix = "task_id_to_task_inst_ids";
         f_unpack_suffix = "task_id_to_task_inst_ids";
         store_typ = "Int64_set.t Task_id_map.t";
         diff_typ = "Task_id_map_utils.Int64_bucketed.diff_bucketed";
-        ret_typ = "(Task_ds_t.task_id * int64 list) list";
-        diff_ret_typ = "(Task_ds_t.task_id, int64) Map_utils_t.diff_bucketed";
+        ret_typ = "(Task_ds_t.task_id * (int32 * int32) list) list";
+        diff_ret_typ =
+          "(Task_ds_t.task_id, (int32 * int32)) Map_utils_t.diff_bucketed";
         f_to_seq = "Task_id_map.to_seq";
         f_of_seq = "Task_id_map.of_seq";
-        f_inner_pack = Some "Int64_set.Serialize.pack";
-        f_inner_unpack = Some "Int64_set.Deserialize.unpack";
+        f_id_pack = Some "Task_ds.Serialize.pack_task_id";
+        f_id_unpack = Some "Task_ds.Deserialize.unpack_task_id";
+        f_data_pack = Some "Int64_set.Serialize.pack";
+        f_data_unpack = Some "Int64_set.Deserialize.unpack";
       };
       {
         f_pack_suffix = "task_inst_id_to_task_seg_ids";
@@ -394,14 +422,18 @@ module Bucket_store = struct
         store_typ = "Int64_int64_option_set.t Task_inst_id_map.t";
         diff_typ =
           "Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed";
-        ret_typ = "(Task_ds_t.task_inst_id * (int64 * int64 option) list) list";
+        ret_typ =
+          "(Task_ds_t.task_inst_id * ((int32 * int32) * (int32 * int32) \
+           option) list) list";
         diff_ret_typ =
-          "(Task_ds_t.task_inst_id, int64 * int64 option) \
+          "(Task_ds_t.task_inst_id, (int32 * int32) * (int32 * int32) option) \
            Map_utils_t.diff_bucketed";
         f_to_seq = "Task_inst_id_map.to_seq";
         f_of_seq = "Task_inst_id_map.of_seq";
-        f_inner_pack = Some "Int64_int64_option_set.Serialize.pack";
-        f_inner_unpack = Some "Int64_int64_option_set.Deserialize.unpack";
+        f_id_pack = Some "Task_ds.Serialize.pack_task_inst_id";
+        f_id_unpack = Some "Task_ds.Deserialize.unpack_task_inst_id";
+        f_data_pack = Some "Int64_int64_option_set.Serialize.pack";
+        f_data_unpack = Some "Int64_int64_option_set.Deserialize.unpack";
       };
       (* {
        *   f_pack_suffix = "progress_indexed_by_start";
@@ -421,26 +453,30 @@ module Bucket_store = struct
         f_unpack_suffix = "indexed_by_start";
         store_typ = "task_seg_place_map";
         diff_typ = "task_seg_place_map_diff";
-        ret_typ = "(int64 * Task_ds_t.task_seg_id list) list";
+        ret_typ = "((int32 * int32) * Task_ds_t.task_seg_id list) list";
         diff_ret_typ =
-          "(int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed";
+          "((int32 * int32), Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed";
         f_to_seq = "Int64_map.to_seq";
         f_of_seq = "Int64_map.of_seq";
-        f_inner_pack = Some "Task_seg_id_set.Serialize.pack";
-        f_inner_unpack = Some "Task_seg_id_set.Deserialize.unpack";
+        f_id_pack = Some "Misc_utils.int64_to_int32_int32";
+        f_id_unpack = Some "Misc_utils.int32_int32_to_int64";
+        f_data_pack = Some "Task_seg_id_set.Serialize.pack";
+        f_data_unpack = Some "Task_seg_id_set.Deserialize.unpack";
       };
       {
         f_pack_suffix = "indexed_by_end_exc";
         f_unpack_suffix = "indexed_by_end_exc";
         store_typ = "task_seg_place_map";
         diff_typ = "task_seg_place_map_diff";
-        ret_typ = "(int64 * Task_ds_t.task_seg_id list) list";
+        ret_typ = "((int32 * int32) * Task_ds_t.task_seg_id list) list";
         diff_ret_typ =
-          "(int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed";
+          "((int32 * int32), Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed";
         f_to_seq = "Int64_map.to_seq";
         f_of_seq = "Int64_map.of_seq";
-        f_inner_pack = Some "Task_seg_id_set.Serialize.pack";
-        f_inner_unpack = Some "Task_seg_id_set.Deserialize.unpack";
+        f_id_pack = Some "Misc_utils.int64_to_int32_int32";
+        f_id_unpack = Some "Misc_utils.int32_int32_to_int64";
+        f_data_pack = Some "Task_seg_id_set.Serialize.pack";
+        f_data_unpack = Some "Task_seg_id_set.Deserialize.unpack";
       };
     ]
 
@@ -452,18 +488,24 @@ module Bucket_store = struct
     Printf.printf "let %s (x : %s) : %s =\n" (get_pack_f_name e) e.store_typ
       e.ret_typ;
     Printf.printf "x |> %s\n" e.f_to_seq;
-    Option.iter
-      (fun x -> Printf.printf "|> Seq.map (fun (id, y) -> (id, %s y))\n" x)
-      e.f_inner_pack;
+    Printf.printf "|> Seq.map (fun (id, y) -> (\n";
+    Option.iter (fun x -> Printf.printf "%s " x) e.f_id_pack;
+    Printf.printf "id, ";
+    Option.iter (fun x -> Printf.printf "%s " x) e.f_data_pack;
+    Printf.printf "y";
+    Printf.printf "))\n";
     Printf.printf "|> List.of_seq\n"
 
   let print_unpack_function e =
     Printf.printf "let %s (x : %s) : %s =\n" (get_unpack_f_name e) e.ret_typ
       e.store_typ;
     Printf.printf "x |> List.to_seq\n";
-    Option.iter
-      (fun x -> Printf.printf "|> Seq.map (fun (id, y) -> (id, %s y))\n" x)
-      e.f_inner_unpack;
+    Printf.printf "|> Seq.map (fun (id, y) -> (\n";
+    Option.iter (fun x -> Printf.printf "%s " x) e.f_id_unpack;
+    Printf.printf "id, ";
+    Option.iter (fun x -> Printf.printf "%s " x) e.f_data_unpack;
+    Printf.printf "y";
+    Printf.printf "))\n";
     Printf.printf "|> %s\n" e.f_of_seq
 
   let print_pack_diff_function e =
@@ -524,12 +566,12 @@ module Set_store = struct
         f_unpack_suffix = "sched_req_ids";
         store_typ = "Int64_set.t";
         diff_typ = "Int64_set_utils.diff";
-        ret_typ = "int64 list";
-        diff_ret_typ = "int64 Set_utils_t.diff";
+        ret_typ = "(int32 * int32) list";
+        diff_ret_typ = "(int32 * int32) Set_utils_t.diff";
         f_to_seq = "Int64_set.to_seq";
         f_of_seq = "Int64_set.of_seq";
-        f_inner_pack = None;
-        f_inner_unpack = None;
+        f_inner_pack = Some "Misc_utils.int64_to_int32_int32";
+        f_inner_unpack = Some "Misc_utils.int32_int32_to_int64";
       };
     ]
 

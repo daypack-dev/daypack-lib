@@ -116,14 +116,6 @@ val sched_data_empty : sched_data
 
 val empty : sched
 
-module Time_slot : sig
-  val get_occupied_time_slots :
-    ?start:int64 -> ?end_exc:int64 -> sched -> (int64 * int64) Seq.t
-
-  val get_free_time_slots :
-    start:int64 -> end_exc:int64 -> sched -> (int64 * int64) Seq.t
-end
-
 module Quota : sig
   val update_quota : int64 Task_inst_id_map.t -> sched -> sched
 
@@ -631,6 +623,14 @@ module Agenda : sig
     val remove_task_seg_place_by_task_seg_id :
       Task_ds.task_seg_id -> sched -> sched
   end
+
+  module Time_slot : sig
+    val get_occupied_time_slots :
+      ?start:int64 -> ?end_exc:int64 -> sched -> (int64 * int64) Seq.t
+
+    val get_free_time_slots :
+      start:int64 -> end_exc:int64 -> sched -> (int64 * int64) Seq.t
+  end
 end
 
 module Sched_req : sig
@@ -641,12 +641,14 @@ module Sched_req : sig
 
   module Enqueue : sig
     val enqueue_sched_req_data :
-      Sched_req_ds.sched_req_data -> sched -> Sched_req_ds.sched_req * sched
+      Sched_req_ds.sched_req_data ->
+      sched ->
+      (Sched_req_ds.sched_req * sched, unit) result
 
     val enqueue_sched_req_data_list :
       Sched_req_ds.sched_req_data list ->
       sched ->
-      Sched_req_ds.sched_req list * sched
+      (Sched_req_ds.sched_req list * sched, unit) result
   end
 
   module Dequeue : sig
@@ -778,17 +780,18 @@ module Serialize : sig
     sched_req_record_store -> Sched_req_ds_t.sched_req_record list
 
   val pack_quota :
-    int64 Task_inst_id_map.t -> (Task_ds.task_inst_id * int64) list
+    int64 Task_inst_id_map.t -> (Task_ds_t.task_inst_id * (int32 * int32)) list
 
   val pack_user_id_to_task_ids :
-    Int64_set.t User_id_map.t -> (Task_ds_t.user_id * int64 list) list
+    Int64_set.t User_id_map.t -> (Task_ds_t.user_id * (int32 * int32) list) list
 
   val pack_task_id_to_task_inst_ids :
-    Int64_set.t Task_id_map.t -> (Task_ds_t.task_id * int64 list) list
+    Int64_set.t Task_id_map.t -> (Task_ds_t.task_id * (int32 * int32) list) list
 
   val pack_task_inst_id_to_task_seg_ids :
     Int64_int64_option_set.t Task_inst_id_map.t ->
-    (Task_ds_t.task_inst_id * (int64 * int64 option) list) list
+    (Task_ds_t.task_inst_id * ((int32 * int32) * (int32 * int32) option) list)
+      list
 
   val pack_task_seg_id_to_progress :
     Task_ds.progress Task_seg_id_map.t ->
@@ -800,15 +803,15 @@ module Serialize : sig
 
   val pack_indexed_by_task_seg_id :
     (int64 * int64) Task_seg_id_map.t ->
-    (Task_ds_t.task_seg_id * (int64 * int64)) list
+    (Task_ds_t.task_seg_id * ((int32 * int32) * (int32 * int32))) list
 
   val pack_indexed_by_start :
-    task_seg_place_map -> (int64 * Task_ds_t.task_seg_id list) list
+    task_seg_place_map -> ((int32 * int32) * Task_ds_t.task_seg_id list) list
 
   val pack_indexed_by_end_exc :
-    task_seg_place_map -> (int64 * Task_ds_t.task_seg_id list) list
+    task_seg_place_map -> ((int32 * int32) * Task_ds_t.task_seg_id list) list
 
-  val pack_sched_req_ids : Int64_set.t -> int64 list
+  val pack_sched_req_ids : Int64_set.t -> (int32 * int32) list
 
   val pack_sched : sched -> Sched_t.sched
 
@@ -848,16 +851,17 @@ module Deserialize : sig
     Sched_req_ds_t.sched_req_record list -> sched_req_record_store
 
   val unpack_quota :
-    (Task_ds.task_inst_id * int64) list -> int64 Task_inst_id_map.t
+    (Task_ds_t.task_inst_id * (int32 * int32)) list -> int64 Task_inst_id_map.t
 
   val unpack_user_id_to_task_ids :
-    (Task_ds_t.user_id * int64 list) list -> Int64_set.t User_id_map.t
+    (Task_ds_t.user_id * (int32 * int32) list) list -> Int64_set.t User_id_map.t
 
   val unpack_task_id_to_task_inst_ids :
-    (Task_ds_t.task_id * int64 list) list -> Int64_set.t Task_id_map.t
+    (Task_ds_t.task_id * (int32 * int32) list) list -> Int64_set.t Task_id_map.t
 
   val unpack_task_inst_id_to_task_seg_ids :
-    (Task_ds_t.task_inst_id * (int64 * int64 option) list) list ->
+    (Task_ds_t.task_inst_id * ((int32 * int32) * (int32 * int32) option) list)
+      list ->
     Int64_int64_option_set.t Task_inst_id_map.t
 
   val unpack_task_seg_id_to_progress :
@@ -869,16 +873,16 @@ module Deserialize : sig
     Task_ds.progress Task_inst_id_map.t
 
   val unpack_indexed_by_task_seg_id :
-    (Task_ds_t.task_seg_id * (int64 * int64)) list ->
+    (Task_ds_t.task_seg_id * ((int32 * int32) * (int32 * int32))) list ->
     (int64 * int64) Task_seg_id_map.t
 
   val unpack_indexed_by_end_exc :
-    (int64 * Task_ds_t.task_seg_id list) list -> task_seg_place_map
+    ((int32 * int32) * Task_ds_t.task_seg_id list) list -> task_seg_place_map
 
   val unpack_indexed_by_start :
-    (int64 * Task_ds_t.task_seg_id list) list -> task_seg_place_map
+    ((int32 * int32) * Task_ds_t.task_seg_id list) list -> task_seg_place_map
 
-  val unpack_sched_req_ids : int64 list -> Int64_set.t
+  val unpack_sched_req_ids : (int32 * int32) list -> Int64_set.t
 
   val unpack_sched : Sched_t.sched -> sched
 

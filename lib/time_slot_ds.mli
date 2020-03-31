@@ -36,3 +36,21 @@ val equal : t list -> t list -> bool
 val a_is_subset_of_b : a:t Seq.t -> b:t Seq.t -> bool
 
 val to_string : t -> string
+
+module Check : sig
+  val check_time_slot : t -> bool
+end
+
+module Serialize : sig
+  val pack_time_slot : int64 * int64 -> (int32 * int32) * (int32 * int32)
+
+  val pack_time_slots :
+    (int64 * int64) list -> ((int32 * int32) * (int32 * int32)) list
+end
+
+module Deserialize : sig
+  val unpack_time_slot : (int32 * int32) * (int32 * int32) -> int64 * int64
+
+  val unpack_time_slots :
+    ((int32 * int32) * (int32 * int32)) list -> (int64 * int64) list
+end

@@ -113,55 +113,89 @@ let sched_req_partially_within_time_period ~start ~end_exc
     (start' < start && start < end_exc')
     || (start' < end_exc && end_exc < end_exc')
 
+module Check = struct
+  let check_sched_req_data (data : sched_req_data) : bool =
+    List.for_all
+      (fun x ->
+         Sched_req_data_unit_skeleton.Check.check
+           ~f_data:Task_ds.Check.check_task_seg_alloc_req
+           ~f_time:Time.Check.check_unix_time
+           ~f_time_slot:Time_slot_ds.Check.check_time_slot x)
+      data
+
+  let check_sched_req_data_list (l : sched_req_data list) : bool =
+    List.for_all check_sched_req_data l
+
+  let check_sched_req ((id, data) : sched_req) : bool =
+    id >= 0L && check_sched_req_data data
+
+  let check_sched_req_record_data (data : sched_req_record_data) : bool =
+    List.for_all
+      (fun x ->
+         Sched_req_data_unit_skeleton.Check.check
+           ~f_data:Task_ds.Check.check_task_seg
+           ~f_time:Time.Check.check_unix_time
+           ~f_time_slot:Time_slot_ds.Check.check_time_slot x)
+      data
+
+  let check_sched_req_record_data_list (l : sched_req_record_data list) : bool =
+    List.for_all check_sched_req_record_data l
+
+  let check_sched_req_record ((id, data) : sched_req_record) : bool =
+    id >= 0L && check_sched_req_record_data data
+end
+
 module Serialize = struct
   let rec pack_sched_req (id, data) : Sched_req_ds_t.sched_req =
-    (id, List.map pack_sched_req_data_unit data)
+    (Misc_utils.int32_int32_of_int64 id, List.map pack_sched_req_data_unit data)
 
   and pack_sched_req_data_unit (sched_req_data_unit : sched_req_data_unit) :
     Sched_req_ds_t.sched_req_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:(fun x -> x)
-      ~pack_time:(fun x -> x)
-      ~pack_time_slot:(fun x -> x)
-      sched_req_data_unit
+      ~pack_data:Task_ds.Serialize.pack_task_seg_alloc_req
+      ~pack_time:Misc_utils.int32_int32_of_int64
+      ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot sched_req_data_unit
 
   let rec pack_sched_req_record (id, data_list) :
     Sched_req_ds_t.sched_req_record =
-    (id, List.map pack_sched_req_record_data_unit data_list)
+    ( Misc_utils.int32_int32_of_int64 id,
+      List.map pack_sched_req_record_data_unit data_list )
 
   and pack_sched_req_record_data_unit
       (sched_req_record_data : sched_req_record_data_unit) :
     Sched_req_ds_t.sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:(fun x -> x)
-      ~pack_time:(fun x -> x)
-      ~pack_time_slot:(fun x -> x)
+      ~pack_data:Task_ds.Serialize.pack_task_seg
+      ~pack_time:Misc_utils.int32_int32_of_int64
+      ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
       sched_req_record_data
 end
 
 module Deserialize = struct
   let rec unpack_sched_req (id, data) : sched_req =
-    (id, List.map unpack_sched_req_data_unit data)
+    ( Misc_utils.int64_of_int32_int32 id,
+      List.map unpack_sched_req_data_unit data )
 
   and unpack_sched_req_data_unit
       (sched_req_data_unit : Sched_req_ds_t.sched_req_data_unit) :
     sched_req_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
-      ~unpack_data:(fun x -> x)
-      ~unpack_time:(fun x -> x)
-      ~unpack_time_slot:(fun x -> x)
+      ~unpack_data:Task_ds.Deserialize.unpack_task_seg_alloc_req
+      ~unpack_time:Misc_utils.int64_of_int32_int32
+      ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
       sched_req_data_unit
 
   let rec unpack_sched_req_record (id, data) : sched_req_record =
-    (id, List.map unpack_sched_req_record_data_unit data)
+    ( Misc_utils.int64_of_int32_int32 id,
+      List.map unpack_sched_req_record_data_unit data )
 
   and unpack_sched_req_record_data_unit
       (sched_req_record_data_unit : Sched_req_ds_t.sched_req_record_data_unit) :
     sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
-      ~unpack_data:(fun x -> x)
-      ~unpack_time:(fun x -> x)
-      ~unpack_time_slot:(fun x -> x)
+      ~unpack_data:Task_ds.Deserialize.unpack_task_seg
+      ~unpack_time:Misc_utils.int64_of_int32_int32
+      ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
       sched_req_record_data_unit
 end
 
@@ -172,7 +206,7 @@ module Print = struct
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
           Printf.sprintf "id : %s, len : %Ld\n"
-            (Task_ds.task_inst_id_to_string id)
+            (Task_ds.string_of_task_inst_id id)
             len)
       ~string_of_time:Int64.to_string
       ~string_of_time_slot:Time_slot_ds.to_string req_data
@@ -200,7 +234,7 @@ module Print = struct
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
           Printf.sprintf "id : %s, len : %Ld\n"
-            (Task_ds.task_seg_id_to_string id)
+            (Task_ds.string_of_task_seg_id id)
             len)
       ~string_of_time:Int64.to_string
       ~string_of_time_slot:Time_slot_ds.to_string req_data

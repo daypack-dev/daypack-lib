@@ -1,12 +1,12 @@
 open Test_utils
 
-let qc_list_of_base_and_diffs_is_inverse_of_list_to_base_and_diffs =
+let qc_list_of_base_and_diffs_is_inverse_of_base_and_diffs_of_list =
   QCheck.Test.make ~count:1000
-    ~name:"qc_list_of_base_and_diffs_is_inverse_of_list_to_base_and_diffs"
+    ~name:"qc_list_of_base_and_diffs_is_inverse_of_base_and_diffs_of_list"
     QCheck.(list_of_size Gen.(int_range 1 10) sched)
     (fun scheds ->
        match
-         Daypack_lib.Sched_ver_history.Serialize.list_to_base_and_diffs scheds
+         Daypack_lib.Sched_ver_history.Serialize.base_and_diffs_of_list scheds
        with
        | None -> false
        | Some (base, diffs) ->
@@ -54,7 +54,7 @@ let qc_read_from_dir_is_inverse_of_write_to_dir =
 
 let suite =
   [
-    qc_list_of_base_and_diffs_is_inverse_of_list_to_base_and_diffs;
+    qc_list_of_base_and_diffs_is_inverse_of_base_and_diffs_of_list;
     qc_of_base_and_diffs_is_inverse_of_to_base_and_diffs;
     qc_read_from_dir_is_inverse_of_write_to_dir;
   ]

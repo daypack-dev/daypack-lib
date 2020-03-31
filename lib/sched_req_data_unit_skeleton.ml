@@ -136,6 +136,49 @@ let map (type a b c d e f) ~(f_data : a -> d) ~(f_time : b -> e)
 let map_list ~f_data ~f_time ~f_time_slot ts =
   List.map (map ~f_data ~f_time ~f_time_slot) ts
 
+module Check = struct
+  let check (type a b c) ~(f_data : a -> bool) ~(f_time : b -> bool)
+      ~(f_time_slot : c -> bool) (t : (a, b, c) t) : bool =
+    match t with
+    | Fixed { task_seg_related_data; start } ->
+      f_data task_seg_related_data && f_time start
+    | Shift { task_seg_related_data_list; time_slots; incre } ->
+      List.for_all f_data task_seg_related_data_list
+      && List.for_all f_time_slot time_slots
+      && incre > 0L
+    | Split_and_shift
+        {
+          task_seg_related_data;
+          time_slots;
+          incre;
+          split_count;
+          min_seg_size;
+          max_seg_size;
+        } -> (
+        f_data task_seg_related_data
+        && List.for_all f_time_slot time_slots
+        && incre > 0L
+        && ( match split_count with
+            | Max_split x -> x >= 0L
+            | Exact_split x -> x >= 0L )
+        && min_seg_size > 0L
+        && match max_seg_size with None -> true | Some x -> x >= min_seg_size )
+    | Split_even { task_seg_related_data; time_slots; buckets; incre } ->
+      f_data task_seg_related_data
+      && List.for_all f_time_slot time_slots
+      && List.for_all f_time_slot buckets
+      && incre > 0L
+    | Time_share { task_seg_related_data_list; time_slots; interval_size } ->
+      List.for_all f_data task_seg_related_data_list
+      && List.for_all f_time_slot time_slots
+      && interval_size > 0L
+    | Push_toward { task_seg_related_data; target; time_slots; incre } ->
+      f_data task_seg_related_data
+      && f_time target
+      && List.for_all f_time_slot time_slots
+      && incre > 0L
+end
+
 let get_inner_data (type a b c) (t : (a, b, c) t) : a list =
   match t with
   | Fixed { task_seg_related_data; _ } -> [ task_seg_related_data ]
@@ -264,20 +307,22 @@ module Serialize = struct
         {
           task_seg_related_data_list =
             List.map pack_data x.task_seg_related_data_list;
-          incre = x.incre;
+          incre = Misc_utils.int32_int32_of_int64 x.incre;
           time_slots = List.map pack_time_slot x.time_slots;
         }
     | Split_and_shift x ->
       `Split_and_shift
         {
           task_seg_related_data = pack_data x.task_seg_related_data;
-          incre = x.incre;
+          incre = Misc_utils.int32_int32_of_int64 x.incre;
           split_count =
             ( match x.split_count with
-              | Max_split x -> `Max_split x
-              | Exact_split x -> `Exact_split x );
-          min_seg_size = x.min_seg_size;
-          max_seg_size = x.max_seg_size;
+              | Max_split x -> `Max_split (Misc_utils.int32_int32_of_int64 x)
+              | Exact_split x ->
+                `Exact_split (Misc_utils.int32_int32_of_int64 x) );
+          min_seg_size = Misc_utils.int32_int32_of_int64 x.min_seg_size;
+          max_seg_size =
+            Option.map Misc_utils.int32_int32_of_int64 x.max_seg_size;
           time_slots = List.map pack_time_slot x.time_slots;
         }
     | Split_even x ->
@@ -286,14 +331,14 @@ module Serialize = struct
           task_seg_related_data = pack_data x.task_seg_related_data;
           time_slots = List.map pack_time_slot x.time_slots;
           buckets = List.map pack_time_slot x.buckets;
-          incre = x.incre;
+          incre = Misc_utils.int32_int32_of_int64 x.incre;
         }
     | Time_share x ->
       `Time_share
         {
           task_seg_related_data_list =
             List.map pack_data x.task_seg_related_data_list;
-          interval_size = x.interval_size;
+          interval_size = Misc_utils.int32_int32_of_int64 x.interval_size;
           time_slots = List.map pack_time_slot x.time_slots;
         }
     | Push_toward x ->
@@ -302,7 +347,7 @@ module Serialize = struct
           task_seg_related_data = pack_data x.task_seg_related_data;
           target = pack_time x.target;
           time_slots = List.map pack_time_slot x.time_slots;
-          incre = x.incre;
+          incre = Misc_utils.int32_int32_of_int64 x.incre;
         }
 end
 
@@ -325,20 +370,22 @@ module Deserialize = struct
           task_seg_related_data_list =
             List.map unpack_data x.task_seg_related_data_list;
           time_slots = List.map unpack_time_slot x.time_slots;
-          incre = x.incre;
+          incre = Misc_utils.int64_of_int32_int32 x.incre;
         }
     | `Split_and_shift x ->
       Split_and_shift
         {
           task_seg_related_data = unpack_data x.task_seg_related_data;
           time_slots = List.map unpack_time_slot x.time_slots;
-          incre = x.incre;
+          incre = Misc_utils.int64_of_int32_int32 x.incre;
           split_count =
             ( match x.split_count with
-              | `Max_split x -> Max_split x
-              | `Exact_split x -> Exact_split x );
-          min_seg_size = x.min_seg_size;
-          max_seg_size = x.max_seg_size;
+              | `Max_split x -> Max_split (Misc_utils.int64_of_int32_int32 x)
+              | `Exact_split x ->
+                Exact_split (Misc_utils.int64_of_int32_int32 x) );
+          min_seg_size = Misc_utils.int64_of_int32_int32 x.min_seg_size;
+          max_seg_size =
+            Option.map Misc_utils.int64_of_int32_int32 x.max_seg_size;
         }
     | `Split_even x ->
       Split_even
@@ -346,7 +393,7 @@ module Deserialize = struct
           task_seg_related_data = unpack_data x.task_seg_related_data;
           time_slots = List.map unpack_time_slot x.time_slots;
           buckets = List.map unpack_time_slot x.buckets;
-          incre = x.incre;
+          incre = Misc_utils.int64_of_int32_int32 x.incre;
         }
     | `Time_share x ->
       Time_share
@@ -354,7 +401,7 @@ module Deserialize = struct
           task_seg_related_data_list =
             List.map unpack_data x.task_seg_related_data_list;
           time_slots = List.map unpack_time_slot x.time_slots;
-          interval_size = x.interval_size;
+          interval_size = Misc_utils.int64_of_int32_int32 x.interval_size;
         }
     | `Push_toward x ->
       Push_toward
@@ -362,6 +409,6 @@ module Deserialize = struct
           task_seg_related_data = unpack_data x.task_seg_related_data;
           target = unpack_time x.target;
           time_slots = List.map unpack_time_slot x.time_slots;
-          incre = x.incre;
+          incre = Misc_utils.int64_of_int32_int32 x.incre;
         }
 end

@@ -77,14 +77,35 @@ let succ_task_seg_sub_id ((id1, id2, id3, id4, id5) : task_seg_id) =
 
 let user_id_to_string (id : user_id) = Printf.sprintf "%Ld" id
 
-let task_id_to_string ((id1, id2) : task_id) = Printf.sprintf "%Ld.%Ld" id1 id2
+let string_to_user_id (s : string) : (user_id, unit) result =
+  try Ok (Int64.of_string s) with _ -> Error ()
 
-let task_inst_id_to_string ((id1, id2, id3) : task_inst_id) =
+let string_of_task_id ((id1, id2) : task_id) = Printf.sprintf "%Ld.%Ld" id1 id2
+
+let string_to_task_id (s : string) : (task_id, unit) result =
+  try Scanf.sscanf s "%Ld.%Ld" (fun id1 id2 -> Ok (id1, id2))
+  with _ -> Error ()
+
+let string_of_task_inst_id ((id1, id2, id3) : task_inst_id) =
   Printf.sprintf "%Ld.%Ld.%Ld" id1 id2 id3
 
-let task_seg_id_to_string ((id1, id2, id3, id4, id5) : task_seg_id) =
+let string_to_task_inst_id (s : string) : (task_inst_id, unit) result =
+  try Scanf.sscanf s "%Ld.%Ld.%Ld" (fun id1 id2 id3 -> Ok (id1, id2, id3))
+  with _ -> Error ()
+
+let string_of_task_seg_id ((id1, id2, id3, id4, id5) : task_seg_id) =
   Printf.sprintf "%Ld.%Ld.%Ld.%Ld.%s" id1 id2 id3 id4
     (match id5 with None -> "X" | Some x -> Int64.to_string x)
+
+let string_to_task_seg_id (s : string) : (task_seg_id, unit) result =
+  try
+    Scanf.sscanf s "%Ld.%Ld.%Ld.%Ld.X" (fun id1 id2 id3 id4 ->
+        Ok (id1, id2, id3, id4, None))
+  with _ -> (
+      try
+        Scanf.sscanf s "%Ld.%Ld.%Ld.%Ld.%Ld" (fun id1 id2 id3 id4 id5 ->
+            Ok (id1, id2, id3, id4, Some id5))
+      with _ -> Error () )
 
 let task_seg_alloc_req_sum_length reqs =
   List.fold_left (fun acc (_, size) -> acc +^ size) 0L reqs
@@ -114,16 +135,57 @@ let sched_req_template_bound_on_start_and_end_exc
              Some (min start cur_start, max end_exc cur_end_exc) ))
     None sched_req_template
 
+module Check = struct
+  let check_user_id (id : user_id) = id >= 0L
+
+  let check_task_id ((id1, id2) : task_id) = id1 >= 0L && id2 >= 0L
+
+  let check_task_inst_id ((id1, id2, id3) : task_inst_id) =
+    id1 >= 0L && id2 >= 0L && id3 >= 0L
+
+  let check_task_seg_id ((id1, id2, id3, id4, id5) : task_seg_id) =
+    id1 >= 0L
+    && id2 >= 0L
+    && id3 >= 0L
+    && id4 >= 0L
+    && match id5 with None -> true | Some x -> x >= 0L
+
+  let check_task_seg_size (size : task_seg_size) : bool = size > 0L
+
+  let check_task_seg_alloc_req ((id, size) : task_seg_alloc_req) : bool =
+    check_task_inst_id id && check_task_seg_size size
+
+  let check_task_seg ((id, size) : task_seg) : bool =
+    check_task_seg_id id && check_task_seg_size size
+end
+
 module Serialize = struct
   let pack_arith_seq (arith_seq : arith_seq) : Task_ds_t.arith_seq =
     {
-      start = arith_seq.start;
-      end_exc = arith_seq.end_exc;
-      diff = arith_seq.diff;
+      start = Misc_utils.int32_int32_of_int64 arith_seq.start;
+      end_exc = Option.map Misc_utils.int32_int32_of_int64 arith_seq.end_exc;
+      diff = Misc_utils.int32_int32_of_int64 arith_seq.diff;
     }
 
+  let pack_user_id = Misc_utils.int32_int32_of_int64
+
+  let pack_task_id (id1, id2) =
+    (Misc_utils.int32_int32_of_int64 id1, Misc_utils.int32_int32_of_int64 id2)
+
+  let pack_task_inst_id (id1, id2, id3) =
+    ( Misc_utils.int32_int32_of_int64 id1,
+      Misc_utils.int32_int32_of_int64 id2,
+      Misc_utils.int32_int32_of_int64 id3 )
+
+  let pack_task_seg_id (id1, id2, id3, id4, id5) =
+    ( Misc_utils.int32_int32_of_int64 id1,
+      Misc_utils.int32_int32_of_int64 id2,
+      Misc_utils.int32_int32_of_int64 id3,
+      Misc_utils.int32_int32_of_int64 id4,
+      Option.map Misc_utils.int32_int32_of_int64 id5 )
+
   let rec pack_task ((id, data) : task) : Task_ds_t.task =
-    (id, pack_task_data data)
+    (pack_task_id id, pack_task_data data)
 
   and pack_task_data (task_data : task_data) : Task_ds_t.task_data =
     {
@@ -149,7 +211,8 @@ module Serialize = struct
 
   and pack_recur (recur : recur) : Task_ds_t.recur =
     {
-      excluded_time_slots = recur.excluded_time_slots;
+      excluded_time_slots =
+        Time_slot_ds.Serialize.pack_time_slots recur.excluded_time_slots;
       recur_type = pack_recur_type recur.recur_type;
     }
 
@@ -157,9 +220,9 @@ module Serialize = struct
       (sched_req_template_data_unit : sched_req_template_data_unit) :
     Task_ds_t.sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:(fun x -> x)
-      ~pack_time:(fun x -> x)
-      ~pack_time_slot:(fun x -> x)
+      ~pack_data:Misc_utils.int32_int32_of_int64
+      ~pack_time:Misc_utils.int32_int32_of_int64
+      ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
       sched_req_template_data_unit
 
   and pack_sched_req_template (sched_req_template : sched_req_template) :
@@ -173,7 +236,7 @@ module Serialize = struct
     }
 
   and pack_task_inst ((id, data) : task_inst) : Task_ds_t.task_inst =
-    (id, pack_task_inst_data data)
+    (pack_task_inst_id id, pack_task_inst_data data)
 
   and pack_task_inst_data (task_inst_data : task_inst_data) :
     Task_ds_t.task_inst_data =
@@ -183,12 +246,15 @@ module Serialize = struct
     Task_ds_t.task_inst_type =
     match task_inst_type with
     | Reminder -> `Reminder
-    | Reminder_quota_counting { quota } -> `Reminder_quota_counting quota
+    | Reminder_quota_counting { quota } ->
+      `Reminder_quota_counting (Misc_utils.int32_int32_of_int64 quota)
     | Passing -> `Passing
 
-  and pack_task_seg x = x
+  and pack_task_seg (id, size) =
+    (pack_task_seg_id id, Misc_utils.int32_int32_of_int64 size)
 
-  and pack_task_seg_alloc_req x = x
+  and pack_task_seg_alloc_req (id, size) =
+    (pack_task_inst_id id, Misc_utils.int32_int32_of_int64 size)
 
   and pack_task_seg_size x = x
 
@@ -201,13 +267,30 @@ end
 module Deserialize = struct
   let unpack_arith_seq (arith_seq : Task_ds_t.arith_seq) : arith_seq =
     {
-      start = arith_seq.start;
-      end_exc = arith_seq.end_exc;
-      diff = arith_seq.diff;
+      start = Misc_utils.int64_of_int32_int32 arith_seq.start;
+      end_exc = Option.map Misc_utils.int64_of_int32_int32 arith_seq.end_exc;
+      diff = Misc_utils.int64_of_int32_int32 arith_seq.diff;
     }
 
+  let unpack_user_id = Misc_utils.int64_of_int32_int32
+
+  let unpack_task_id (id1, id2) =
+    (Misc_utils.int64_of_int32_int32 id1, Misc_utils.int64_of_int32_int32 id2)
+
+  let unpack_task_inst_id (id1, id2, id3) =
+    ( Misc_utils.int64_of_int32_int32 id1,
+      Misc_utils.int64_of_int32_int32 id2,
+      Misc_utils.int64_of_int32_int32 id3 )
+
+  let unpack_task_seg_id (id1, id2, id3, id4, id5) =
+    ( Misc_utils.int64_of_int32_int32 id1,
+      Misc_utils.int64_of_int32_int32 id2,
+      Misc_utils.int64_of_int32_int32 id3,
+      Misc_utils.int64_of_int32_int32 id4,
+      Option.map Misc_utils.int64_of_int32_int32 id5 )
+
   let rec unpack_task ((id, data) : Task_ds_t.task) : task =
-    (id, unpack_task_data data)
+    (unpack_task_id id, unpack_task_data data)
 
   and unpack_task_data (task_data : Task_ds_t.task_data) : task_data =
     {
@@ -233,7 +316,8 @@ module Deserialize = struct
 
   and unpack_recur (recur : Task_ds_t.recur) : recur =
     {
-      excluded_time_slots = recur.excluded_time_slots;
+      excluded_time_slots =
+        Time_slot_ds.Deserialize.unpack_time_slots recur.excluded_time_slots;
       recur_type = unpack_recur_type recur.recur_type;
     }
 
@@ -241,9 +325,9 @@ module Deserialize = struct
       (sched_req_template_data_unit : Task_ds_t.sched_req_template_data_unit) :
     sched_req_template_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
-      ~unpack_data:(fun x -> x)
-      ~unpack_time:(fun x -> x)
-      ~unpack_time_slot:(fun x -> x)
+      ~unpack_data:Misc_utils.int64_of_int32_int32
+      ~unpack_time:Misc_utils.int64_of_int32_int32
+      ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
       sched_req_template_data_unit
 
   and unpack_sched_req_template
@@ -258,7 +342,7 @@ module Deserialize = struct
     }
 
   and unpack_task_inst ((id, data) : Task_ds_t.task_inst) : task_inst =
-    (id, unpack_task_inst_data data)
+    (unpack_task_inst_id id, unpack_task_inst_data data)
 
   and unpack_task_inst_data (task_inst_data : Task_ds_t.task_inst_data) :
     task_inst_data =
@@ -268,12 +352,16 @@ module Deserialize = struct
     task_inst_type =
     match task_inst_type with
     | `Reminder -> Reminder
-    | `Reminder_quota_counting quota -> Reminder_quota_counting { quota }
+    | `Reminder_quota_counting quota ->
+      Reminder_quota_counting
+        { quota = Misc_utils.int64_of_int32_int32 quota }
     | `Passing -> Passing
 
-  and unpack_task_seg x = x
+  and unpack_task_seg (id, size) =
+    (unpack_task_seg_id id, Misc_utils.int64_of_int32_int32 size)
 
-  and unpack_task_seg_alloc_req x = x
+  and unpack_task_seg_alloc_req (id, size) =
+    (unpack_task_inst_id id, Misc_utils.int64_of_int32_int32 size)
 
   and unpack_task_seg_size x = x
 
@@ -315,7 +403,7 @@ module Print = struct
   let debug_string_of_task ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (id, data) =
     Debug_print.bprintf ~indent_level buffer "task id : %s\n"
-      (task_id_to_string id);
+      (string_of_task_id id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "name : %s\n"
       data.name;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
@@ -371,7 +459,7 @@ module Print = struct
   let debug_string_of_task_inst ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, data) =
     Debug_print.bprintf ~indent_level buffer "task inst id : %s\n"
-      (task_inst_id_to_string id);
+      (string_of_task_inst_id id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "type : %s\n"
       ( match data.task_inst_type with
         | Reminder -> "reminder"
@@ -383,7 +471,7 @@ module Print = struct
   let debug_string_of_task_seg ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, size) =
     Debug_print.bprintf ~indent_level buffer "task seg id : %s\n"
-      (task_seg_id_to_string id);
+      (string_of_task_seg_id id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "size : %Ld\n"
       size;
     Buffer.contents buffer
@@ -391,7 +479,7 @@ module Print = struct
   let debug_string_of_task_seg_place ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (id, start, end_exc) =
     Debug_print.bprintf ~indent_level buffer "task seg id : %s\n"
-      (task_seg_id_to_string id);
+      (string_of_task_seg_id id);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "[%Ld, %Ld)\n"
       start end_exc;
     Buffer.contents buffer

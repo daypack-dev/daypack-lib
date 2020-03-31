@@ -2113,56 +2113,63 @@ module Agenda = struct
       | Some (start, end_exc) ->
         remove_task_seg_place (task_seg_id, start, end_exc) sched
   end
-end
 
-module Time_slot = struct
-  let get_occupied_time_slots ?start ?end_exc (sched : sched) :
-    (int64 * int64) Seq.t =
-    Agenda.To_seq.task_seg_place_uncompleted sched
-    |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
-    |> (fun l ->
-        Option.fold ~none:l
-          ~some:(fun start -> Time_slot_ds.slice ~start l)
-          start)
-    |> (fun l ->
-        Option.fold ~none:l
-          ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l)
-          end_exc)
-    |> Time_slot_ds.normalize ~skip_sort:true
+  module Time_slot = struct
+    let get_occupied_time_slots ?start ?end_exc (sched : sched) :
+      (int64 * int64) Seq.t =
+      To_seq.task_seg_place_uncompleted sched
+      |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
+      |> (fun l ->
+          Option.fold ~none:l
+            ~some:(fun start -> Time_slot_ds.slice ~start l)
+            start)
+      |> (fun l ->
+          Option.fold ~none:l
+            ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l)
+            end_exc)
+      |> Time_slot_ds.normalize ~skip_sort:true
 
-  let get_free_time_slots ~start ~end_exc (sched : sched) :
-    (int64 * int64) Seq.t =
-    get_occupied_time_slots ~start ~end_exc sched
-    |> Time_slot_ds.invert ~start ~end_exc
+    let get_free_time_slots ~start ~end_exc (sched : sched) :
+      (int64 * int64) Seq.t =
+      get_occupied_time_slots ~start ~end_exc sched
+      |> Time_slot_ds.invert ~start ~end_exc
+  end
 end
 
 module Sched_req = struct
   module Enqueue = struct
     let enqueue_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
-        (sched : sched) : Sched_req_ds.sched_req * sched =
-      let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
-      ( (sched_req_id, sched_req_data),
-        ( sid,
-          {
-            sd with
-            store =
+        (sched : sched) : (Sched_req_ds.sched_req * sched, unit) result =
+      if Sched_req_ds.Check.check_sched_req_data sched_req_data then
+        let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
+        Ok
+          ( (sched_req_id, sched_req_data),
+            ( sid,
               {
-                sd.store with
-                sched_req_pending_store =
-                  Sched_req_id_map.add sched_req_id sched_req_data
-                    sd.store.sched_req_pending_store;
-              };
-          } ) )
+                sd with
+                store =
+                  {
+                    sd.store with
+                    sched_req_pending_store =
+                      Sched_req_id_map.add sched_req_id sched_req_data
+                        sd.store.sched_req_pending_store;
+                  };
+              } ) )
+      else Error ()
 
     let enqueue_sched_req_data_list
         (sched_req_data_list : Sched_req_ds.sched_req_data list) (sched : sched)
-      : Sched_req_ds.sched_req list * sched =
-      List.fold_left
-        (fun (sched_reqs, sched) sched_req_data ->
-           let sched_req, sched = enqueue_sched_req_data sched_req_data sched in
-           (sched_req :: sched_reqs, sched))
-        ([], sched) sched_req_data_list
-      |> fun (l, s) -> (List.rev l, s)
+      : (Sched_req_ds.sched_req list * sched, unit) result =
+      if Sched_req_ds.Check.check_sched_req_data_list sched_req_data_list then
+        List.fold_left
+          (fun (sched_reqs, sched) sched_req_data ->
+             let sched_req, sched =
+               enqueue_sched_req_data sched_req_data sched |> Result.get_ok
+             in
+             (sched_req :: sched_reqs, sched))
+          ([], sched) sched_req_data_list
+        |> fun (l, s) -> (List.rev l, s) |> Result.ok
+      else Error ()
   end
 
   module Dequeue = struct
@@ -2715,7 +2722,8 @@ module Recur = struct
           aux start end_exc diff task_inst_data sched_req_template
         | Task_ds.Time_pattern_match
             (pattern, { task_inst_data; sched_req_template }) ->
-          Time_pattern.matching_time_slots pattern usable_time_slot_list
+          Time_pattern.matching_time_slots (Time_slots usable_time_slot_list)
+            pattern
           |> Seq.map (fun (start', _end_exc) ->
               ( task_inst_data,
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:start'
@@ -2798,6 +2806,7 @@ module Recur = struct
               in
               let _, sched =
                 Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched
+                |> Result.get_ok
               in
               sched)
            sched)
@@ -2805,27 +2814,16 @@ module Recur = struct
 end
 
 module Leftover = struct
-  let get_leftover_task_segs ~(before : int64) ((_sid, sd) as sched : sched) :
+  let get_leftover_task_segs ~(before : int64) (sched : sched) :
     Task_ds.task_seg Seq.t =
-    let agenda_before, _, _ =
-      Int64_map.split before sd.agenda.indexed_by_start
-    in
-    Int64_map.to_seq agenda_before
-    |> Seq.flat_map (fun (_, task_seg_ids) ->
-        Task_seg_id_set.to_seq task_seg_ids)
-    |> Seq.map (fun task_seg_id ->
-        Agenda.Find.find_task_seg_place_opt_by_task_seg_id task_seg_id sched
-        |> Option.get)
-    |> Seq.filter (fun (_, _place_start, place_end_exc) ->
-        place_end_exc <= before)
-    |> Seq.filter (fun (task_seg_id, _, _) ->
-        let id1, id2, id3, _, _ = task_seg_id in
-        let task_inst_id = (id1, id2, id3) in
-        Option.is_some
-          (Task_inst.Find.find_task_inst_uncompleted_opt task_inst_id sched))
-    |> Seq.filter_map (fun (task_seg_id, _, _) ->
-        Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched
-        |> Option.map (fun task_seg_size -> (task_seg_id, task_seg_size)))
+    Agenda.To_seq.task_seg_place_uncompleted ~end_exc:before
+      ~include_task_seg_place_partially_within_time_period:false sched
+    |> Seq.map (fun (task_seg_id, _, _) ->
+        let task_seg_size =
+          Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched
+          |> Option.get
+        in
+        (task_seg_id, task_seg_size))
 
   let sched_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
     let leftover_task_segs = get_leftover_task_segs ~before:start sched in
@@ -2854,6 +2852,7 @@ module Leftover = struct
       (fun sched sched_req_data ->
          let _, sched =
            Sched_req.Enqueue.enqueue_sched_req_data sched_req_data sched
+           |> Result.get_ok
          in
          sched)
       sched sched_req_data_seq
@@ -3037,11 +3036,16 @@ module Serialize = struct
     }
 
   let pack_quota (x : int64 Task_inst_id_map.t) :
-    (Task_ds.task_inst_id * int64) list =
-    x |> Task_inst_id_map.to_seq |> List.of_seq
+    (Task_ds_t.task_inst_id * (int32 * int32)) list =
+    x
+    |> Task_inst_id_map.to_seq
+    |> Seq.map (fun (id, quota) ->
+        ( Task_ds.Serialize.pack_task_inst_id id,
+          Misc_utils.int32_int32_of_int64 quota ))
+    |> List.of_seq
 
   let pack_quota_diff (x : int64 Task_inst_id_map_utils.diff) :
-    (Task_ds_t.task_inst_id, int64) Map_utils_t.diff =
+    (Task_ds_t.task_inst_id, int32 * int32) Map_utils_t.diff =
     { added = pack_quota x.added; removed = pack_quota x.removed }
 
   let pack_task_seg_id_to_progress (x : Task_ds.progress Task_seg_id_map.t) :
@@ -3049,7 +3053,8 @@ module Serialize = struct
     x
     |> Task_seg_id_map.to_seq
     |> Seq.map (fun (id, progress) ->
-        (id, Task_ds.Serialize.pack_progress progress))
+        ( Task_ds.Serialize.pack_task_seg_id id,
+          Task_ds.Serialize.pack_progress progress ))
     |> List.of_seq
 
   let pack_task_seg_id_to_progress_diff
@@ -3065,7 +3070,8 @@ module Serialize = struct
     x
     |> Task_inst_id_map.to_seq
     |> Seq.map (fun (id, progress) ->
-        (id, Task_ds.Serialize.pack_progress progress))
+        ( Task_ds.Serialize.pack_task_inst_id id,
+          Task_ds.Serialize.pack_progress progress ))
     |> List.of_seq
 
   let pack_task_inst_id_to_progress_diff
@@ -3077,12 +3083,20 @@ module Serialize = struct
     }
 
   let pack_indexed_by_task_seg_id (x : (int64 * int64) Task_seg_id_map.t) :
-    (Task_ds_t.task_seg_id * (int64 * int64)) list =
-    x |> Task_seg_id_map.to_seq |> Seq.map (fun x -> x) |> List.of_seq
+    (Task_ds_t.task_seg_id * ((int32 * int32) * (int32 * int32))) list =
+    x
+    |> Task_seg_id_map.to_seq
+    |> Seq.map (fun (id, (start, end_exc)) ->
+        ( Task_ds.Serialize.pack_task_seg_id id,
+          ( Misc_utils.int32_int32_of_int64 start,
+            Misc_utils.int32_int32_of_int64 end_exc ) ))
+    |> List.of_seq
 
   let pack_indexed_by_task_seg_id_diff
       (x : (int64 * int64) Task_seg_id_map_utils.diff) :
-    (Task_ds_t.task_seg_id, int64 * int64) Map_utils_t.diff =
+    ( Task_ds_t.task_seg_id,
+      (int32 * int32) * (int32 * int32) )
+      Map_utils_t.diff =
     {
       added = pack_indexed_by_task_seg_id x.added;
       removed = pack_indexed_by_task_seg_id x.removed;
@@ -3096,30 +3110,32 @@ module Serialize = struct
   *)
 
   let pack_user_id_to_task_ids (x : Int64_set.t User_id_map.t) :
-    (Task_ds_t.user_id * int64 list) list =
+    (Task_ds_t.user_id * (int32 * int32) list) list =
     x
     |> User_id_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        (Task_ds.Serialize.pack_user_id id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_user_id_to_task_ids_diff
       (x : User_id_map_utils.Int64_bucketed.diff_bucketed) :
-    (Task_ds_t.user_id, int64) Map_utils_t.diff_bucketed =
+    (Task_ds_t.user_id, int32 * int32) Map_utils_t.diff_bucketed =
     {
       added = pack_user_id_to_task_ids x.added;
       removed = pack_user_id_to_task_ids x.removed;
     }
 
   let pack_task_id_to_task_inst_ids (x : Int64_set.t Task_id_map.t) :
-    (Task_ds_t.task_id * int64 list) list =
+    (Task_ds_t.task_id * (int32 * int32) list) list =
     x
     |> Task_id_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        (Task_ds.Serialize.pack_task_id id, Int64_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_task_id_to_task_inst_ids_diff
       (x : Task_id_map_utils.Int64_bucketed.diff_bucketed) :
-    (Task_ds_t.task_id, int64) Map_utils_t.diff_bucketed =
+    (Task_ds_t.task_id, int32 * int32) Map_utils_t.diff_bucketed =
     {
       added = pack_task_id_to_task_inst_ids x.added;
       removed = pack_task_id_to_task_inst_ids x.removed;
@@ -3127,43 +3143,50 @@ module Serialize = struct
 
   let pack_task_inst_id_to_task_seg_ids
       (x : Int64_int64_option_set.t Task_inst_id_map.t) :
-    (Task_ds_t.task_inst_id * (int64 * int64 option) list) list =
+    (Task_ds_t.task_inst_id * ((int32 * int32) * (int32 * int32) option) list)
+      list =
     x
     |> Task_inst_id_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_int64_option_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        ( Task_ds.Serialize.pack_task_inst_id id,
+          Int64_int64_option_set.Serialize.pack y ))
     |> List.of_seq
 
   let pack_task_inst_id_to_task_seg_ids_diff
       (x : Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed) :
-    (Task_ds_t.task_inst_id, int64 * int64 option) Map_utils_t.diff_bucketed =
+    ( Task_ds_t.task_inst_id,
+      (int32 * int32) * (int32 * int32) option )
+      Map_utils_t.diff_bucketed =
     {
       added = pack_task_inst_id_to_task_seg_ids x.added;
       removed = pack_task_inst_id_to_task_seg_ids x.removed;
     }
 
   let pack_indexed_by_start (x : task_seg_place_map) :
-    (int64 * Task_ds_t.task_seg_id list) list =
+    ((int32 * int32) * Task_ds_t.task_seg_id list) list =
     x
     |> Int64_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        (Misc_utils.int32_int32_of_int64 id, Task_seg_id_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_indexed_by_start_diff (x : task_seg_place_map_diff) :
-    (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
+    (int32 * int32, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
     {
       added = pack_indexed_by_start x.added;
       removed = pack_indexed_by_start x.removed;
     }
 
   let pack_indexed_by_end_exc (x : task_seg_place_map) :
-    (int64 * Task_ds_t.task_seg_id list) list =
+    ((int32 * int32) * Task_ds_t.task_seg_id list) list =
     x
     |> Int64_map.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Serialize.pack y))
+    |> Seq.map (fun (id, y) ->
+        (Misc_utils.int32_int32_of_int64 id, Task_seg_id_set.Serialize.pack y))
     |> List.of_seq
 
   let pack_indexed_by_end_exc_diff (x : task_seg_place_map_diff) :
-    (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
+    (int32 * int32, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed =
     {
       added = pack_indexed_by_end_exc x.added;
       removed = pack_indexed_by_end_exc x.removed;
@@ -3176,11 +3199,14 @@ module Serialize = struct
     Set_store.print_pack_related_functions ()
   *)
 
-  let pack_sched_req_ids (x : Int64_set.t) : int64 list =
-    x |> Int64_set.to_seq |> List.of_seq
+  let pack_sched_req_ids (x : Int64_set.t) : (int32 * int32) list =
+    x
+    |> Int64_set.to_seq
+    |> Seq.map Misc_utils.int32_int32_of_int64
+    |> List.of_seq
 
   let pack_sched_req_ids_diff (x : Int64_set_utils.diff) :
-    int64 Set_utils_t.diff =
+    (int32 * int32) Set_utils_t.diff =
     {
       added = pack_sched_req_ids x.added;
       removed = pack_sched_req_ids x.removed;
@@ -3511,11 +3537,17 @@ module Deserialize = struct
       removed = unpack_sched_req_record_list x.removed;
     }
 
-  let unpack_quota (x : (Task_ds.task_inst_id * int64) list) :
+  let unpack_quota (x : (Task_ds_t.task_inst_id * (int32 * int32)) list) :
     int64 Task_inst_id_map.t =
-    x |> List.to_seq |> Task_inst_id_map.of_seq
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, quota) ->
+        ( Task_ds.Deserialize.unpack_task_inst_id id,
+          Misc_utils.int64_of_int32_int32 quota ))
+    |> Task_inst_id_map.of_seq
 
-  let unpack_quota_diff (x : (Task_ds_t.task_inst_id, int64) Map_utils_t.diff) :
+  let unpack_quota_diff
+      (x : (Task_ds_t.task_inst_id, int32 * int32) Map_utils_t.diff) :
     int64 Task_inst_id_map_utils.diff =
     { added = unpack_quota x.added; removed = unpack_quota x.removed }
 
@@ -3525,7 +3557,8 @@ module Deserialize = struct
     x
     |> List.to_seq
     |> Seq.map (fun (id, progress) ->
-        (id, Task_ds.Deserialize.unpack_progress progress))
+        ( Task_ds.Deserialize.unpack_task_seg_id id,
+          Task_ds.Deserialize.unpack_progress progress ))
     |> Task_seg_id_map.of_seq
 
   let unpack_task_seg_id_to_progress_diff
@@ -3542,7 +3575,8 @@ module Deserialize = struct
     x
     |> List.to_seq
     |> Seq.map (fun (id, progress) ->
-        (id, Task_ds.Deserialize.unpack_progress progress))
+        ( Task_ds.Deserialize.unpack_task_inst_id id,
+          Task_ds.Deserialize.unpack_progress progress ))
     |> Task_inst_id_map.of_seq
 
   let unpack_task_inst_id_to_progress_diff
@@ -3554,13 +3588,21 @@ module Deserialize = struct
     }
 
   let unpack_indexed_by_task_seg_id
-      (x : (Task_ds_t.task_seg_id * (int64 * int64)) list) :
+      (x : (Task_ds_t.task_seg_id * ((int32 * int32) * (int32 * int32))) list) :
     (int64 * int64) Task_seg_id_map.t =
-    x |> List.to_seq |> Seq.map (fun x -> x) |> Task_seg_id_map.of_seq
+    x
+    |> List.to_seq
+    |> Seq.map (fun (id, (start, end_exc)) ->
+        ( Task_ds.Deserialize.unpack_task_seg_id id,
+          ( Misc_utils.int64_of_int32_int32 start,
+            Misc_utils.int64_of_int32_int32 end_exc ) ))
+    |> Task_seg_id_map.of_seq
 
   let unpack_indexed_by_task_seg_id_diff
-      (x : (Task_ds_t.task_seg_id, int64 * int64) Map_utils_t.diff) :
-    (int64 * int64) Task_seg_id_map_utils.diff =
+      (x :
+         ( Task_ds_t.task_seg_id,
+           (int32 * int32) * (int32 * int32) )
+           Map_utils_t.diff) : (int64 * int64) Task_seg_id_map_utils.diff =
     {
       added = unpack_indexed_by_task_seg_id x.added;
       removed = unpack_indexed_by_task_seg_id x.removed;
@@ -3573,15 +3615,18 @@ module Deserialize = struct
     Bucket_store.print_unpack_related_functions ()
   *)
 
-  let unpack_user_id_to_task_ids (x : (Task_ds_t.user_id * int64 list) list) :
+  let unpack_user_id_to_task_ids
+      (x : (Task_ds_t.user_id * (int32 * int32) list) list) :
     Int64_set.t User_id_map.t =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        ( Task_ds.Deserialize.unpack_user_id id,
+          Int64_set.Deserialize.unpack y ))
     |> User_id_map.of_seq
 
   let unpack_user_id_to_task_ids_diff
-      (x : (Task_ds_t.user_id, int64) Map_utils_t.diff_bucketed) :
+      (x : (Task_ds_t.user_id, int32 * int32) Map_utils_t.diff_bucketed) :
     User_id_map_utils.Int64_bucketed.diff_bucketed =
     {
       added = unpack_user_id_to_task_ids x.added;
@@ -3589,14 +3634,17 @@ module Deserialize = struct
     }
 
   let unpack_task_id_to_task_inst_ids
-      (x : (Task_ds_t.task_id * int64 list) list) : Int64_set.t Task_id_map.t =
+      (x : (Task_ds_t.task_id * (int32 * int32) list) list) :
+    Int64_set.t Task_id_map.t =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Int64_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        ( Task_ds.Deserialize.unpack_task_id id,
+          Int64_set.Deserialize.unpack y ))
     |> Task_id_map.of_seq
 
   let unpack_task_id_to_task_inst_ids_diff
-      (x : (Task_ds_t.task_id, int64) Map_utils_t.diff_bucketed) :
+      (x : (Task_ds_t.task_id, int32 * int32) Map_utils_t.diff_bucketed) :
     Task_id_map_utils.Int64_bucketed.diff_bucketed =
     {
       added = unpack_task_id_to_task_inst_ids x.added;
@@ -3604,47 +3652,58 @@ module Deserialize = struct
     }
 
   let unpack_task_inst_id_to_task_seg_ids
-      (x : (Task_ds_t.task_inst_id * (int64 * int64 option) list) list) :
-    Int64_int64_option_set.t Task_inst_id_map.t =
+      (x :
+         ( Task_ds_t.task_inst_id
+           * ((int32 * int32) * (int32 * int32) option) list )
+           list) : Int64_int64_option_set.t Task_inst_id_map.t =
     x
     |> List.to_seq
     |> Seq.map (fun (id, y) ->
-        (id, Int64_int64_option_set.Deserialize.unpack y))
+        ( Task_ds.Deserialize.unpack_task_inst_id id,
+          Int64_int64_option_set.Deserialize.unpack y ))
     |> Task_inst_id_map.of_seq
 
   let unpack_task_inst_id_to_task_seg_ids_diff
       (x :
-         (Task_ds_t.task_inst_id, int64 * int64 option) Map_utils_t.diff_bucketed)
-    : Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed =
+         ( Task_ds_t.task_inst_id,
+           (int32 * int32) * (int32 * int32) option )
+           Map_utils_t.diff_bucketed) :
+    Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed =
     {
       added = unpack_task_inst_id_to_task_seg_ids x.added;
       removed = unpack_task_inst_id_to_task_seg_ids x.removed;
     }
 
-  let unpack_indexed_by_start (x : (int64 * Task_ds_t.task_seg_id list) list) :
+  let unpack_indexed_by_start
+      (x : ((int32 * int32) * Task_ds_t.task_seg_id list) list) :
     task_seg_place_map =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        ( Misc_utils.int64_of_int32_int32 id,
+          Task_seg_id_set.Deserialize.unpack y ))
     |> Int64_map.of_seq
 
   let unpack_indexed_by_start_diff
-      (x : (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
+      (x : (int32 * int32, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
     task_seg_place_map_diff =
     {
       added = unpack_indexed_by_start x.added;
       removed = unpack_indexed_by_start x.removed;
     }
 
-  let unpack_indexed_by_end_exc (x : (int64 * Task_ds_t.task_seg_id list) list)
-    : task_seg_place_map =
+  let unpack_indexed_by_end_exc
+      (x : ((int32 * int32) * Task_ds_t.task_seg_id list) list) :
+    task_seg_place_map =
     x
     |> List.to_seq
-    |> Seq.map (fun (id, y) -> (id, Task_seg_id_set.Deserialize.unpack y))
+    |> Seq.map (fun (id, y) ->
+        ( Misc_utils.int64_of_int32_int32 id,
+          Task_seg_id_set.Deserialize.unpack y ))
     |> Int64_map.of_seq
 
   let unpack_indexed_by_end_exc_diff
-      (x : (int64, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
+      (x : (int32 * int32, Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed) :
     task_seg_place_map_diff =
     {
       added = unpack_indexed_by_end_exc x.added;
@@ -3658,10 +3717,13 @@ module Deserialize = struct
     Set_store.print_unpack_related_functions ()
   *)
 
-  let unpack_sched_req_ids (x : int64 list) : Int64_set.t =
-    x |> List.to_seq |> Int64_set.of_seq
+  let unpack_sched_req_ids (x : (int32 * int32) list) : Int64_set.t =
+    x
+    |> List.to_seq
+    |> Seq.map Misc_utils.int64_of_int32_int32
+    |> Int64_set.of_seq
 
-  let unpack_sched_req_ids_diff (x : int64 Set_utils_t.diff) :
+  let unpack_sched_req_ids_diff (x : (int32 * int32) Set_utils_t.diff) :
     Int64_set_utils.diff =
     {
       added = unpack_sched_req_ids x.added;
@@ -4251,16 +4313,16 @@ module Print = struct
       (fun (id, start, end_exc) ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
            "%s - %s | %s\n"
-           (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
-           (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc)
-           (Task_ds.task_seg_id_to_string id))
+           (Time.Print.date_string_of_time ~display_in_time_zone:`Local start)
+           (Time.Print.date_string_of_time ~display_in_time_zone:`Local end_exc)
+           (Task_ds.string_of_task_seg_id id))
       (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "leftover quota :\n";
     Task_inst_id_map.iter
       (fun id quota ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s : %Ld\n"
-           (Task_ds.task_inst_id_to_string id)
+           (Task_ds.string_of_task_inst_id id)
            quota)
       sd.store.quota;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
@@ -4268,7 +4330,7 @@ module Print = struct
     Task_seg_id_map.iter
       (fun id progress ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
-           (Task_ds.task_seg_id_to_string id);
+           (Task_ds.string_of_task_seg_id id);
          Task_ds.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
            ~buffer progress
          |> ignore)
@@ -4278,7 +4340,7 @@ module Print = struct
     Task_inst_id_map.iter
       (fun id progress ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
-           (Task_ds.task_inst_id_to_string id);
+           (Task_ds.string_of_task_inst_id id);
          Task_ds.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
            ~buffer progress
          |> ignore)

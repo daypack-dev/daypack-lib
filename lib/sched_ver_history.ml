@@ -66,13 +66,12 @@ module In_place_head = struct
   module Sched_req = struct
     module Enqueue = struct
       let enqueue_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
-        Sched_req_ds.sched_req =
+        (Sched_req_ds.sched_req, unit) result =
         map_head
           (fun sched ->
-             let sched_req, sched =
-               Sched.Sched_req.Enqueue.enqueue_sched_req_data data sched
-             in
-             (sched_req, Replace_head sched))
+             match Sched.Sched_req.Enqueue.enqueue_sched_req_data data sched with
+             | Ok (sched_req, sched) -> (Ok sched_req, Replace_head sched)
+             | Error () -> (Error (), Do_nothing))
           t
     end
   end
@@ -323,7 +322,7 @@ module Equal = struct
 end
 
 module Serialize = struct
-  let list_to_base_and_diffs (l : Sched.sched list) :
+  let base_and_diffs_of_list (l : Sched.sched list) :
     (Sched.sched * Sched.sched_diff list) option =
     let rec aux
         (base_and_last_and_diffs :
@@ -344,7 +343,7 @@ module Serialize = struct
     aux None (List.rev l)
 
   let to_base_and_diffs (t : t) : (Sched.sched * Sched.sched_diff list) option =
-    list_to_base_and_diffs t.history
+    base_and_diffs_of_list t.history
 
   let write_to_dir ~(dir : string) (t : t) : (unit, string) result =
     try
@@ -371,7 +370,9 @@ module Serialize = struct
                 (fun () -> output_string oc sched_diff_str));
           Ok () )
       else Error "File is not a directory"
-    with Sys_error msg -> Error msg
+    with
+    | Sys_error msg -> Error msg
+    | _ -> Error "Failed to write to directory"
 end
 
 module Deserialize = struct
@@ -393,34 +394,41 @@ module Deserialize = struct
 
   let read_from_dir ~(dir : string) : (t, string) result =
     try
-      let base =
-        let ic = open_in (Filename.concat dir "sched_v0.json") in
-        Fun.protect
-          ~finally:(fun () -> close_in ic)
-          (fun () -> really_input_string ic (in_channel_length ic))
-        |> Sched.Deserialize.sched_of_json_string
-      in
-      let diffs =
-        Sys.readdir dir
-        |> Array.to_seq
-        |> Seq.filter_map (fun s ->
-            try
-              Scanf.sscanf s "sched_v%d.json" (fun i ->
-                  if i = 0 then None else Some (i, s))
-            with Stdlib.Scanf.Scan_failure _ -> None)
-        |> Seq.map (fun (i, s) ->
-            let ic = open_in (Filename.concat dir s) in
-            ( i,
-              Fun.protect
-                ~finally:(fun () -> close_in ic)
-                (fun () -> really_input_string ic (in_channel_length ic)) ))
-        |> OSeq.sort ~cmp:(fun (i1, _) (i2, _) -> compare i1 i2)
-        |> Seq.map (fun (_i, s) ->
-            Sched.Deserialize.sched_diff_of_json_string s)
-        |> List.of_seq
-      in
-      Ok (of_base_and_diffs base diffs)
-    with Sys_error msg -> Error msg
+      if Sys.is_directory dir then
+        if Sys.readdir dir = [||] then Ok (make_empty ())
+        else
+          let base =
+            let ic = open_in (Filename.concat dir "sched_v0.json") in
+            Fun.protect
+              ~finally:(fun () -> close_in ic)
+              (fun () -> really_input_string ic (in_channel_length ic))
+            |> Sched.Deserialize.sched_of_json_string
+          in
+          let diffs =
+            Sys.readdir dir
+            |> Array.to_seq
+            |> Seq.filter_map (fun s ->
+                try
+                  Scanf.sscanf s "sched_v%d.json" (fun i ->
+                      if i = 0 then None else Some (i, s))
+                with Stdlib.Scanf.Scan_failure _ -> None)
+            |> Seq.map (fun (i, s) ->
+                let ic = open_in (Filename.concat dir s) in
+                ( i,
+                  Fun.protect
+                    ~finally:(fun () -> close_in ic)
+                    (fun () -> really_input_string ic (in_channel_length ic))
+                ))
+            |> OSeq.sort ~cmp:(fun (i1, _) (i2, _) -> compare i1 i2)
+            |> Seq.map (fun (_i, s) ->
+                Sched.Deserialize.sched_diff_of_json_string s)
+            |> List.of_seq
+          in
+          Ok (of_base_and_diffs base diffs)
+      else Error "Path is not a directory"
+    with
+    | Sys_error msg -> Error msg
+    | _ -> Error "Failed to read from directory"
 end
 
 module Print = struct

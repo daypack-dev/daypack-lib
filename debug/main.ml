@@ -20,7 +20,7 @@ let debug_single_task_seg_shift () =
   Task_seg_place_gens.single_task_seg_shift ~incre ~cur_pos ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task_ds.task_seg_id_to_string id)
+        (Task_ds.string_of_task_seg_id id)
         start end_exc)
 
 let debug_single_task_seg_shift_rev () =
@@ -44,7 +44,7 @@ let debug_single_task_seg_shift_rev () =
     ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task_ds.task_seg_id_to_string id)
+        (Task_ds.string_of_task_seg_id id)
         start end_exc)
 
 let debug_multi_task_segs_shift () =
@@ -58,7 +58,7 @@ let debug_multi_task_segs_shift () =
   List.iter
     (fun (id, size) ->
        Printf.printf "time seg id : %s size : %Ld\n"
-         (Task_ds.task_seg_id_to_string id)
+         (Task_ds.string_of_task_seg_id id)
          size)
     task_segs;
   List.iteri
@@ -73,7 +73,7 @@ let debug_multi_task_segs_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.task_seg_id_to_string id)
+             (Task_ds.string_of_task_seg_id id)
              start end_exc)
         pos_s)
 
@@ -110,7 +110,7 @@ let debug_single_task_seg_multi_splits_exact () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n" (Task_ds.task_seg_id_to_string id) x)
+           Printf.printf "  %s - %Ld\n" (Task_ds.string_of_task_seg_id id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_max () =
@@ -131,7 +131,7 @@ let debug_single_task_seg_multi_splits_max () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n" (Task_ds.task_seg_id_to_string id) x)
+           Printf.printf "  %s - %Ld\n" (Task_ds.string_of_task_seg_id id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_exact_shift () =
@@ -161,7 +161,7 @@ let debug_single_task_seg_multi_splits_exact_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.task_seg_id_to_string id)
+             (Task_ds.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -191,7 +191,7 @@ let debug_single_task_seg_multi_splits_max_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.task_seg_id_to_string id)
+             (Task_ds.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -214,7 +214,7 @@ let debug_multi_tasks_interleave () =
   Seq.iter
     (fun (id, start, end_exc) ->
        Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-         (Task_ds.task_seg_id_to_string id)
+         (Task_ds.string_of_task_seg_id id)
          start end_exc)
     s
 
@@ -250,7 +250,7 @@ let debug_single_task_seg_multi_even_splits () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.task_seg_id_to_string id)
+             (Task_ds.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -435,6 +435,7 @@ let debug_sched_backtracking_search_pending () =
     Sched.empty
     |> Sched.Quota.update_quota quota
     |> Sched.Sched_req.Enqueue.enqueue_sched_req_data_list sched_req_data_list
+    |> Result.get_ok
   in
   Sched_search.backtracking_search_pending ~start:0L ~end_exc:50L
     ~include_sched_reqs_partially_within_time_period:true
@@ -713,12 +714,15 @@ let debug_time_pattern_matching_tm_seq () =
       days = `Month_days [];
       hours = [ 11 ];
       minutes = [ 0 ];
+      seconds = [];
     }
   in
   let search_years_ahead = 100 in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
   let s =
-    Daypack_lib.Time_pattern.matching_tm_seq ~search_years_ahead ~start:tm
+    Daypack_lib.Time_pattern.matching_tm_seq
+      (Years_ahead_start_tm
+         { time_zone_of_tm = `Local; start = tm; search_years_ahead })
       pattern
   in
   s
@@ -754,9 +758,9 @@ let debug_time_pattern_matching_time_slots () =
      *      }) *)
     Unix.time () |> Unix.localtime
   in
-  let start = Time.tm_to_unix_time ~time_zone_of_tm:`Local tm in
+  let start = Time.unix_time_of_tm ~time_zone_of_tm:`Local tm in
   let end_exc =
-    Time.tm_to_unix_time ~time_zone_of_tm:`Local
+    Time.unix_time_of_tm ~time_zone_of_tm:`Local
       { tm with tm_year = tm.tm_year + 1 }
   in
   let time_slots = [ (start, end_exc) ] in
@@ -768,22 +772,25 @@ let debug_time_pattern_matching_time_slots () =
       days = `Month_days [];
       hours = [ 13 ];
       minutes = [];
+      seconds = [];
     }
   in
   Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
-  let s = Daypack_lib.Time_pattern.matching_time_slots pattern time_slots in
+  let s =
+    Daypack_lib.Time_pattern.matching_time_slots (Time_slots time_slots) pattern
+  in
   s
   |> OSeq.take 30
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
-        (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc))
+        (Time.Print.date_string_of_time ~display_in_time_zone:`Local start)
+        (Time.Print.date_string_of_time ~display_in_time_zone:`Local end_exc))
 
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
-  let start = Time.cur_unix_time_min () in
-  let end_exc = Int64.add start (Int64.mul 10_000L 60L) in
+  let start = Time.Current.cur_unix_time () in
+  let end_exc = Int64.add start (Int64.mul 10_000L 360L) in
   let periods =
     let open Time_pattern in
     [
@@ -793,6 +800,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
         days = `Month_days [ 1 ];
         hours = [];
         minutes = [];
+        seconds = [];
       },
         {
           years = [];
@@ -800,6 +808,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
           days = `Month_days [ 1 ];
           hours = [];
           minutes = [];
+          seconds = [];
         } );
     ]
   in
@@ -809,8 +818,8 @@ let debug_time_profile_matching_time_slots_of_periods () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        (Time.Print.time_to_date_string ~display_in_time_zone:`Local start)
-        (Time.Print.time_to_date_string ~display_in_time_zone:`Local end_exc))
+        (Time.Print.date_string_of_time ~display_in_time_zone:`Local start)
+        (Time.Print.date_string_of_time ~display_in_time_zone:`Local end_exc))
 
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";
@@ -977,9 +986,9 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_sched_backtracking_search_pending ();
  *   print_newline () *)
 
-let () =
-  debug_sched_agenda_range ();
-  print_newline ()
+(* let () =
+ *   debug_sched_agenda_range ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_sched_usage_simulation ();
@@ -989,9 +998,9 @@ let () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_pattern_matching_time_slots ();
- *   print_newline () *)
+let () =
+  debug_time_pattern_matching_time_slots ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
