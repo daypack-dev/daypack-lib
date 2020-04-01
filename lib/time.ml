@@ -27,6 +27,12 @@ let first_mday = 1
 
 let tm_year_offset = 1900
 
+let minute_to_second_multiplier = 60L
+
+let hour_to_second_multiplier = Int64.mul 60L minute_to_second_multiplier
+
+let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
+
 let int_of_weekday (wday : weekday) : int =
   match wday with
   | `Sun -> 0

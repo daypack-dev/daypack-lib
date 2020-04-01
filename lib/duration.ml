@@ -1,10 +1,4 @@
 module Interpret_string = struct
-  let minute_to_second_multiplier = 60L
-
-  let hour_to_second_multiplier = Int64.mul 60L minute_to_second_multiplier
-
-  let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
-
   let minute_unit_strings = [ "min"; "mins"; "minute"; "minutes" ]
 
   let hour_unit_strings = [ "hr"; "hrs"; "hour"; "hours" ]
@@ -15,7 +9,7 @@ module Interpret_string = struct
     try
       Scanf.sscanf s "%Ld%c%s" (fun min _sep unit ->
           if List.mem unit minute_unit_strings then
-            Ok (Int64.mul minute_to_second_multiplier min)
+            Ok (Int64.mul Time.minute_to_second_multiplier min)
           else Error ())
     with _ -> Error ()
 
@@ -23,7 +17,7 @@ module Interpret_string = struct
     try
       Scanf.sscanf s "%Ld%c%s" (fun min _sep unit ->
           if List.mem unit hour_unit_strings then
-            Ok (Int64.mul hour_to_second_multiplier min)
+            Ok (Int64.mul Time.hour_to_second_multiplier min)
           else Error ())
     with _ -> Error ()
 
@@ -31,7 +25,7 @@ module Interpret_string = struct
     try
       Scanf.sscanf s "%Ld%c%s" (fun min _sep unit ->
           if List.mem unit day_unit_strings then
-            Ok (Int64.mul day_to_second_multiplier min)
+            Ok (Int64.mul Time.day_to_second_multiplier min)
           else Error ())
     with _ -> Error ()
 
