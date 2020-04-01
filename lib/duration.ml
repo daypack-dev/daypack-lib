@@ -42,7 +42,7 @@ module Interpret_string = struct
 
   let seconds_of_day_hour_minute_string (s : string) : (int64, unit) result =
     try
-      Scanf.sscanf s "%[^,],%[^,],%[^,]" (fun day hour min ->
+      Scanf.sscanf s "%[^,]%[, ]%[^,]%[, ]%[^,]" (fun day _sep hour _sep min ->
           match seconds_of_day_string day with
           | Error () -> Error ()
           | Ok day_seconds -> (
