@@ -31,7 +31,7 @@ module Interpret_string = struct
 
   let seconds_of_hour_minute_string (s : string) : (int64, unit) result =
     try
-      Scanf.sscanf s "%[^,],%[^,]" (fun hour min ->
+      Scanf.sscanf s "%[^,]%[, ]%[^,]" (fun hour _sep min ->
           match seconds_of_hours_string hour with
           | Error () -> Error ()
           | Ok hour_seconds -> (
