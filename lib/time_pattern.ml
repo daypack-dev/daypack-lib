@@ -291,7 +291,7 @@ module Interpret_string = struct
 
   let check_minute x = assert (x < 60)
 
-  let of_date_string (s : string) : (t, unit) result =
+  let of_date_time_string (s : string) : (t, unit) result =
     try
       Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
           check_hour hour;
@@ -388,7 +388,7 @@ module Interpret_string = struct
     with _ -> Error ()
 
   let of_string (s : string) : (t, string) result =
-    match of_date_string s with
+    match of_date_time_string s with
     | Ok x -> Ok x
     | Error () -> (
         match of_weekday_time_string s with
