@@ -141,13 +141,13 @@ let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   | [] ->
     Seq.map
       (fun tm_mon -> { acc with tm_mon })
-      OSeq.(Time.int_of_month start --^ 12)
+      OSeq.(Time.tm_int_of_month start --^ 12)
   | pat_mon_list ->
     pat_mon_list
     |> List.to_seq
     |> Seq.filter (fun pat_mon -> Time.month_le start pat_mon)
     |> Seq.map (fun pat_mon ->
-        { acc with tm_mon = Time.int_of_month pat_mon })
+        { acc with tm_mon = Time.tm_int_of_month pat_mon })
 
 let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
   : Unix.tm Seq.t =
