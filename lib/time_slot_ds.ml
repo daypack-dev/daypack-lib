@@ -245,8 +245,32 @@ let merge (time_slots1 : t Seq.t) (time_slots2 : t Seq.t) : t Seq.t =
   in
   aux time_slots1 time_slots2
 
+let merge_multi_seq (time_slot_batches : t Seq.t Seq.t) : t Seq.t =
+  Seq.fold_left
+    (fun acc time_slots ->
+       merge acc time_slots
+    )
+    Seq.empty
+    time_slot_batches
+
+let merge_multi_list (time_slot_batches : t Seq.t list) : t Seq.t =
+  List.to_seq time_slot_batches
+  |> merge_multi_seq
+
 let union time_slots1 time_slots2 =
   merge time_slots1 time_slots2 |> normalize ~skip_filter:true ~skip_sort:true
+
+let union_multi_seq (time_slot_batches : t Seq.t Seq.t) : t Seq.t =
+  Seq.fold_left
+    (fun acc time_slots ->
+       union acc time_slots
+    )
+    Seq.empty
+    time_slot_batches
+
+let union_multi_list (time_slot_batches : t Seq.t list) : t Seq.t =
+  List.to_seq time_slot_batches
+  |> union_multi_seq
 
 let chunk ~chunk_size ?(drop_partial = false) (time_slots : t Seq.t) : t Seq.t =
   let rec aux time_slots =
