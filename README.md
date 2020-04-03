@@ -32,7 +32,7 @@ See here __TODO__
 
 ## Features
 
-<details><summary>__Overview__</summary>
+<details><summary>Overview</summary>
 <p>
 
 - Automatic scheduling
@@ -102,7 +102,8 @@ See here __TODO__
 </p>
 </details>
 
-#### Constraints (or scheduling strategies) supported
+<details><summary>Constraints (or scheduling strategies) supported</summary>
+<p>
 
 __Note:__ The following lists all the constraints supported by the core library,
 but frontends may not expose them completely
@@ -171,6 +172,9 @@ but frontends may not expose them completely
 
   - E.g. "I need this done, which takes 15mins, it needs to be done between 4pm-10pm,
     but I want it as close to 6pm as possible"
+
+</p>
+</details>
 
 ## Architecture and limitations
 
