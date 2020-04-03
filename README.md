@@ -32,9 +32,7 @@ See here __TODO__
 
 ## Features
 
-#### Overview
-
-<details><summary>Overview</summary>
+<details><summary>#### Overview</summary>
 <p>
 
 - Automatic scheduling
