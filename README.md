@@ -34,6 +34,9 @@ See here __TODO__
 
 #### Overview
 
+<details><summary>Overview</summary>
+<p>
+
 - Automatic scheduling
 
   - See below for strategies supported in scheduling requests
@@ -97,6 +100,9 @@ See here __TODO__
   - `Daypack_lib` contains implementation of all functionalities, and has zero dependency on any online service
 
   - This is not novel/unexpected or necessarily desirable, and is listed more for clarity's sake, as some similar software make use of online services
+
+</p>
+</details>
 
 #### Constraints (or scheduling strategies) supported
 
