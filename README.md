@@ -178,6 +178,9 @@ but frontends may not expose them completely
 
 ## Architecture and limitations
 
+<details><summary>Details</summary>
+<p>
+
 Daypack does not aim to be a general solver, and only supports a limited set of constraints
 (which are listed above)
 
@@ -198,6 +201,9 @@ Some of the features that Daypack does __NOT__ support
 - Resource allocation
 
   - Doesn't seem to be a useful item for personal TODO list
+
+</p>
+</details>
 
 ## Getting started
 
