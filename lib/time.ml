@@ -89,8 +89,7 @@ let tm_int_of_month (month : month) : int =
   | `Nov -> 10
   | `Dec -> 11
 
-let human_int_of_month (month : month) : int =
-  tm_int_of_month month + 1
+let human_int_of_month (month : month) : int = tm_int_of_month month + 1
 
 let month_of_tm_int (x : int) : month =
   match x with
@@ -108,8 +107,7 @@ let month_of_tm_int (x : int) : month =
   | 11 -> `Dec
   | _ -> failwith "Invalid month int"
 
-let month_of_human_int (x : int) : month =
-  month_of_tm_int (x - 1)
+let month_of_human_int (x : int) : month = month_of_tm_int (x - 1)
 
 let cal_month_of_month (month : month) : CalendarLib.Calendar.month =
   match month with

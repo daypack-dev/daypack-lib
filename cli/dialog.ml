@@ -136,7 +136,9 @@ let process_time_string (s : string) : (int64, string) result =
 
 let process_time_slot_string (s : string) : (int64 * int64, string) result =
   let cur_time = Daypack_lib.Time.Current.cur_unix_time () in
-  match Daypack_lib.Time_pattern.Interpret_string.paired_pattern_of_string s with
+  match
+    Daypack_lib.Time_pattern.Interpret_string.paired_pattern_of_string s
+  with
   | Ok (start_pat, end_exc_pat) -> (
       match
         Daypack_lib.Time_pattern.next_match_time_slot_paired_pattern
@@ -144,29 +146,28 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
           (Years_ahead_start_unix_time
              {
                start = cur_time;
-               search_years_ahead =
-                 Config.time_pattern_search_years_ahead;
+               search_years_ahead = Config.time_pattern_search_years_ahead;
              })
           start_pat end_exc_pat
       with
       | None -> Error "Failed to find match for start pattern"
       | Some (start, end_exc) -> Ok (start, end_exc) )
-  | Error _ ->
-    match Daypack_lib.Time_pattern.Interpret_string.of_string s with
-    | Error msg -> Error msg
-    | Ok pat -> (
-        match
-          Daypack_lib.Time_pattern.next_match_time_slot
-            ~search_in_time_zone:`Local
-            (Years_ahead_start_unix_time
-               {
-                 start = cur_time;
-                 search_years_ahead = Config.time_pattern_search_years_ahead;
-               })
-            pat
-        with
-        | None -> Error "Failed to find match for pattern"
-        | Some x -> Ok x )
+  | Error _ -> (
+      match Daypack_lib.Time_pattern.Interpret_string.of_string s with
+      | Error msg -> Error msg
+      | Ok pat -> (
+          match
+            Daypack_lib.Time_pattern.next_match_time_slot
+              ~search_in_time_zone:`Local
+              (Years_ahead_start_unix_time
+                 {
+                   start = cur_time;
+                   search_years_ahead = Config.time_pattern_search_years_ahead;
+                 })
+              pat
+          with
+          | None -> Error "Failed to find match for pattern"
+          | Some x -> Ok x ) )
 
 let ask_time ~indent_level ~(prompt : string) : int64 =
   ask ~indent_level ~prompt process_time_string

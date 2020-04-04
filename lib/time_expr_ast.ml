@@ -7,8 +7,7 @@ type hour_minute_expr = {
   minute : int;
 }
 
-type hour_minutes_expr =
-  | Hour_minute_range of hour_minute_expr range_expr
+type hour_minutes_expr = Hour_minute_range of hour_minute_expr range_expr
 
 type day_expr =
   | Weekday of Time.weekday
@@ -48,8 +47,7 @@ type time_point_expr =
     }
   | Hour_minute of hour_minute_expr
 
-type time_range_expr =
-  time_point_expr range_expr
+type time_range_expr = time_point_expr range_expr
 
 type complex_time_range_expr =
   | Hour_minutes_of_days of {

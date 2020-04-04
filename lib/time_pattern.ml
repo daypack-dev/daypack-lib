@@ -135,7 +135,8 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
 
 let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
-    if acc.tm_year = start.tm_year then Time.month_of_tm_int start.tm_mon else `Jan
+    if acc.tm_year = start.tm_year then Time.month_of_tm_int start.tm_mon
+    else `Jan
   in
   match t.months with
   | [] ->
@@ -403,14 +404,14 @@ module Interpret_string = struct
     try
       Scanf.sscanf s "%[^, ]%[, ]%[^, ]" (fun start _sep end_exc ->
           match of_string start with
-          | Error _ -> Error "Failed to interpret start string as a time pattern"
-          | Ok start ->
-            match of_string end_exc with
-            | Error _ -> Error "Failed to interpret end exc string as a time pattern"
-            | Ok end_exc -> Ok (start, end_exc)
-        )
-    with
-    _ -> Error "Failed to interpret string as time pattern pair"
+          | Error _ ->
+            Error "Failed to interpret start string as a time pattern"
+          | Ok start -> (
+              match of_string end_exc with
+              | Error _ ->
+                Error "Failed to interpret end exc string as a time pattern"
+              | Ok end_exc -> Ok (start, end_exc) ))
+    with _ -> Error "Failed to interpret string as time pattern pair"
 end
 
 module Equal = struct
