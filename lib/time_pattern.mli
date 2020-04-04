@@ -58,6 +58,8 @@ val next_match_time_slot_paired_pattern :
 
 module Interpret_string : sig
   val of_string : string -> (t, string) result
+
+  val paired_pattern_of_string : string -> (t * t, string) result
 end
 
 module Equal : sig

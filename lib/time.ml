@@ -27,7 +27,13 @@ let first_mday = 1
 
 let tm_year_offset = 1900
 
-let int_of_weekday (wday : weekday) : int =
+let minute_to_second_multiplier = 60L
+
+let hour_to_second_multiplier = Int64.mul 60L minute_to_second_multiplier
+
+let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
+
+let tm_int_of_weekday (wday : weekday) : int =
   match wday with
   | `Sun -> 0
   | `Mon -> 1
@@ -37,7 +43,7 @@ let int_of_weekday (wday : weekday) : int =
   | `Fri -> 3
   | `Sat -> 3
 
-let weekday_of_int (x : int) : weekday =
+let weekday_of_tm_int (x : int) : weekday =
   match x with
   | 0 -> `Sun
   | 1 -> `Mon
@@ -68,7 +74,7 @@ let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
   | Fri -> `Fri
   | Sat -> `Sat
 
-let int_of_month (month : month) : int =
+let tm_int_of_month (month : month) : int =
   match month with
   | `Jan -> 0
   | `Feb -> 1
@@ -83,7 +89,10 @@ let int_of_month (month : month) : int =
   | `Nov -> 10
   | `Dec -> 11
 
-let month_of_int (x : int) : month =
+let human_int_of_month (month : month) : int =
+  tm_int_of_month month + 1
+
+let month_of_tm_int (x : int) : month =
   match x with
   | 0 -> `Jan
   | 1 -> `Feb
@@ -98,6 +107,9 @@ let month_of_int (x : int) : month =
   | 10 -> `Nov
   | 11 -> `Dec
   | _ -> failwith "Invalid month int"
+
+let month_of_human_int (x : int) : month =
+  month_of_tm_int (x - 1)
 
 let cal_month_of_month (month : month) : CalendarLib.Calendar.month =
   match month with
@@ -130,26 +142,26 @@ let month_of_cal_month (month : CalendarLib.Calendar.month) : month =
   | Dec -> `Dec
 
 let month_compare (m1 : month) (m2 : month) : int =
-  compare (int_of_month m1) (int_of_month m2)
+  compare (tm_int_of_month m1) (tm_int_of_month m2)
 
-let month_lt m1 m2 = int_of_month m1 < int_of_month m2
+let month_lt m1 m2 = tm_int_of_month m1 < tm_int_of_month m2
 
-let month_le m1 m2 = int_of_month m1 <= int_of_month m2
+let month_le m1 m2 = tm_int_of_month m1 <= tm_int_of_month m2
 
-let month_gt m1 m2 = int_of_month m1 > int_of_month m2
+let month_gt m1 m2 = tm_int_of_month m1 > tm_int_of_month m2
 
-let month_ge m1 m2 = int_of_month m1 >= int_of_month m2
+let month_ge m1 m2 = tm_int_of_month m1 >= tm_int_of_month m2
 
 let weekday_compare (d1 : weekday) (d2 : weekday) : int =
-  compare (int_of_weekday d1) (int_of_weekday d2)
+  compare (tm_int_of_weekday d1) (tm_int_of_weekday d2)
 
-let weekday_lt d1 d2 = int_of_weekday d1 < int_of_weekday d2
+let weekday_lt d1 d2 = tm_int_of_weekday d1 < tm_int_of_weekday d2
 
-let weekday_le d1 d2 = int_of_weekday d1 <= int_of_weekday d2
+let weekday_le d1 d2 = tm_int_of_weekday d1 <= tm_int_of_weekday d2
 
-let weekday_gt d1 d2 = int_of_weekday d1 > int_of_weekday d2
+let weekday_gt d1 d2 = tm_int_of_weekday d1 > tm_int_of_weekday d2
 
-let weekday_ge d1 d2 = int_of_weekday d1 >= int_of_weekday d2
+let weekday_ge d1 d2 = tm_int_of_weekday d1 >= tm_int_of_weekday d2
 
 type time_zone =
   [ `Local
@@ -168,7 +180,6 @@ let tm_of_unix_time ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
 
 let unix_time_of_tm ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
   tm
-  |> zero_tm_sec
   |> (fun x ->
       match time_zone_of_tm with
       | `Local ->
@@ -222,7 +233,7 @@ let day_count_of_month ~year ~(month : month) =
 let weekday_of_month_day ~(year : int) ~(month : month) ~(mday : int) : weekday
   =
   CalendarLib.Date.day_of_week
-    (CalendarLib.Date.make year (int_of_month month) mday)
+    (CalendarLib.Date.make year (tm_int_of_month month) mday)
   |> weekday_of_cal_weekday
 
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =

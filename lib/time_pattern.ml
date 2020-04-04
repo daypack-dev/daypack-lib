@@ -110,7 +110,7 @@ let matching_hours (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
 
 let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let year = acc.tm_year + Time.tm_year_offset in
-  let month = Time.month_of_int acc.tm_mon in
+  let month = Time.month_of_tm_int acc.tm_mon in
   let day_count = Time.day_count_of_month ~year ~month in
   let start =
     if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
@@ -135,19 +135,19 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
 
 let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
-    if acc.tm_year = start.tm_year then Time.month_of_int start.tm_mon else `Jan
+    if acc.tm_year = start.tm_year then Time.month_of_tm_int start.tm_mon else `Jan
   in
   match t.months with
   | [] ->
     Seq.map
       (fun tm_mon -> { acc with tm_mon })
-      OSeq.(Time.int_of_month start --^ 12)
+      OSeq.(Time.tm_int_of_month start --^ 12)
   | pat_mon_list ->
     pat_mon_list
     |> List.to_seq
     |> Seq.filter (fun pat_mon -> Time.month_le start pat_mon)
     |> Seq.map (fun pat_mon ->
-        { acc with tm_mon = Time.int_of_month pat_mon })
+        { acc with tm_mon = Time.tm_int_of_month pat_mon })
 
 let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
   : Unix.tm Seq.t =
@@ -291,12 +291,12 @@ module Interpret_string = struct
 
   let check_minute x = assert (x < 60)
 
-  let of_date_string (s : string) : (t, unit) result =
+  let of_date_time_string (s : string) : (t, unit) result =
     try
       Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
           check_hour hour;
           check_minute minute;
-          let month = Time.month_of_int month in
+          let month = Time.month_of_human_int month in
           Ok
             {
               years = [ year ];
@@ -311,7 +311,7 @@ module Interpret_string = struct
           Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
               check_hour hour;
               check_minute minute;
-              let month = Time.month_of_int month in
+              let month = Time.month_of_human_int month in
               Ok
                 {
                   years = [];
@@ -353,7 +353,7 @@ module Interpret_string = struct
 
   let of_weekday_time_string (s : string) : (t, unit) result =
     try
-      Scanf.sscanf s "%[^-]-%d:%d" (fun maybe_weekday hour minute ->
+      Scanf.sscanf s "%[a-zA-Z]%c%d:%d" (fun maybe_weekday _sep hour minute ->
           check_hour hour;
           check_minute minute;
           let weekday =
@@ -388,7 +388,7 @@ module Interpret_string = struct
     with _ -> Error ()
 
   let of_string (s : string) : (t, string) result =
-    match of_date_string s with
+    match of_date_time_string s with
     | Ok x -> Ok x
     | Error () -> (
         match of_weekday_time_string s with
@@ -398,6 +398,19 @@ module Interpret_string = struct
             | Ok x -> Ok x
             | Error () -> Error "Failed to interpret string as a time pattern" )
       )
+
+  let paired_pattern_of_string (s : string) : (t * t, string) result =
+    try
+      Scanf.sscanf s "%[^, ]%[, ]%[^, ]" (fun start _sep end_exc ->
+          match of_string start with
+          | Error _ -> Error "Failed to interpret start string as a time pattern"
+          | Ok start ->
+            match of_string end_exc with
+            | Error _ -> Error "Failed to interpret end exc string as a time pattern"
+            | Ok end_exc -> Ok (start, end_exc)
+        )
+    with
+    _ -> Error "Failed to interpret string as time pattern pair"
 end
 
 module Equal = struct

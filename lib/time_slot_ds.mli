@@ -15,9 +15,17 @@ val relative_complement : mem_of:t Seq.t -> not_mem_of:t Seq.t -> t Seq.t
 
 val merge : t Seq.t -> t Seq.t -> t Seq.t
 
+val merge_multi_seq : t Seq.t Seq.t -> t Seq.t
+
+val merge_multi_list : t Seq.t list -> t Seq.t
+
 val intersect : t Seq.t -> t Seq.t -> t Seq.t
 
 val union : t Seq.t -> t Seq.t -> t Seq.t
+
+val union_multi_seq : t Seq.t Seq.t -> t Seq.t
+
+val union_multi_list : t Seq.t list -> t Seq.t
 
 val chunk : chunk_size:int64 -> ?drop_partial:bool -> t Seq.t -> t Seq.t
 
