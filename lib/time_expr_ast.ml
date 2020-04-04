@@ -13,31 +13,31 @@ type day_expr =
   | Weekday of Time.weekday
   | Month_day of int
 
-type days_expr =
-  | Next_n_days of int
-  | Every_x_day of day_expr
-  | Day_list of day_expr list
-  | Day_range of day_expr range_expr
+(* type days_expr =
+ *   | Next_n_days of int
+ *   | Every_x_day of day_expr
+ *   | Day_list of day_expr list
+ *   | Day_range of day_expr range_expr *)
 
 type month_expr = Time.month
 
-type months_expr =
-  | Next_n_months of int
-  | Every_x_month of month_expr
-  | Month_list of month_expr list
-  | Month_range of month_expr range_expr
+(* type months_expr =
+ *   | Next_n_months of int
+ *   | Every_x_month of month_expr
+ *   | Month_list of month_expr list
+ *   | Month_range of month_expr range_expr *)
 
 type year_expr = int
 
 type time_point_expr =
   | Year_month_day_hour_minute of {
       year : year_expr;
-      month : months_expr;
+      month : month_expr;
       day : day_expr;
       hour_minute : hour_minute_expr;
     }
   | Month_day_hour_minute of {
-      month : months_expr;
+      month : month_expr;
       day : day_expr;
       hour_minute : hour_minute_expr;
     }
@@ -47,12 +47,29 @@ type time_point_expr =
     }
   | Hour_minute of hour_minute_expr
 
-type time_range_expr = time_point_expr range_expr
-
-type complex_time_range_expr =
-  | Hour_minutes_of_days of {
+type time_slots_expr =
+  | Hour_minutes_of_day_list of {
       hour_minutes : hour_minutes_expr;
-      days : days_expr;
+      days : day_expr list;
+    }
+  | Hour_minutes_of_day_range of {
+      hour_minutes : hour_minutes_expr;
+      start : day_expr;
+      end_exc : day_expr;
+    }
+  | Hour_minutes_of_next_n_days of {
+      hour_minutes : hour_minutes_expr;
+      day_count : int;
+    }
+  | Hour_minutes_of_day_list_of_month_list of {
+      hour_minutes : hour_minutes_expr;
+      days : day_expr list;
+      months : month_expr list;
+    }
+  | Hour_minutes_of_every_weekday_list_of_month_list of {
+      hour_minutes : hour_minutes_expr;
+      weekdays : Time.weekday list;
+      months : month_expr list;
     }
 
 (* let time_range_exprs_of_complex_time_range_expr (e : complex_time_range_expr) : time_range_expr list =
