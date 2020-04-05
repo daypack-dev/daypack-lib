@@ -42,14 +42,14 @@ val next_match_time_slot :
   t ->
   (int64 * int64) option
 
-val matching_time_slots_paired_pattern :
+val matching_time_slots_paired_patterns :
   search_in_time_zone:Time.time_zone ->
   search_type ->
   t ->
   t ->
   Time_slot_ds.t Seq.t
 
-val next_match_time_slot_paired_pattern :
+val next_match_time_slot_paired_patterns :
   search_in_time_zone:Time.time_zone ->
   search_type ->
   t ->
@@ -59,7 +59,7 @@ val next_match_time_slot_paired_pattern :
 module Interpret_string : sig
   val of_string : string -> (t, string) result
 
-  val paired_pattern_of_string : string -> (t * t, string) result
+  val paired_patterns_of_string : string -> (t * t, string) result
 end
 
 module Equal : sig

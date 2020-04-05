@@ -137,11 +137,11 @@ let process_time_string (s : string) : (int64, string) result =
 let process_time_slot_string (s : string) : (int64 * int64, string) result =
   let cur_time = Daypack_lib.Time.Current.cur_unix_time () in
   match
-    Daypack_lib.Time_pattern.Interpret_string.paired_pattern_of_string s
+    Daypack_lib.Time_pattern.Interpret_string.paired_patterns_of_string s
   with
   | Ok (start_pat, end_exc_pat) -> (
       match
-        Daypack_lib.Time_pattern.next_match_time_slot_paired_pattern
+        Daypack_lib.Time_pattern.next_match_time_slot_paired_patterns
           ~search_in_time_zone:`Local
           (Years_ahead_start_unix_time
              {

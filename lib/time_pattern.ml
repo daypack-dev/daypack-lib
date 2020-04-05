@@ -242,7 +242,7 @@ let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let matching_time_slots_paired_pattern ~(search_in_time_zone : Time.time_zone)
+let matching_time_slots_paired_patterns ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (t1 : t) (t2 : t) : Time_slot_ds.t Seq.t =
   matching_time_slots ~search_in_time_zone search_type t1
   |> Seq.filter_map (fun (start, _) ->
@@ -251,10 +251,10 @@ let matching_time_slots_paired_pattern ~(search_in_time_zone : Time.time_zone)
       | Seq.Nil -> None
       | Seq.Cons ((_, end_exc), _) -> Some (start, end_exc))
 
-let next_match_time_slot_paired_pattern ~(search_in_time_zone : Time.time_zone)
+let next_match_time_slot_paired_patterns ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (t1 : t) (t2 : t) : (int64 * int64) option =
   match
-    matching_time_slots_paired_pattern ~search_in_time_zone search_type t1 t2 ()
+    matching_time_slots_paired_patterns ~search_in_time_zone search_type t1 t2 ()
   with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
@@ -400,7 +400,7 @@ module Interpret_string = struct
             | Error () -> Error "Failed to interpret string as a time pattern" )
       )
 
-  let paired_pattern_of_string (s : string) : (t * t, string) result =
+  let paired_patterns_of_string (s : string) : (t * t, string) result =
     try
       Scanf.sscanf s "%[^, ]%[, ]%[^, ]" (fun start _sep end_exc ->
           match of_string start with
