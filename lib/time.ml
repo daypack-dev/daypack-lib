@@ -33,15 +33,25 @@ let hour_to_second_multiplier = Int64.mul 60L minute_to_second_multiplier
 
 let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
 
+let next_weekday (wday : weekday) : weekday =
+  match wday with
+  | `Sun -> `Mon
+  | `Mon -> `Tue
+  | `Tue -> `Wed
+  | `Wed -> `Thu
+  | `Thu -> `Fri
+  | `Fri -> `Sat
+  | `Sat -> `Sun
+
 let tm_int_of_weekday (wday : weekday) : int =
   match wday with
   | `Sun -> 0
   | `Mon -> 1
   | `Tue -> 2
   | `Wed -> 3
-  | `Thu -> 3
-  | `Fri -> 3
-  | `Sat -> 3
+  | `Thu -> 4
+  | `Fri -> 5
+  | `Sat -> 6
 
 let weekday_of_tm_int (x : int) : weekday =
   match x with
