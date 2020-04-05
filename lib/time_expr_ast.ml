@@ -13,6 +13,10 @@ type day_expr =
   | Weekday of Time.weekday
   | Month_day of int
 
+type day_range_expr =
+  | Weekday_range of Time.weekday * Time.weekday
+  | Month_day_range of int * int
+
 (* type days_expr =
  *   | Next_n_days of int
  *   | Every_x_day of day_expr
@@ -54,8 +58,7 @@ type time_slots_expr =
     }
   | Hour_minutes_of_day_range of {
       hour_minutes : hour_minutes_expr;
-      start : day_expr;
-      end_exc : day_expr;
+      days : day_range_expr;
     }
   | Hour_minutes_of_next_n_days of {
       hour_minutes : hour_minutes_expr;
