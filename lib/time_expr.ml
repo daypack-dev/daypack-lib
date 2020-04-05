@@ -54,6 +54,18 @@ let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) : (Time_p
         (add_hour_minute_to_time_pattern hm_start pat,
          add_hour_minute_to_time_pattern hm_end_exc pat)
       )
+  | Hour_minutes_of_next_n_days { hour_minutes; day_count } ->
+    let hm_start, hm_end_exc = paired_hour_minute_of_range_expr hour_minutes in
+    let cur_tm = Time.Current.cur_tm_local () in
+    let cur_mday = cur_tm.tm_mday in
+    OSeq.(cur_mday --^ (cur_mday + day_count))
+    |> List.of_seq
+    |> List.map (fun mday -> Month_day mday)
+    |> List.map time_pattern_of_day_expr
+    |> List.map (fun pat ->
+        (add_hour_minute_to_time_pattern hm_start pat,
+         add_hour_minute_to_time_pattern hm_end_exc pat)
+      )
   | _ -> failwith "Unimplemented"
 
 (* let time_range_exprs_of_complex_time_range_expr (e : complex_time_range_expr) : time_range_expr list =
