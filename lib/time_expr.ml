@@ -102,7 +102,3 @@ let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) : (Time_p
          add_hour_minute_to_time_pattern hm_end_exc pat)
       )
     |> List.of_seq
-
-(* let time_range_exprs_of_complex_time_range_expr (e : complex_time_range_expr) : time_range_expr list =
- *   match e with
- *   | Hour_minutes_of_days { hour_minutes; days } -> *)
