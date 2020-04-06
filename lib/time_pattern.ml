@@ -26,14 +26,15 @@ type t = {
   seconds : int list;
 }
 
-let empty = {
-  years = [];
-  months = [];
-  days = `Month_days [];
-  hours = [];
-  minutes = [];
-  seconds = [];
-}
+let empty =
+  {
+    years = [];
+    months = [];
+    days = `Month_days [];
+    hours = [];
+    minutes = [];
+    seconds = [];
+  }
 
 let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
   : search_type =
@@ -263,7 +264,8 @@ let matching_time_slots_paired_patterns ~(search_in_time_zone : Time.time_zone)
 let next_match_time_slot_paired_patterns ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (t1 : t) (t2 : t) : (int64 * int64) option =
   match
-    matching_time_slots_paired_patterns ~search_in_time_zone search_type t1 t2 ()
+    matching_time_slots_paired_patterns ~search_in_time_zone search_type t1 t2
+      ()
   with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)

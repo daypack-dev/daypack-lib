@@ -43,12 +43,11 @@ let next_weekday (wday : weekday) : weekday =
   | `Fri -> `Sat
   | `Sat -> `Sun
 
-let weekday_list_of_weekday_range ~(start : weekday) ~(end_inc : weekday) : weekday list =
+let weekday_list_of_weekday_range ~(start : weekday) ~(end_inc : weekday) :
+  weekday list =
   let rec aux acc cur end_inc =
-    if cur = end_inc then
-      List.rev (cur :: acc)
-    else
-      aux (cur :: acc) (next_weekday cur) end_inc
+    if cur = end_inc then List.rev (cur :: acc)
+    else aux (cur :: acc) (next_weekday cur) end_inc
   in
   aux [] start end_inc
 
