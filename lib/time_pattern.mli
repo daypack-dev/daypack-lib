@@ -24,6 +24,8 @@ type t = {
   seconds : int list;
 }
 
+val empty : t
+
 val matching_tm_seq :
   search_in_time_zone:Time.time_zone -> search_type -> t -> Unix.tm Seq.t
 

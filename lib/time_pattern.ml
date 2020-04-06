@@ -26,6 +26,15 @@ type t = {
   seconds : int list;
 }
 
+let empty = {
+  years = [];
+  months = [];
+  days = `Month_days [];
+  hours = [];
+  minutes = [];
+  seconds = [];
+}
+
 let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
   : search_type =
   match search_type with
