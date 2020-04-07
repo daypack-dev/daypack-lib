@@ -1,18 +1,25 @@
 open Time_expr_ast
 
 let time_pattern_of_day_expr ?(base : Time_pattern.t = Time_pattern.empty)
-    (e : day_expr) : Time_pattern.t =
-  {
-    base with
-    days =
-      ( match e with
-        | Weekday x -> `Weekdays [ x ]
-        | Month_day x -> `Month_days [ x ] );
-  }
+    (e : day_expr) : (Time_pattern.t, unit) result =
+  match e with
+  | Weekday x ->
+    Ok { base with days = `Weekdays [ x ] }
+  | Month_day x ->
+    if 1 <= x && x <= 31 then
+      Ok { base with days = `Month_days [ x ] }
+    else
+      Error ()
 
 let time_pattern_of_month_expr ?(base : Time_pattern.t = Time_pattern.empty)
-    (e : month_expr) : Time_pattern.t =
-  { base with months = [ e ] }
+    (e : month_expr) : (Time_pattern.t, unit) result =
+  (match e with
+   | Direct_pick_month x -> Ok x
+   | Human_int_month n ->
+     Time.month_of_human_int n)
+  |> Result.map (fun x ->
+      { base with months = [ x ] }
+    )
 
 let paired_hour_minute_of_range_expr (e : hour_minute_expr range_expr) :
   hour_minute_expr * hour_minute_expr =
@@ -39,16 +46,21 @@ let days_of_day_range_expr (e : day_range_expr) : day_expr list =
     OSeq.(start -- end_inc) |> Seq.map (fun x -> Month_day x) |> List.of_seq
 
 let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) :
-  (Time_pattern.t * Time_pattern.t) list =
+  ((Time_pattern.t * Time_pattern.t) list, unit) result =
   match e with
   | Hour_minutes_of_day_list { hour_minutes; days } ->
-    days
-    |> List.to_seq
-    |> Seq.map time_pattern_of_day_expr
-    |> Seq.map (fun pat ->
-        paired_time_pattern_of_hour_minute_range_expr ~base:pat
-          hour_minutes)
-    |> List.of_seq
+    let day_exprs =
+      List.map time_pattern_of_day_expr days
+    in
+    if List.for_all Result.is_ok day_exprs then
+      day_exprs
+      |> List.map Result.get_ok
+      |> List.map (fun pat ->
+          paired_time_pattern_of_hour_minute_range_expr ~base:pat
+            hour_minutes)
+      |> Result.ok
+    else
+      Error ()
   | Hour_minutes_of_day_range { hour_minutes; days } ->
     days
     |> days_of_day_range_expr

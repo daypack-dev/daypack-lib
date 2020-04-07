@@ -153,3 +153,7 @@
           time_profile_store_j.mli)
  (deps    time_profile_store.atd)
  (action  (run atdgen -j -j-std %{deps})))
+
+(ocamllex time_expr_lexer)
+
+(menhir (modules time_expr_parser))

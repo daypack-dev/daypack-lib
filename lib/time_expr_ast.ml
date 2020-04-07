@@ -23,7 +23,9 @@ type day_range_expr =
  *   | Day_list of day_expr list
  *   | Day_range of day_expr range_expr *)
 
-type month_expr = Time.month
+type month_expr =
+  | Direct_pick_month of Time.month
+  | Human_int_month of int
 
 (* type months_expr =
  *   | Next_n_months of int
@@ -37,12 +39,12 @@ type time_point_expr =
   | Year_month_day_hour_minute of {
       year : year_expr;
       month : month_expr;
-      day : day_expr;
+      month_day : int;
       hour_minute : hour_minute_expr;
     }
   | Month_day_hour_minute of {
       month : month_expr;
-      day : day_expr;
+      month_day : int;
       hour_minute : hour_minute_expr;
     }
   | Day_hour_minute of {
@@ -74,3 +76,7 @@ type time_slots_expr =
       weekdays : Time.weekday list;
       months : month_expr list;
     }
+
+type t =
+  | Time_point_expr of time_point_expr
+  | Time_slots_expr of time_slots_expr

@@ -109,23 +109,23 @@ let tm_int_of_month (month : month) : int =
 
 let human_int_of_month (month : month) : int = tm_int_of_month month + 1
 
-let month_of_tm_int (x : int) : month =
+let month_of_tm_int (x : int) : (month, unit) result =
   match x with
-  | 0 -> `Jan
-  | 1 -> `Feb
-  | 2 -> `Mar
-  | 3 -> `Apr
-  | 4 -> `May
-  | 5 -> `Jun
-  | 6 -> `Jul
-  | 7 -> `Aug
-  | 8 -> `Sep
-  | 9 -> `Oct
-  | 10 -> `Nov
-  | 11 -> `Dec
-  | _ -> failwith "Invalid month int"
+  | 0 -> Ok `Jan
+  | 1 -> Ok `Feb
+  | 2 -> Ok `Mar
+  | 3 -> Ok `Apr
+  | 4 -> Ok `May
+  | 5 -> Ok `Jun
+  | 6 -> Ok `Jul
+  | 7 -> Ok `Aug
+  | 8 -> Ok `Sep
+  | 9 -> Ok `Oct
+  | 10 -> Ok `Nov
+  | 11 -> Ok `Dec
+  | _ -> Error ()
 
-let month_of_human_int (x : int) : month = month_of_tm_int (x - 1)
+let month_of_human_int (x : int) : (month, unit) result = month_of_tm_int (x - 1)
 
 let cal_month_of_month (month : month) : CalendarLib.Calendar.month =
   match month with
