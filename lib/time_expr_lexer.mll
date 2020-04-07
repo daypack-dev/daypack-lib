@@ -10,7 +10,7 @@
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
 
-let nat = ['0' - '9']
+let nat = ['0' - '9']+
 
 (* weekdays *)
 let sunday    = ['S' 's'] "unday"    | ['S' 's'] "un"
@@ -45,7 +45,7 @@ rule read =
   (* separators *)
   | "-" { HYPHEN }
   | "," { COMMA }
-  | ";" { COLON }
+  | ":" { COLON }
 
   (* weekdays *)
   | sunday

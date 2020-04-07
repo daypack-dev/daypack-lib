@@ -6,7 +6,6 @@
 
 (* data *)
 %token <int> NAT
-%token <char> CHAR
 
 (* keywords *)
 %token OF
@@ -50,7 +49,7 @@ parse:
   ;
 
 time_point_expr:
-  | year = NAT; HYPHEN; month = NAT; month_day = NAT; CHAR;
+  | year = NAT; HYPHEN; month = NAT; HYPHEN; month_day = NAT;
     hour_minute = hour_minute_expr;
     {
       match Time.month_of_human_int month with
