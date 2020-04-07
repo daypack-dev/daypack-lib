@@ -158,3 +158,12 @@ let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) :
     )
     else
       Error ()
+
+module Interpret_string = struct
+  let parse lexbuf : t =
+    Time_expr_parser.parse Time_expr_lexer.read lexbuf
+
+  let of_string (s : string) : t =
+    let lexbuf = Lexing.from_string s in
+    parse lexbuf
+end
