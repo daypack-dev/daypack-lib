@@ -28,6 +28,17 @@
 
 (* months *)
 %token JANUARY
+%token FEBRUARY
+%token MARCH
+%token APRIL
+%token MAY
+%token JUNE
+%token JULY
+%token AUGUST
+%token SEPTEMBER
+%token OCTOBER
+%token NOVEMBER
+%token DECEMBER
 
 %start <Time_expr_ast.t> parse
 
@@ -87,5 +98,16 @@ day_expr:
 
 month_expr:
   | x = NAT { Human_int_month x }
-  | JANUARY { Direct_pick_month Jan }
+  | JANUARY   { Direct_pick_month Jan }
+  | FEBRUARY  { Direct_pick_month Feb }
+  | MARCH     { Direct_pick_month Mar }
+  | APRIL     { Direct_pick_month Apr }
+  | MAY       { Direct_pick_month May }
+  | JUNE      { Direct_pick_month Jun }
+  | JULY      { Direct_pick_month Jul }
+  | AUGUST    { Direct_pick_month Aug }
+  | SEPTEMBER { Direct_pick_month Sep }
+  | OCTOBER   { Direct_pick_month Oct }
+  | NOVEMBER  { Direct_pick_month Nov }
+  | DECEMBER  { Direct_pick_month Dec }
   ;
