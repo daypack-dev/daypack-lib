@@ -120,7 +120,7 @@ let matching_hours (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
 
 let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let year = acc.tm_year + Time.tm_year_offset in
-  let month = Time.month_of_tm_int acc.tm_mon in
+  let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
   let day_count = Time.day_count_of_month ~year ~month in
   let start =
     if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
@@ -145,7 +145,7 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
 
 let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
-    if acc.tm_year = start.tm_year then Time.month_of_tm_int start.tm_mon
+    if acc.tm_year = start.tm_year then Time.month_of_tm_int start.tm_mon |> Result.get_ok
     else `Jan
   in
   match t.months with
@@ -308,7 +308,7 @@ module Interpret_string = struct
       Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
           check_hour hour;
           check_minute minute;
-          let month = Time.month_of_human_int month in
+          let month = Time.month_of_human_int month |> Result.get_ok in
           Ok
             {
               years = [ year ];
@@ -323,7 +323,7 @@ module Interpret_string = struct
           Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
               check_hour hour;
               check_minute minute;
-              let month = Time.month_of_human_int month in
+              let month = Time.month_of_human_int month |> Result.get_ok in
               Ok
                 {
                   years = [];
