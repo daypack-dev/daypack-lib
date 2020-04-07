@@ -145,7 +145,8 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
 
 let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
-    if acc.tm_year = start.tm_year then Time.month_of_tm_int start.tm_mon |> Result.get_ok
+    if acc.tm_year = start.tm_year then
+      Time.month_of_tm_int start.tm_mon |> Result.get_ok
     else `Jan
   in
   match t.months with

@@ -3,23 +3,17 @@ open Time_expr_ast
 let time_pattern_of_day_expr ?(base : Time_pattern.t = Time_pattern.empty)
     (e : day_expr) : (Time_pattern.t, unit) result =
   match e with
-  | Weekday x ->
-    Ok { base with days = `Weekdays [ x ] }
+  | Weekday x -> Ok { base with days = `Weekdays [ x ] }
   | Month_day x ->
-    if 1 <= x && x <= 31 then
-      Ok { base with days = `Month_days [ x ] }
-    else
-      Error ()
+    if 1 <= x && x <= 31 then Ok { base with days = `Month_days [ x ] }
+    else Error ()
 
 let time_pattern_of_month_expr ?(base : Time_pattern.t = Time_pattern.empty)
     (e : month_expr) : (Time_pattern.t, unit) result =
-  (match e with
-   | Direct_pick_month x -> Ok x
-   | Human_int_month n ->
-     Time.month_of_human_int n)
-  |> Result.map (fun x ->
-      { base with months = [ x ] }
-    )
+  ( match e with
+    | Direct_pick_month x -> Ok x
+    | Human_int_month n -> Time.month_of_human_int n )
+  |> Result.map (fun x -> { base with months = [ x ] })
 
 let paired_hour_minute_of_range_expr (e : hour_minute_expr range_expr) :
   hour_minute_expr * hour_minute_expr =
@@ -49,9 +43,7 @@ let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) :
   ((Time_pattern.t * Time_pattern.t) list, unit) result =
   match e with
   | Hour_minutes_of_day_list { hour_minutes; days } ->
-    let day_pats =
-      List.map time_pattern_of_day_expr days
-    in
+    let day_pats = List.map time_pattern_of_day_expr days in
     if List.for_all Result.is_ok day_pats then
       day_pats
       |> List.to_seq
@@ -61,13 +53,10 @@ let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) :
             hour_minutes)
       |> List.of_seq
       |> Result.ok
-    else
-      Error ()
+    else Error ()
   | Hour_minutes_of_day_range { hour_minutes; days } ->
     let day_pats =
-      days
-      |> days_of_day_range_expr
-      |> List.map time_pattern_of_day_expr
+      days |> days_of_day_range_expr |> List.map time_pattern_of_day_expr
     in
     if List.for_all Result.is_ok day_pats then
       day_pats
@@ -78,8 +67,7 @@ let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) :
             hour_minutes)
       |> List.of_seq
       |> Result.ok
-    else
-      Error ()
+    else Error ()
   | Hour_minutes_of_next_n_days { hour_minutes; day_count } ->
     let cur_tm = Time.Current.cur_tm_local () in
     let cur_mday = cur_tm.tm_mday in
@@ -98,13 +86,10 @@ let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) :
             hour_minutes)
       |> List.of_seq
       |> Result.ok
-    else
-      Error ()
+    else Error ()
   | Hour_minutes_of_day_list_of_month_list { hour_minutes; days; months } ->
-    let month_pats =
-      List.map time_pattern_of_month_expr months
-    in
-    if List.for_all Result.is_ok month_pats then (
+    let month_pats = List.map time_pattern_of_month_expr months in
+    if List.for_all Result.is_ok month_pats then
       let day_pats =
         month_pats
         |> List.to_seq
@@ -122,17 +107,12 @@ let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) :
               hour_minutes)
         |> List.of_seq
         |> Result.ok
-      else
-        Error ()
-    )
-    else
-      Error ()
+      else Error ()
+    else Error ()
   | Hour_minutes_of_every_weekday_list_of_month_list
       { hour_minutes; weekdays; months } ->
-    let month_pats =
-      List.map time_pattern_of_month_expr months
-    in
-    if List.for_all Result.is_ok month_pats then (
+    let month_pats = List.map time_pattern_of_month_expr months in
+    if List.for_all Result.is_ok month_pats then
       let day_pats =
         month_pats
         |> List.to_seq
@@ -153,15 +133,11 @@ let paired_time_patterns_list_of_time_slots_expr (e : time_slots_expr) :
               hour_minutes)
         |> List.of_seq
         |> Result.ok
-      else
-        Error ()
-    )
-    else
-      Error ()
+      else Error ()
+    else Error ()
 
 module Interpret_string = struct
-  let parse lexbuf : t =
-    Time_expr_parser.parse Time_expr_lexer.read lexbuf
+  let parse lexbuf : t = Time_expr_parser.parse Time_expr_lexer.read lexbuf
 
   let of_string (s : string) : t =
     let lexbuf = Lexing.from_string s in
