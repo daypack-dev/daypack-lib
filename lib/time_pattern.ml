@@ -299,6 +299,170 @@ module Deserialize = struct
     }
 end
 
+module Interpret_time_expr = struct
+  exception Invalid_time_expr
+
+  let next_hour_minute_expr ({ hour; minute } : Time_expr_ast.hour_minute_expr)
+    : Time_expr_ast.hour_minute_expr =
+    match Time.next_hour_minute ~hour ~minute with
+    | Ok (hour, minute) -> { hour; minute }
+    | Error () -> raise Invalid_time_expr
+
+  let days_of_day_range_expr (e : Time_expr_ast.day_range_expr) :
+    Time_expr_ast.day_expr list =
+    match e with
+    | Weekday_range (start, end_inc) ->
+      Time.weekday_list_of_weekday_range ~start ~end_inc
+      |> List.map (fun x -> Time_expr_ast.Weekday x)
+    | Month_day_range (start, end_inc) ->
+      OSeq.(start -- end_inc)
+      |> Seq.map (fun x -> Time_expr_ast.Month_day x)
+      |> List.of_seq
+
+  let time_pattern_of_day_expr ?(base : t = empty) (e : Time_expr_ast.day_expr)
+    : t =
+    match e with
+    | Weekday x -> { base with days = `Weekdays [ x ] }
+    | Month_day x ->
+      if 1 <= x && x <= 31 then { base with days = `Month_days [ x ] }
+      else raise Invalid_time_expr
+
+  let time_pattern_of_month_expr ?(base : t = empty)
+      (e : Time_expr_ast.month_expr) : t =
+    let month =
+      match e with
+      | Direct_pick_month x -> x
+      | Human_int_month n -> (
+          match Time.month_of_human_int n with
+          | Ok x -> x
+          | Error () -> raise Invalid_time_expr )
+    in
+    { base with months = [ month ] }
+
+  let time_pattern_of_year_expr ?(base : t = empty)
+      (e : Time_expr_ast.year_expr) : t =
+    { base with years = [ e ] }
+
+  let paired_hour_minute_of_range_expr
+      (e : Time_expr_ast.hour_minute_expr Time_expr_ast.range_expr) :
+    Time_expr_ast.hour_minute_expr * Time_expr_ast.hour_minute_expr =
+    match e with
+    | Range_inc (x, y) -> (x, next_hour_minute_expr y)
+    | Range_exc (x, y) -> (x, y)
+
+  let time_pattern_of_hour_minute_expr ?(base : t = empty)
+      (e : Time_expr_ast.hour_minute_expr) : t =
+    { base with hours = [ e.hour ]; minutes = [ e.minute ] }
+
+  let paired_time_pattern_of_hour_minute_range_expr ?(base : t = empty)
+      (e : Time_expr_ast.hour_minute_expr Time_expr_ast.range_expr) : t * t =
+    let hm_start, hm_end_exc = paired_hour_minute_of_range_expr e in
+    ( time_pattern_of_hour_minute_expr ~base hm_start,
+      time_pattern_of_hour_minute_expr ~base hm_end_exc )
+
+  let time_pattern_of_time_point_expr (e : Time_expr_ast.time_point_expr) :
+    (t, unit) result =
+    try
+      Ok
+        ( match e with
+          | Year_month_day_hour_minute { year; month; month_day; hour_minute } ->
+            time_pattern_of_year_expr year
+            |> (fun base -> time_pattern_of_month_expr ~base month)
+            |> (fun base ->
+                time_pattern_of_day_expr ~base (Month_day month_day))
+            |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
+          | Month_day_hour_minute { month; month_day; hour_minute } ->
+            time_pattern_of_month_expr month
+            |> (fun base ->
+                time_pattern_of_day_expr ~base (Month_day month_day))
+            |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
+          | Day_hour_minute { day; hour_minute } ->
+            time_pattern_of_day_expr day
+            |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
+          | Hour_minute hour_minute ->
+            time_pattern_of_hour_minute_expr hour_minute )
+    with Invalid_time_expr -> Error ()
+
+  let paired_time_patterns_of_time_slots_expr
+      (e : Time_expr_ast.time_slots_expr) : ((t * t) list, unit) result =
+    try
+      Ok
+        ( match e with
+          | Hour_minutes_of_day_list { hour_minutes; days } ->
+            let day_pats = List.map time_pattern_of_day_expr days in
+            day_pats
+            |> List.to_seq
+            |> Seq.map (fun pat ->
+                paired_time_pattern_of_hour_minute_range_expr ~base:pat
+                  hour_minutes)
+            |> List.of_seq
+          | Hour_minutes_of_day_range { hour_minutes; days } ->
+            let day_pats =
+              days
+              |> days_of_day_range_expr
+              |> List.map time_pattern_of_day_expr
+            in
+            day_pats
+            |> List.to_seq
+            |> Seq.map (fun pat ->
+                paired_time_pattern_of_hour_minute_range_expr ~base:pat
+                  hour_minutes)
+            |> List.of_seq
+          | Hour_minutes_of_next_n_days { hour_minutes; day_count } ->
+            let cur_tm = Time.Current.cur_tm_local () in
+            let cur_mday = cur_tm.tm_mday in
+            let day_pats =
+              OSeq.(cur_mday --^ (cur_mday + day_count))
+              |> Seq.map (fun mday -> Time_expr_ast.Month_day mday)
+              |> Seq.map time_pattern_of_day_expr
+              |> List.of_seq
+            in
+            day_pats
+            |> List.to_seq
+            |> Seq.map (fun pat ->
+                paired_time_pattern_of_hour_minute_range_expr ~base:pat
+                  hour_minutes)
+            |> List.of_seq
+          | Hour_minutes_of_day_list_of_month_list { hour_minutes; days; months }
+            ->
+            let month_pats = List.map time_pattern_of_month_expr months in
+            let day_pats =
+              month_pats
+              |> List.to_seq
+              |> Seq.flat_map (fun base ->
+                  days
+                  |> List.to_seq
+                  |> Seq.map (time_pattern_of_day_expr ~base))
+              |> List.of_seq
+            in
+            day_pats
+            |> List.to_seq
+            |> Seq.map (fun pat ->
+                paired_time_pattern_of_hour_minute_range_expr ~base:pat
+                  hour_minutes)
+            |> List.of_seq
+          | Hour_minutes_of_every_weekday_list_of_month_list
+              { hour_minutes; weekdays; months } ->
+            let month_pats = List.map time_pattern_of_month_expr months in
+            let day_pats =
+              month_pats
+              |> List.to_seq
+              |> Seq.flat_map (fun base ->
+                  weekdays
+                  |> List.to_seq
+                  |> Seq.map (fun weekday ->
+                      time_pattern_of_day_expr ~base (Weekday weekday)))
+              |> List.of_seq
+            in
+            day_pats
+            |> List.to_seq
+            |> Seq.map (fun pat ->
+                paired_time_pattern_of_hour_minute_range_expr ~base:pat
+                  hour_minutes)
+            |> List.of_seq )
+    with Invalid_time_expr -> Error ()
+end
+
 module Interpret_string = struct
   let check_hour x = assert (x < 24)
 
