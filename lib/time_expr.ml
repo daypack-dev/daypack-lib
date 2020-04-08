@@ -11,8 +11,7 @@ module Interpret_string = struct
 
   let of_string (s : string) : (t, string) result =
     let lexbuf = Lexing.from_string s in
-    try Ok (parse lexbuf)
-    with
+    try Ok (parse lexbuf) with
     | Time_expr_lexer.Syntax_error msg ->
       Error (Printf.sprintf "%s: %s" (lexbuf_to_pos_str lexbuf) msg)
     | Time_expr_parser.Error ->
