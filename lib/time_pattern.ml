@@ -24,7 +24,7 @@ type t = {
   hours : int list;
   minutes : int list;
   seconds : int list;
-  max_match_count : int option;
+  max_time_slot_match_count : int option;
 }
 
 type single_or_paired =
@@ -39,7 +39,7 @@ let empty =
     hours = [];
     minutes = [];
     seconds = [];
-    max_match_count = None;
+    max_time_slot_match_count = None;
   }
 
 let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
@@ -288,7 +288,7 @@ module Serialize = struct
       hours = t.hours;
       minutes = t.minutes;
       seconds = t.seconds;
-      max_match_count = t.max_match_count;
+      max_time_slot_match_count = t.max_time_slot_match_count;
     }
 end
 
@@ -303,7 +303,7 @@ module Deserialize = struct
       hours = t.hours;
       minutes = t.minutes;
       seconds = t.seconds;
-      max_match_count = t.max_match_count;
+      max_time_slot_match_count = t.max_time_slot_match_count;
     }
 end
 
