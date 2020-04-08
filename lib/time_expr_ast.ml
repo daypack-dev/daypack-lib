@@ -62,10 +62,10 @@ type time_slots_expr =
       hour_minutes : hour_minutes_expr;
       days : day_range_expr;
     }
-  | Hour_minutes_of_next_n_days of {
-      hour_minutes : hour_minutes_expr;
-      day_count : int;
-    }
+  (* | Hour_minutes_of_next_n_days of {
+   *     hour_minutes : hour_minutes_expr;
+   *     day_count : int;
+   *   } *)
   | Hour_minutes_of_day_list_of_month_list of {
       hour_minutes : hour_minutes_expr;
       days : day_expr list;
