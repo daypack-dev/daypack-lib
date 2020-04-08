@@ -241,6 +241,11 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
       | None -> l
       | Some time_slots -> Time_slot_ds.intersect (List.to_seq time_slots) l)
   |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
+  |> (match t.max_time_slot_match_count with
+      | None -> fun x -> x
+      | Some n ->
+        OSeq.take n
+    )
 
 let next_match_tm ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (t : t) : Unix.tm option =
