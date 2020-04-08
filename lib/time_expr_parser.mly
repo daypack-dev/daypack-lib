@@ -10,6 +10,7 @@
 (* keywords *)
 %token OF
 %token TO
+%token EVERY
 
 (* separators *)
 %token HYPHEN

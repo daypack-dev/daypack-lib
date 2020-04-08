@@ -47,8 +47,10 @@ rule read =
   | "," { COMMA }
   | ":" { COLON }
 
-  | "to" { TO }
-  | "of" { OF }
+  (* keywords *)
+  | "to"    { TO }
+  | "of"    { OF }
+  | "every" { every }
 
   (* weekdays *)
   | sunday
