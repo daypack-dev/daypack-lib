@@ -409,6 +409,7 @@ module Interpret_time_expr = struct
     with Invalid_time_expr msg -> Error msg
 
   let paired_time_patterns_of_time_slots_expr
+      ~(start : int64)
       (e : Time_expr_ast.time_slots_expr) : ((t * t) list, string) result =
     try
       Ok
@@ -435,10 +436,10 @@ module Interpret_time_expr = struct
                   hour_minutes)
             |> List.of_seq
           | Hour_minutes_of_next_n_days { hour_minutes; day_count } ->
-            let cur_tm = Time.Current.cur_tm_local () in
-            let cur_mday = cur_tm.tm_mday in
+            let tm = Time.tm_of_unix_time ~time_zone_of_tm:`Local start in
+            let mday = tm.tm_mday in
             let day_pats =
-              OSeq.(cur_mday --^ (cur_mday + day_count))
+              OSeq.(mday --^ (mday + day_count))
               |> Seq.map (fun mday -> Time_expr_ast.Month_day mday)
               |> Seq.map time_pattern_of_day_expr
               |> List.of_seq
