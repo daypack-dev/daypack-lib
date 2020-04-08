@@ -508,126 +508,150 @@ module Interpret_string = struct
       | Error msg -> Error msg
       | Ok x -> Ok x
 
-  let of_date_time_string (s : string) : (t, unit) result =
-    try
-      Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
-          check_hour hour;
-          check_minute minute;
-          let month = Time.month_of_human_int month |> Result.get_ok in
-          Ok
-            {
-              years = [ year ];
-              months = [ month ];
-              days = `Month_days [ day ];
-              hours = [ hour ];
-              minutes = [ minute ];
-              seconds = [];
-            })
-    with _ -> (
-        try
-          Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
-              check_hour hour;
-              check_minute minute;
-              let month = Time.month_of_human_int month |> Result.get_ok in
-              Ok
-                {
-                  years = [];
-                  months = [ month ];
-                  days = `Month_days [ day ];
-                  hours = [ hour ];
-                  minutes = [ minute ];
-                  seconds = [];
-                })
-        with _ -> (
-            try
-              Scanf.sscanf s "%d%c%d:%d" (fun day _sep hour minute ->
-                  check_hour hour;
-                  check_minute minute;
-                  Ok
-                    {
-                      years = [];
-                      months = [];
-                      days = `Month_days [ day ];
-                      hours = [ hour ];
-                      minutes = [ minute ];
-                      seconds = [];
-                    })
-            with _ -> (
-                try
-                  Scanf.sscanf s "%d:%d" (fun hour minute ->
-                      check_hour hour;
-                      check_minute minute;
-                      Ok
-                        {
-                          years = [];
-                          months = [];
-                          days = `Month_days [];
-                          hours = [ hour ];
-                          minutes = [ minute ];
-                          seconds = [];
-                        })
-                with _ -> Error () ) ) )
+  let time_pattern_of_string (s : string) : (t, string) result =
+    match single_or_paired_time_patterns_of_string s with
+    | Ok (Single x) -> Ok x
+    | Ok (Paired _) -> Error "Time expression translates to time slot patterns"
+    | Error msg -> Error msg
 
-  let of_weekday_time_string (s : string) : (t, unit) result =
-    try
-      Scanf.sscanf s "%[a-zA-Z]%c%d:%d" (fun maybe_weekday _sep hour minute ->
-          check_hour hour;
-          check_minute minute;
-          let weekday =
-            Time.Interpret_string.weekday_of_string maybe_weekday
-            |> Result.get_ok
-          in
-          Ok
-            {
-              years = [];
-              months = [];
-              days = `Weekdays [ weekday ];
-              hours = [ hour ];
-              minutes = [ minute ];
-              seconds = [];
-            })
-    with _ -> Error ()
+  let paired_time_patterns_of_string (s : string) : ((t * t) list, string) result =
+    match single_or_paired_time_patterns_of_string s with
+    | Ok (Single _) -> Error "Time expression translates to time point pattern"
+    | Ok (Paired x) -> Ok x
+    | Error msg -> Error msg
 
-  let of_weekday_string (s : string) : (t, unit) result =
-    try
-      let weekday =
-        Time.Interpret_string.weekday_of_string s |> Result.get_ok
-      in
-      Ok
-        {
-          years = [];
-          months = [];
-          days = `Weekdays [ weekday ];
-          hours = [];
-          minutes = [];
-          seconds = [];
-        }
-    with _ -> Error ()
-
-  let of_string (s : string) : (t, string) result =
-    match of_date_time_string s with
-    | Ok x -> Ok x
-    | Error () -> (
-        match of_weekday_time_string s with
-        | Ok x -> Ok x
-        | Error () -> (
-            match of_weekday_string s with
-            | Ok x -> Ok x
-            | Error () -> Error "Failed to interpret string as a time pattern" )
+  let paired_time_pattern_of_string (s : string) : (t * t, string) result =
+    match single_or_paired_time_patterns_of_string s with
+    | Ok (Single _) -> Error "Time expression translates to time point pattern"
+    | Ok (Paired l) ->
+      (
+        match l with
+        | [] -> Error "Time expression translates to empty list of time slot patterns"
+        | [x] -> Ok x
+        | _ -> Error "Time expression translates to more than one time slot patterns"
       )
+    | Error msg -> Error msg
 
-  let paired_patterns_of_string (s : string) : (t * t, string) result =
-    try
-      Scanf.sscanf s "%[^, ]%[, ]%[^, ]" (fun start _sep end_exc ->
-          match of_string start with
-          | Error _ ->
-            Error "Failed to interpret start string as a time pattern"
-          | Ok start -> (
-              match of_string end_exc with
-              | Error _ ->
-                Error "Failed to interpret end exc string as a time pattern"
-              | Ok end_exc -> Ok (start, end_exc) ))
-    with _ -> Error "Failed to interpret string as time pattern pair"
+  (* let of_date_time_string (s : string) : (t, unit) result =
+   *   try
+   *     Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
+   *         check_hour hour;
+   *         check_minute minute;
+   *         let month = Time.month_of_human_int month |> Result.get_ok in
+   *         Ok
+   *           {
+   *             years = [ year ];
+   *             months = [ month ];
+   *             days = `Month_days [ day ];
+   *             hours = [ hour ];
+   *             minutes = [ minute ];
+   *             seconds = [];
+   *           })
+   *   with _ -> (
+   *       try
+   *         Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
+   *             check_hour hour;
+   *             check_minute minute;
+   *             let month = Time.month_of_human_int month |> Result.get_ok in
+   *             Ok
+   *               {
+   *                 years = [];
+   *                 months = [ month ];
+   *                 days = `Month_days [ day ];
+   *                 hours = [ hour ];
+   *                 minutes = [ minute ];
+   *                 seconds = [];
+   *               })
+   *       with _ -> (
+   *           try
+   *             Scanf.sscanf s "%d%c%d:%d" (fun day _sep hour minute ->
+   *                 check_hour hour;
+   *                 check_minute minute;
+   *                 Ok
+   *                   {
+   *                     years = [];
+   *                     months = [];
+   *                     days = `Month_days [ day ];
+   *                     hours = [ hour ];
+   *                     minutes = [ minute ];
+   *                     seconds = [];
+   *                   })
+   *           with _ -> (
+   *               try
+   *                 Scanf.sscanf s "%d:%d" (fun hour minute ->
+   *                     check_hour hour;
+   *                     check_minute minute;
+   *                     Ok
+   *                       {
+   *                         years = [];
+   *                         months = [];
+   *                         days = `Month_days [];
+   *                         hours = [ hour ];
+   *                         minutes = [ minute ];
+   *                         seconds = [];
+   *                       })
+   *               with _ -> Error () ) ) )
+   * 
+   * let of_weekday_time_string (s : string) : (t, unit) result =
+   *   try
+   *     Scanf.sscanf s "%[a-zA-Z]%c%d:%d" (fun maybe_weekday _sep hour minute ->
+   *         check_hour hour;
+   *         check_minute minute;
+   *         let weekday =
+   *           Time.Interpret_string.weekday_of_string maybe_weekday
+   *           |> Result.get_ok
+   *         in
+   *         Ok
+   *           {
+   *             years = [];
+   *             months = [];
+   *             days = `Weekdays [ weekday ];
+   *             hours = [ hour ];
+   *             minutes = [ minute ];
+   *             seconds = [];
+   *           })
+   *   with _ -> Error ()
+   * 
+   * let of_weekday_string (s : string) : (t, unit) result =
+   *   try
+   *     let weekday =
+   *       Time.Interpret_string.weekday_of_string s |> Result.get_ok
+   *     in
+   *     Ok
+   *       {
+   *         years = [];
+   *         months = [];
+   *         days = `Weekdays [ weekday ];
+   *         hours = [];
+   *         minutes = [];
+   *         seconds = [];
+   *       }
+   *   with _ -> Error ()
+   * 
+   * let of_string (s : string) : (t, string) result =
+   *   match of_date_time_string s with
+   *   | Ok x -> Ok x
+   *   | Error () -> (
+   *       match of_weekday_time_string s with
+   *       | Ok x -> Ok x
+   *       | Error () -> (
+   *           match of_weekday_string s with
+   *           | Ok x -> Ok x
+   *           | Error () -> Error "Failed to interpret string as a time pattern" )
+   *     )
+   * 
+   * let paired_patterns_of_string (s : string) : (t * t, string) result =
+   *   try
+   *     Scanf.sscanf s "%[^, ]%[, ]%[^, ]" (fun start _sep end_exc ->
+   *         match of_string start with
+   *         | Error _ ->
+   *           Error "Failed to interpret start string as a time pattern"
+   *         | Ok start -> (
+   *             match of_string end_exc with
+   *             | Error _ ->
+   *               Error "Failed to interpret end exc string as a time pattern"
+   *             | Ok end_exc -> Ok (start, end_exc) ))
+   *   with _ -> Error "Failed to interpret string as time pattern pair" *)
 end
 
 module Equal = struct

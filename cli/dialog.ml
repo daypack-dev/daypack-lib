@@ -119,7 +119,7 @@ let ask_uint64_multi ~indent_level ~(prompt : string) : int64 list =
       with Failure msg -> Error msg)
 
 let process_time_string (s : string) : (int64, string) result =
-  match Daypack_lib.Time_pattern.Interpret_string.of_string s with
+  match Daypack_lib.Time_pattern.Interpret_string.time_pattern_of_string s with
   | Error msg -> Error msg
   | Ok pat -> (
       match
@@ -137,7 +137,7 @@ let process_time_string (s : string) : (int64, string) result =
 let process_time_slot_string (s : string) : (int64 * int64, string) result =
   let cur_time = Daypack_lib.Time.Current.cur_unix_time () in
   match
-    Daypack_lib.Time_pattern.Interpret_string.paired_patterns_of_string s
+    Daypack_lib.Time_pattern.Interpret_string.paired_time_pattern_of_string s
   with
   | Ok (start_pat, end_exc_pat) -> (
       match
@@ -153,7 +153,7 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
       | None -> Error "Failed to find match for start pattern"
       | Some (start, end_exc) -> Ok (start, end_exc) )
   | Error _ -> (
-      match Daypack_lib.Time_pattern.Interpret_string.of_string s with
+      match Daypack_lib.Time_pattern.Interpret_string.time_pattern_of_string s with
       | Error msg -> Error msg
       | Ok pat -> (
           match
