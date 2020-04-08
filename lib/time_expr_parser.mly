@@ -95,6 +95,11 @@ time_slots_expr:
     {
       Hour_minutes_of_day_range { hour_minutes; days = Month_day_range (day_start, day_end_inc) }
     }
+  | hour_minutes = hour_minutes_expr; OF; days = separated_list(COMMA, day_expr); OF;
+    months = separated_list(COMMA, month_expr)
+    {
+      Hour_minutes_of_day_list_of_month_list { hour_minutes; days; months }
+    }
   ;
 
 hour_minutes_expr:
