@@ -42,6 +42,16 @@ let empty =
     max_time_slot_match_count = None;
   }
 
+let update_max_time_slot_match_count (n : int option) (t : t) : t =
+  { t with
+    max_time_slot_match_count = n
+  }
+
+let update_max_time_slot_match_count_paired_time_pattern (n : int option) ((x, y) : t * t) : t * t =
+  (update_max_time_slot_match_count n x,
+   update_max_time_slot_match_count n y
+  )
+
 let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
   : search_type =
   match search_type with
@@ -404,17 +414,22 @@ module Interpret_time_expr = struct
             |> (fun base -> time_pattern_of_month_expr ~base month)
             |> (fun base ->
                 time_pattern_of_day_expr ~base (Month_day month_day))
-            |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
+            |> (fun base -> time_pattern_of_hour_minute_expr ~base hour_minute)
+            |> update_max_time_slot_match_count (Some 1)
           | Month_day_hour_minute { month; month_day; hour_minute } ->
             time_pattern_of_month_expr month
             |> (fun base ->
                 time_pattern_of_day_expr ~base (Month_day month_day))
-            |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
+            |> (fun base -> time_pattern_of_hour_minute_expr ~base hour_minute)
+            |> update_max_time_slot_match_count (Some 1)
           | Day_hour_minute { day; hour_minute } ->
             time_pattern_of_day_expr day
-            |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
+            |> (fun base -> time_pattern_of_hour_minute_expr ~base hour_minute)
+            |> update_max_time_slot_match_count (Some 1)
           | Hour_minute hour_minute ->
-            time_pattern_of_hour_minute_expr hour_minute )
+            time_pattern_of_hour_minute_expr hour_minute
+            |> update_max_time_slot_match_count (Some 1)
+        )
     with Invalid_time_expr msg -> Error msg
 
   let paired_time_patterns_of_time_slots_expr
@@ -424,21 +439,19 @@ module Interpret_time_expr = struct
         ( match e with
           | Hour_minutes_of_day_list { hour_minutes; days } ->
             check_hour_minutes_expr hour_minutes;
-            let day_pats = List.map time_pattern_of_day_expr days in
-            day_pats
+            List.map time_pattern_of_day_expr days
             |> List.to_seq
+            |> Seq.map (update_max_time_slot_match_count (Some 1))
             |> Seq.map (fun pat ->
                 paired_time_pattern_of_hour_minute_range_expr ~base:pat
                   hour_minutes)
             |> List.of_seq
           | Hour_minutes_of_day_range { hour_minutes; days } ->
-            let day_pats =
-              days
-              |> days_of_day_range_expr
-              |> List.map time_pattern_of_day_expr
-            in
-            day_pats
+            days
+            |> days_of_day_range_expr
             |> List.to_seq
+            |> Seq.map time_pattern_of_day_expr
+            |> Seq.map (update_max_time_slot_match_count (Some 1))
             |> Seq.map (fun pat ->
                 paired_time_pattern_of_hour_minute_range_expr ~base:pat
                   hour_minutes)
@@ -464,6 +477,7 @@ module Interpret_time_expr = struct
             let day_pats =
               month_pats
               |> List.to_seq
+              |> Seq.map (update_max_time_slot_match_count (Some 1))
               |> Seq.flat_map (fun base ->
                   days
                   |> List.to_seq
