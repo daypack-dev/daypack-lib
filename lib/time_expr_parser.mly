@@ -49,16 +49,36 @@ parse:
   ;
 
 time_point_expr:
-  | year = NAT; HYPHEN; month = NAT; HYPHEN; month_day = NAT;
-    hour_minute = hour_minute_expr;
+  | year = NAT; HYPHEN; month = month_expr; HYPHEN; month_day = NAT; hour_minute = hour_minute_expr;
     {
       Year_month_day_hour_minute
         {
           year;
-          month = Human_int_month month;
+          month;
           month_day;
           hour_minute;
         }
+    }
+  | HYPHEN; month = month_expr; HYPHEN; month_day = NAT; hour_minute = hour_minute_expr;
+    {
+      Month_day_hour_minute
+        {
+          month;
+          month_day;
+          hour_minute;
+        }
+    }
+  | HYPHEN; HYPHEN; day = day_expr; hour_minute = hour_minute_expr;
+    {
+      Day_hour_minute
+        {
+          day;
+          hour_minute;
+        }
+    }
+  | HYPHEN; HYPHEN; hour_minute = hour_minute_expr;
+    {
+      Hour_minute hour_minute
     }
   ;
 
@@ -67,16 +87,24 @@ time_slots_expr:
     {
       Hour_minutes_of_day_list { hour_minutes; days }
     }
+  | hour_minutes = hour_minutes_expr; OF; day_start = weekday_expr; TO; day_end_inc = weekday_expr;
+    {
+      Hour_minutes_of_day_range { hour_minutes; days = Weekday_range (day_start, day_end_inc) }
+    }
+  | hour_minutes = hour_minutes_expr; OF; day_start = month_day_expr; TO; day_end_inc = month_day_expr;
+    {
+      Hour_minutes_of_day_range { hour_minutes; days = Month_day_range (day_start, day_end_inc) }
+    }
   ;
 
 hour_minutes_expr:
-  | x = hour_minute_expr;
+  | start = hour_minute_expr;
     {
-      Single x
+      Range_inc (start, start)
     }
   | start = hour_minute_expr; COMMA; end_exc = hour_minute_expr;
     {
-      Ranged (start, end_exc)
+      Range_exc (start, end_exc)
     }
   ;
 
@@ -87,22 +115,34 @@ hour_minute_expr:
     }
   ;
 
+month_day_expr:
+  | x = NAT { x }
+
+weekday_expr:
+  | SUNDAY    { `Sun }
+  | MONDAY    { `Mon }
+  | TUESDAY   { `Tue }
+  | WEDNESDAY { `Wed }
+  | THURSDAY  { `Thu }
+  | FRIDAY    { `Fri }
+  | SATURDAY  { `Sat }
+
 day_expr:
-  | SUNDAY  { Weekday `Sun }
-  | x = NAT { Month_day x }
+  | x = month_day_expr { Month_day x }
+  | x = weekday_expr   { Weekday x }
 
 month_expr:
-  | x = NAT { Human_int_month x }
-  | JANUARY   { Direct_pick_month Jan }
-  | FEBRUARY  { Direct_pick_month Feb }
-  | MARCH     { Direct_pick_month Mar }
-  | APRIL     { Direct_pick_month Apr }
-  | MAY       { Direct_pick_month May }
-  | JUNE      { Direct_pick_month Jun }
-  | JULY      { Direct_pick_month Jul }
-  | AUGUST    { Direct_pick_month Aug }
-  | SEPTEMBER { Direct_pick_month Sep }
-  | OCTOBER   { Direct_pick_month Oct }
-  | NOVEMBER  { Direct_pick_month Nov }
-  | DECEMBER  { Direct_pick_month Dec }
+  | x = NAT   { Human_int_month x }
+  | JANUARY   { Direct_pick_month `Jan }
+  | FEBRUARY  { Direct_pick_month `Feb }
+  | MARCH     { Direct_pick_month `Mar }
+  | APRIL     { Direct_pick_month `Apr }
+  | MAY       { Direct_pick_month `May }
+  | JUNE      { Direct_pick_month `Jun }
+  | JULY      { Direct_pick_month `Jul }
+  | AUGUST    { Direct_pick_month `Aug }
+  | SEPTEMBER { Direct_pick_month `Sep }
+  | OCTOBER   { Direct_pick_month `Oct }
+  | NOVEMBER  { Direct_pick_month `Nov }
+  | DECEMBER  { Direct_pick_month `Dec }
   ;

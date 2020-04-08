@@ -1,6 +1,6 @@
 type 'a range_expr =
-  | Single of 'a
-  | Ranged of 'a * 'a
+  | Range_inc of 'a * 'a
+  | Range_exc of 'a * 'a
 
 type hour_minute_expr = {
   hour : int;

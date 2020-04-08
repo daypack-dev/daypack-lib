@@ -17,7 +17,16 @@ let time_pattern_of_month_expr ?(base : Time_pattern.t = Time_pattern.empty)
 
 let paired_hour_minute_of_range_expr (e : hour_minute_expr range_expr) :
   hour_minute_expr * hour_minute_expr =
-  match e with Single x -> (x, x) | Ranged (x, y) -> (x, y)
+  match e with
+  | Range_inc (x, y) ->
+    let next_y =
+      let hour, minute =
+        Time.next_hour_minute ~hour:y.hour ~minute:y.minute |> Result.get_ok
+      in
+      { hour; minute }
+    in
+    (x, next_y)
+  | Range_exc (x, y) -> (x, y)
 
 let time_pattern_of_hour_minute_expr
     ?(base : Time_pattern.t = Time_pattern.empty) (e : hour_minute_expr) :
