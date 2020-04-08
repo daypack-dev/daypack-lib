@@ -47,6 +47,9 @@ rule read =
   | "," { COMMA }
   | ":" { COLON }
 
+  | "to" { TO }
+  | "of" { OF }
+
   (* weekdays *)
   | sunday
     { SUNDAY }

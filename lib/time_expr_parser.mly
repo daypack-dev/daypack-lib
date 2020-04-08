@@ -102,7 +102,7 @@ hour_minutes_expr:
     {
       Range_inc (start, start)
     }
-  | start = hour_minute_expr; COMMA; end_exc = hour_minute_expr;
+  | start = hour_minute_expr; TO; end_exc = hour_minute_expr;
     {
       Range_exc (start, end_exc)
     }
