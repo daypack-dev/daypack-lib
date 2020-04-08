@@ -52,17 +52,13 @@ time_point_expr:
   | year = NAT; HYPHEN; month = NAT; HYPHEN; month_day = NAT;
     hour_minute = hour_minute_expr;
     {
-      match Time.month_of_human_int month with
-      | Ok month ->
-        Year_month_day_hour_minute
-          {
-            year;
-            month = Direct_pick_month month;
-            month_day;
-            hour_minute;
-          }
-      | Error () ->
-        failwith "Failed to interpret month int"
+      Year_month_day_hour_minute
+        {
+          year;
+          month = Human_int_month month;
+          month_day;
+          hour_minute;
+        }
     }
   ;
 
