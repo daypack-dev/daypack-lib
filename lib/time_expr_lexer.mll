@@ -18,7 +18,7 @@ let monday    = ['M' 't'] "onday"    | ['M' 'm'] "on"
 let tuesday   = ['T' 't'] "uesday"   | ['T' 't'] "ue"
 let wednesday = ['W' 'w'] "ednesday" | ['W' 'w'] "ed"
 let thursday  = ['T' 't'] "hursday"  | ['T' 't'] "hu"
-let friday    = ['F' 'f'] "riday"    | ['F' 'f'] "fri"
+let friday    = ['F' 'f'] "riday"    | ['F' 'f'] "ri"
 let saturday  = ['S' 's'] "aturday"  | ['S' 's'] "at"
 
 (* months *)
