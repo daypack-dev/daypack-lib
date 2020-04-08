@@ -24,6 +24,10 @@ type t = {
   seconds : int list;
 }
 
+type single_or_paired =
+  | Single of t
+  | Paired of (t * t) list
+
 val empty : t
 
 val matching_tm_seq :

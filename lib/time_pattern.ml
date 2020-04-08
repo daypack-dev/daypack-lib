@@ -26,6 +26,10 @@ type t = {
   seconds : int list;
 }
 
+type single_or_paired =
+  | Single of t
+  | Paired of (t * t) list
+
 let empty =
   {
     years = [];
@@ -300,13 +304,27 @@ module Deserialize = struct
 end
 
 module Interpret_time_expr = struct
-  exception Invalid_time_expr
+  exception Invalid_time_expr of string
+
+  let check_hour_minute_expr ({hour; minute } : Time_expr_ast.hour_minute_expr)
+    : unit =
+    if Time.check_hour_minute ~hour ~minute then
+      ()
+    else
+      raise (Invalid_time_expr (Printf.sprintf "Invalid hour minute: %d:%d" hour minute))
+
+  let check_hour_minutes_expr (hour_minutes : Time_expr_ast.hour_minutes_expr) : unit =
+    match hour_minutes with
+    | Time_expr_ast.Range_inc (x, y)
+    | Time_expr_ast.Range_exc (x, y) ->
+      check_hour_minute_expr x;
+      check_hour_minute_expr y
 
   let next_hour_minute_expr ({ hour; minute } : Time_expr_ast.hour_minute_expr)
     : Time_expr_ast.hour_minute_expr =
     match Time.next_hour_minute ~hour ~minute with
     | Ok (hour, minute) -> { hour; minute }
-    | Error () -> raise Invalid_time_expr
+    | Error () -> raise (Invalid_time_expr (Printf.sprintf "Invalid hour minute: %d:%d" hour minute))
 
   let days_of_day_range_expr (e : Time_expr_ast.day_range_expr) :
     Time_expr_ast.day_expr list =
@@ -325,7 +343,7 @@ module Interpret_time_expr = struct
     | Weekday x -> { base with days = `Weekdays [ x ] }
     | Month_day x ->
       if 1 <= x && x <= 31 then { base with days = `Month_days [ x ] }
-      else raise Invalid_time_expr
+      else raise (Invalid_time_expr (Printf.sprintf "Invalid day of month: %d" x))
 
   let time_pattern_of_month_expr ?(base : t = empty)
       (e : Time_expr_ast.month_expr) : t =
@@ -335,7 +353,7 @@ module Interpret_time_expr = struct
       | Human_int_month n -> (
           match Time.month_of_human_int n with
           | Ok x -> x
-          | Error () -> raise Invalid_time_expr )
+          | Error () -> raise (Invalid_time_expr (Printf.sprintf "Invalid month: %d" n)))
     in
     { base with months = [ month ] }
 
@@ -361,7 +379,7 @@ module Interpret_time_expr = struct
       time_pattern_of_hour_minute_expr ~base hm_end_exc )
 
   let time_pattern_of_time_point_expr (e : Time_expr_ast.time_point_expr) :
-    (t, unit) result =
+    (t, string) result =
     try
       Ok
         ( match e with
@@ -381,14 +399,15 @@ module Interpret_time_expr = struct
             |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
           | Hour_minute hour_minute ->
             time_pattern_of_hour_minute_expr hour_minute )
-    with Invalid_time_expr -> Error ()
+    with Invalid_time_expr msg -> Error msg
 
   let paired_time_patterns_of_time_slots_expr
-      (e : Time_expr_ast.time_slots_expr) : ((t * t) list, unit) result =
+      (e : Time_expr_ast.time_slots_expr) : ((t * t) list, string) result =
     try
       Ok
         ( match e with
           | Hour_minutes_of_day_list { hour_minutes; days } ->
+            check_hour_minutes_expr hour_minutes;
             let day_pats = List.map time_pattern_of_day_expr days in
             day_pats
             |> List.to_seq
@@ -460,13 +479,34 @@ module Interpret_time_expr = struct
                 paired_time_pattern_of_hour_minute_range_expr ~base:pat
                   hour_minutes)
             |> List.of_seq )
-    with Invalid_time_expr -> Error ()
+    with Invalid_time_expr msg -> Error msg
+
+  let single_or_paired_time_patterns_of_time_expr (e : Time_expr_ast.t) : (single_or_paired, string) result =
+    match e with
+    | Time_expr_ast.Time_point_expr e ->
+      (match time_pattern_of_time_point_expr e with
+       | Ok x -> Ok (Single x)
+       | Error msg -> Error msg
+      )
+    | Time_expr_ast.Time_slots_expr e ->
+      (match paired_time_patterns_of_time_slots_expr e with
+       | Ok x -> Ok (Paired x)
+       | Error msg -> Error msg
+      )
 end
 
 module Interpret_string = struct
   let check_hour x = assert (x < 24)
 
   let check_minute x = assert (x < 60)
+
+  let single_or_paired_time_patterns_of_string (s : string) : (single_or_paired, string) result =
+    match Time_expr.Interpret_string.of_string s with
+    | Error msg -> Error msg
+    | Ok time_expr ->
+      match Interpret_time_expr.single_or_paired_time_patterns_of_time_expr time_expr with
+      | Error msg -> Error msg
+      | Ok x -> Ok x
 
   let of_date_time_string (s : string) : (t, unit) result =
     try
