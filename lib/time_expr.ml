@@ -28,6 +28,10 @@ let time_pattern_of_month_expr ?(base : Time_pattern.t = Time_pattern.empty)
   in
   { base with months = [ month ] }
 
+let time_pattern_of_year_expr ?(base : Time_pattern.t = Time_pattern.empty)
+    (e : year_expr) : Time_pattern.t =
+  { base with years = [ e ] }
+
 let paired_hour_minute_of_range_expr (e : hour_minute_expr range_expr) :
   hour_minute_expr * hour_minute_expr =
   match e with
@@ -53,6 +57,27 @@ let days_of_day_range_expr (e : day_range_expr) : day_expr list =
     |> List.map (fun x -> Weekday x)
   | Month_day_range (start, end_inc) ->
     OSeq.(start -- end_inc) |> Seq.map (fun x -> Month_day x) |> List.of_seq
+
+let time_pattern_of_time_point_expr (e : time_point_expr) :
+  (Time_pattern.t, unit) result =
+  try
+    Ok
+      ( match e with
+        | Year_month_day_hour_minute { year; month; month_day; hour_minute } ->
+          time_pattern_of_year_expr year
+          |> (fun base -> time_pattern_of_month_expr ~base month)
+          |> (fun base -> time_pattern_of_day_expr ~base (Month_day month_day))
+          |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
+        | Month_day_hour_minute { month; month_day; hour_minute } ->
+          time_pattern_of_month_expr month
+          |> (fun base -> time_pattern_of_day_expr ~base (Month_day month_day))
+          |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
+        | Day_hour_minute { day; hour_minute } ->
+          time_pattern_of_day_expr day
+          |> fun base -> time_pattern_of_hour_minute_expr ~base hour_minute
+        | Hour_minute hour_minute -> time_pattern_of_hour_minute_expr hour_minute
+      )
+  with Invalid_time_expr -> Error ()
 
 let paired_time_patterns_of_time_slots_expr (e : time_slots_expr) :
   ((Time_pattern.t * Time_pattern.t) list, unit) result =
