@@ -153,7 +153,9 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
       | None -> Error "Failed to find match for start pattern"
       | Some (start, end_exc) -> Ok (start, end_exc) )
   | Error _ -> (
-      match Daypack_lib.Time_pattern.Interpret_string.time_pattern_of_string s with
+      match
+        Daypack_lib.Time_pattern.Interpret_string.time_pattern_of_string s
+      with
       | Error msg -> Error msg
       | Ok pat -> (
           match

@@ -63,7 +63,8 @@ val next_match_time_slot_paired_patterns :
   (int64 * int64) option
 
 module Interpret_string : sig
-  val single_or_paired_time_patterns_of_string : string -> (single_or_paired, string) result
+  val single_or_paired_time_patterns_of_string :
+    string -> (single_or_paired, string) result
 
   val time_pattern_of_string : string -> (t, string) result
 
