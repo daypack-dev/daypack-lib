@@ -297,9 +297,10 @@ let matching_time_slots_single_or_multi_paired
   | Paired_time_patterns pats ->
     pats
     |> List.to_seq
-    |> Seq.flat_map (fun (t1, t2) ->
+    |> Seq.map (fun (t1, t2) ->
         matching_time_slots_paired_patterns ~search_in_time_zone
           search_type t1 t2)
+    |> Time_slot_ds.merge_multi_seq
 
 let next_match_time_slot_single_or_multi_paired
     ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
