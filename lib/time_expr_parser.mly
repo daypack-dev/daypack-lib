@@ -62,7 +62,8 @@ time_point_expr:
           hour_minute;
         }
     }
-  | HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | HYPHEN; month = human_int_month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | month = direct_pick_month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
     {
       Month_day_hour_minute
         {
