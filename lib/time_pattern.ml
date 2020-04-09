@@ -304,6 +304,16 @@ let matching_time_slots_single_or_multi_paired ~(search_in_time_zone : Time.time
         matching_time_slots_paired_patterns ~search_in_time_zone search_type t1 t2
       )
 
+let next_match_time_slot_single_or_multi_paired ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type) (x : single_or_multi_paired) : Time_slot_ds.t option =
+  match
+    matching_time_slots_single_or_multi_paired
+      ~search_in_time_zone search_type x
+      ()
+  with
+  | Seq.Nil -> None
+  | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
+
 module Serialize = struct
   let pack_days (x : days) : Time_pattern_t.days = x
 

@@ -63,6 +63,18 @@ val next_match_time_slot_paired_patterns :
   t ->
   (int64 * int64) option
 
+val matching_time_slots_single_or_multi_paired :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  single_or_multi_paired ->
+  Time_slot_ds.t Seq.t
+
+val next_match_time_slot_single_or_multi_paired :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  single_or_multi_paired ->
+  Time_slot_ds.t option
+
 module Interpret_string : sig
   val single_or_paired_time_patterns_of_string :
     string -> (single_or_multi_paired, string) result
