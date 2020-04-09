@@ -365,8 +365,8 @@ module Print = struct
       (tm.tm_year + tm_year_offset)
       (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min
 
-  let date_time_string_of_time ~(display_in_time_zone : time_zone) (time : int64) :
-    string =
+  let date_time_string_of_time ~(display_in_time_zone : time_zone)
+      (time : int64) : string =
     let tm = tm_of_unix_time ~time_zone_of_tm:display_in_time_zone time in
     date_time_string_of_tm tm
 
