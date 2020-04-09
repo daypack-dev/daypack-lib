@@ -52,6 +52,7 @@ rule read =
   | "to"    { TO }
   | "of"    { OF }
   | "every" { EVERY }
+  | "next"  { NEXT }
 
   (* weekdays *)
   | sunday

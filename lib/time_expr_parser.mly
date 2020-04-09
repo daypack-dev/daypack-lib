@@ -11,6 +11,7 @@
 %token OF
 %token TO
 %token EVERY
+%token NEXT
 
 (* separators *)
 %token HYPHEN
@@ -71,6 +72,7 @@ time_point_expr:
         }
     }
   | HYPHEN; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | NEXT; month_day = month_day_expr; hour_minute = hour_minute_expr;
     {
       Day_hour_minute
         {
