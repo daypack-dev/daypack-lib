@@ -124,6 +124,12 @@ time_slots_expr:
   ;
 
 hour_minutes_expr:
+  | l = separated_nonempty_list(COMMA, hour_minute_range_expr);
+    {
+      l
+    }
+
+hour_minute_range_expr:
   | start = hour_minute_expr;
     {
       Range_inc (start, start)

@@ -333,12 +333,16 @@ module Interpret_time_expr = struct
         (Invalid_time_expr
            (Printf.sprintf "Invalid hour minute: %d:%d" hour minute))
 
-  let check_hour_minutes_expr (hour_minutes : Time_expr_ast.hour_minutes_expr) :
+  let check_hour_minute_range_expr (hour_minute_range : Time_expr_ast.hour_minute_range_expr) :
     unit =
-    match hour_minutes with
+    match hour_minute_range with
     | Time_expr_ast.Range_inc (x, y) | Time_expr_ast.Range_exc (x, y) ->
       check_hour_minute_expr x;
       check_hour_minute_expr y
+
+  let check_hour_minutes (hour_minutes : Time_expr_ast.hour_minute_range_expr list) :
+    unit =
+    List.iter check_hour_minute_range_expr hour_minutes
 
   let next_hour_minute_expr ({ hour; minute } : Time_expr_ast.hour_minute_expr)
     : Time_expr_ast.hour_minute_expr =
@@ -399,10 +403,15 @@ module Interpret_time_expr = struct
     { base with hours = [ e.hour ]; minutes = [ e.minute ] }
 
   let paired_time_pattern_of_hour_minute_range_expr ?(base : t = empty)
-      (e : Time_expr_ast.hour_minute_expr Time_expr_ast.range_expr) : t * t =
+      (e : Time_expr_ast.hour_minute_range_expr) : t * t =
     let hm_start, hm_end_exc = paired_hour_minute_of_range_expr e in
     ( time_pattern_of_hour_minute_expr ~base hm_start,
       time_pattern_of_hour_minute_expr ~base hm_end_exc )
+
+  let paired_time_pattern_seq_of_hour_minutes ?(base : t = empty)
+      (l : Time_expr_ast.hour_minute_range_expr list) : (t * t) Seq.t =
+    List.to_seq l
+    |> Seq.map (paired_time_pattern_of_hour_minute_range_expr ~base)
 
   let time_pattern_of_time_point_expr (e : Time_expr_ast.time_point_expr) :
     (t, string) result =
@@ -438,12 +447,12 @@ module Interpret_time_expr = struct
       Ok
         ( match e with
           | Day_list_and_hour_minutes { hour_minutes; days } ->
-            check_hour_minutes_expr hour_minutes;
+            check_hour_minutes hour_minutes;
             List.map time_pattern_of_day_expr days
             |> List.to_seq
             |> Seq.map (update_max_time_slot_match_count (Some 1))
-            |> Seq.map (fun pat ->
-                paired_time_pattern_of_hour_minute_range_expr ~base:pat
+            |> Seq.flat_map (fun pat ->
+                paired_time_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
             |> List.of_seq
           | Day_range_and_hour_minutes { hour_minutes; days } ->
@@ -452,8 +461,8 @@ module Interpret_time_expr = struct
             |> List.to_seq
             |> Seq.map time_pattern_of_day_expr
             |> Seq.map (update_max_time_slot_match_count (Some 1))
-            |> Seq.map (fun pat ->
-                paired_time_pattern_of_hour_minute_range_expr ~base:pat
+            |> Seq.flat_map (fun pat ->
+                paired_time_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
             |> List.of_seq
           | Month_list_and_month_day_list_and_hour_minutes { hour_minutes; month_days; months }
@@ -472,8 +481,8 @@ module Interpret_time_expr = struct
             in
             day_pats
             |> List.to_seq
-            |> Seq.map (fun pat ->
-                paired_time_pattern_of_hour_minute_range_expr ~base:pat
+            |> Seq.flat_map (fun pat ->
+                paired_time_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
             |> List.of_seq
           | Month_list_and_weekday_list_and_hour_minutes
@@ -491,8 +500,8 @@ module Interpret_time_expr = struct
             in
             day_pats
             |> List.to_seq
-            |> Seq.map (fun pat ->
-                paired_time_pattern_of_hour_minute_range_expr ~base:pat
+            |> Seq.flat_map (fun pat ->
+                paired_time_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
             |> List.of_seq )
     with Invalid_time_expr msg -> Error msg
