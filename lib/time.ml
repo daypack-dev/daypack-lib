@@ -257,7 +257,7 @@ let day_count_of_month ~year ~(month : month) =
 let weekday_of_month_day ~(year : int) ~(month : month) ~(mday : int) : weekday
   =
   CalendarLib.Date.day_of_week
-    (CalendarLib.Date.make year (tm_int_of_month month) mday)
+    (CalendarLib.Date.make year (human_int_of_month month) mday)
   |> weekday_of_cal_weekday
 
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
