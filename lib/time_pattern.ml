@@ -292,6 +292,18 @@ let next_match_time_slot_paired_patterns ~(search_in_time_zone : Time.time_zone)
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
+let matching_time_slots_single_or_multi_paired ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type) (x : single_or_multi_paired) : Time_slot_ds.t Seq.t =
+  match x with
+  | Single_time_pattern pat ->
+    matching_time_slots ~search_in_time_zone search_type pat
+  | Paired_time_patterns pats ->
+    pats
+    |> List.to_seq
+    |> Seq.flat_map (fun (t1, t2) ->
+        matching_time_slots_paired_patterns ~search_in_time_zone search_type t1 t2
+      )
+
 module Serialize = struct
   let pack_days (x : days) : Time_pattern_t.days = x
 
