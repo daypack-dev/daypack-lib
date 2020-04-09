@@ -281,7 +281,7 @@ let matching_time_slots_paired_patterns ~(search_in_time_zone : Time.time_zone)
       let search_type = push_search_type_to_later_start ~start search_type in
       match matching_time_slots ~search_in_time_zone search_type t2 () with
       | Seq.Nil -> None
-      | Seq.Cons ((_, end_exc), _) -> Some (start, end_exc))
+      | Seq.Cons ((end_exc, _), _) -> Some (start, end_exc))
 
 let next_match_time_slot_paired_patterns ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (t1 : t) (t2 : t) : (int64 * int64) option =
