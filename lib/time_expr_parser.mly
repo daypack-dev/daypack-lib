@@ -51,7 +51,7 @@ parse:
   ;
 
 time_point_expr:
-  | year = NAT; HYPHEN; month = month_expr; HYPHEN; month_day = NAT; hour_minute = hour_minute_expr;
+  | year = NAT; HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
     {
       Year_month_day_hour_minute
         {
@@ -61,7 +61,7 @@ time_point_expr:
           hour_minute;
         }
     }
-  | HYPHEN; month = month_expr; HYPHEN; month_day = NAT; hour_minute = hour_minute_expr;
+  | HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
     {
       Month_day_hour_minute
         {
@@ -85,38 +85,41 @@ time_point_expr:
   ;
 
 time_slots_expr:
-  (* hour minutes + day list *)
-  (* | hour_minutes = hour_minutes_expr; OF; days = separated_nonempty_list(COMMA, day_expr); *)
+  (* day list + hour minutes *)
   | days = separated_nonempty_list(COMMA, day_expr);
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Hour_minutes_of_day_list { hour_minutes; days }
+      Day_list_and_hour_minutes { hour_minutes; days }
     }
 
-  (* hour minutes + weekday to weekday *)
-  (* | hour_minutes = hour_minutes_expr; OF; day_start = weekday_expr; TO; day_end_inc = weekday_expr; *)
+  (* weekday to weekday + hour minutes *)
   | day_start = weekday_expr; TO; day_end_inc = weekday_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Hour_minutes_of_day_range { hour_minutes; days = Weekday_range (day_start, day_end_inc) }
+      Day_range_and_hour_minutes { hour_minutes; days = Weekday_range (day_start, day_end_inc) }
     }
 
-  (* hour minutes + month day to month day *)
-  (* | hour_minutes = hour_minutes_expr; OF; day_start = month_day_expr; TO; day_end_inc = month_day_expr; *)
+  (* month day to month day + hour minutes *)
   | day_start = month_day_expr; TO; day_end_inc = month_day_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Hour_minutes_of_day_range { hour_minutes; days = Month_day_range (day_start, day_end_inc) }
+      Day_range_and_hour_minutes { hour_minutes; days = Month_day_range (day_start, day_end_inc) }
     }
 
-  (* hour minutes + month day list + month list *)
-  (* | hour_minutes = hour_minutes_expr; OF; month_days = separated_nonempty_list(COMMA, month_day_expr); OF;
-    months = separated_nonempty_list(COMMA, month_expr); *)
+  (* month list + month day list + hour minutes *)
   | months = separated_nonempty_list(COMMA, direct_pick_month_expr);
-    DOT; month_days = separated_list(COMMA, month_day_expr);
+    DOT; month_days = separated_nonempty_list(COMMA, month_day_expr);
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Hour_minutes_of_month_day_list_of_month_list { hour_minutes; month_days; months }
+      Month_list_and_month_day_list_and_hour_minutes { hour_minutes; month_days; months }
+    }
+
+  (* month list + weekday list + hour minutes *)
+  | months = separated_nonempty_list(COMMA, direct_pick_month_expr);
+    DOT; weekdays = separated_nonempty_list(COMMA, weekday_expr);
+    DOT; hour_minutes = hour_minutes_expr;
+    {
+      Month_list_and_weekday_list_and_hour_minutes { hour_minutes; weekdays; months }
     }
   ;
 

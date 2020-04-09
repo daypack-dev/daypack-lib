@@ -437,7 +437,7 @@ module Interpret_time_expr = struct
     try
       Ok
         ( match e with
-          | Hour_minutes_of_day_list { hour_minutes; days } ->
+          | Day_list_and_hour_minutes { hour_minutes; days } ->
             check_hour_minutes_expr hour_minutes;
             List.map time_pattern_of_day_expr days
             |> List.to_seq
@@ -446,7 +446,7 @@ module Interpret_time_expr = struct
                 paired_time_pattern_of_hour_minute_range_expr ~base:pat
                   hour_minutes)
             |> List.of_seq
-          | Hour_minutes_of_day_range { hour_minutes; days } ->
+          | Day_range_and_hour_minutes { hour_minutes; days } ->
             days
             |> days_of_day_range_expr
             |> List.to_seq
@@ -456,22 +456,7 @@ module Interpret_time_expr = struct
                 paired_time_pattern_of_hour_minute_range_expr ~base:pat
                   hour_minutes)
             |> List.of_seq
-          (* | Hour_minutes_of_next_n_days { hour_minutes; day_count } ->
-           *   let tm = Time.tm_of_unix_time ~time_zone_of_tm:`Local start in
-           *   let mday = tm.tm_mday in
-           *   let day_pats =
-           *     OSeq.(mday --^ (mday + day_count))
-           *     |> Seq.map (fun mday -> Time_expr_ast.Month_day mday)
-           *     |> Seq.map time_pattern_of_day_expr
-           *     |> List.of_seq
-           *   in
-           *   day_pats
-           *   |> List.to_seq
-           *   |> Seq.map (fun pat ->
-           *       paired_time_pattern_of_hour_minute_range_expr ~base:pat
-           *         hour_minutes)
-           *   |> List.of_seq *)
-          | Hour_minutes_of_month_day_list_of_month_list { hour_minutes; month_days; months }
+          | Month_list_and_month_day_list_and_hour_minutes { hour_minutes; month_days; months }
             ->
             let month_pats = List.map time_pattern_of_month_expr months in
             let day_pats =
@@ -491,7 +476,7 @@ module Interpret_time_expr = struct
                 paired_time_pattern_of_hour_minute_range_expr ~base:pat
                   hour_minutes)
             |> List.of_seq
-          | Hour_minutes_of_every_weekday_list_of_month_list
+          | Month_list_and_weekday_list_and_hour_minutes
               { hour_minutes; weekdays; months } ->
             let month_pats = List.map time_pattern_of_month_expr months in
             let day_pats =

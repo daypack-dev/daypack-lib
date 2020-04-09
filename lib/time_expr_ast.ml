@@ -54,24 +54,20 @@ type time_point_expr =
   | Hour_minute of hour_minute_expr
 
 type time_slots_expr =
-  | Hour_minutes_of_day_list of {
+  | Day_list_and_hour_minutes of {
       hour_minutes : hour_minutes_expr;
       days : day_expr list;
     }
-  | Hour_minutes_of_day_range of {
+  | Day_range_and_hour_minutes of {
       hour_minutes : hour_minutes_expr;
       days : day_range_expr;
     }
-  (* | Hour_minutes_of_next_n_days of {
-   *     hour_minutes : hour_minutes_expr;
-   *     day_count : int;
-   *   } *)
-  | Hour_minutes_of_month_day_list_of_month_list of {
+  | Month_list_and_month_day_list_and_hour_minutes of {
       hour_minutes : hour_minutes_expr;
       month_days : int list;
       months : month_expr list;
     }
-  | Hour_minutes_of_every_weekday_list_of_month_list of {
+  | Month_list_and_weekday_list_and_hour_minutes of {
       hour_minutes : hour_minutes_expr;
       weekdays : Time.weekday list;
       months : month_expr list;
