@@ -79,6 +79,7 @@ time_point_expr:
         }
     }
   | HYPHEN; HYPHEN; hour_minute = hour_minute_expr;
+  | hour_minute = hour_minute_expr;
     {
       Hour_minute hour_minute
     }
