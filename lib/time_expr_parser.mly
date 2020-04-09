@@ -85,6 +85,12 @@ time_point_expr:
   ;
 
 time_slots_expr:
+  (* time point to time point *)
+  | start = time_point_expr; TO; end_exc = time_point_expr;
+    {
+      Single_time_slot (start, end_exc)
+    }
+
   (* day list + hour minutes *)
   | days = separated_nonempty_list(COMMA, day_expr);
     DOT; hour_minutes = hour_minutes_expr;
