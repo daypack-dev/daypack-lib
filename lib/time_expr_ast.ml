@@ -54,6 +54,7 @@ type time_point_expr =
   | Hour_minute of hour_minute_expr
 
 type time_slots_expr =
+  | Single_time_slot of time_point_expr * time_point_expr
   | Day_list_and_hour_minutes of {
       hour_minutes : hour_minute_range_expr list;
       days : day_expr list;

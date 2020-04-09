@@ -446,6 +446,14 @@ module Interpret_time_expr = struct
     try
       Ok
         ( match e with
+          | Single_time_slot (start, end_exc) -> (
+              match time_pattern_of_time_point_expr start with
+              | Error msg -> raise (Invalid_time_expr msg)
+              | Ok start ->
+                match time_pattern_of_time_point_expr end_exc with
+                | Error msg -> raise (Invalid_time_expr msg)
+                | Ok end_exc -> [ (start, end_exc)]
+            )
           | Day_list_and_hour_minutes { hour_minutes; days } ->
             check_hour_minutes hour_minutes;
             List.map time_pattern_of_day_expr days
