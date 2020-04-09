@@ -66,9 +66,9 @@ type time_slots_expr =
    *     hour_minutes : hour_minutes_expr;
    *     day_count : int;
    *   } *)
-  | Hour_minutes_of_day_list_of_month_list of {
+  | Hour_minutes_of_month_day_list_of_month_list of {
       hour_minutes : hour_minutes_expr;
-      days : day_expr list;
+      month_days : int list;
       months : month_expr list;
     }
   | Hour_minutes_of_every_weekday_list_of_month_list of {

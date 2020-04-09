@@ -16,6 +16,7 @@
 %token HYPHEN
 %token COLON
 %token COMMA
+%token DOT
 
 (* weekdays *)
 %token SUNDAY
@@ -84,22 +85,38 @@ time_point_expr:
   ;
 
 time_slots_expr:
-  | hour_minutes = hour_minutes_expr; OF; days = separated_list(COMMA, day_expr);
+  (* hour minutes + day list *)
+  (* | hour_minutes = hour_minutes_expr; OF; days = separated_nonempty_list(COMMA, day_expr); *)
+  | days = separated_nonempty_list(COMMA, day_expr);
+    DOT; hour_minutes = hour_minutes_expr;
     {
       Hour_minutes_of_day_list { hour_minutes; days }
     }
-  | hour_minutes = hour_minutes_expr; OF; day_start = weekday_expr; TO; day_end_inc = weekday_expr;
+
+  (* hour minutes + weekday to weekday *)
+  (* | hour_minutes = hour_minutes_expr; OF; day_start = weekday_expr; TO; day_end_inc = weekday_expr; *)
+  | day_start = weekday_expr; TO; day_end_inc = weekday_expr;
+    DOT; hour_minutes = hour_minutes_expr;
     {
       Hour_minutes_of_day_range { hour_minutes; days = Weekday_range (day_start, day_end_inc) }
     }
-  | hour_minutes = hour_minutes_expr; OF; day_start = month_day_expr; TO; day_end_inc = month_day_expr;
+
+  (* hour minutes + month day to month day *)
+  (* | hour_minutes = hour_minutes_expr; OF; day_start = month_day_expr; TO; day_end_inc = month_day_expr; *)
+  | day_start = month_day_expr; TO; day_end_inc = month_day_expr;
+    DOT; hour_minutes = hour_minutes_expr;
     {
       Hour_minutes_of_day_range { hour_minutes; days = Month_day_range (day_start, day_end_inc) }
     }
-  | hour_minutes = hour_minutes_expr; OF; days = separated_list(COMMA, day_expr); OF;
-    months = separated_list(COMMA, month_expr)
+
+  (* hour minutes + month day list + month list *)
+  (* | hour_minutes = hour_minutes_expr; OF; month_days = separated_nonempty_list(COMMA, month_day_expr); OF;
+    months = separated_nonempty_list(COMMA, month_expr); *)
+  | months = separated_nonempty_list(COMMA, direct_pick_month_expr);
+    DOT; month_days = separated_list(COMMA, month_day_expr);
+    DOT; hour_minutes = hour_minutes_expr;
     {
-      Hour_minutes_of_day_list_of_month_list { hour_minutes; days; months }
+      Hour_minutes_of_month_day_list_of_month_list { hour_minutes; month_days; months }
     }
   ;
 
@@ -123,6 +140,7 @@ hour_minute_expr:
 
 month_day_expr:
   | x = NAT { x }
+  ;
 
 weekday_expr:
   | SUNDAY    { `Sun }
@@ -132,13 +150,18 @@ weekday_expr:
   | THURSDAY  { `Thu }
   | FRIDAY    { `Fri }
   | SATURDAY  { `Sat }
+  ;
 
 day_expr:
   | x = month_day_expr { Month_day x }
   | x = weekday_expr   { Weekday x }
+  ;
 
-month_expr:
+human_int_month_expr:
   | x = NAT   { Human_int_month x }
+  ;
+
+direct_pick_month_expr:
   | JANUARY   { Direct_pick_month `Jan }
   | FEBRUARY  { Direct_pick_month `Feb }
   | MARCH     { Direct_pick_month `Mar }
@@ -152,3 +175,7 @@ month_expr:
   | NOVEMBER  { Direct_pick_month `Nov }
   | DECEMBER  { Direct_pick_month `Dec }
   ;
+
+month_expr:
+  | x = human_int_month_expr { x }
+  | x = direct_pick_month_expr { x }

@@ -46,11 +46,12 @@ rule read =
   | "-" { HYPHEN }
   | "," { COMMA }
   | ":" { COLON }
+  | "." { DOT }
 
   (* keywords *)
   | "to"    { TO }
   | "of"    { OF }
-  | "every" { every }
+  | "every" { EVERY }
 
   (* weekdays *)
   | sunday

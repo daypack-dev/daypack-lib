@@ -471,7 +471,7 @@ module Interpret_time_expr = struct
            *       paired_time_pattern_of_hour_minute_range_expr ~base:pat
            *         hour_minutes)
            *   |> List.of_seq *)
-          | Hour_minutes_of_day_list_of_month_list { hour_minutes; days; months }
+          | Hour_minutes_of_month_day_list_of_month_list { hour_minutes; month_days; months }
             ->
             let month_pats = List.map time_pattern_of_month_expr months in
             let day_pats =
@@ -479,9 +479,10 @@ module Interpret_time_expr = struct
               |> List.to_seq
               |> Seq.map (update_max_time_slot_match_count (Some 1))
               |> Seq.flat_map (fun base ->
-                  days
+                  month_days
                   |> List.to_seq
-                  |> Seq.map (time_pattern_of_day_expr ~base))
+                  |> Seq.map (fun x ->
+                      time_pattern_of_day_expr ~base (Time_expr_ast.Month_day x)))
               |> List.of_seq
             in
             day_pats
