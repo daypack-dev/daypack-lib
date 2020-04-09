@@ -43,14 +43,11 @@ let empty =
   }
 
 let update_max_time_slot_match_count (n : int option) (t : t) : t =
-  { t with
-    max_time_slot_match_count = n
-  }
+  { t with max_time_slot_match_count = n }
 
-let update_max_time_slot_match_count_paired_time_pattern (n : int option) ((x, y) : t * t) : t * t =
-  (update_max_time_slot_match_count n x,
-   update_max_time_slot_match_count n y
-  )
+let update_max_time_slot_match_count_paired_time_pattern (n : int option)
+    ((x, y) : t * t) : t * t =
+  (update_max_time_slot_match_count n x, update_max_time_slot_match_count n y)
 
 let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
   : search_type =
@@ -251,11 +248,10 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
       | None -> l
       | Some time_slots -> Time_slot_ds.intersect (List.to_seq time_slots) l)
   |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
-  |> (match t.max_time_slot_match_count with
-      | None -> fun x -> x
-      | Some n ->
-        OSeq.take n
-    )
+  |>
+  match t.max_time_slot_match_count with
+  | None -> fun x -> x
+  | Some n -> OSeq.take n
 
 let next_match_tm ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (t : t) : Unix.tm option =
@@ -292,8 +288,9 @@ let next_match_time_slot_paired_patterns ~(search_in_time_zone : Time.time_zone)
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
-let matching_time_slots_single_or_multi_paired ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (x : single_or_multi_paired) : Time_slot_ds.t Seq.t =
+let matching_time_slots_single_or_multi_paired
+    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+    (x : single_or_multi_paired) : Time_slot_ds.t Seq.t =
   match x with
   | Single_time_pattern pat ->
     matching_time_slots ~search_in_time_zone search_type pat
@@ -301,15 +298,15 @@ let matching_time_slots_single_or_multi_paired ~(search_in_time_zone : Time.time
     pats
     |> List.to_seq
     |> Seq.flat_map (fun (t1, t2) ->
-        matching_time_slots_paired_patterns ~search_in_time_zone search_type t1 t2
-      )
+        matching_time_slots_paired_patterns ~search_in_time_zone
+          search_type t1 t2)
 
-let next_match_time_slot_single_or_multi_paired ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (x : single_or_multi_paired) : Time_slot_ds.t option =
+let next_match_time_slot_single_or_multi_paired
+    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+    (x : single_or_multi_paired) : Time_slot_ds.t option =
   match
-    matching_time_slots_single_or_multi_paired
-      ~search_in_time_zone search_type x
-      ()
+    matching_time_slots_single_or_multi_paired ~search_in_time_zone search_type
+      x ()
   with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
@@ -355,15 +352,15 @@ module Interpret_time_expr = struct
         (Invalid_time_expr
            (Printf.sprintf "Invalid hour minute: %d:%d" hour minute))
 
-  let check_hour_minute_range_expr (hour_minute_range : Time_expr_ast.hour_minute_range_expr) :
-    unit =
+  let check_hour_minute_range_expr
+      (hour_minute_range : Time_expr_ast.hour_minute_range_expr) : unit =
     match hour_minute_range with
     | Time_expr_ast.Range_inc (x, y) | Time_expr_ast.Range_exc (x, y) ->
       check_hour_minute_expr x;
       check_hour_minute_expr y
 
-  let check_hour_minutes (hour_minutes : Time_expr_ast.hour_minute_range_expr list) :
-    unit =
+  let check_hour_minutes
+      (hour_minutes : Time_expr_ast.hour_minute_range_expr list) : unit =
     List.iter check_hour_minute_range_expr hour_minutes
 
   let next_hour_minute_expr ({ hour; minute } : Time_expr_ast.hour_minute_expr)
@@ -459,8 +456,7 @@ module Interpret_time_expr = struct
             |> update_max_time_slot_match_count (Some 1)
           | Hour_minute hour_minute ->
             time_pattern_of_hour_minute_expr hour_minute
-            |> update_max_time_slot_match_count (Some 1)
-        )
+            |> update_max_time_slot_match_count (Some 1) )
     with Invalid_time_expr msg -> Error msg
 
   let paired_time_patterns_of_time_slots_expr
@@ -471,11 +467,10 @@ module Interpret_time_expr = struct
           | Single_time_slot (start, end_exc) -> (
               match time_pattern_of_time_point_expr start with
               | Error msg -> raise (Invalid_time_expr msg)
-              | Ok start ->
-                match time_pattern_of_time_point_expr end_exc with
-                | Error msg -> raise (Invalid_time_expr msg)
-                | Ok end_exc -> [ (start, end_exc)]
-            )
+              | Ok start -> (
+                  match time_pattern_of_time_point_expr end_exc with
+                  | Error msg -> raise (Invalid_time_expr msg)
+                  | Ok end_exc -> [ (start, end_exc) ] ) )
           | Day_list_and_hour_minutes { hour_minutes; days } ->
             check_hour_minutes hour_minutes;
             List.map time_pattern_of_day_expr days
@@ -495,8 +490,8 @@ module Interpret_time_expr = struct
                 paired_time_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
             |> List.of_seq
-          | Month_list_and_month_day_list_and_hour_minutes { hour_minutes; month_days; months }
-            ->
+          | Month_list_and_month_day_list_and_hour_minutes
+              { hour_minutes; month_days; months } ->
             let month_pats = List.map time_pattern_of_month_expr months in
             let day_pats =
               month_pats
@@ -506,7 +501,8 @@ module Interpret_time_expr = struct
                   month_days
                   |> List.to_seq
                   |> Seq.map (fun x ->
-                      time_pattern_of_day_expr ~base (Time_expr_ast.Month_day x)))
+                      time_pattern_of_day_expr ~base
+                        (Time_expr_ast.Month_day x)))
               |> List.of_seq
             in
             day_pats
@@ -569,19 +565,22 @@ module Interpret_string = struct
   let time_pattern_of_string (s : string) : (t, string) result =
     match single_or_paired_time_patterns_of_string s with
     | Ok (Single_time_pattern x) -> Ok x
-    | Ok (Paired_time_patterns _) -> Error "Time expression translates to time slot patterns"
+    | Ok (Paired_time_patterns _) ->
+      Error "Time expression translates to time slot patterns"
     | Error msg -> Error msg
 
   let paired_time_patterns_of_string (s : string) :
     ((t * t) list, string) result =
     match single_or_paired_time_patterns_of_string s with
-    | Ok (Single_time_pattern _) -> Error "Time expression translates to time point pattern"
+    | Ok (Single_time_pattern _) ->
+      Error "Time expression translates to time point pattern"
     | Ok (Paired_time_patterns x) -> Ok x
     | Error msg -> Error msg
 
   let paired_time_pattern_of_string (s : string) : (t * t, string) result =
     match single_or_paired_time_patterns_of_string s with
-    | Ok (Single_time_pattern _) -> Error "Time expression translates to time point pattern"
+    | Ok (Single_time_pattern _) ->
+      Error "Time expression translates to time point pattern"
     | Ok (Paired_time_patterns l) -> (
         match l with
         | [] ->

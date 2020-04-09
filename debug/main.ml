@@ -804,7 +804,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
         hours = [];
         minutes = [];
         seconds = [];
-      max_time_slot_match_count = None;
+        max_time_slot_match_count = None;
       },
         {
           years = [];
@@ -813,7 +813,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
           hours = [];
           minutes = [];
           seconds = [];
-      max_time_slot_match_count = None;
+          max_time_slot_match_count = None;
         } );
     ]
   in
