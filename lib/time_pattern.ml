@@ -27,9 +27,9 @@ type t = {
   max_time_slot_match_count : int option;
 }
 
-type single_or_paired =
-  | Single of t
-  | Paired of (t * t) list
+type single_or_multi_paired =
+  | Single_time_pattern of t
+  | Paired_time_patterns of (t * t) list
 
 let empty =
   {
@@ -514,16 +514,16 @@ module Interpret_time_expr = struct
             |> List.of_seq )
     with Invalid_time_expr msg -> Error msg
 
-  let single_or_paired_time_patterns_of_time_expr (e : Time_expr_ast.t) :
-    (single_or_paired, string) result =
+  let single_or_multi_paired_time_patterns_of_time_expr (e : Time_expr_ast.t) :
+    (single_or_multi_paired, string) result =
     match e with
     | Time_expr_ast.Time_point_expr e -> (
         match time_pattern_of_time_point_expr e with
-        | Ok x -> Ok (Single x)
+        | Ok x -> Ok (Single_time_pattern x)
         | Error msg -> Error msg )
     | Time_expr_ast.Time_slots_expr e -> (
         match paired_time_patterns_of_time_slots_expr e with
-        | Ok x -> Ok (Paired x)
+        | Ok x -> Ok (Paired_time_patterns x)
         | Error msg -> Error msg )
 end
 
@@ -533,12 +533,12 @@ module Interpret_string = struct
   let check_minute x = assert (x < 60)
 
   let single_or_paired_time_patterns_of_string (s : string) :
-    (single_or_paired, string) result =
+    (single_or_multi_paired, string) result =
     match Time_expr.Interpret_string.of_string s with
     | Error msg -> Error msg
     | Ok time_expr -> (
         match
-          Interpret_time_expr.single_or_paired_time_patterns_of_time_expr
+          Interpret_time_expr.single_or_multi_paired_time_patterns_of_time_expr
             time_expr
         with
         | Error msg -> Error msg
@@ -546,21 +546,21 @@ module Interpret_string = struct
 
   let time_pattern_of_string (s : string) : (t, string) result =
     match single_or_paired_time_patterns_of_string s with
-    | Ok (Single x) -> Ok x
-    | Ok (Paired _) -> Error "Time expression translates to time slot patterns"
+    | Ok (Single_time_pattern x) -> Ok x
+    | Ok (Paired_time_patterns _) -> Error "Time expression translates to time slot patterns"
     | Error msg -> Error msg
 
   let paired_time_patterns_of_string (s : string) :
     ((t * t) list, string) result =
     match single_or_paired_time_patterns_of_string s with
-    | Ok (Single _) -> Error "Time expression translates to time point pattern"
-    | Ok (Paired x) -> Ok x
+    | Ok (Single_time_pattern _) -> Error "Time expression translates to time point pattern"
+    | Ok (Paired_time_patterns x) -> Ok x
     | Error msg -> Error msg
 
   let paired_time_pattern_of_string (s : string) : (t * t, string) result =
     match single_or_paired_time_patterns_of_string s with
-    | Ok (Single _) -> Error "Time expression translates to time point pattern"
-    | Ok (Paired l) -> (
+    | Ok (Single_time_pattern _) -> Error "Time expression translates to time point pattern"
+    | Ok (Paired_time_patterns l) -> (
         match l with
         | [] ->
           Error

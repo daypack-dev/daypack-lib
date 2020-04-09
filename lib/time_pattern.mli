@@ -25,9 +25,9 @@ type t = {
   max_time_slot_match_count : int option;
 }
 
-type single_or_paired =
-  | Single of t
-  | Paired of (t * t) list
+type single_or_multi_paired =
+  | Single_time_pattern of t
+  | Paired_time_patterns of (t * t) list
 
 val empty : t
 
@@ -65,7 +65,7 @@ val next_match_time_slot_paired_patterns :
 
 module Interpret_string : sig
   val single_or_paired_time_patterns_of_string :
-    string -> (single_or_paired, string) result
+    string -> (single_or_multi_paired, string) result
 
   val time_pattern_of_string : string -> (t, string) result
 
