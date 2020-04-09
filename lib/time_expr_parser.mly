@@ -70,17 +70,25 @@ time_point_expr:
           hour_minute;
         }
     }
-  | HYPHEN; HYPHEN; day = day_expr; hour_minute = hour_minute_expr;
+  | HYPHEN; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
     {
       Day_hour_minute
         {
-          day;
+          day = Month_day month_day;
           hour_minute;
         }
     }
   | HYPHEN; HYPHEN; hour_minute = hour_minute_expr;
     {
       Hour_minute hour_minute
+    }
+  | weekday = weekday_expr; hour_minute = hour_minute_expr;
+    {
+      Day_hour_minute
+        {
+          day = Weekday weekday;
+          hour_minute;
+        }
     }
   ;
 
