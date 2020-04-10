@@ -26,7 +26,7 @@ type t = {
   seconds : int list;
 }
 
-type single_or_multi_paired =
+type single_or_multi_pairs =
   | Single_time_pattern of t
   | Paired_time_patterns of (t * t) list
 
@@ -257,8 +257,8 @@ let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let matching_time_slots_paired_patterns ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (t1 : t) (t2 : t) : Time_slot_ds.t Seq.t =
+let matching_time_slots_time_pattern_pair ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type) (t1, t2 : t * t) : Time_slot_ds.t Seq.t =
   matching_time_slots ~search_in_time_zone search_type t1
   |> Seq.filter_map (fun (start, _) ->
       let search_type = push_search_type_to_later_start ~start search_type in
@@ -266,34 +266,34 @@ let matching_time_slots_paired_patterns ~(search_in_time_zone : Time.time_zone)
       | Seq.Nil -> None
       | Seq.Cons ((end_exc, _), _) -> Some (start, end_exc))
 
-let next_match_time_slot_paired_patterns ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (t1 : t) (t2 : t) : (int64 * int64) option =
+let next_match_time_slot_time_pattern_pair ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type) (t1, t2 : t * t) : (int64 * int64) option =
   match
-    matching_time_slots_paired_patterns ~search_in_time_zone search_type t1 t2
+    matching_time_slots_time_pattern_pair ~search_in_time_zone search_type (t1, t2)
       ()
   with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
-let matching_time_slots_single_or_multi_paired
+let matching_time_slots_single_or_multi_pairs
     ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
-    (x : single_or_multi_paired) : Time_slot_ds.t Seq.t =
+    (x : single_or_multi_pairs) : Time_slot_ds.t Seq.t =
   match x with
   | Single_time_pattern pat ->
     matching_time_slots ~search_in_time_zone search_type pat
   | Paired_time_patterns pats ->
     pats
     |> List.to_seq
-    |> Seq.map (fun (t1, t2) ->
-        matching_time_slots_paired_patterns ~search_in_time_zone
-          search_type t1 t2)
+    |> Seq.map (fun x ->
+        matching_time_slots_time_pattern_pair ~search_in_time_zone
+          search_type x)
     |> Time_slot_ds.merge_multi_seq
 
-let next_match_time_slot_single_or_multi_paired
+let next_match_time_slot_single_or_multi_pairs
     ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
-    (x : single_or_multi_paired) : Time_slot_ds.t option =
+    (x : single_or_multi_pairs) : Time_slot_ds.t option =
   match
-    matching_time_slots_single_or_multi_paired ~search_in_time_zone search_type
+    matching_time_slots_single_or_multi_pairs ~search_in_time_zone search_type
       x ()
   with
   | Seq.Nil -> None

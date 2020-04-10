@@ -214,4 +214,30 @@ module To_time_pattern = struct
         match paired_time_patterns_of_time_slots_expr e with
         | Ok x -> Ok (Paired_time_patterns x)
         | Error msg -> Error msg )
+
+  let time_pattern_of_time_expr (e : t) :
+    (Time_pattern.t, string) result =
+    match single_or_multi_paired_time_patterns_of_time_expr e with
+    | Ok (Time_pattern.Single_time_pattern x) -> Ok x
+    | Ok (Time_pattern.Paired_time_patterns _) -> Error "Time expression translates to paired time patterns"
+    | Error msg -> Error msg
+
+  let paired_time_pattern_of_time_expr (e : t) :
+    (Time_pattern.t * Time_pattern.t, string) result =
+    match single_or_multi_paired_time_patterns_of_time_expr e with
+    | Ok (Time_pattern.Single_time_pattern _) -> Error "Time expression translates to single time pattern"
+    | Ok (Time_pattern.Paired_time_patterns l) ->(
+        match l with
+        | [] -> Error "Time expression translates to empty list of paired time patterns"
+        | [ x ] -> Ok x
+        | _ -> Error "Time expression translates to more than one paired time patterns"
+      )
+    | Error msg -> Error msg
+
+  let paired_time_patterns_of_time_expr (e : t) :
+    ((Time_pattern.t * Time_pattern.t) list, string) result =
+    match single_or_multi_paired_time_patterns_of_time_expr e with
+    | Ok (Time_pattern.Single_time_pattern _) -> Error "Time expression translates to single time pattern"
+    | Ok (Time_pattern.Paired_time_patterns l) -> Ok l
+    | Error msg -> Error msg
 end
