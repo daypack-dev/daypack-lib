@@ -8,7 +8,7 @@ module Interpret_string = struct
   let lexbuf_to_pos_str lexbuf =
     let open Lexing in
     let pos = lexbuf.lex_curr_p in
-    Printf.sprintf "%s:%d:%d" pos.pos_fname pos.pos_lnum
+    Printf.sprintf "%d:%d" pos.pos_lnum
       (pos.pos_cnum - pos.pos_bol - 1)
 
   let of_string (s : string) : (t, string) result =
