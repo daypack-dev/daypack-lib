@@ -1,5 +1,7 @@
 open Time_expr_ast
 
+type search_type = Time_pattern.search_type
+
 module Interpret_string = struct
   let parse lexbuf : t = Time_expr_parser.parse Time_expr_lexer.read lexbuf
 
@@ -219,7 +221,7 @@ module To_time_pattern = struct
     (Time_pattern.t, string) result =
     match single_or_pairs_of_time_expr e with
     | Ok (Time_pattern.Single_time_pattern x) -> Ok x
-    | Ok (Time_pattern.Paired_time_patterns _) -> Error "Time expression translates to paired time patterns"
+    | Ok (Time_pattern.Paired_time_patterns _) -> Error "Time expression translates to time pattern pairs"
     | Error msg -> Error msg
 
   let paired_time_pattern_of_time_expr (e : t) :
@@ -228,9 +230,9 @@ module To_time_pattern = struct
     | Ok (Time_pattern.Single_time_pattern _) -> Error "Time expression translates to single time pattern"
     | Ok (Time_pattern.Paired_time_patterns l) ->(
         match l with
-        | [] -> Error "Time expression translates to empty list of paired time patterns"
+        | [] -> Error "Time expression translates to empty list of time pattern pairs"
         | [ x ] -> Ok x
-        | _ -> Error "Time expression translates to more than one paired time patterns"
+        | _ -> Error "Time expression translates to more than one time pattern pairs"
       )
     | Error msg -> Error msg
 
@@ -241,3 +243,25 @@ module To_time_pattern = struct
     | Ok (Time_pattern.Paired_time_patterns l) -> Ok l
     | Error msg -> Error msg
 end
+
+let next_match_unix_time_time_point_expr ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type)
+    (e : time_point_expr) : (int64 option, string) result =
+  match To_time_pattern.time_pattern_of_time_point_expr e with
+  | Error msg -> Error msg
+  | Ok pat ->
+    Ok (Time_pattern.next_match_unix_time ~search_in_time_zone search_type pat)
+
+let next_match_unix_time_time_slots_expr ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type)
+    (e : time_slots_expr) : (int64 option, string) result =
+  match To_time_pattern.single_or_pairs_of_time_expr
+
+let next_match_unix_time_time_expr ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type)
+    (e : time_expr) : (int64 option, string) result =
+  match e with
+  | Time_point_expr e ->
+    next_match_unix_time_time_point_expr ~search_in_time_zone search_type e
+  | Time_slots_expr _ ->
+    Error "Time expression "

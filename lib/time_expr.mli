@@ -1,3 +1,11 @@
+type search_type = Time_pattern.search_type
+
+val next_match_unix_time_time_point_expr :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  Time_expr_ast.time_point_expr ->
+  (int64, string) result
+
 module Interpret_string : sig
   val of_string : string -> (Time_expr_ast.t, string) result
 end
