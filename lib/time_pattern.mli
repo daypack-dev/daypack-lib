@@ -60,6 +60,18 @@ val next_match_time_slot_time_pattern_pair :
   t * t ->
   (int64 * int64) option
 
+val matching_time_slots_time_pattern_pairs :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  (t * t) list ->
+  Time_slot_ds.t Seq.t
+
+val next_match_time_slot_time_pattern_pairs :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  (t * t) list ->
+  (int64 * int64) option
+
 val matching_time_slots_single_or_multi_pairs :
   search_in_time_zone:Time.time_zone ->
   search_type ->
