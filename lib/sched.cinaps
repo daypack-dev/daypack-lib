@@ -216,13 +216,13 @@ module Store = struct
         f_inner_pack =
           Some
             "(fun (id, quota) -> (Task_ds.Serialize.pack_task_inst_id id, \
-             Misc_utils.int64_to_int32_int32 quota))";
-        f_inner_pack_data = Some "Misc_utils.int64_to_int32_int32";
+             Misc_utils.int32_int32_of_int64 quota))";
+        f_inner_pack_data = Some "Misc_utils.int32_int32_of_int64";
         f_inner_unpack =
           Some
             "(fun (id, quota) -> (Task_ds.Deserialize.unpack_task_inst_id id, \
-             Misc_utils.int32_int32_to_int64 quota))";
-        f_inner_unpack_data = Some "Misc_utils.int32_int32_to_int64";
+             Misc_utils.int64_of_int32_int32 quota))";
+        f_inner_unpack_data = Some "Misc_utils.int64_of_int32_int32";
       };
       {
         f_pack_suffix = "task_seg_id_to_progress";
@@ -282,15 +282,15 @@ module Store = struct
           Some
             "(fun (id, (start, end_exc)) -> \
              (Task_ds.Serialize.pack_task_seg_id id, \
-             (Misc_utils.int64_to_int32_int32 start, \
-             Misc_utils.int64_to_int32_int32 end_exc)))";
+             (Misc_utils.int32_int32_of_int64 start, \
+             Misc_utils.int32_int32_of_int64 end_exc)))";
         f_inner_pack_data = Some "(fun x -> x)";
         f_inner_unpack =
           Some
             "(fun (id, (start, end_exc)) -> \
              (Task_ds.Deserialize.unpack_task_seg_id id, \
-             (Misc_utils.int32_int32_to_int64 start, \
-             Misc_utils.int32_int32_to_int64 end_exc)))";
+             (Misc_utils.int64_of_int32_int32 start, \
+             Misc_utils.int64_of_int32_int32 end_exc)))";
         f_inner_unpack_data = Some "(fun x -> x)";
       };
     ]
@@ -458,8 +458,8 @@ module Bucket_store = struct
           "((int32 * int32), Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed";
         f_to_seq = "Int64_map.to_seq";
         f_of_seq = "Int64_map.of_seq";
-        f_id_pack = Some "Misc_utils.int64_to_int32_int32";
-        f_id_unpack = Some "Misc_utils.int32_int32_to_int64";
+        f_id_pack = Some "Misc_utils.int32_int32_of_int64";
+        f_id_unpack = Some "Misc_utils.int64_of_int32_int32";
         f_data_pack = Some "Task_seg_id_set.Serialize.pack";
         f_data_unpack = Some "Task_seg_id_set.Deserialize.unpack";
       };
@@ -473,8 +473,8 @@ module Bucket_store = struct
           "((int32 * int32), Task_ds_t.task_seg_id) Map_utils_t.diff_bucketed";
         f_to_seq = "Int64_map.to_seq";
         f_of_seq = "Int64_map.of_seq";
-        f_id_pack = Some "Misc_utils.int64_to_int32_int32";
-        f_id_unpack = Some "Misc_utils.int32_int32_to_int64";
+        f_id_pack = Some "Misc_utils.int32_int32_of_int64";
+        f_id_unpack = Some "Misc_utils.int64_of_int32_int32";
         f_data_pack = Some "Task_seg_id_set.Serialize.pack";
         f_data_unpack = Some "Task_seg_id_set.Deserialize.unpack";
       };
@@ -570,8 +570,8 @@ module Set_store = struct
         diff_ret_typ = "(int32 * int32) Set_utils_t.diff";
         f_to_seq = "Int64_set.to_seq";
         f_of_seq = "Int64_set.of_seq";
-        f_inner_pack = Some "Misc_utils.int64_to_int32_int32";
-        f_inner_unpack = Some "Misc_utils.int32_int32_to_int64";
+        f_inner_pack = Some "Misc_utils.int32_int32_of_int64";
+        f_inner_unpack = Some "Misc_utils.int64_of_int32_int32";
       };
     ]
 
