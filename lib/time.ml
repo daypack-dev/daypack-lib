@@ -361,7 +361,7 @@ module Print = struct
     | `Dec -> "Dec"
 
   let date_time_string_of_tm (tm : Unix.tm) : string =
-    Printf.sprintf "%d-%02d-%02d_%02d:%02d"
+    Printf.sprintf "%d-%02d-%02d %02d:%02d"
       (tm.tm_year + tm_year_offset)
       (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min
 
