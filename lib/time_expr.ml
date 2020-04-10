@@ -18,6 +18,18 @@ module Interpret_string = struct
       Error (Printf.sprintf "%s: %s" (lexbuf_to_pos_str lexbuf) msg)
     | Time_expr_parser.Error ->
       Error (Printf.sprintf "%s: syntax error" (lexbuf_to_pos_str lexbuf))
+
+  let time_point_expr_of_string (s : string) : (time_point_expr, string) result =
+    match of_string s with
+    | Ok (Time_point_expr e) -> Ok e
+    | Ok (Time_slots_expr _) -> Error "String translates to time slots expression"
+    | Error msg -> Error msg
+
+  let time_slots_expr_of_string (s : string) : (time_slots_expr, string) result =
+    match of_string s with
+    | Ok (Time_point_expr _) -> Error "String translates to time point expression"
+    | Ok (Time_slots_expr e) -> Ok e
+    | Error msg -> Error msg
 end
 
 module To_time_pattern = struct
@@ -250,3 +262,11 @@ let next_match_unix_time_time_point_expr ~(search_in_time_zone : Time.time_zone)
   | Error msg -> Error msg
   | Ok pat ->
     Ok (Time_pattern.next_match_unix_time ~search_in_time_zone search_type pat)
+
+let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type)
+    (e : t) : ((int64 * int64) option, string) result =
+  match To_time_pattern.single_or_pairs_of_time_expr e with
+  | Error msg -> Error msg
+  | Ok p ->
+    Ok (Time_pattern.next_match_time_slot_single_or_pairs ~search_in_time_zone search_type p)
