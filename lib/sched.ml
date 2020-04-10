@@ -4215,7 +4215,7 @@ module Diff = struct
     else (sid_old, sub_diff_sched_data sd_diff sd)
 end
 
-module Print = struct
+module To_string = struct
   let debug_string_of_sched ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (sid, sd) =
     Debug_print.bprintf ~indent_level buffer "schedule id : %s\n"
@@ -4224,7 +4224,7 @@ module Print = struct
       "pending scheduling requests :\n";
     Sched_req_id_map.iter
       (fun id data ->
-         Sched_req_ds.Print.debug_string_of_sched_req
+         Sched_req_ds.To_string.debug_string_of_sched_req
            ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.sched_req_pending_store;
@@ -4232,7 +4232,7 @@ module Print = struct
       "scheduling request record :\n";
     Sched_req_id_map.iter
       (fun id data ->
-         Sched_req_ds.Print.debug_string_of_sched_req_record
+         Sched_req_ds.To_string.debug_string_of_sched_req_record
            ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.sched_req_record_store;
@@ -4240,7 +4240,7 @@ module Print = struct
       "tasks uncompleted :\n";
     Task_id_map.iter
       (fun id data ->
-         Task_ds.Print.debug_string_of_task ~indent_level:(indent_level + 2)
+         Task_ds.To_string.debug_string_of_task ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_uncompleted_store;
@@ -4248,7 +4248,7 @@ module Print = struct
       "tasks completed :\n";
     Task_id_map.iter
       (fun id data ->
-         Task_ds.Print.debug_string_of_task ~indent_level:(indent_level + 2)
+         Task_ds.To_string.debug_string_of_task ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_completed_store;
@@ -4256,7 +4256,7 @@ module Print = struct
       "tasks discarded :\n";
     Task_id_map.iter
       (fun id data ->
-         Task_ds.Print.debug_string_of_task ~indent_level:(indent_level + 2)
+         Task_ds.To_string.debug_string_of_task ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_discarded_store;
@@ -4264,7 +4264,7 @@ module Print = struct
       "task insts uncompleted :\n";
     Task_inst_id_map.iter
       (fun id data ->
-         Task_ds.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
+         Task_ds.To_string.debug_string_of_task_inst ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_uncompleted_store;
@@ -4272,7 +4272,7 @@ module Print = struct
       "task insts completed :\n";
     Task_inst_id_map.iter
       (fun id data ->
-         Task_ds.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
+         Task_ds.To_string.debug_string_of_task_inst ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_completed_store;
@@ -4280,7 +4280,7 @@ module Print = struct
       "task insts discarded :\n";
     Task_inst_id_map.iter
       (fun id data ->
-         Task_ds.Print.debug_string_of_task_inst ~indent_level:(indent_level + 2)
+         Task_ds.To_string.debug_string_of_task_inst ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_discarded_store;
@@ -4288,7 +4288,7 @@ module Print = struct
       "task segs uncompleted :\n";
     Task_seg_id_map.iter
       (fun id data ->
-         Task_ds.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
+         Task_ds.To_string.debug_string_of_task_seg ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_seg_uncompleted_store;
@@ -4296,7 +4296,7 @@ module Print = struct
       "task segs completed :\n";
     Task_seg_id_map.iter
       (fun id data ->
-         Task_ds.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
+         Task_ds.To_string.debug_string_of_task_seg ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_seg_completed_store;
@@ -4304,7 +4304,7 @@ module Print = struct
       "task segs discarded :\n";
     Task_seg_id_map.iter
       (fun id data ->
-         Task_ds.Print.debug_string_of_task_seg ~indent_level:(indent_level + 2)
+         Task_ds.To_string.debug_string_of_task_seg ~indent_level:(indent_level + 2)
            ~buffer (id, data)
          |> ignore)
       sd.store.task_seg_discarded_store;
@@ -4313,9 +4313,9 @@ module Print = struct
       (fun (id, start, end_exc) ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
            "%s - %s | %s\n"
-           (Time.Print.date_time_string_of_time ~display_in_time_zone:`Local
+           (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
               start)
-           (Time.Print.date_time_string_of_time ~display_in_time_zone:`Local
+           (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
               end_exc)
            (Task_ds.string_of_task_seg_id id))
       (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
@@ -4333,7 +4333,7 @@ module Print = struct
       (fun id progress ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
            (Task_ds.string_of_task_seg_id id);
-         Task_ds.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
+         Task_ds.To_string.debug_string_of_progress ~indent_level:(indent_level + 3)
            ~buffer progress
          |> ignore)
       sd.store.task_seg_id_to_progress;
@@ -4343,12 +4343,14 @@ module Print = struct
       (fun id progress ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
            (Task_ds.string_of_task_inst_id id);
-         Task_ds.Print.debug_string_of_progress ~indent_level:(indent_level + 3)
+         Task_ds.To_string.debug_string_of_progress ~indent_level:(indent_level + 3)
            ~buffer progress
          |> ignore)
       sd.store.task_inst_id_to_progress;
     Buffer.contents buffer
+end
 
+module Print = struct
   let debug_print_sched ?(indent_level = 0) sched =
-    print_string (debug_string_of_sched ~indent_level sched)
+    print_string (To_string.debug_string_of_sched ~indent_level sched)
 end

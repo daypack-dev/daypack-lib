@@ -913,9 +913,11 @@ module Diff : sig
   val sub_diff_sched : sched_diff -> sched -> sched
 end
 
-module Print : sig
+module To_string : sig
   val debug_string_of_sched :
     ?indent_level:int -> ?buffer:Buffer.t -> sched -> string
+end
 
+module Print : sig
   val debug_print_sched : ?indent_level:int -> sched -> unit
 end

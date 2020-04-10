@@ -354,11 +354,11 @@ module Equal = struct
     && List.sort compare pat1.minutes = List.sort compare pat2.minutes
 end
 
-module Print = struct
+module To_string = struct
   let debug_string_of_days (days : days) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_weekdays l =
-      String.concat "," (List.map Time.Print.string_of_weekday l)
+      String.concat "," (List.map Time.To_string.string_of_weekday l)
     in
     match days with
     | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)
@@ -368,7 +368,7 @@ module Print = struct
       (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_months l =
-      String.concat "," (List.map Time.Print.string_of_month l)
+      String.concat "," (List.map Time.To_string.string_of_month l)
     in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : [%s]\n"
@@ -385,6 +385,9 @@ module Print = struct
       (aux t.seconds);
     Buffer.contents buffer
 
+end
+
+module Print = struct
   let debug_print_pattern ?(indent_level = 0) t =
-    print_string (debug_string_of_pattern ~indent_level t)
+    print_string (To_string.debug_string_of_pattern ~indent_level t)
 end

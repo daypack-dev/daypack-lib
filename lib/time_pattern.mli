@@ -88,12 +88,15 @@ module Equal : sig
   val equal : t -> t -> bool
 end
 
-module Print : sig
+module To_string : sig
   val debug_string_of_days : days -> string
 
   val debug_string_of_pattern :
     ?indent_level:int -> ?buffer:Buffer.t -> t -> string
 
+end
+
+module Print : sig
   val debug_print_pattern : ?indent_level:int -> t -> unit
 end
 

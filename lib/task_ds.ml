@@ -371,13 +371,13 @@ module Deserialize = struct
     { chunks = Int64_int64_set.Deserialize.unpack x.chunks }
 end
 
-module Print = struct
+module To_string = struct
   let debug_string_of_sched_req_template ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (sched_req_template : sched_req_template) :
     string =
     List.iter
       (fun x ->
-         Sched_req_data_unit_skeleton.Print
+         Sched_req_data_unit_skeleton.To_string
          .debug_string_of_sched_req_data_unit_skeleton ~buffer ~indent_level
            ~string_of_data:Int64.to_string ~string_of_time:Int64.to_string
            ~string_of_time_slot:Time_slot_ds.to_string x
@@ -396,9 +396,6 @@ module Print = struct
       arith_seq.diff;
     Debug_print.bprintf ~indent_level buffer "}";
     Buffer.contents buffer
-
-  let debug_print_arith_seq ?(indent_level = 0) arith_seq =
-    print_string (debug_string_of_arith_seq ~indent_level arith_seq)
 
   let debug_string_of_task ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (id, data) =
@@ -446,7 +443,7 @@ module Print = struct
               (pattern, { task_inst_data = _; sched_req_template }) ->
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "recur type : time pattern\n";
-            Time_pattern.Print.debug_string_of_pattern
+            Time_pattern.To_string.debug_string_of_pattern
               ~indent_level:(indent_level + 2) ~buffer pattern
             |> ignore;
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
@@ -494,18 +491,24 @@ module Print = struct
       progress.chunks;
     Buffer.contents buffer
 
+end
+
+module Print = struct
+  let debug_print_arith_seq ?(indent_level = 0) arith_seq =
+    print_string (To_string.debug_string_of_arith_seq ~indent_level arith_seq)
+
   let debug_print_task ?(indent_level = 0) task =
-    print_string (debug_string_of_task ~indent_level task)
+    print_string (To_string.debug_string_of_task ~indent_level task)
 
   let debug_print_task_inst ?(indent_level = 0) task_inst =
-    print_string (debug_string_of_task_inst ~indent_level task_inst)
+    print_string (To_string.debug_string_of_task_inst ~indent_level task_inst)
 
   let debug_print_task_seg ?(indent_level = 0) task_seg =
-    print_string (debug_string_of_task_seg ~indent_level task_seg)
+    print_string (To_string.debug_string_of_task_seg ~indent_level task_seg)
 
   let debug_print_task_seg_place ?(indent_level = 0) task_seg_place =
-    print_string (debug_string_of_task_seg_place ~indent_level task_seg_place)
+    print_string (To_string.debug_string_of_task_seg_place ~indent_level task_seg_place)
 
   let debug_print_progress ?(indent_level = 0) progress =
-    print_string (debug_string_of_progress ~indent_level progress)
+    print_string (To_string.debug_string_of_progress ~indent_level progress)
 end

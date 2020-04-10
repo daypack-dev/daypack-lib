@@ -200,7 +200,7 @@ let remove_data_units_with_matching_inner_data (type a b c) (f : a -> bool)
     (ts : (a, b, c) t list) : (a, b, c) t list =
   List.filter (fun t -> not (contains_matching_inner_data f t)) ts
 
-module Print = struct
+module To_string = struct
   let debug_string_of_sched_req_data_unit_skeleton (type a b c)
       ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(string_of_data : a -> string) ~(string_of_time : b -> string)

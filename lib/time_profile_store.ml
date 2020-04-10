@@ -87,7 +87,7 @@ module Equal = struct
     String_map.equal Time_profile.Equal.data_equal t1.profiles t2.profiles
 end
 
-module Print = struct
+module To_string = struct
   let debug_string_of_time_profile_store ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (t : t) : string =
     let open Time_profile in
@@ -103,17 +103,20 @@ module Print = struct
           (fun (start, end_exc) ->
              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
                "start\n";
-             Time_pattern.Print.debug_string_of_pattern
+             Time_pattern.To_string.debug_string_of_pattern
                ~indent_level:(indent_level + 3) ~buffer start
              |> ignore;
              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
                "end\n";
-             Time_pattern.Print.debug_string_of_pattern
+             Time_pattern.To_string.debug_string_of_pattern
                ~indent_level:(indent_level + 3) ~buffer end_exc
              |> ignore)
           data.periods);
     Buffer.contents buffer
 
+end
+
+module Print = struct
   let debug_print_time_profile_store ?(indent_level = 0) (t : t) =
-    print_string (debug_string_of_time_profile_store ~indent_level t)
+    print_string (To_string.debug_string_of_time_profile_store ~indent_level t)
 end
