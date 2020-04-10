@@ -35,7 +35,7 @@ module Interpret_string = struct
     | Error msg -> Error msg
 end
 
-module To_time_pattern = struct
+module To_time_pattern_lossy = struct
   exception Invalid_time_expr of string
 
   let check_hour_minute_expr ({ hour; minute } : hour_minute_expr) : unit =
@@ -149,7 +149,7 @@ module To_time_pattern = struct
             time_pattern_of_hour_minute_expr hour_minute )
     with Invalid_time_expr msg -> Error msg
 
-  let paired_time_patterns_of_time_slots_expr (e : time_slots_expr) :
+  let time_pattern_pairs_of_time_slots_expr (e : time_slots_expr) :
     ((Time_pattern.t * Time_pattern.t) list, string) result =
     try
       Ok
@@ -227,7 +227,7 @@ module To_time_pattern = struct
         | Ok x -> Ok (Single_time_pattern x)
         | Error msg -> Error msg )
     | Time_expr_ast.Time_slots_expr e -> (
-        match paired_time_patterns_of_time_slots_expr e with
+        match time_pattern_pairs_of_time_slots_expr e with
         | Ok x -> Ok (Paired_time_patterns x)
         | Error msg -> Error msg )
 
@@ -264,7 +264,7 @@ end
 let next_match_unix_time_time_point_expr ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (e : time_point_expr) :
   (int64 option, string) result =
-  match To_time_pattern.time_pattern_of_time_point_expr e with
+  match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
   | Error msg -> Error msg
   | Ok pat ->
     Ok
@@ -273,9 +273,46 @@ let next_match_unix_time_time_point_expr ~(search_in_time_zone : Time.time_zone)
 let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (e : t) :
   ((int64 * int64) option, string) result =
-  match To_time_pattern.single_or_pairs_of_time_expr e with
+  match To_time_pattern_lossy.single_or_pairs_of_time_expr e with
   | Error msg -> Error msg
   | Ok p ->
     Ok
       (Time_pattern.next_match_time_slot_single_or_pairs ~search_in_time_zone
          search_type p)
+
+let matching_time_slots ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type) (e : t) :
+  (Time_slot_ds.t Seq.t, string) result =
+  match e with
+  | Time_point_expr e -> (
+      match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
+      | Error msg -> Error msg
+      | Ok pat ->
+        Time_pattern.matching_time_slots ~search_in_time_zone search_type pat
+        |> OSeq.take 1
+        |> Result.ok
+    )
+  | Time_slots_expr e -> (
+      let take_count =
+        match e with
+        | Single_time_slot _
+        | Day_list_and_hour_minutes _
+        | Day_range_and_hour_minutes _
+        | Month_list_and_month_day_list_and_hour_minutes _
+        | Month_list_and_weekday_list_and_hour_minutes _
+          -> Some 1
+      in
+      match To_time_pattern_lossy.time_pattern_pairs_of_time_slots_expr e with
+      | Error msg -> Error msg
+      | Ok l ->
+        l
+        |> List.to_seq
+        |> Seq.map (Time_pattern.matching_time_slots_time_pattern_pair ~search_in_time_zone search_type)
+        |> (match take_count with
+            | None -> fun x -> x
+            | Some n -> Seq.map (OSeq.take n)
+          )
+        |> Time_slot_ds.merge_multi_seq
+        |> Result.ok
+    )
+

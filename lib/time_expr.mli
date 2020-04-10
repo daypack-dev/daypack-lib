@@ -12,6 +12,12 @@ val next_match_time_slot :
   Time_expr_ast.t ->
   ((int64 * int64) option, string) result
 
+val matching_time_slots :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  Time_expr_ast.t ->
+  ((int64 * int64) Seq.t, string) result
+
 module Interpret_string : sig
   val of_string : string -> (Time_expr_ast.t, string) result
 
@@ -22,11 +28,11 @@ module Interpret_string : sig
     string -> (Time_expr_ast.time_slots_expr, string) result
 end
 
-module To_time_pattern : sig
+module To_time_pattern_lossy : sig
   val time_pattern_of_time_point_expr :
     Time_expr_ast.time_point_expr -> (Time_pattern.t, string) result
 
-  val paired_time_patterns_of_time_slots_expr :
+  val time_pattern_pairs_of_time_slots_expr :
     Time_expr_ast.time_slots_expr ->
     ((Time_pattern.t * Time_pattern.t) list, string) result
 
