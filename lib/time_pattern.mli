@@ -22,7 +22,6 @@ type t = {
   hours : int list;
   minutes : int list;
   seconds : int list;
-  max_time_slot_match_count : int option;
 }
 
 type single_or_multi_paired =

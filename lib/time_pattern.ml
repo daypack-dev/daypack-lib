@@ -24,7 +24,6 @@ type t = {
   hours : int list;
   minutes : int list;
   seconds : int list;
-  max_time_slot_match_count : int option;
 }
 
 type single_or_multi_paired =
@@ -39,15 +38,7 @@ let empty =
     hours = [];
     minutes = [];
     seconds = [];
-    max_time_slot_match_count = None;
   }
-
-let update_max_time_slot_match_count (n : int option) (t : t) : t =
-  { t with max_time_slot_match_count = n }
-
-let update_max_time_slot_match_count_paired_time_pattern (n : int option)
-    ((x, y) : t * t) : t * t =
-  (update_max_time_slot_match_count n x, update_max_time_slot_match_count n y)
 
 let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
   : search_type =
@@ -248,10 +239,6 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
       | None -> l
       | Some time_slots -> Time_slot_ds.intersect (List.to_seq time_slots) l)
   |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
-  |>
-  match t.max_time_slot_match_count with
-  | None -> fun x -> x
-  | Some n -> OSeq.take n
 
 let next_match_tm ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (t : t) : Unix.tm option =
@@ -323,7 +310,6 @@ module Serialize = struct
       hours = t.hours;
       minutes = t.minutes;
       seconds = t.seconds;
-      max_time_slot_match_count = t.max_time_slot_match_count;
     }
 end
 
@@ -338,7 +324,6 @@ module Deserialize = struct
       hours = t.hours;
       minutes = t.minutes;
       seconds = t.seconds;
-      max_time_slot_match_count = t.max_time_slot_match_count;
     }
 end
 
@@ -444,20 +429,17 @@ module Interpret_time_expr = struct
             |> (fun base ->
                 time_pattern_of_day_expr ~base (Month_day month_day))
             |> (fun base -> time_pattern_of_hour_minute_expr ~base hour_minute)
-            |> update_max_time_slot_match_count (Some 1)
           | Month_day_hour_minute { month; month_day; hour_minute } ->
             time_pattern_of_month_expr month
             |> (fun base ->
                 time_pattern_of_day_expr ~base (Month_day month_day))
             |> (fun base -> time_pattern_of_hour_minute_expr ~base hour_minute)
-            |> update_max_time_slot_match_count (Some 1)
           | Day_hour_minute { day; hour_minute } ->
             time_pattern_of_day_expr day
             |> (fun base -> time_pattern_of_hour_minute_expr ~base hour_minute)
-            |> update_max_time_slot_match_count (Some 1)
           | Hour_minute hour_minute ->
             time_pattern_of_hour_minute_expr hour_minute
-            |> update_max_time_slot_match_count (Some 1) )
+        )
     with Invalid_time_expr msg -> Error msg
 
   let paired_time_patterns_of_time_slots_expr
@@ -476,7 +458,6 @@ module Interpret_time_expr = struct
             check_hour_minutes hour_minutes;
             List.map time_pattern_of_day_expr days
             |> List.to_seq
-            |> Seq.map (update_max_time_slot_match_count (Some 1))
             |> Seq.flat_map (fun pat ->
                 paired_time_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
@@ -486,7 +467,6 @@ module Interpret_time_expr = struct
             |> days_of_day_range_expr
             |> List.to_seq
             |> Seq.map time_pattern_of_day_expr
-            |> Seq.map (update_max_time_slot_match_count (Some 1))
             |> Seq.flat_map (fun pat ->
                 paired_time_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
@@ -497,7 +477,6 @@ module Interpret_time_expr = struct
             let day_pats =
               month_pats
               |> List.to_seq
-              |> Seq.map (update_max_time_slot_match_count (Some 1))
               |> Seq.flat_map (fun base ->
                   month_days
                   |> List.to_seq
