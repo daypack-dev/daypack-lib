@@ -242,7 +242,6 @@ let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
          hours;
          minutes;
          seconds;
-         max_time_slot_match_count = None;
        })
     (quad
        (list_size (int_bound 5) (int_range 1980 2100))
