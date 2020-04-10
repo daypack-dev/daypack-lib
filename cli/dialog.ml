@@ -119,9 +119,10 @@ let ask_uint64_multi ~indent_level ~(prompt : string) : int64 list =
       with Failure msg -> Error msg)
 
 let process_time_string (s : string) : (int64, string) result =
-  match Daypack_lib.Time_pattern.Interpret_string.time_pattern_of_string s with
+  match Daypack_lib.Time_expr.Interpret_string.of_string s with
   | Error msg -> Error msg
-  | Ok pat -> (
+  | Ok expr -> (
+      match Daypack_lib.Time_expr.To_time_pattern.single_or_mu
       match
         Daypack_lib.Time_pattern.next_match_int64 ~search_in_time_zone:`Local
           (Years_ahead_start_unix_time

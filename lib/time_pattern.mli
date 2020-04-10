@@ -74,16 +74,16 @@ val next_match_time_slot_single_or_multi_paired :
   single_or_multi_paired ->
   Time_slot_ds.t option
 
-module Interpret_string : sig
-  val single_or_paired_time_patterns_of_string :
-    string -> (single_or_multi_paired, string) result
-
-  val time_pattern_of_string : string -> (t, string) result
-
-  val paired_time_patterns_of_string : string -> ((t * t) list, string) result
-
-  val paired_time_pattern_of_string : string -> (t * t, string) result
-end
+(* module Interpret_string : sig
+ *   val single_or_paired_time_patterns_of_string :
+ *     string -> (single_or_multi_paired, string) result
+ * 
+ *   val time_pattern_of_string : string -> (t, string) result
+ * 
+ *   val paired_time_patterns_of_string : string -> ((t * t) list, string) result
+ * 
+ *   val paired_time_pattern_of_string : string -> (t * t, string) result
+ * end *)
 
 module Equal : sig
   val equal : t -> t -> bool
