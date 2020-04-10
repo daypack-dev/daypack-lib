@@ -39,7 +39,7 @@ val matching_time_slots :
 val next_match_tm :
   search_in_time_zone:Time.time_zone -> search_type -> t -> Unix.tm option
 
-val next_match_int64 :
+val next_match_unix_time :
   search_in_time_zone:Time.time_zone -> search_type -> t -> int64 option
 
 val next_match_time_slot :

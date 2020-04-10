@@ -246,7 +246,7 @@ let next_match_tm ~(search_in_time_zone : Time.time_zone)
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let next_match_int64 ~(search_in_time_zone : Time.time_zone)
+let next_match_unix_time ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (t : t) : int64 option =
   next_match_tm ~search_in_time_zone search_type t
   |> Option.map (Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone)
