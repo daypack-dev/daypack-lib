@@ -26,7 +26,7 @@ type t = {
   seconds : int list;
 }
 
-type single_or_multi_pairs =
+type single_or_pairs =
   | Single_time_pattern of t
   | Paired_time_patterns of (t * t) list
 
@@ -293,20 +293,20 @@ let next_match_time_slot_time_pattern_pairs ~(search_in_time_zone : Time.time_zo
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
-let matching_time_slots_single_or_multi_pairs
+let matching_time_slots_single_or_pairs
     ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
-    (x : single_or_multi_pairs) : Time_slot_ds.t Seq.t =
+    (x : single_or_pairs) : Time_slot_ds.t Seq.t =
   match x with
   | Single_time_pattern pat ->
     matching_time_slots ~search_in_time_zone search_type pat
   | Paired_time_patterns l ->
     matching_time_slots_time_pattern_pairs ~search_in_time_zone search_type l
 
-let next_match_time_slot_single_or_multi_pairs
+let next_match_time_slot_single_or_pairs
     ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
-    (x : single_or_multi_pairs) : Time_slot_ds.t option =
+    (x : single_or_pairs) : Time_slot_ds.t option =
   match
-    matching_time_slots_single_or_multi_pairs ~search_in_time_zone search_type
+    matching_time_slots_single_or_pairs ~search_in_time_zone search_type
       x ()
   with
   | Seq.Nil -> None

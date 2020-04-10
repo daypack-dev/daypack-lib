@@ -24,7 +24,7 @@ type t = {
   seconds : int list;
 }
 
-type single_or_multi_pairs =
+type single_or_pairs =
   | Single_time_pattern of t
   | Paired_time_patterns of (t * t) list
 
@@ -72,16 +72,16 @@ val next_match_time_slot_time_pattern_pairs :
   (t * t) list ->
   (int64 * int64) option
 
-val matching_time_slots_single_or_multi_pairs :
+val matching_time_slots_single_or_pairs :
   search_in_time_zone:Time.time_zone ->
   search_type ->
-  single_or_multi_pairs ->
+  single_or_pairs ->
   Time_slot_ds.t Seq.t
 
-val next_match_time_slot_single_or_multi_pairs :
+val next_match_time_slot_single_or_pairs :
   search_in_time_zone:Time.time_zone ->
   search_type ->
-  single_or_multi_pairs ->
+  single_or_pairs ->
   Time_slot_ds.t option
 
 (* module Interpret_string : sig

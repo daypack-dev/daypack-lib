@@ -203,8 +203,8 @@ module To_time_pattern = struct
             |> List.of_seq )
     with Invalid_time_expr msg -> Error msg
 
-  let single_or_multi_paired_time_patterns_of_time_expr (e : t) :
-    (Time_pattern.single_or_multi_paired, string) result =
+  let single_or_pairs_of_time_expr (e : t) :
+    (Time_pattern.single_or_pairs, string) result =
     match e with
     | Time_expr_ast.Time_point_expr e -> (
         match time_pattern_of_time_point_expr e with
@@ -217,14 +217,14 @@ module To_time_pattern = struct
 
   let time_pattern_of_time_expr (e : t) :
     (Time_pattern.t, string) result =
-    match single_or_multi_paired_time_patterns_of_time_expr e with
+    match single_or_pairs_of_time_expr e with
     | Ok (Time_pattern.Single_time_pattern x) -> Ok x
     | Ok (Time_pattern.Paired_time_patterns _) -> Error "Time expression translates to paired time patterns"
     | Error msg -> Error msg
 
   let paired_time_pattern_of_time_expr (e : t) :
     (Time_pattern.t * Time_pattern.t, string) result =
-    match single_or_multi_paired_time_patterns_of_time_expr e with
+    match single_or_pairs_of_time_expr e with
     | Ok (Time_pattern.Single_time_pattern _) -> Error "Time expression translates to single time pattern"
     | Ok (Time_pattern.Paired_time_patterns l) ->(
         match l with
@@ -236,7 +236,7 @@ module To_time_pattern = struct
 
   let paired_time_patterns_of_time_expr (e : t) :
     ((Time_pattern.t * Time_pattern.t) list, string) result =
-    match single_or_multi_paired_time_patterns_of_time_expr e with
+    match single_or_pairs_of_time_expr e with
     | Ok (Time_pattern.Single_time_pattern _) -> Error "Time expression translates to single time pattern"
     | Ok (Time_pattern.Paired_time_patterns l) -> Ok l
     | Error msg -> Error msg
