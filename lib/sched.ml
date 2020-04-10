@@ -4264,48 +4264,48 @@ module To_string = struct
       "task insts uncompleted :\n";
     Task_inst_id_map.iter
       (fun id data ->
-         Task_ds.To_string.debug_string_of_task_inst ~indent_level:(indent_level + 2)
-           ~buffer (id, data)
+         Task_ds.To_string.debug_string_of_task_inst
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_uncompleted_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "task insts completed :\n";
     Task_inst_id_map.iter
       (fun id data ->
-         Task_ds.To_string.debug_string_of_task_inst ~indent_level:(indent_level + 2)
-           ~buffer (id, data)
+         Task_ds.To_string.debug_string_of_task_inst
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_completed_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "task insts discarded :\n";
     Task_inst_id_map.iter
       (fun id data ->
-         Task_ds.To_string.debug_string_of_task_inst ~indent_level:(indent_level + 2)
-           ~buffer (id, data)
+         Task_ds.To_string.debug_string_of_task_inst
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.task_inst_discarded_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "task segs uncompleted :\n";
     Task_seg_id_map.iter
       (fun id data ->
-         Task_ds.To_string.debug_string_of_task_seg ~indent_level:(indent_level + 2)
-           ~buffer (id, data)
+         Task_ds.To_string.debug_string_of_task_seg
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.task_seg_uncompleted_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "task segs completed :\n";
     Task_seg_id_map.iter
       (fun id data ->
-         Task_ds.To_string.debug_string_of_task_seg ~indent_level:(indent_level + 2)
-           ~buffer (id, data)
+         Task_ds.To_string.debug_string_of_task_seg
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.task_seg_completed_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "task segs discarded :\n";
     Task_seg_id_map.iter
       (fun id data ->
-         Task_ds.To_string.debug_string_of_task_seg ~indent_level:(indent_level + 2)
-           ~buffer (id, data)
+         Task_ds.To_string.debug_string_of_task_seg
+           ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.task_seg_discarded_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "agenda :\n";
@@ -4333,8 +4333,8 @@ module To_string = struct
       (fun id progress ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
            (Task_ds.string_of_task_seg_id id);
-         Task_ds.To_string.debug_string_of_progress ~indent_level:(indent_level + 3)
-           ~buffer progress
+         Task_ds.To_string.debug_string_of_progress
+           ~indent_level:(indent_level + 3) ~buffer progress
          |> ignore)
       sd.store.task_seg_id_to_progress;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
@@ -4343,8 +4343,8 @@ module To_string = struct
       (fun id progress ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "id : %s\n"
            (Task_ds.string_of_task_inst_id id);
-         Task_ds.To_string.debug_string_of_progress ~indent_level:(indent_level + 3)
-           ~buffer progress
+         Task_ds.To_string.debug_string_of_progress
+           ~indent_level:(indent_level + 3) ~buffer progress
          |> ignore)
       sd.store.task_inst_id_to_progress;
     Buffer.contents buffer

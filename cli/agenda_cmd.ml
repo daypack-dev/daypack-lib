@@ -24,8 +24,8 @@ let run (list_free_time_slots : bool) : unit =
               ~display_in_time_zone:`Local end_exc
           in
           Printf.printf "| %s - %s | %s\n" start_str end_exc_str
-            (Daypack_lib.Duration.To_string.human_readable_string_of_duration
-               (Int64.sub end_exc start)))
+            (Daypack_lib.Duration.To_string
+             .human_readable_string_of_duration (Int64.sub end_exc start)))
     else
       let places_within_period =
         Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start

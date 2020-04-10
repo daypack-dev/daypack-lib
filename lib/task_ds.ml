@@ -490,7 +490,6 @@ module To_string = struct
            "[%Ld, %Ld)\n" start end_exc)
       progress.chunks;
     Buffer.contents buffer
-
 end
 
 module Print = struct
@@ -507,7 +506,8 @@ module Print = struct
     print_string (To_string.debug_string_of_task_seg ~indent_level task_seg)
 
   let debug_print_task_seg_place ?(indent_level = 0) task_seg_place =
-    print_string (To_string.debug_string_of_task_seg_place ~indent_level task_seg_place)
+    print_string
+      (To_string.debug_string_of_task_seg_place ~indent_level task_seg_place)
 
   let debug_print_progress ?(indent_level = 0) progress =
     print_string (To_string.debug_string_of_progress ~indent_level progress)

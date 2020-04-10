@@ -93,7 +93,6 @@ module To_string : sig
 
   val debug_string_of_pattern :
     ?indent_level:int -> ?buffer:Buffer.t -> t -> string
-
 end
 
 module Print : sig

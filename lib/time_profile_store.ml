@@ -113,7 +113,6 @@ module To_string = struct
              |> ignore)
           data.periods);
     Buffer.contents buffer
-
 end
 
 module Print = struct

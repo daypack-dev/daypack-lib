@@ -121,29 +121,28 @@ let ask_uint64_multi ~indent_level ~(prompt : string) : int64 list =
 let process_time_string (s : string) : (int64, string) result =
   match Daypack_lib.Time_expr.Interpret_string.time_point_expr_of_string s with
   | Error msg -> Error msg
-  | Ok expr ->
-    match
-      Daypack_lib.Time_expr.next_match_unix_time_time_point_expr ~search_in_time_zone:`Local
-        (Years_ahead_start_unix_time
-           {
-             start = Daypack_lib.Time.Current.cur_unix_time ();
-             search_years_ahead = Config.time_pattern_search_years_ahead;
-           })
-        expr
-    with
-    | Error msg -> Error msg
-    | Ok None -> Error "Failed to find a matching time"
-    | Ok (Some x) -> Ok x
+  | Ok expr -> (
+      match
+        Daypack_lib.Time_expr.next_match_unix_time_time_point_expr
+          ~search_in_time_zone:`Local
+          (Years_ahead_start_unix_time
+             {
+               start = Daypack_lib.Time.Current.cur_unix_time ();
+               search_years_ahead = Config.time_pattern_search_years_ahead;
+             })
+          expr
+      with
+      | Error msg -> Error msg
+      | Ok None -> Error "Failed to find a matching time"
+      | Ok (Some x) -> Ok x )
 
 let process_time_slot_string (s : string) : (int64 * int64, string) result =
   let cur_time = Daypack_lib.Time.Current.cur_unix_time () in
-  match
-    Daypack_lib.Time_expr.Interpret_string.of_string s
-  with
+  match Daypack_lib.Time_expr.Interpret_string.of_string s with
   | Error msg -> Error msg
   | Ok e -> (
-      match Daypack_lib.Time_expr.next_match_time_slot
-          ~search_in_time_zone:`Local
+      match
+        Daypack_lib.Time_expr.next_match_time_slot ~search_in_time_zone:`Local
           (Years_ahead_start_unix_time
              {
                start = cur_time;
@@ -153,8 +152,7 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
       with
       | Error msg -> Error msg
       | Ok None -> Error "Failed to find a matching time slot"
-      | Ok (Some x) -> Ok x
-    )
+      | Ok (Some x) -> Ok x )
 
 let ask_time ~indent_level ~(prompt : string) : int64 =
   ask ~indent_level ~prompt process_time_string

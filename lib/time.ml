@@ -380,5 +380,6 @@ end
 module Print = struct
   let debug_print_time ?(indent_level = 0) ~(display_in_time_zone : time_zone)
       (time : int64) : unit =
-    print_string (To_string.debug_string_of_time ~indent_level ~display_in_time_zone time)
+    print_string
+      (To_string.debug_string_of_time ~indent_level ~display_in_time_zone time)
 end

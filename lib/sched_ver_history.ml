@@ -445,7 +445,6 @@ module To_string = struct
 end
 
 module Print = struct
-
   let debug_print_sched_ver_history ?(indent_level = 0) (t : t) =
     print_string (To_string.debug_string_of_sched_ver_history ~indent_level t)
 end

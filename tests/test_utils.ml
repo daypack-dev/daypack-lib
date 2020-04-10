@@ -234,15 +234,7 @@ let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
   let open QCheck.Gen in
   map
     (fun (years, months, days, (hours, minutes, seconds)) ->
-       let open Daypack_lib.Time_pattern in
-       {
-         years;
-         months;
-         days;
-         hours;
-         minutes;
-         seconds;
-       })
+       Daypack_lib.Time_pattern.{ years; months; days; hours; minutes; seconds })
     (quad
        (list_size (int_bound 5) (int_range 1980 2100))
        (list_size (int_bound 5) month_gen)
@@ -271,8 +263,8 @@ let time_profile_store_gen =
 let time_profile_store =
   QCheck.make
     ~print:
-      Daypack_lib.Time_profile_store.To_string.debug_string_of_time_profile_store
-    time_profile_store_gen
+      Daypack_lib.Time_profile_store.To_string
+      .debug_string_of_time_profile_store time_profile_store_gen
 
 let task_seg_id_gen =
   let open QCheck.Gen in
@@ -332,7 +324,8 @@ let task_inst_gen = QCheck.Gen.(pair task_inst_id_gen task_inst_data_gen)
 
 let task_inst =
   let open QCheck in
-  make ~print:Daypack_lib.Task_ds.To_string.debug_string_of_task_inst task_inst_gen
+  make ~print:Daypack_lib.Task_ds.To_string.debug_string_of_task_inst
+    task_inst_gen
 
 let split_count_gen =
   let open QCheck.Gen in
@@ -417,7 +410,8 @@ let sched_req_gen : Daypack_lib.Sched_req_ds.sched_req QCheck.Gen.t =
   pair pos_int64_gen (list_size (int_bound 2) sched_req_data_unit_gen)
 
 let sched_req =
-  QCheck.make ~print:Daypack_lib.Sched_req_ds.To_string.debug_string_of_sched_req
+  QCheck.make
+    ~print:Daypack_lib.Sched_req_ds.To_string.debug_string_of_sched_req
     sched_req_gen
 
 let sched_req_record_data_unit_gen :
@@ -708,7 +702,8 @@ let task_inst_store =
         s
         |> Daypack_lib.Task_inst_id_map.to_seq
         |> List.of_seq
-        |> QCheck.Print.list Daypack_lib.Task_ds.To_string.debug_string_of_task_inst)
+        |> QCheck.Print.list
+          Daypack_lib.Task_ds.To_string.debug_string_of_task_inst)
     task_inst_store_gen
 
 let task_seg_store_gen =
@@ -723,7 +718,8 @@ let task_seg_store =
         s
         |> Daypack_lib.Task_seg_id_map.to_seq
         |> List.of_seq
-        |> QCheck.Print.list Daypack_lib.Task_ds.To_string.debug_string_of_task_seg)
+        |> QCheck.Print.list
+          Daypack_lib.Task_ds.To_string.debug_string_of_task_seg)
     task_seg_store_gen
 
 let sched_req_store_gen =
@@ -984,5 +980,6 @@ let sched_ver_history_gen =
 
 let sched_ver_history =
   QCheck.make
-    ~print:Daypack_lib.Sched_ver_history.To_string.debug_string_of_sched_ver_history
+    ~print:
+      Daypack_lib.Sched_ver_history.To_string.debug_string_of_sched_ver_history
     sched_ver_history_gen
