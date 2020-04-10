@@ -4,7 +4,7 @@ val next_match_unix_time_time_point_expr :
   search_in_time_zone:Time.time_zone ->
   search_type ->
   Time_expr_ast.time_point_expr ->
-  (int64, string) result
+  (int64 option, string) result
 
 module Interpret_string : sig
   val of_string : string -> (Time_expr_ast.t, string) result
@@ -21,6 +21,9 @@ module To_time_pattern : sig
 
   val time_pattern_of_time_expr : Time_expr_ast.t -> (Time_pattern.t, string) result
 
-  val paired_time_patterns_of_time_expr :
+  val time_pattern_pair_of_time_expr :
+    Time_expr_ast.t -> (Time_pattern.t * Time_pattern.t, string) result
+
+  val time_pattern_pairs_of_time_expr :
     Time_expr_ast.t -> ((Time_pattern.t * Time_pattern.t) list, string) result
 end
