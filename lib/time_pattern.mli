@@ -1,4 +1,4 @@
-type search_type =
+type search_param =
   | Time_slots of Time_slot_ds.t list
   | Years_ahead_start_unix_time of {
       start : int64;
@@ -31,56 +31,56 @@ type single_or_pairs =
 val empty : t
 
 val matching_tm_seq :
-  search_in_time_zone:Time.time_zone -> search_type -> t -> Unix.tm Seq.t
+  search_in_time_zone:Time.time_zone -> search_param -> t -> Unix.tm Seq.t
 
 val matching_time_slots :
-  search_in_time_zone:Time.time_zone -> search_type -> t -> Time_slot_ds.t Seq.t
+  search_in_time_zone:Time.time_zone -> search_param -> t -> Time_slot_ds.t Seq.t
 
 val next_match_tm :
-  search_in_time_zone:Time.time_zone -> search_type -> t -> Unix.tm option
+  search_in_time_zone:Time.time_zone -> search_param -> t -> Unix.tm option
 
 val next_match_unix_time :
-  search_in_time_zone:Time.time_zone -> search_type -> t -> int64 option
+  search_in_time_zone:Time.time_zone -> search_param -> t -> int64 option
 
 val next_match_time_slot :
   search_in_time_zone:Time.time_zone ->
-  search_type ->
+  search_param ->
   t ->
   (int64 * int64) option
 
 val matching_time_slots_time_pattern_pair :
   search_in_time_zone:Time.time_zone ->
-  search_type ->
+  search_param ->
   t * t ->
   Time_slot_ds.t Seq.t
 
 val next_match_time_slot_time_pattern_pair :
   search_in_time_zone:Time.time_zone ->
-  search_type ->
+  search_param ->
   t * t ->
   (int64 * int64) option
 
 val matching_time_slots_time_pattern_pairs :
   search_in_time_zone:Time.time_zone ->
-  search_type ->
+  search_param ->
   (t * t) list ->
   Time_slot_ds.t Seq.t
 
 val next_match_time_slot_time_pattern_pairs :
   search_in_time_zone:Time.time_zone ->
-  search_type ->
+  search_param ->
   (t * t) list ->
   (int64 * int64) option
 
 val matching_time_slots_single_or_pairs :
   search_in_time_zone:Time.time_zone ->
-  search_type ->
+  search_param ->
   single_or_pairs ->
   Time_slot_ds.t Seq.t
 
 val next_match_time_slot_single_or_pairs :
   search_in_time_zone:Time.time_zone ->
-  search_type ->
+  search_param ->
   single_or_pairs ->
   Time_slot_ds.t option
 
