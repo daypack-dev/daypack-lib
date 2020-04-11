@@ -2723,7 +2723,12 @@ module Recur = struct
         | Task_ds.Time_pattern_match
             (pattern, { task_inst_data; sched_req_template }) ->
           Time_pattern.matching_time_slots
-            (Time_slots { search_in_time_zone = `Local; time_slots = usable_time_slot_list}) pattern
+            (Time_slots
+               {
+                 search_in_time_zone = `Local;
+                 time_slots = usable_time_slot_list;
+               })
+            pattern
           |> Seq.map (fun (start', _end_exc) ->
               ( task_inst_data,
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:start'

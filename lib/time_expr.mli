@@ -1,19 +1,13 @@
 type search_param = Time_pattern.search_param
 
 val next_match_unix_time_time_point_expr :
-  search_param ->
-  Time_expr_ast.time_point_expr ->
-  (int64 option, string) result
+  search_param -> Time_expr_ast.time_point_expr -> (int64 option, string) result
 
 val next_match_time_slot :
-  search_param ->
-  Time_expr_ast.t ->
-  ((int64 * int64) option, string) result
+  search_param -> Time_expr_ast.t -> ((int64 * int64) option, string) result
 
 val matching_time_slots :
-  search_param ->
-  Time_expr_ast.t ->
-  ((int64 * int64) Seq.t, string) result
+  search_param -> Time_expr_ast.t -> ((int64 * int64) Seq.t, string) result
 
 module Interpret_string : sig
   val of_string : string -> (Time_expr_ast.t, string) result
