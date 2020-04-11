@@ -237,11 +237,11 @@ let merge (time_slots1 : t Seq.t) (time_slots2 : t Seq.t) : t Seq.t =
   let rec aux time_slots1 time_slots2 =
     match (time_slots1 (), time_slots2 ()) with
     | Seq.Nil, s | s, Seq.Nil -> fun () -> s
-    | Seq.Cons ((start1, end_exc1), rest1), Seq.Cons ((start2, end_exc2), rest2)
+    | (Seq.Cons ((start1, end_exc1), rest1) as ts1), (Seq.Cons ((start2, end_exc2), rest2) as ts2)
       ->
       if start1 <= start2 then fun () ->
-        Seq.Cons ((start1, end_exc1), aux rest1 time_slots2)
-      else fun () -> Seq.Cons ((start2, end_exc2), aux time_slots1 rest2)
+        Seq.Cons ((start1, end_exc1), aux rest1 (fun () -> ts2))
+      else fun () -> Seq.Cons ((start2, end_exc2), aux (fun () -> ts1) rest2)
   in
   aux time_slots1 time_slots2
 
