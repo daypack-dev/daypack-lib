@@ -1,12 +1,17 @@
 open Int64_utils
 
-type search_type =
-  | Time_slots of Time_slot_ds.t list
+type search_param =
+  | Time_slots of {
+      search_in_time_zone : Time.time_zone;
+      time_slots : Time_slot_ds.t list;
+    }
   | Years_ahead_start_unix_time of {
+      search_in_time_zone : Time.time_zone;
       start : int64;
       search_years_ahead : int;
     }
   | Years_ahead_start_tm of {
+      search_in_time_zone : Time.time_zone;
       time_zone_of_tm : Time.time_zone;
       start : Unix.tm;
       search_years_ahead : int;
@@ -40,12 +45,19 @@ let empty =
     seconds = [];
   }
 
-let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
-  : search_type =
-  match search_type with
-  | Time_slots time_slots -> (
+let get_search_in_time_zone (param : search_param) : Time.time_zone =
+  match param with
+  | Time_slots { search_in_time_zone; _ } -> search_in_time_zone
+  | Years_ahead_start_unix_time { search_in_time_zone; _ } ->
+    search_in_time_zone
+  | Years_ahead_start_tm { search_in_time_zone; _ } -> search_in_time_zone
+
+let push_search_param_to_later_start ~(start : int64)
+    (search_param : search_param) : search_param =
+  match search_param with
+  | Time_slots { search_in_time_zone; time_slots } -> (
       match Time_slot_ds.min_start_and_max_end_exc_list time_slots with
-      | None -> search_type
+      | None -> search_param
       | Some (start', end_exc') ->
         let start = max start' start in
         let time_slots =
@@ -54,15 +66,23 @@ let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
           |> Time_slot_ds.intersect (Seq.return (start, end_exc'))
           |> List.of_seq
         in
-        Time_slots time_slots )
-  | Years_ahead_start_unix_time { start = start'; search_years_ahead } ->
+        Time_slots { search_in_time_zone; time_slots } )
+  | Years_ahead_start_unix_time
+      { search_in_time_zone; start = start'; search_years_ahead } ->
     let start = max start' start in
-    Years_ahead_start_unix_time { start; search_years_ahead }
-  | Years_ahead_start_tm { time_zone_of_tm; start = start'; search_years_ahead }
-    ->
+    Years_ahead_start_unix_time
+      { search_in_time_zone; start; search_years_ahead }
+  | Years_ahead_start_tm
+      {
+        search_in_time_zone;
+        time_zone_of_tm;
+        start = start';
+        search_years_ahead;
+      } ->
     let start = max (Time.unix_time_of_tm ~time_zone_of_tm start') start in
     Years_ahead_start_tm
       {
+        search_in_time_zone;
         time_zone_of_tm;
         start = Time.tm_of_unix_time ~time_zone_of_tm start;
         search_years_ahead;
@@ -179,11 +199,10 @@ let matching_years ~search_years_ahead (t : t) (start : Unix.tm) (acc : Unix.tm)
     |> Seq.map (fun pat_year ->
         { acc with tm_year = pat_year - Time.tm_year_offset })
 
-let start_tm_and_search_years_ahead_of_search_type
-    ~(search_in_time_zone : Time.time_zone) (search_type : search_type) :
-  (Unix.tm * int) option =
-  match search_type with
-  | Time_slots time_slots -> (
+let start_tm_and_search_years_ahead_of_search_param
+    (search_param : search_param) : (Unix.tm * int) option =
+  match search_param with
+  | Time_slots { search_in_time_zone; time_slots } -> (
       match Time_slot_ds.min_start_and_max_end_exc_list time_slots with
       | None -> None
       | Some (start, end_exc) ->
@@ -195,12 +214,14 @@ let start_tm_and_search_years_ahead_of_search_type
         in
         let search_years_ahead = end_exc_tm.tm_year - start_tm.tm_year + 1 in
         Some (start_tm, search_years_ahead) )
-  | Years_ahead_start_unix_time { start; search_years_ahead } ->
+  | Years_ahead_start_unix_time
+      { search_in_time_zone; start; search_years_ahead } ->
     let start_tm =
       Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone start
     in
     Some (start_tm, search_years_ahead)
-  | Years_ahead_start_tm { time_zone_of_tm; start; search_years_ahead } ->
+  | Years_ahead_start_tm
+      { search_in_time_zone; time_zone_of_tm; start; search_years_ahead } ->
     let start =
       start
       |> Time.unix_time_of_tm ~time_zone_of_tm
@@ -208,12 +229,8 @@ let start_tm_and_search_years_ahead_of_search_type
     in
     Some (start, search_years_ahead)
 
-let matching_tm_seq ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (t : t) : Unix.tm Seq.t =
-  match
-    start_tm_and_search_years_ahead_of_search_type ~search_in_time_zone
-      search_type
-  with
+let matching_tm_seq (search_param : search_param) (t : t) : Unix.tm Seq.t =
+  match start_tm_and_search_years_ahead_of_search_param search_param with
   | None -> Seq.empty
   | Some (start, search_years_ahead) ->
     (* let start = Time.zero_tm_sec start in *)
@@ -224,14 +241,15 @@ let matching_tm_seq ~(search_in_time_zone : Time.time_zone)
     |> Seq.flat_map (fun acc -> matching_minutes t start acc)
     |> Seq.flat_map (fun acc -> matching_seconds t start acc)
 
-let matching_time_slots ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (t : t) : Time_slot_ds.t Seq.t =
+let matching_time_slots (search_param : search_param) (t : t) :
+  Time_slot_ds.t Seq.t =
   let time_slots =
-    match search_type with
-    | Time_slots time_slots -> Some time_slots
+    match search_param with
+    | Time_slots { time_slots; _ } -> Some time_slots
     | _ -> None
   in
-  matching_tm_seq ~search_in_time_zone search_type t
+  let search_in_time_zone = get_search_in_time_zone search_param in
+  matching_tm_seq search_param t
   |> Seq.map (Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone)
   |> Seq.map (fun time -> (time, time +^ 1L))
   |> (fun l ->
@@ -240,74 +258,62 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
       | Some time_slots -> Time_slot_ds.intersect (List.to_seq time_slots) l)
   |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
 
-let next_match_tm ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (t : t) : Unix.tm option =
-  match (matching_tm_seq ~search_in_time_zone search_type t) () with
+let next_match_tm (search_param : search_param) (t : t) : Unix.tm option =
+  match (matching_tm_seq search_param t) () with
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let next_match_unix_time ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (t : t) : int64 option =
-  next_match_tm ~search_in_time_zone search_type t
+let next_match_unix_time (search_param : search_param) (t : t) : int64 option =
+  let search_in_time_zone = get_search_in_time_zone search_param in
+  next_match_tm search_param t
   |> Option.map (Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone)
 
-let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (t : t) : (int64 * int64) option =
-  match matching_time_slots ~search_in_time_zone search_type t () with
+let next_match_time_slot (search_param : search_param) (t : t) :
+  (int64 * int64) option =
+  match matching_time_slots search_param t () with
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let matching_time_slots_time_pattern_pair
-    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+let matching_time_slots_time_pattern_pair (search_param : search_param)
     ((t1, t2) : t * t) : Time_slot_ds.t Seq.t =
-  matching_time_slots ~search_in_time_zone search_type t1
+  matching_time_slots search_param t1
   |> Seq.filter_map (fun (start, _) ->
-      let search_type = push_search_type_to_later_start ~start search_type in
-      match matching_time_slots ~search_in_time_zone search_type t2 () with
+      let search_param =
+        push_search_param_to_later_start ~start search_param
+      in
+      match matching_time_slots search_param t2 () with
       | Seq.Nil -> None
       | Seq.Cons ((end_exc, _), _) -> Some (start, end_exc))
 
-let next_match_time_slot_time_pattern_pair
-    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+let next_match_time_slot_time_pattern_pair (search_param : search_param)
     ((t1, t2) : t * t) : (int64 * int64) option =
-  match
-    matching_time_slots_time_pattern_pair ~search_in_time_zone search_type
-      (t1, t2) ()
-  with
+  match matching_time_slots_time_pattern_pair search_param (t1, t2) () with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
-let matching_time_slots_time_pattern_pairs
-    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+let matching_time_slots_time_pattern_pairs (search_param : search_param)
     (l : (t * t) list) : Time_slot_ds.t Seq.t =
   l
   |> List.to_seq
-  |> Seq.map
-    (matching_time_slots_time_pattern_pair ~search_in_time_zone search_type)
+  |> Seq.map (matching_time_slots_time_pattern_pair search_param)
   |> Time_slot_ds.merge_multi_seq
 
-let next_match_time_slot_time_pattern_pairs
-    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+let next_match_time_slot_time_pattern_pairs (search_param : search_param)
     (l : (t * t) list) : (int64 * int64) option =
-  match
-    matching_time_slots_time_pattern_pairs ~search_in_time_zone search_type l ()
-  with
+  match matching_time_slots_time_pattern_pairs search_param l () with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
-let matching_time_slots_single_or_pairs ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (x : single_or_pairs) : Time_slot_ds.t Seq.t =
+let matching_time_slots_single_or_pairs (search_param : search_param)
+    (x : single_or_pairs) : Time_slot_ds.t Seq.t =
   match x with
-  | Single_time_pattern pat ->
-    matching_time_slots ~search_in_time_zone search_type pat
+  | Single_time_pattern pat -> matching_time_slots search_param pat
   | Paired_time_patterns l ->
-    matching_time_slots_time_pattern_pairs ~search_in_time_zone search_type l
+    matching_time_slots_time_pattern_pairs search_param l
 
-let next_match_time_slot_single_or_pairs ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (x : single_or_pairs) : Time_slot_ds.t option =
-  match
-    matching_time_slots_single_or_pairs ~search_in_time_zone search_type x ()
-  with
+let next_match_time_slot_single_or_pairs (search_param : search_param)
+    (x : single_or_pairs) : Time_slot_ds.t option =
+  match matching_time_slots_single_or_pairs search_param x () with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 

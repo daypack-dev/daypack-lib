@@ -1,6 +1,6 @@
 open Time_expr_ast
 
-type search_type = Time_pattern.search_type
+type search_param = Time_pattern.search_param
 
 module Interpret_string = struct
   let parse lexbuf : t = Time_expr_parser.parse Time_expr_lexer.read lexbuf
@@ -261,24 +261,20 @@ module To_time_pattern_lossy = struct
     | Error msg -> Error msg
 end
 
-let next_match_unix_time_time_point_expr ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (e : time_point_expr) :
-  (int64 option, string) result =
+let next_match_unix_time_time_point_expr (search_param : search_param)
+    (e : time_point_expr) : (int64 option, string) result =
   match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
   | Error msg -> Error msg
-  | Ok pat ->
-    Ok
-      (Time_pattern.next_match_unix_time ~search_in_time_zone search_type pat)
+  | Ok pat -> Ok (Time_pattern.next_match_unix_time search_param pat)
 
-let matching_time_slots ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (e : t) : (Time_slot_ds.t Seq.t, string) result
-  =
+let matching_time_slots (search_param : search_param) (e : t) :
+  (Time_slot_ds.t Seq.t, string) result =
   match e with
   | Time_point_expr e -> (
       match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
       | Error msg -> Error msg
       | Ok pat ->
-        Time_pattern.matching_time_slots ~search_in_time_zone search_type pat
+        Time_pattern.matching_time_slots search_param pat
         |> OSeq.take 1
         |> Result.ok )
   | Time_slots_expr e -> (
@@ -295,8 +291,7 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
       | Ok l ->
         l
         |> List.map
-          (Time_pattern.matching_time_slots_time_pattern_pair
-             ~search_in_time_zone search_type)
+          (Time_pattern.matching_time_slots_time_pattern_pair search_param)
         |> Time_slot_ds.collect_round_robin_non_decreasing
         |> (match take_count with None -> fun x -> x | Some n -> OSeq.take n)
         |> OSeq.take_while (List.for_all Option.is_some)
@@ -304,13 +299,9 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
         |> Seq.map Option.get
         |> Result.ok )
 
-let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (e : t) :
+let next_match_time_slot (search_param : search_param) (e : t) :
   ((int64 * int64) option, string) result =
-  match matching_time_slots ~search_in_time_zone
-          search_type e with
+  match matching_time_slots search_param e with
   | Error msg -> Error msg
-  | Ok seq ->
-    match seq () with
-    | Seq.Nil -> Ok None
-    | Seq.Cons (x, _) -> Ok (Some x)
+  | Ok seq -> (
+      match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
