@@ -270,16 +270,6 @@ let next_match_unix_time_time_point_expr ~(search_in_time_zone : Time.time_zone)
     Ok
       (Time_pattern.next_match_unix_time ~search_in_time_zone search_type pat)
 
-let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (e : t) :
-  ((int64 * int64) option, string) result =
-  match To_time_pattern_lossy.single_or_pairs_of_time_expr e with
-  | Error msg -> Error msg
-  | Ok p ->
-    Ok
-      (Time_pattern.next_match_time_slot_single_or_pairs ~search_in_time_zone
-         search_type p)
-
 let matching_time_slots ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (e : t) : (Time_slot_ds.t Seq.t, string) result
   =
@@ -313,3 +303,14 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
         |> Seq.flat_map List.to_seq
         |> Seq.map Option.get
         |> Result.ok )
+
+let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type) (e : t) :
+  ((int64 * int64) option, string) result =
+  match matching_time_slots ~search_in_time_zone
+          search_type e with
+  | Error msg -> Error msg
+  | Ok seq ->
+    match seq () with
+    | Seq.Nil -> Ok None
+    | Seq.Cons (x, _) -> Ok (Some x)
