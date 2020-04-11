@@ -292,6 +292,11 @@ let merge_multi_list_round_robin_non_decreasing (batches : t Seq.t list) : t Seq
   in
   aux None batches
 
+let merge_multi_seq_round_robin_non_decreasing (batches : t Seq.t Seq.t) : t Seq.t =
+  batches
+  |> List.of_seq
+  |> merge_multi_list_round_robin_non_decreasing
+
 let union time_slots1 time_slots2 =
   merge time_slots1 time_slots2 |> normalize ~skip_filter:true ~skip_sort:true
 
