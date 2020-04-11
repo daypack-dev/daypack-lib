@@ -306,13 +306,14 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
       | Error msg -> Error msg
       | Ok l ->
         l
-        |> List.to_seq
-        |> Seq.map (Time_pattern.matching_time_slots_time_pattern_pair ~search_in_time_zone search_type)
+        |> List.map (Time_pattern.matching_time_slots_time_pattern_pair ~search_in_time_zone search_type)
+        |> Time_slot_ds.collect_round_robin_non_decreasing
         |> (match take_count with
             | None -> fun x -> x
-            | Some n -> Seq.map (OSeq.take n)
+            | Some n -> OSeq.take n
           )
-        |> Time_slot_ds.merge_multi_seq_round_robin_non_decreasing
+        |> OSeq.take_while (List.for_all Option.is_some)
+        |> Seq.flat_map (List.to_seq)
+        |> Seq.map Option.get
         |> Result.ok
     )
-
