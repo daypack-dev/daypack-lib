@@ -253,55 +253,46 @@ let merge_multi_seq (time_slot_batches : t Seq.t Seq.t) : t Seq.t =
 let merge_multi_list (time_slot_batches : t Seq.t list) : t Seq.t =
   List.to_seq time_slot_batches |> merge_multi_seq
 
-let collect_round_robin_non_decreasing (batches : t Seq.t list) : (t option list) Seq.t =
+let collect_round_robin_non_decreasing (batches : t Seq.t list) :
+  t option list Seq.t =
   let rec get_usable_part (cur_start : int64) (seq : t Seq.t) : t Seq.t =
     match seq () with
     | Seq.Nil -> Seq.empty
     | Seq.Cons ((start, end_exc), rest) as s ->
-      if cur_start <= start then
-        fun () -> s
-      else
-        if end_exc <= cur_start then
-          get_usable_part cur_start rest
-        else
-          fun () -> Seq.Cons ((cur_start, end_exc), rest)
+      if cur_start <= start then fun () -> s
+      else if end_exc <= cur_start then get_usable_part cur_start rest
+      else fun () -> Seq.Cons ((cur_start, end_exc), rest)
   in
-  let rec aux (cur_start : int64 option) (batches : t Seq.t list) : (t option list) Seq.t =
+  let rec aux (cur_start : int64 option) (batches : t Seq.t list) :
+    t option list Seq.t =
     let cur_start, acc, new_batches =
-      List.fold_left (fun (cur_start, acc, new_batches) seq ->
-          let usable =
-            match cur_start with
-            | None -> seq
-            | Some cur_start ->
-              get_usable_part cur_start seq
-          in
-          match usable () with
-          | Seq.Nil -> (cur_start, None :: acc, new_batches)
-          | Seq.Cons ((start, end_exc), rest) ->
-            (Some start, Some (start, end_exc) :: acc, rest :: new_batches)
-        )
-        (cur_start, [], [])
-        batches
+      List.fold_left
+        (fun (cur_start, acc, new_batches) seq ->
+           let usable =
+             match cur_start with
+             | None -> seq
+             | Some cur_start -> get_usable_part cur_start seq
+           in
+           match usable () with
+           | Seq.Nil -> (cur_start, None :: acc, new_batches)
+           | Seq.Cons ((start, end_exc), rest) ->
+             (Some start, Some (start, end_exc) :: acc, rest :: new_batches))
+        (cur_start, [], []) batches
     in
-    let acc =
-      List.rev acc
-    in
+    let acc = List.rev acc in
     let new_batches = List.rev new_batches in
     fun () -> Seq.Cons (acc, aux cur_start new_batches)
   in
   aux None batches
 
-let merge_multi_list_round_robin_non_decreasing (batches : t Seq.t list) : t Seq.t =
+let merge_multi_list_round_robin_non_decreasing (batches : t Seq.t list) :
+  t Seq.t =
   collect_round_robin_non_decreasing batches
-  |> Seq.flat_map (fun l ->
-      List.to_seq l
-      |> Seq.filter_map (fun x -> x)
-    )
+  |> Seq.flat_map (fun l -> List.to_seq l |> Seq.filter_map (fun x -> x))
 
-let merge_multi_seq_round_robin_non_decreasing (batches : t Seq.t Seq.t) : t Seq.t =
-  batches
-  |> List.of_seq
-  |> merge_multi_list_round_robin_non_decreasing
+let merge_multi_seq_round_robin_non_decreasing (batches : t Seq.t Seq.t) :
+  t Seq.t =
+  batches |> List.of_seq |> merge_multi_list_round_robin_non_decreasing
 
 let union time_slots1 time_slots2 =
   merge time_slots1 time_slots2 |> normalize ~skip_filter:true ~skip_sort:true

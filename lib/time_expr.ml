@@ -281,8 +281,8 @@ let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
          search_type p)
 
 let matching_time_slots ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (e : t) :
-  (Time_slot_ds.t Seq.t, string) result =
+    (search_type : search_type) (e : t) : (Time_slot_ds.t Seq.t, string) result
+  =
   match e with
   | Time_point_expr e -> (
       match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
@@ -290,30 +290,26 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
       | Ok pat ->
         Time_pattern.matching_time_slots ~search_in_time_zone search_type pat
         |> OSeq.take 1
-        |> Result.ok
-    )
+        |> Result.ok )
   | Time_slots_expr e -> (
       let take_count =
         match e with
-        | Single_time_slot _
-        | Day_list_and_hour_minutes _
+        | Single_time_slot _ | Day_list_and_hour_minutes _
         | Day_range_and_hour_minutes _
         | Month_list_and_month_day_list_and_hour_minutes _
-        | Month_list_and_weekday_list_and_hour_minutes _
-          -> Some 1
+        | Month_list_and_weekday_list_and_hour_minutes _ ->
+          Some 1
       in
       match To_time_pattern_lossy.time_pattern_pairs_of_time_slots_expr e with
       | Error msg -> Error msg
       | Ok l ->
         l
-        |> List.map (Time_pattern.matching_time_slots_time_pattern_pair ~search_in_time_zone search_type)
+        |> List.map
+          (Time_pattern.matching_time_slots_time_pattern_pair
+             ~search_in_time_zone search_type)
         |> Time_slot_ds.collect_round_robin_non_decreasing
-        |> (match take_count with
-            | None -> fun x -> x
-            | Some n -> OSeq.take n
-          )
+        |> (match take_count with None -> fun x -> x | Some n -> OSeq.take n)
         |> OSeq.take_while (List.for_all Option.is_some)
-        |> Seq.flat_map (List.to_seq)
+        |> Seq.flat_map List.to_seq
         |> Seq.map Option.get
-        |> Result.ok
-    )
+        |> Result.ok )
