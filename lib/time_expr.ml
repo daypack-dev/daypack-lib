@@ -312,7 +312,7 @@ let matching_time_slots ~(search_in_time_zone : Time.time_zone)
             | None -> fun x -> x
             | Some n -> Seq.map (OSeq.take n)
           )
-        |> Time_slot_ds.merge_multi_seq
+        |> Time_slot_ds.merge_multi_seq_round_robin_non_decreasing
         |> Result.ok
     )
 
