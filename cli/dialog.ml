@@ -124,9 +124,9 @@ let process_time_string (s : string) : (int64, string) result =
   | Ok expr -> (
       match
         Daypack_lib.Time_expr.next_match_unix_time_time_point_expr
-          ~search_in_time_zone:`Local
           (Years_ahead_start_unix_time
              {
+               search_in_time_zone = `Local;
                start = Daypack_lib.Time.Current.cur_unix_time ();
                search_years_ahead = Config.time_pattern_search_years_ahead;
              })
@@ -142,9 +142,10 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
   | Error msg -> Error msg
   | Ok e -> (
       match
-        Daypack_lib.Time_expr.next_match_time_slot ~search_in_time_zone:`Local
+        Daypack_lib.Time_expr.next_match_time_slot
           (Years_ahead_start_unix_time
              {
+               search_in_time_zone = `Local;
                start = cur_time;
                search_years_ahead = Config.time_pattern_search_years_ahead;
              })
