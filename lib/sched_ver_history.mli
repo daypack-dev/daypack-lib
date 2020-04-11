@@ -114,9 +114,11 @@ module Deserialize : sig
   val read_from_dir : dir:string -> (t, string) result
 end
 
-module Print : sig
+module To_string : sig
   val debug_string_of_sched_ver_history :
     ?indent_level:int -> ?buffer:Buffer.t -> t -> string
+end
 
+module Print : sig
   val debug_print_sched_ver_history : ?indent_level:int -> t -> unit
 end

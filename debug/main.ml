@@ -785,8 +785,10 @@ let debug_time_pattern_matching_time_slots () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        (Time.Print.date_string_of_time ~display_in_time_zone:`Local start)
-        (Time.Print.date_string_of_time ~display_in_time_zone:`Local end_exc))
+        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
+           start)
+        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
+           end_exc))
 
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
@@ -819,8 +821,10 @@ let debug_time_profile_matching_time_slots_of_periods () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        (Time.Print.date_string_of_time ~display_in_time_zone:`Local start)
-        (Time.Print.date_string_of_time ~display_in_time_zone:`Local end_exc))
+        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
+           start)
+        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
+           end_exc))
 
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";

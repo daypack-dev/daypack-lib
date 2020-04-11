@@ -70,7 +70,7 @@ module Interpret_string = struct
             | Error () -> Error "Failed to interpret string as duration" ) )
 end
 
-module Print = struct
+module To_string = struct
   let human_readable_string_of_duration (duration : int64) : string =
     let minutes = Int64.div duration 60L in
     let hours = Int64.div minutes 60L in

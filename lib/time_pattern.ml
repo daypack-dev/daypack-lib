@@ -26,6 +26,20 @@ type t = {
   seconds : int list;
 }
 
+type single_or_pairs =
+  | Single_time_pattern of t
+  | Paired_time_patterns of (t * t) list
+
+let empty =
+  {
+    years = [];
+    months = [];
+    days = `Month_days [];
+    hours = [];
+    minutes = [];
+    seconds = [];
+  }
+
 let push_search_type_to_later_start ~(start : int64) (search_type : search_type)
   : search_type =
   match search_type with
@@ -110,7 +124,7 @@ let matching_hours (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
 
 let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let year = acc.tm_year + Time.tm_year_offset in
-  let month = Time.month_of_tm_int acc.tm_mon in
+  let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
   let day_count = Time.day_count_of_month ~year ~month in
   let start =
     if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
@@ -135,7 +149,9 @@ let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
 
 let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
-    if acc.tm_year = start.tm_year then Time.month_of_tm_int start.tm_mon else `Jan
+    if acc.tm_year = start.tm_year then
+      Time.month_of_tm_int start.tm_mon |> Result.get_ok
+    else `Jan
   in
   match t.months with
   | [] ->
@@ -230,7 +246,7 @@ let next_match_tm ~(search_in_time_zone : Time.time_zone)
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let next_match_int64 ~(search_in_time_zone : Time.time_zone)
+let next_match_unix_time ~(search_in_time_zone : Time.time_zone)
     (search_type : search_type) (t : t) : int64 option =
   next_match_tm ~search_in_time_zone search_type t
   |> Option.map (Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone)
@@ -241,19 +257,56 @@ let next_match_time_slot ~(search_in_time_zone : Time.time_zone)
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let matching_time_slots_paired_pattern ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (t1 : t) (t2 : t) : Time_slot_ds.t Seq.t =
+let matching_time_slots_time_pattern_pair
+    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+    ((t1, t2) : t * t) : Time_slot_ds.t Seq.t =
   matching_time_slots ~search_in_time_zone search_type t1
   |> Seq.filter_map (fun (start, _) ->
       let search_type = push_search_type_to_later_start ~start search_type in
       match matching_time_slots ~search_in_time_zone search_type t2 () with
       | Seq.Nil -> None
-      | Seq.Cons ((_, end_exc), _) -> Some (start, end_exc))
+      | Seq.Cons ((end_exc, _), _) -> Some (start, end_exc))
 
-let next_match_time_slot_paired_pattern ~(search_in_time_zone : Time.time_zone)
-    (search_type : search_type) (t1 : t) (t2 : t) : (int64 * int64) option =
+let next_match_time_slot_time_pattern_pair
+    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+    ((t1, t2) : t * t) : (int64 * int64) option =
   match
-    matching_time_slots_paired_pattern ~search_in_time_zone search_type t1 t2 ()
+    matching_time_slots_time_pattern_pair ~search_in_time_zone search_type
+      (t1, t2) ()
+  with
+  | Seq.Nil -> None
+  | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
+
+let matching_time_slots_time_pattern_pairs
+    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+    (l : (t * t) list) : Time_slot_ds.t Seq.t =
+  l
+  |> List.to_seq
+  |> Seq.map
+    (matching_time_slots_time_pattern_pair ~search_in_time_zone search_type)
+  |> Time_slot_ds.merge_multi_seq
+
+let next_match_time_slot_time_pattern_pairs
+    ~(search_in_time_zone : Time.time_zone) (search_type : search_type)
+    (l : (t * t) list) : (int64 * int64) option =
+  match
+    matching_time_slots_time_pattern_pairs ~search_in_time_zone search_type l ()
+  with
+  | Seq.Nil -> None
+  | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
+
+let matching_time_slots_single_or_pairs ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type) (x : single_or_pairs) : Time_slot_ds.t Seq.t =
+  match x with
+  | Single_time_pattern pat ->
+    matching_time_slots ~search_in_time_zone search_type pat
+  | Paired_time_patterns l ->
+    matching_time_slots_time_pattern_pairs ~search_in_time_zone search_type l
+
+let next_match_time_slot_single_or_pairs ~(search_in_time_zone : Time.time_zone)
+    (search_type : search_type) (x : single_or_pairs) : Time_slot_ds.t option =
+  match
+    matching_time_slots_single_or_pairs ~search_in_time_zone search_type x ()
   with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
@@ -286,133 +339,6 @@ module Deserialize = struct
     }
 end
 
-module Interpret_string = struct
-  let check_hour x = assert (x < 24)
-
-  let check_minute x = assert (x < 60)
-
-  let of_date_time_string (s : string) : (t, unit) result =
-    try
-      Scanf.sscanf s "%d-%d-%d%c%d:%d" (fun year month day _sep hour minute ->
-          check_hour hour;
-          check_minute minute;
-          let month = Time.month_of_human_int month in
-          Ok
-            {
-              years = [ year ];
-              months = [ month ];
-              days = `Month_days [ day ];
-              hours = [ hour ];
-              minutes = [ minute ];
-              seconds = [];
-            })
-    with _ -> (
-        try
-          Scanf.sscanf s "%d-%d%c%d:%d" (fun month day _sep hour minute ->
-              check_hour hour;
-              check_minute minute;
-              let month = Time.month_of_human_int month in
-              Ok
-                {
-                  years = [];
-                  months = [ month ];
-                  days = `Month_days [ day ];
-                  hours = [ hour ];
-                  minutes = [ minute ];
-                  seconds = [];
-                })
-        with _ -> (
-            try
-              Scanf.sscanf s "%d%c%d:%d" (fun day _sep hour minute ->
-                  check_hour hour;
-                  check_minute minute;
-                  Ok
-                    {
-                      years = [];
-                      months = [];
-                      days = `Month_days [ day ];
-                      hours = [ hour ];
-                      minutes = [ minute ];
-                      seconds = [];
-                    })
-            with _ -> (
-                try
-                  Scanf.sscanf s "%d:%d" (fun hour minute ->
-                      check_hour hour;
-                      check_minute minute;
-                      Ok
-                        {
-                          years = [];
-                          months = [];
-                          days = `Month_days [];
-                          hours = [ hour ];
-                          minutes = [ minute ];
-                          seconds = [];
-                        })
-                with _ -> Error () ) ) )
-
-  let of_weekday_time_string (s : string) : (t, unit) result =
-    try
-      Scanf.sscanf s "%[a-zA-Z]%c%d:%d" (fun maybe_weekday _sep hour minute ->
-          check_hour hour;
-          check_minute minute;
-          let weekday =
-            Time.Interpret_string.weekday_of_string maybe_weekday
-            |> Result.get_ok
-          in
-          Ok
-            {
-              years = [];
-              months = [];
-              days = `Weekdays [ weekday ];
-              hours = [ hour ];
-              minutes = [ minute ];
-              seconds = [];
-            })
-    with _ -> Error ()
-
-  let of_weekday_string (s : string) : (t, unit) result =
-    try
-      let weekday =
-        Time.Interpret_string.weekday_of_string s |> Result.get_ok
-      in
-      Ok
-        {
-          years = [];
-          months = [];
-          days = `Weekdays [ weekday ];
-          hours = [];
-          minutes = [];
-          seconds = [];
-        }
-    with _ -> Error ()
-
-  let of_string (s : string) : (t, string) result =
-    match of_date_time_string s with
-    | Ok x -> Ok x
-    | Error () -> (
-        match of_weekday_time_string s with
-        | Ok x -> Ok x
-        | Error () -> (
-            match of_weekday_string s with
-            | Ok x -> Ok x
-            | Error () -> Error "Failed to interpret string as a time pattern" )
-      )
-
-  let paired_pattern_of_string (s : string) : (t * t, string) result =
-    try
-      Scanf.sscanf s "%[^, ]%[, ]%[^, ]" (fun start _sep end_exc ->
-          match of_string start with
-          | Error _ -> Error "Failed to interpret start string as a time pattern"
-          | Ok start ->
-            match of_string end_exc with
-            | Error _ -> Error "Failed to interpret end exc string as a time pattern"
-            | Ok end_exc -> Ok (start, end_exc)
-        )
-    with
-    _ -> Error "Failed to interpret string as time pattern pair"
-end
-
 module Equal = struct
   let equal (pat1 : t) (pat2 : t) : bool =
     List.sort compare pat1.years = List.sort compare pat2.years
@@ -427,11 +353,11 @@ module Equal = struct
     && List.sort compare pat1.minutes = List.sort compare pat2.minutes
 end
 
-module Print = struct
+module To_string = struct
   let debug_string_of_days (days : days) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_weekdays l =
-      String.concat "," (List.map Time.Print.string_of_weekday l)
+      String.concat "," (List.map Time.To_string.string_of_weekday l)
     in
     match days with
     | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)
@@ -441,7 +367,7 @@ module Print = struct
       (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_months l =
-      String.concat "," (List.map Time.Print.string_of_month l)
+      String.concat "," (List.map Time.To_string.string_of_month l)
     in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "year : [%s]\n"
@@ -457,7 +383,9 @@ module Print = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "sec : [%s]\n"
       (aux t.seconds);
     Buffer.contents buffer
+end
 
+module Print = struct
   let debug_print_pattern ?(indent_level = 0) t =
-    print_string (debug_string_of_pattern ~indent_level t)
+    print_string (To_string.debug_string_of_pattern ~indent_level t)
 end

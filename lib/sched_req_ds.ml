@@ -199,10 +199,10 @@ module Deserialize = struct
       sched_req_record_data_unit
 end
 
-module Print = struct
+module To_string = struct
   let debug_string_of_sched_req_data_unit ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data =
-    Sched_req_data_unit_skeleton.Print
+    Sched_req_data_unit_skeleton.To_string
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
           Printf.sprintf "id : %s, len : %Ld\n"
@@ -230,7 +230,7 @@ module Print = struct
 
   let debug_string_of_sched_req_record_data_unit ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data =
-    Sched_req_data_unit_skeleton.Print
+    Sched_req_data_unit_skeleton.To_string
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
           Printf.sprintf "id : %s, len : %Ld\n"
@@ -257,27 +257,33 @@ module Print = struct
       ~buffer req_data_list
     |> ignore;
     Buffer.contents buffer
+end
 
+module Print = struct
   let debug_print_sched_req_data_unit ?(indent_level = 0) sched_req_data_unit =
     print_string
-      (debug_string_of_sched_req_data_unit ~indent_level sched_req_data_unit)
+      (To_string.debug_string_of_sched_req_data_unit ~indent_level
+         sched_req_data_unit)
 
   let debug_print_sched_req_data ?(indent_level = 0) sched_req_data =
-    print_string (debug_string_of_sched_req_data ~indent_level sched_req_data)
+    print_string
+      (To_string.debug_string_of_sched_req_data ~indent_level sched_req_data)
 
   let debug_print_sched_req ?(indent_level = 0) sched_req =
-    print_string (debug_string_of_sched_req ~indent_level sched_req)
+    print_string (To_string.debug_string_of_sched_req ~indent_level sched_req)
 
   let debug_print_sched_req_record_data_unit ?(indent_level = 0)
       sched_req_data_unit =
     print_string
-      (debug_string_of_sched_req_record_data_unit ~indent_level
+      (To_string.debug_string_of_sched_req_record_data_unit ~indent_level
          sched_req_data_unit)
 
   let debug_print_sched_req_record_data ?(indent_level = 0) sched_req_data =
     print_string
-      (debug_string_of_sched_req_record_data ~indent_level sched_req_data)
+      (To_string.debug_string_of_sched_req_record_data ~indent_level
+         sched_req_data)
 
   let debug_print_sched_req_record ?(indent_level = 0) sched_req =
-    print_string (debug_string_of_sched_req_record ~indent_level sched_req)
+    print_string
+      (To_string.debug_string_of_sched_req_record ~indent_level sched_req)
 end

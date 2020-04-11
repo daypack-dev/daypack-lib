@@ -24,6 +24,12 @@ type t = {
   seconds : int list;
 }
 
+type single_or_pairs =
+  | Single_time_pattern of t
+  | Paired_time_patterns of (t * t) list
+
+val empty : t
+
 val matching_tm_seq :
   search_in_time_zone:Time.time_zone -> search_type -> t -> Unix.tm Seq.t
 
@@ -33,7 +39,7 @@ val matching_time_slots :
 val next_match_tm :
   search_in_time_zone:Time.time_zone -> search_type -> t -> Unix.tm option
 
-val next_match_int64 :
+val next_match_unix_time :
   search_in_time_zone:Time.time_zone -> search_type -> t -> int64 option
 
 val next_match_time_slot :
@@ -42,36 +48,54 @@ val next_match_time_slot :
   t ->
   (int64 * int64) option
 
-val matching_time_slots_paired_pattern :
+val matching_time_slots_time_pattern_pair :
   search_in_time_zone:Time.time_zone ->
   search_type ->
-  t ->
-  t ->
+  t * t ->
   Time_slot_ds.t Seq.t
 
-val next_match_time_slot_paired_pattern :
+val next_match_time_slot_time_pattern_pair :
   search_in_time_zone:Time.time_zone ->
   search_type ->
-  t ->
-  t ->
+  t * t ->
   (int64 * int64) option
 
-module Interpret_string : sig
-  val of_string : string -> (t, string) result
+val matching_time_slots_time_pattern_pairs :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  (t * t) list ->
+  Time_slot_ds.t Seq.t
 
-  val paired_pattern_of_string : string -> (t * t, string) result
-end
+val next_match_time_slot_time_pattern_pairs :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  (t * t) list ->
+  (int64 * int64) option
+
+val matching_time_slots_single_or_pairs :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  single_or_pairs ->
+  Time_slot_ds.t Seq.t
+
+val next_match_time_slot_single_or_pairs :
+  search_in_time_zone:Time.time_zone ->
+  search_type ->
+  single_or_pairs ->
+  Time_slot_ds.t option
 
 module Equal : sig
   val equal : t -> t -> bool
 end
 
-module Print : sig
+module To_string : sig
   val debug_string_of_days : days -> string
 
   val debug_string_of_pattern :
     ?indent_level:int -> ?buffer:Buffer.t -> t -> string
+end
 
+module Print : sig
   val debug_print_pattern : ?indent_level:int -> t -> unit
 end
 

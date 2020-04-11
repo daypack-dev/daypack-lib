@@ -19,6 +19,12 @@ val merge_multi_seq : t Seq.t Seq.t -> t Seq.t
 
 val merge_multi_list : t Seq.t list -> t Seq.t
 
+val collect_round_robin_non_decreasing : t Seq.t list -> t option list Seq.t
+
+val merge_multi_seq_round_robin_non_decreasing : t Seq.t Seq.t -> t Seq.t
+
+val merge_multi_list_round_robin_non_decreasing : t Seq.t list -> t Seq.t
+
 val intersect : t Seq.t -> t Seq.t -> t Seq.t
 
 val union : t Seq.t -> t Seq.t -> t Seq.t

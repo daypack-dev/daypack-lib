@@ -431,18 +431,20 @@ module Deserialize = struct
     | _ -> Error "Failed to read from directory"
 end
 
-module Print = struct
+module To_string = struct
   let debug_string_of_sched_ver_history ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (t : t) =
     Debug_print.bprintf ~indent_level buffer "sched ver history\n";
     List.iter
       (fun sched ->
-         Sched.Print.debug_string_of_sched ~indent_level:(indent_level + 1)
+         Sched.To_string.debug_string_of_sched ~indent_level:(indent_level + 1)
            ~buffer sched
          |> ignore)
       (List.rev t.history);
     Buffer.contents buffer
+end
 
+module Print = struct
   let debug_print_sched_ver_history ?(indent_level = 0) (t : t) =
-    print_string (debug_string_of_sched_ver_history ~indent_level t)
+    print_string (To_string.debug_string_of_sched_ver_history ~indent_level t)
 end

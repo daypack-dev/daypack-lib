@@ -119,54 +119,40 @@ let ask_uint64_multi ~indent_level ~(prompt : string) : int64 list =
       with Failure msg -> Error msg)
 
 let process_time_string (s : string) : (int64, string) result =
-  match Daypack_lib.Time_pattern.Interpret_string.of_string s with
+  match Daypack_lib.Time_expr.Interpret_string.time_point_expr_of_string s with
   | Error msg -> Error msg
-  | Ok pat -> (
+  | Ok expr -> (
       match
-        Daypack_lib.Time_pattern.next_match_int64 ~search_in_time_zone:`Local
+        Daypack_lib.Time_expr.next_match_unix_time_time_point_expr
+          ~search_in_time_zone:`Local
           (Years_ahead_start_unix_time
              {
                start = Daypack_lib.Time.Current.cur_unix_time ();
                search_years_ahead = Config.time_pattern_search_years_ahead;
              })
-          pat
+          expr
       with
-      | None -> Error "Failed to find matching time"
-      | Some time -> Ok time )
+      | Error msg -> Error msg
+      | Ok None -> Error "Failed to find a matching time"
+      | Ok (Some x) -> Ok x )
 
 let process_time_slot_string (s : string) : (int64 * int64, string) result =
   let cur_time = Daypack_lib.Time.Current.cur_unix_time () in
-  match Daypack_lib.Time_pattern.Interpret_string.paired_pattern_of_string s with
-  | Ok (start_pat, end_exc_pat) -> (
+  match Daypack_lib.Time_expr.Interpret_string.of_string s with
+  | Error msg -> Error msg
+  | Ok e -> (
       match
-        Daypack_lib.Time_pattern.next_match_time_slot_paired_pattern
-          ~search_in_time_zone:`Local
+        Daypack_lib.Time_expr.next_match_time_slot ~search_in_time_zone:`Local
           (Years_ahead_start_unix_time
              {
                start = cur_time;
-               search_years_ahead =
-                 Config.time_pattern_search_years_ahead;
+               search_years_ahead = Config.time_pattern_search_years_ahead;
              })
-          start_pat end_exc_pat
+          e
       with
-      | None -> Error "Failed to find match for start pattern"
-      | Some (start, end_exc) -> Ok (start, end_exc) )
-  | Error _ ->
-    match Daypack_lib.Time_pattern.Interpret_string.of_string s with
-    | Error msg -> Error msg
-    | Ok pat -> (
-        match
-          Daypack_lib.Time_pattern.next_match_time_slot
-            ~search_in_time_zone:`Local
-            (Years_ahead_start_unix_time
-               {
-                 start = cur_time;
-                 search_years_ahead = Config.time_pattern_search_years_ahead;
-               })
-            pat
-        with
-        | None -> Error "Failed to find match for pattern"
-        | Some x -> Ok x )
+      | Error msg -> Error msg
+      | Ok None -> Error "Failed to find a matching time slot"
+      | Ok (Some x) -> Ok x )
 
 let ask_time ~indent_level ~(prompt : string) : int64 =
   ask ~indent_level ~prompt process_time_string
