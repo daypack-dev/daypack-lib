@@ -2,6 +2,41 @@ open Time_expr_ast
 
 type search_param = Time_pattern.search_param
 
+module To_string = struct
+
+  let debug_string_of_hour_minutes ({hour; minute; mode} : hour_minute_expr) : string =
+    Printf.sprintf "Invalid hour minute: %d:%d%s" hour minute (match mode with
+        | Hour_in_AM -> " am"
+        | Hour_in_PM -> " pm"
+        | Hour_in_24_hours -> ""
+      )
+end
+
+module Validate_and_normalize = struct
+  let validate_and_normalize_hour_minutes_expr ({ hour; minute; mode} : hour_minute_expr) : (hour_minute_expr, string) result =
+    if 0 <= minute && minute < 60 then (
+      match mode with
+      | Hour_in_AM ->
+        if 0 <= hour && hour < 12 then
+          Ok { hour; minute; mode = Hour_in_24_hours }
+        else
+          Error "Invalid hour"
+      | Hour_in_PM ->
+        if 0 <= hour && hour < 12 then
+          Ok { hour = hour + 12; minute; mode = Hour_in_24_hours }
+        else
+          Error "Invalid hour"
+      | Hour_in_24_hours ->
+        if 0 <= hour && hour < 24 then
+          Ok { hour; minute; mode = Hour_in_24_hours }
+        else
+          Error "Invalid hour"
+    )
+    else
+      Error "Invalid minute"
+
+end
+
 module Interpret_string = struct
   let parse lexbuf : t = Time_expr_parser.parse Time_expr_lexer.read lexbuf
 
@@ -55,14 +90,17 @@ module To_time_pattern_lossy = struct
   let check_hour_minutes (hour_minutes : hour_minute_range_expr list) : unit =
     List.iter check_hour_minute_range_expr hour_minutes
 
-  let next_hour_minute_expr ({ hour; minute } : hour_minute_expr) :
+  let next_hour_minute_expr (e : hour_minute_expr) :
     hour_minute_expr =
-    match Time.next_hour_minute ~hour ~minute with
-    | Ok (hour, minute) -> { hour; minute }
-    | Error () ->
-      raise
-        (Invalid_time_expr
-           (Printf.sprintf "Invalid hour minute: %d:%d" hour minute))
+    match Validate_and_normalize.validate_and_normalize_hour_minutes_expr e with
+    | Error msg -> raise (Invalid_time_expr msg)
+    | Ok {hour; minute; mode} ->
+      match Time.next_hour_minute ~hour ~minute with
+      | Ok (hour, minute) -> { hour; minute;  mode }
+      | Error () ->
+        raise
+          (Invalid_time_expr
+             (To_string.debug_string_of_hour_minutes e))
 
   let days_of_day_range_expr (e : day_range_expr) : day_expr list =
     match e with
