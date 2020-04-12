@@ -443,7 +443,7 @@ module To_string = struct
               (pattern, { task_inst_data = _; sched_req_template }) ->
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
               "recur type : time pattern\n";
-            Time_pattern.To_string.debug_string_of_pattern
+            Time_pattern.To_string.debug_string_of_time_pattern
               ~indent_level:(indent_level + 2) ~buffer pattern
             |> ignore;
             Debug_print.bprintf ~indent_level:(indent_level + 2) buffer

@@ -245,7 +245,7 @@ let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
           (list_size (int_bound 5) (int_bound 60))))
 
 let time_pattern =
-  QCheck.make ~print:Daypack_lib.Time_pattern.To_string.debug_string_of_pattern
+  QCheck.make ~print:Daypack_lib.Time_pattern.To_string.debug_string_of_time_pattern
     time_pattern_gen
 
 let time_profile_gen =
