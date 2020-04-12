@@ -161,7 +161,7 @@ hour_minute_range_expr:
 hour_minute_expr:
   | hour = NAT; COLON; minute = NAT
     {
-      { hour; minute }
+      { hour; minute; mode = Hour_in_24_hours }
     }
   ;
 
