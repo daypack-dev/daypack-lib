@@ -29,9 +29,13 @@ type t = {
   seconds : int list;
 }
 
-type single_or_pairs =
+type time_range_pattern =
+  | Range_inc of t * t
+  | Range_exc of t * t
+
+type single_or_ranges =
   | Single_time_pattern of t
-  | Paired_time_patterns of (t * t) list
+  | Time_range_patterns of time_range_pattern list
 
 val empty : t
 
@@ -45,23 +49,23 @@ val next_match_unix_time : search_param -> t -> int64 option
 
 val next_match_time_slot : search_param -> t -> (int64 * int64) option
 
-val matching_time_slots_time_pattern_pair :
-  search_param -> t * t -> Time_slot_ds.t Seq.t
+val matching_time_slots_time_range_pattern :
+  search_param -> time_range_pattern -> Time_slot_ds.t Seq.t
 
-val next_match_time_slot_time_pattern_pair :
-  search_param -> t * t -> (int64 * int64) option
+val next_match_time_slot_time_range_pattern :
+  search_param -> time_range_pattern -> (int64 * int64) option
 
-val matching_time_slots_time_pattern_pairs :
-  search_param -> (t * t) list -> Time_slot_ds.t Seq.t
+val matching_time_slots_time_range_patterns :
+  search_param -> time_range_pattern list -> Time_slot_ds.t Seq.t
 
-val next_match_time_slot_time_pattern_pairs :
-  search_param -> (t * t) list -> (int64 * int64) option
+val next_match_time_slot_time_range_patterns :
+  search_param -> time_range_pattern list -> (int64 * int64) option
 
-val matching_time_slots_single_or_pairs :
-  search_param -> single_or_pairs -> Time_slot_ds.t Seq.t
+val matching_time_slots_single_or_ranges :
+  search_param -> single_or_ranges -> Time_slot_ds.t Seq.t
 
-val next_match_time_slot_single_or_pairs :
-  search_param -> single_or_pairs -> Time_slot_ds.t option
+val next_match_time_slot_single_or_ranges :
+  search_param -> single_or_ranges -> Time_slot_ds.t option
 
 module Equal : sig
   val equal : t -> t -> bool
