@@ -390,7 +390,7 @@ module To_string = struct
     | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)
     | `Weekdays xs -> Printf.sprintf "weekday [%s]" (aux_weekdays xs)
 
-  let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+  let debug_string_of_time_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_months l =
@@ -410,9 +410,37 @@ module To_string = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "sec : [%s]\n"
       (aux t.seconds);
     Buffer.contents buffer
+
+  let debug_string_of_time_range_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+      (t : time_range_pattern) : string =
+    (match t with
+    | Range.Range_inc (t1, t2) ->
+      Debug_print.bprintf ~indent_level buffer "time range pattern inc:\n";
+      debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t1 |> ignore;
+      debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t2 |> ignore
+    | Range.Range_exc (t1, t2) ->
+      Debug_print.bprintf ~indent_level buffer "time range pattern exc:\n";
+      debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t1 |> ignore;
+      debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t2 |> ignore
+    );
+    Buffer.contents buffer
+
+  let debug_string_of_single_or_ranges ?(indent_level = 0) ?(buffer = Buffer.create 4096)
+      (t : single_or_ranges) : string =
+    match t with
+    | Single_time_pattern t -> debug_string_of_time_pattern ~indent_level ~buffer t
+    | Time_range_patterns l ->
+      List.iter (fun t -> debug_string_of_time_range_pattern ~indent_level ~buffer t |> ignore) l;
+      Buffer.contents buffer
 end
 
 module Print = struct
-  let debug_print_pattern ?(indent_level = 0) t =
-    print_string (To_string.debug_string_of_pattern ~indent_level t)
+  let debug_print_time_pattern ?(indent_level = 0) t =
+    print_string (To_string.debug_string_of_time_pattern ~indent_level t)
+
+  let debug_print_time_range_pattern ?(indent_level = 0) t =
+    print_string (To_string.debug_string_of_time_range_pattern ~indent_level t)
+
+  let debug_print_single_or_ranges ?(indent_level = 0) t =
+    print_string (To_string.debug_string_of_single_or_ranges ~indent_level t)
 end
