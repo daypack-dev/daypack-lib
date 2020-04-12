@@ -1,5 +1,4 @@
 {
-  open Lexing
   open Time_expr_parser
 
   exception Syntax_error of string
