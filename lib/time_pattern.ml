@@ -415,11 +415,11 @@ module To_string = struct
       (t : time_range_pattern) : string =
     (match t with
     | Range.Range_inc (t1, t2) ->
-      Debug_print.bprintf ~indent_level buffer "time range pattern inc:\n";
+      Debug_print.bprintf ~indent_level buffer "time range pattern inclusive:\n";
       debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t1 |> ignore;
       debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t2 |> ignore
     | Range.Range_exc (t1, t2) ->
-      Debug_print.bprintf ~indent_level buffer "time range pattern exc:\n";
+      Debug_print.bprintf ~indent_level buffer "time range pattern exclusive:\n";
       debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t1 |> ignore;
       debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t2 |> ignore
     );
