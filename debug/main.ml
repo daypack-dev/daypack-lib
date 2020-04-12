@@ -718,7 +718,7 @@ let debug_time_pattern_matching_tm_seq () =
     }
   in
   let search_years_ahead = 100 in
-  Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
+  Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
   let s =
     Daypack_lib.Time_pattern.matching_tm_seq
       (Years_ahead_start_tm
@@ -780,9 +780,70 @@ let debug_time_pattern_matching_time_slots () =
       seconds = [];
     }
   in
-  Daypack_lib.Time_pattern.Print.debug_print_pattern pattern;
+  Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
   let s =
     Daypack_lib.Time_pattern.matching_time_slots
+      (Time_slots { search_in_time_zone = `Local; time_slots })
+      pattern
+  in
+  s
+  |> OSeq.take 30
+  |> OSeq.iteri (fun i (start, end_exc) ->
+      Printf.printf "iter : %d\n" i;
+      Printf.printf "  [%s, %s)\n"
+        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
+           start)
+        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
+           end_exc))
+
+let debug_time_range_pattern_matching_time_slots () =
+  print_endline
+    "Debug print for Time_pattern.matching_time_slots_time_range_pattern";
+  let tm =
+    (* (Some
+     *    Unix.
+     *      {
+     *        tm_sec = 0;
+     *        tm_min = 0;
+     *        tm_hour = 0;
+     *        tm_mday = 1;
+     *        tm_mon = 0;
+     *        tm_year = 0;
+     *        tm_wday = 0;
+     *        tm_yday = 0;
+     *        tm_isdst = false;
+     *      }) *)
+    Unix.time () |> Unix.localtime
+  in
+  let start = Time.unix_time_of_tm ~time_zone_of_tm:`Local tm in
+  let end_exc =
+    Time.unix_time_of_tm ~time_zone_of_tm:`Local
+      { tm with tm_year = tm.tm_year + 1 }
+  in
+  let time_slots = [ (start, end_exc) ] in
+  let pattern =
+    let open Daypack_lib.Time_pattern in
+    `Range_inc
+      ( {
+        years = [];
+        months = [ `Feb ];
+        days = `Month_days [];
+        hours = [ 13 ];
+        minutes = [];
+        seconds = [];
+      },
+        {
+          years = [];
+          months = [ `Feb ];
+          days = `Month_days [];
+          hours = [ 13 ];
+          minutes = [];
+          seconds = [];
+        } )
+  in
+  Daypack_lib.Time_pattern.Print.debug_print_time_range_pattern pattern;
+  let s =
+    Daypack_lib.Time_pattern.matching_time_slots_time_range_pattern
       (Time_slots { search_in_time_zone = `Local; time_slots })
       pattern
   in
@@ -1009,8 +1070,12 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
+(* let () =
+ *   debug_time_pattern_matching_time_slots ();
+ *   print_newline () *)
+
 let () =
-  debug_time_pattern_matching_time_slots ();
+  debug_time_range_pattern_matching_time_slots ();
   print_newline ()
 
 (* let () =

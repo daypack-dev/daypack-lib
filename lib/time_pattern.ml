@@ -31,9 +31,11 @@ type t = {
   seconds : int list;
 }
 
-type single_or_pairs =
+type time_range_pattern = t Range.t
+
+type single_or_ranges =
   | Single_time_pattern of t
-  | Paired_time_patterns of (t * t) list
+  | Time_range_patterns of time_range_pattern list
 
 let empty =
   {
@@ -274,46 +276,61 @@ let next_match_time_slot (search_param : search_param) (t : t) :
   | Seq.Nil -> None
   | Seq.Cons (x, _) -> Some x
 
-let matching_time_slots_time_pattern_pair (search_param : search_param)
-    ((t1, t2) : t * t) : Time_slot_ds.t Seq.t =
-  matching_time_slots search_param t1
-  |> Seq.filter_map (fun (start, _) ->
-      let search_param =
-        push_search_param_to_later_start ~start search_param
-      in
-      match matching_time_slots search_param t2 () with
-      | Seq.Nil -> None
-      | Seq.Cons ((end_exc, _), _) -> Some (start, end_exc))
+let matching_time_slots_time_range_pattern (search_param : search_param)
+    (range : time_range_pattern) : Time_slot_ds.t Seq.t =
+  let search_and_get_start (search_param : search_param) (t : t)
+      ((start, _) : Time_slot_ds.t) : Time_slot_ds.t option =
+    let search_param = push_search_param_to_later_start ~start search_param in
+    match next_match_time_slot search_param t with
+    | None -> None
+    | Some (start', _) -> Some (start, start')
+  in
+  let search_and_get_end_exc (search_param : search_param) (t : t)
+      ((start, _) : Time_slot_ds.t) : Time_slot_ds.t option =
+    let search_param = push_search_param_to_later_start ~start search_param in
+    match next_match_time_slot search_param t with
+    | None -> None
+    | Some (_, end_exc') -> Some (start, end_exc')
+  in
+  let start_seq =
+    match range with `Range_inc (t1, _) | `Range_exc (t1, _) -> t1
+  in
+  matching_time_slots search_param start_seq
+  |>
+  match range with
+  | `Range_inc (_, t2) ->
+    Seq.filter_map (search_and_get_end_exc search_param t2)
+  | `Range_exc (_, t2) -> Seq.filter_map (search_and_get_start search_param t2)
 
-let next_match_time_slot_time_pattern_pair (search_param : search_param)
-    ((t1, t2) : t * t) : (int64 * int64) option =
-  match matching_time_slots_time_pattern_pair search_param (t1, t2) () with
+let next_match_time_slot_time_range_pattern (search_param : search_param)
+    (range : time_range_pattern) : (int64 * int64) option =
+  match matching_time_slots_time_range_pattern search_param range () with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
-let matching_time_slots_time_pattern_pairs (search_param : search_param)
-    (l : (t * t) list) : Time_slot_ds.t Seq.t =
+let matching_time_slots_time_range_patterns (search_param : search_param)
+    (l : time_range_pattern list) : Time_slot_ds.t Seq.t =
   l
   |> List.to_seq
-  |> Seq.map (matching_time_slots_time_pattern_pair search_param)
+  |> Seq.map (matching_time_slots_time_range_pattern search_param)
   |> Time_slot_ds.merge_multi_seq
 
-let next_match_time_slot_time_pattern_pairs (search_param : search_param)
-    (l : (t * t) list) : (int64 * int64) option =
-  match matching_time_slots_time_pattern_pairs search_param l () with
+let next_match_time_slot_time_range_patterns (search_param : search_param)
+    (l : time_range_pattern list) : (int64 * int64) option =
+  match matching_time_slots_time_range_patterns search_param l () with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
-let matching_time_slots_single_or_pairs (search_param : search_param)
-    (x : single_or_pairs) : Time_slot_ds.t Seq.t =
+let matching_time_slots_single_or_ranges (search_param : search_param)
+    (x : single_or_ranges) : Time_slot_ds.t Seq.t =
   match x with
   | Single_time_pattern pat -> matching_time_slots search_param pat
-  | Paired_time_patterns l ->
-    matching_time_slots_time_pattern_pairs search_param l
+  | Time_range_patterns l ->
+    matching_time_slots_time_range_patterns search_param l
 
-let next_match_time_slot_single_or_pairs (search_param : search_param)
-    (x : single_or_pairs) : Time_slot_ds.t option =
-  match matching_time_slots_single_or_pairs search_param x () with
+let next_match_time_slot_single_or_ranges (search_param : search_param)
+    (x : single_or_ranges) : Time_slot_ds.t option =
+  match matching_time_slots_single_or_ranges search_param x () with
   | Seq.Nil -> None
   | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc)
 
@@ -369,8 +386,8 @@ module To_string = struct
     | `Month_days xs -> Printf.sprintf "month day [%s]" (aux xs)
     | `Weekdays xs -> Printf.sprintf "weekday [%s]" (aux_weekdays xs)
 
-  let debug_string_of_pattern ?(indent_level = 0) ?(buffer = Buffer.create 4096)
-      (t : t) : string =
+  let debug_string_of_time_pattern ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (t : t) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_months l =
       String.concat "," (List.map Time.To_string.string_of_month l)
@@ -389,9 +406,46 @@ module To_string = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "sec : [%s]\n"
       (aux t.seconds);
     Buffer.contents buffer
+
+  let debug_string_of_time_range_pattern ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (t : time_range_pattern) : string =
+    ( match t with
+      | `Range_inc (t1, t2) ->
+        Debug_print.bprintf ~indent_level buffer
+          "time range pattern inclusive:\n";
+        debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t1
+        |> ignore;
+        debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t2
+        |> ignore
+      | `Range_exc (t1, t2) ->
+        Debug_print.bprintf ~indent_level buffer
+          "time range pattern exclusive:\n";
+        debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t1
+        |> ignore;
+        debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t2
+        |> ignore );
+    Buffer.contents buffer
+
+  let debug_string_of_single_or_ranges ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (t : single_or_ranges) : string =
+    match t with
+    | Single_time_pattern t ->
+      debug_string_of_time_pattern ~indent_level ~buffer t
+    | Time_range_patterns l ->
+      List.iter
+        (fun t ->
+           debug_string_of_time_range_pattern ~indent_level ~buffer t |> ignore)
+        l;
+      Buffer.contents buffer
 end
 
 module Print = struct
-  let debug_print_pattern ?(indent_level = 0) t =
-    print_string (To_string.debug_string_of_pattern ~indent_level t)
+  let debug_print_time_pattern ?(indent_level = 0) t =
+    print_string (To_string.debug_string_of_time_pattern ~indent_level t)
+
+  let debug_print_time_range_pattern ?(indent_level = 0) t =
+    print_string (To_string.debug_string_of_time_range_pattern ~indent_level t)
+
+  let debug_print_single_or_ranges ?(indent_level = 0) t =
+    print_string (To_string.debug_string_of_single_or_ranges ~indent_level t)
 end

@@ -1,39 +1,15 @@
-type hour_minute_mode =
-  | Hour_in_AM
-  | Hour_in_PM
-  | Hour_in_24_hours
-
 type hour_minute_expr = {
   hour : int;
   minute : int;
-  mode : hour_minute_mode;
 }
 
 type hour_minute_range_expr = hour_minute_expr Range.t
 
-type day_expr =
-  | Weekday of Time.weekday
-  | Month_day of int
+type day_expr = Time_expr_ast.day_expr
 
-type day_range_expr =
-  | Weekday_range of Time.weekday * Time.weekday
-  | Month_day_range of int * int
+type day_range_expr = Time_expr_ast.day_range_expr
 
-(* type days_expr =
- *   | Next_n_days of int
- *   | Every_x_day of day_expr
- *   | Day_list of day_expr list
- *   | Day_range of day_expr range_expr *)
-
-type month_expr =
-  | Direct_pick_month of Time.month
-  | Human_int_month of int
-
-(* type months_expr =
- *   | Next_n_months of int
- *   | Every_x_month of month_expr
- *   | Month_list of month_expr list
- *   | Month_range of month_expr range_expr *)
+type month_expr = Time.month
 
 type year_expr = int
 

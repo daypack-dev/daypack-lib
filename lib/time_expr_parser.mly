@@ -12,6 +12,8 @@
 %token TO
 %token EVERY
 %token NEXT
+%token AM
+%token PM
 
 (* separators *)
 %token HYPHEN
@@ -150,18 +152,34 @@ hour_minutes_expr:
 hour_minute_range_expr:
   | start = hour_minute_expr;
     {
-      Range_inc (start, start)
+      `Range_inc (start, start)
     }
   | start = hour_minute_expr; TO; end_exc = hour_minute_expr;
     {
-      Range_exc (start, end_exc)
+      `Range_exc (start, end_exc)
     }
   ;
 
 hour_minute_expr:
   | hour = NAT; COLON; minute = NAT
     {
-      { hour; minute }
+      { hour; minute; mode = Hour_in_24_hours }
+    }
+  | hour = NAT; COLON; minute = NAT; AM
+    {
+      { hour; minute; mode = Hour_in_AM }
+    }
+  | hour = NAT; COLON; minute = NAT; PM
+    {
+      { hour; minute; mode = Hour_in_PM }
+    }
+  | hour = NAT; AM
+    {
+      { hour; minute = 0; mode = Hour_in_AM }
+    }
+  | hour = NAT; PM
+    {
+      { hour; minute = 0; mode = Hour_in_PM }
     }
   ;
 

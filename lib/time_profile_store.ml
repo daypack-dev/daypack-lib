@@ -103,12 +103,12 @@ module To_string = struct
           (fun (start, end_exc) ->
              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
                "start\n";
-             Time_pattern.To_string.debug_string_of_pattern
+             Time_pattern.To_string.debug_string_of_time_pattern
                ~indent_level:(indent_level + 3) ~buffer start
              |> ignore;
              Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
                "end\n";
-             Time_pattern.To_string.debug_string_of_pattern
+             Time_pattern.To_string.debug_string_of_time_pattern
                ~indent_level:(indent_level + 3) ~buffer end_exc
              |> ignore)
           data.periods);

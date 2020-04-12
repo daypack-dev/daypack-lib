@@ -29,9 +29,11 @@ type t = {
   seconds : int list;
 }
 
-type single_or_pairs =
+type time_range_pattern = t Range.t
+
+type single_or_ranges =
   | Single_time_pattern of t
-  | Paired_time_patterns of (t * t) list
+  | Time_range_patterns of time_range_pattern list
 
 val empty : t
 
@@ -45,23 +47,23 @@ val next_match_unix_time : search_param -> t -> int64 option
 
 val next_match_time_slot : search_param -> t -> (int64 * int64) option
 
-val matching_time_slots_time_pattern_pair :
-  search_param -> t * t -> Time_slot_ds.t Seq.t
+val matching_time_slots_time_range_pattern :
+  search_param -> time_range_pattern -> Time_slot_ds.t Seq.t
 
-val next_match_time_slot_time_pattern_pair :
-  search_param -> t * t -> (int64 * int64) option
+val next_match_time_slot_time_range_pattern :
+  search_param -> time_range_pattern -> (int64 * int64) option
 
-val matching_time_slots_time_pattern_pairs :
-  search_param -> (t * t) list -> Time_slot_ds.t Seq.t
+val matching_time_slots_time_range_patterns :
+  search_param -> time_range_pattern list -> Time_slot_ds.t Seq.t
 
-val next_match_time_slot_time_pattern_pairs :
-  search_param -> (t * t) list -> (int64 * int64) option
+val next_match_time_slot_time_range_patterns :
+  search_param -> time_range_pattern list -> (int64 * int64) option
 
-val matching_time_slots_single_or_pairs :
-  search_param -> single_or_pairs -> Time_slot_ds.t Seq.t
+val matching_time_slots_single_or_ranges :
+  search_param -> single_or_ranges -> Time_slot_ds.t Seq.t
 
-val next_match_time_slot_single_or_pairs :
-  search_param -> single_or_pairs -> Time_slot_ds.t option
+val next_match_time_slot_single_or_ranges :
+  search_param -> single_or_ranges -> Time_slot_ds.t option
 
 module Equal : sig
   val equal : t -> t -> bool
@@ -70,12 +72,24 @@ end
 module To_string : sig
   val debug_string_of_days : days -> string
 
-  val debug_string_of_pattern :
+  val debug_string_of_time_pattern :
     ?indent_level:int -> ?buffer:Buffer.t -> t -> string
+
+  val debug_string_of_time_range_pattern :
+    ?indent_level:int -> ?buffer:Buffer.t -> time_range_pattern -> string
+
+  val debug_string_of_single_or_ranges :
+    ?indent_level:int -> ?buffer:Buffer.t -> single_or_ranges -> string
 end
 
 module Print : sig
-  val debug_print_pattern : ?indent_level:int -> t -> unit
+  val debug_print_time_pattern : ?indent_level:int -> t -> unit
+
+  val debug_print_time_range_pattern :
+    ?indent_level:int -> time_range_pattern -> unit
+
+  val debug_print_single_or_ranges :
+    ?indent_level:int -> single_or_ranges -> unit
 end
 
 module Serialize : sig

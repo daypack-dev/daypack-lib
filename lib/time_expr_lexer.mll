@@ -1,5 +1,4 @@
 {
-  open Lexing
   open Time_expr_parser
 
   exception Syntax_error of string
@@ -53,6 +52,12 @@ rule read =
   | "of"    { OF }
   | "every" { EVERY }
   | "next"  { NEXT }
+  | "am"
+  | "AM"
+    { AM }
+  | "pm"
+  | "PM"
+    { PM }
 
   (* weekdays *)
   | sunday
