@@ -31,9 +31,7 @@ type t = {
   seconds : int list;
 }
 
-type time_range_pattern =
-  | Range_inc of t * t
-  | Range_exc of t * t
+type time_range_pattern = t Range.t
 
 type single_or_ranges =
   | Single_time_pattern of t

@@ -1,7 +1,3 @@
-type 'a range_expr =
-  | Range_inc of 'a * 'a
-  | Range_exc of 'a * 'a
-
 type hour_minute_mode = Hour_in_AM | Hour_in_PM | Hour_in_24_hours
 
 type hour_minute_expr = {
@@ -10,7 +6,7 @@ type hour_minute_expr = {
   mode : hour_minute_mode;
 }
 
-type hour_minute_range_expr = hour_minute_expr range_expr
+type hour_minute_range_expr = hour_minute_expr Range.t
 
 type day_expr =
   | Weekday of Time.weekday
