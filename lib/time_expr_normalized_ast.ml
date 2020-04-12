@@ -1,4 +1,7 @@
-type hour_minute_expr = { hour : int; minute : int }
+type hour_minute_expr = {
+  hour : int;
+  minute : int;
+}
 
 type hour_minute_range_expr = hour_minute_expr Range.t
 

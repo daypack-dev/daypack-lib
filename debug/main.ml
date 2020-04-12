@@ -797,7 +797,8 @@ let debug_time_pattern_matching_time_slots () =
            end_exc))
 
 let debug_time_range_pattern_matching_time_slots () =
-  print_endline "Debug print for Time_pattern.matching_time_slots_time_range_pattern";
+  print_endline
+    "Debug print for Time_pattern.matching_time_slots_time_range_pattern";
   let tm =
     (* (Some
      *    Unix.
@@ -822,8 +823,8 @@ let debug_time_range_pattern_matching_time_slots () =
   let time_slots = [ (start, end_exc) ] in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    Range.Range_inc (
-      {
+    Range.Range_inc
+      ( {
         years = [];
         months = [ `Feb ];
         days = `Month_days [];
@@ -831,15 +832,14 @@ let debug_time_range_pattern_matching_time_slots () =
         minutes = [];
         seconds = [];
       },
-      {
-        years = [];
-        months = [ `Feb ];
-        days = `Month_days [];
-        hours = [ 13 ];
-        minutes = [];
-        seconds = [];
-      }
-    )
+        {
+          years = [];
+          months = [ `Feb ];
+          days = `Month_days [];
+          hours = [ 13 ];
+          minutes = [];
+          seconds = [];
+        } )
   in
   Daypack_lib.Time_pattern.Print.debug_print_time_range_pattern pattern;
   let s =

@@ -74,16 +74,22 @@ module To_string : sig
 
   val debug_string_of_time_pattern :
     ?indent_level:int -> ?buffer:Buffer.t -> t -> string
+
   val debug_string_of_time_range_pattern :
     ?indent_level:int -> ?buffer:Buffer.t -> time_range_pattern -> string
+
   val debug_string_of_single_or_ranges :
     ?indent_level:int -> ?buffer:Buffer.t -> single_or_ranges -> string
 end
 
 module Print : sig
   val debug_print_time_pattern : ?indent_level:int -> t -> unit
-  val debug_print_time_range_pattern : ?indent_level:int -> time_range_pattern -> unit
-  val debug_print_single_or_ranges : ?indent_level:int -> single_or_ranges -> unit
+
+  val debug_print_time_range_pattern :
+    ?indent_level:int -> time_range_pattern -> unit
+
+  val debug_print_single_or_ranges :
+    ?indent_level:int -> single_or_ranges -> unit
 end
 
 module Serialize : sig

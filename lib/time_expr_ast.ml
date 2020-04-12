@@ -1,4 +1,7 @@
-type hour_minute_mode = Hour_in_AM | Hour_in_PM | Hour_in_24_hours
+type hour_minute_mode =
+  | Hour_in_AM
+  | Hour_in_PM
+  | Hour_in_24_hours
 
 type hour_minute_expr = {
   hour : int;
