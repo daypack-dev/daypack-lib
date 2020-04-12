@@ -190,30 +190,30 @@ module To_time_pattern_lossy = struct
       (e : Time_expr_ast.year_expr) : Time_pattern.t =
     { base with years = [ e ] }
 
-  let paired_hour_minute_of_range_expr (e : hour_minute_expr range_expr) :
-    hour_minute_expr * hour_minute_expr =
-    match e with
-    | Range_inc (x, y) -> (x, next_hour_minute_expr y)
-    | Range_exc (x, y) -> (x, y)
-
   let time_pattern_of_hour_minute_expr
       ?(base : Time_pattern.t = Time_pattern.empty)
       (e : Time_expr_ast.hour_minute_expr) : Time_pattern.t =
     { base with hours = [ e.hour ]; minutes = [ e.minute ] }
 
-  let paired_time_pattern_of_hour_minute_range_expr
+  let time_range_pattern_of_hour_minute_range_expr
       ?(base : Time_pattern.t = Time_pattern.empty) (e : hour_minute_range_expr)
-    : Time_pattern.t * Time_pattern.t =
-    let hm_start, hm_end_exc = paired_hour_minute_of_range_expr e in
-    ( time_pattern_of_hour_minute_expr ~base hm_start,
-      time_pattern_of_hour_minute_expr ~base hm_end_exc )
+    : Time_pattern.time_range_pattern =
+    match e with
+    | Range_inc (x, y) ->
+      Time_pattern.Range_inc
+        ( time_pattern_of_hour_minute_expr ~base x,
+          time_pattern_of_hour_minute_expr ~base y )
+    | Range_exc (x, y) ->
+      Time_pattern.Range_exc
+        ( time_pattern_of_hour_minute_expr ~base x,
+          time_pattern_of_hour_minute_expr ~base y )
 
-  let paired_time_pattern_seq_of_hour_minutes
+  let time_range_pattern_seq_of_hour_minutes
       ?(base : Time_pattern.t = Time_pattern.empty)
       (l : hour_minute_range_expr list) :
-    (Time_pattern.t * Time_pattern.t) Seq.t =
+    Time_pattern.time_range_pattern Seq.t =
     List.to_seq l
-    |> Seq.map (paired_time_pattern_of_hour_minute_range_expr ~base)
+    |> Seq.map (time_range_pattern_of_hour_minute_range_expr ~base)
 
   let time_pattern_of_time_point_expr (e : time_point_expr) :
     (Time_pattern.t, string) result =
@@ -238,8 +238,8 @@ module To_time_pattern_lossy = struct
             time_pattern_of_hour_minute_expr hour_minute )
     with Invalid_time_expr msg -> Error msg
 
-  let time_pattern_pairs_of_time_slots_expr (e : time_slots_expr) :
-    ((Time_pattern.t * Time_pattern.t) list, string) result =
+  let time_range_patterns_of_time_slots_expr (e : time_slots_expr) :
+    (Time_pattern.time_range_pattern list, string) result =
     try
       Ok
         ( match e with
@@ -249,13 +249,13 @@ module To_time_pattern_lossy = struct
               | Ok start -> (
                   match time_pattern_of_time_point_expr end_exc with
                   | Error msg -> raise (Invalid_time_expr msg)
-                  | Ok end_exc -> [ (start, end_exc) ] ) )
+                  | Ok end_exc -> [ Range_exc (start, end_exc) ] ) )
           | Day_list_and_hour_minutes { hour_minutes; days } ->
             check_hour_minutes hour_minutes;
             List.map time_pattern_of_day_expr days
             |> List.to_seq
             |> Seq.flat_map (fun pat ->
-                paired_time_pattern_seq_of_hour_minutes ~base:pat
+                time_range_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
             |> List.of_seq
           | Day_range_and_hour_minutes { hour_minutes; days } ->
@@ -264,7 +264,7 @@ module To_time_pattern_lossy = struct
             |> List.to_seq
             |> Seq.map time_pattern_of_day_expr
             |> Seq.flat_map (fun pat ->
-                paired_time_pattern_seq_of_hour_minutes ~base:pat
+                time_range_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
             |> List.of_seq
           | Month_list_and_month_day_list_and_hour_minutes
@@ -284,7 +284,7 @@ module To_time_pattern_lossy = struct
             day_pats
             |> List.to_seq
             |> Seq.flat_map (fun pat ->
-                paired_time_pattern_seq_of_hour_minutes ~base:pat
+                time_range_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
             |> List.of_seq
           | Month_list_and_weekday_list_and_hour_minutes
@@ -303,50 +303,50 @@ module To_time_pattern_lossy = struct
             day_pats
             |> List.to_seq
             |> Seq.flat_map (fun pat ->
-                paired_time_pattern_seq_of_hour_minutes ~base:pat
+                time_range_pattern_seq_of_hour_minutes ~base:pat
                   hour_minutes)
             |> List.of_seq )
     with Invalid_time_expr msg -> Error msg
 
-  let single_or_pairs_of_time_expr (e : t) :
-    (Time_pattern.single_or_pairs, string) result =
+  let single_or_ranges_of_time_expr (e : t) :
+    (Time_pattern.single_or_ranges, string) result =
     match e with
     | Time_expr_ast.Time_point_expr e -> (
         match time_pattern_of_time_point_expr e with
         | Ok x -> Ok (Single_time_pattern x)
         | Error msg -> Error msg )
     | Time_expr_ast.Time_slots_expr e -> (
-        match time_pattern_pairs_of_time_slots_expr e with
-        | Ok x -> Ok (Paired_time_patterns x)
+        match time_range_patterns_of_time_slots_expr e with
+        | Ok x -> Ok (Time_range_patterns x)
         | Error msg -> Error msg )
 
   let time_pattern_of_time_expr (e : t) : (Time_pattern.t, string) result =
-    match single_or_pairs_of_time_expr e with
+    match single_or_ranges_of_time_expr e with
     | Ok (Time_pattern.Single_time_pattern x) -> Ok x
-    | Ok (Time_pattern.Paired_time_patterns _) ->
+    | Ok (Time_pattern.Time_range_patterns _) ->
       Error "Time expression translates to time pattern pairs"
     | Error msg -> Error msg
 
-  let time_pattern_pairs_of_time_expr (e : t) :
-    ((Time_pattern.t * Time_pattern.t) list, string) result =
-    match single_or_pairs_of_time_expr e with
+  let time_range_patterns_of_time_expr (e : t) :
+    (Time_pattern.time_range_pattern list, string) result =
+    match single_or_ranges_of_time_expr e with
     | Ok (Time_pattern.Single_time_pattern _) ->
       Error "Time expression translates to single time pattern"
-    | Ok (Time_pattern.Paired_time_patterns l) -> Ok l
+    | Ok (Time_pattern.Time_range_patterns l) -> Ok l
     | Error msg -> Error msg
 
-  let time_pattern_pair_of_time_expr (e : t) :
-    (Time_pattern.t * Time_pattern.t, string) result =
-    match time_pattern_pairs_of_time_expr e with
+  let time_range_pattern_of_time_expr (e : t) :
+    (Time_pattern.time_range_pattern, string) result =
+    match time_range_patterns_of_time_expr e with
     | Ok l -> (
         match l with
         | [] ->
           Error
-            "Time expression translates to empty list of time pattern pairs"
+            "Time expression translates to empty list of time range patterns"
         | [ x ] -> Ok x
         | _ ->
           Error
-            "Time expression translates to more than one time pattern pairs" )
+            "Time expression translates to more than one time range patterns" )
     | Error msg -> Error msg
 end
 
@@ -375,12 +375,12 @@ let matching_time_slots (search_param : search_param) (e : t) :
         | Month_list_and_weekday_list_and_hour_minutes _ ->
           Some 1
       in
-      match To_time_pattern_lossy.time_pattern_pairs_of_time_slots_expr e with
+      match To_time_pattern_lossy.time_range_patterns_of_time_slots_expr e with
       | Error msg -> Error msg
       | Ok l ->
         l
         |> List.map
-          (Time_pattern.matching_time_slots_time_pattern_pair search_param)
+          (Time_pattern.matching_time_slots_time_range_pattern search_param)
         |> Time_slot_ds.collect_round_robin_non_decreasing
         |> (match take_count with None -> fun x -> x | Some n -> OSeq.take n)
         |> OSeq.take_while (List.for_all Option.is_some)

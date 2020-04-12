@@ -23,19 +23,19 @@ module To_time_pattern_lossy : sig
   val time_pattern_of_time_point_expr :
     Time_expr_ast.time_point_expr -> (Time_pattern.t, string) result
 
-  val time_pattern_pairs_of_time_slots_expr :
+  val time_range_patterns_of_time_slots_expr :
     Time_expr_ast.time_slots_expr ->
-    ((Time_pattern.t * Time_pattern.t) list, string) result
+    (Time_pattern.time_range_pattern list, string) result
 
-  val single_or_pairs_of_time_expr :
-    Time_expr_ast.t -> (Time_pattern.single_or_pairs, string) result
+  val single_or_ranges_of_time_expr :
+    Time_expr_ast.t -> (Time_pattern.single_or_ranges, string) result
 
   val time_pattern_of_time_expr :
     Time_expr_ast.t -> (Time_pattern.t, string) result
 
-  val time_pattern_pair_of_time_expr :
-    Time_expr_ast.t -> (Time_pattern.t * Time_pattern.t, string) result
+  val time_range_pattern_of_time_expr :
+    Time_expr_ast.t -> (Time_pattern.time_range_pattern, string) result
 
-  val time_pattern_pairs_of_time_expr :
-    Time_expr_ast.t -> ((Time_pattern.t * Time_pattern.t) list, string) result
+  val time_range_patterns_of_time_expr :
+    Time_expr_ast.t -> (Time_pattern.time_range_pattern list, string) result
 end
