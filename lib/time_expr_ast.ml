@@ -55,22 +55,22 @@ type time_point_expr =
 type time_slots_expr =
   | Single_time_slot of time_point_expr * time_point_expr
   | Day_list_and_hour_minutes of {
-      hour_minutes : hour_minute_range_expr list;
       days : day_expr list;
+      hour_minutes : hour_minute_range_expr list;
     }
   | Day_range_and_hour_minutes of {
-      hour_minutes : hour_minute_range_expr list;
       days : day_range_expr;
+      hour_minutes : hour_minute_range_expr list;
     }
   | Month_list_and_month_day_list_and_hour_minutes of {
-      hour_minutes : hour_minute_range_expr list;
-      month_days : int list;
       months : month_expr list;
+      month_days : int list;
+      hour_minutes : hour_minute_range_expr list;
     }
   | Month_list_and_weekday_list_and_hour_minutes of {
-      hour_minutes : hour_minute_range_expr list;
-      weekdays : Time.weekday list;
       months : month_expr list;
+      weekdays : Time.weekday list;
+      hour_minutes : hour_minute_range_expr list;
     }
 
 type t =
