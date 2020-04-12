@@ -152,11 +152,11 @@ hour_minutes_expr:
 hour_minute_range_expr:
   | start = hour_minute_expr;
     {
-      Range_inc (start, start)
+      `Range_inc (start, start)
     }
   | start = hour_minute_expr; TO; end_exc = hour_minute_expr;
     {
-      Range_exc (start, end_exc)
+      `Range_exc (start, end_exc)
     }
   ;
 

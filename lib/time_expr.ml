@@ -44,8 +44,10 @@ module Validate_and_normalize = struct
   let hour_minute_range_expr (e : Time_expr_ast.hour_minute_range_expr) :
     Time_expr_normalized_ast.hour_minute_range_expr =
     match e with
-    | Range_inc (t1, t2) -> Range_inc (hour_minute_expr t1, hour_minute_expr t2)
-    | Range_exc (t1, t2) -> Range_exc (hour_minute_expr t1, hour_minute_expr t2)
+    | `Range_inc (t1, t2) ->
+      `Range_inc (hour_minute_expr t1, hour_minute_expr t2)
+    | `Range_exc (t1, t2) ->
+      `Range_exc (hour_minute_expr t1, hour_minute_expr t2)
 
   let month_day_expr (n : int) : int =
     if 1 <= n && n <= 31 then n
@@ -195,7 +197,7 @@ module To_time_pattern_lossy = struct
       (hour_minute_range : Time_expr_normalized_ast.hour_minute_range_expr) :
     unit =
     match hour_minute_range with
-    | Range_inc (x, y) | Range_exc (x, y) ->
+    | `Range_inc (x, y) | `Range_exc (x, y) ->
       check_hour_minute_expr x;
       check_hour_minute_expr y
 
@@ -255,12 +257,12 @@ module To_time_pattern_lossy = struct
       (e : Time_expr_normalized_ast.hour_minute_range_expr) :
     Time_pattern.time_range_pattern =
     match e with
-    | Range.Range_inc (x, y) ->
-      Range_inc
+    | `Range_inc (x, y) ->
+      `Range_inc
         ( time_pattern_of_hour_minute_expr ~base x,
           time_pattern_of_hour_minute_expr ~base y )
-    | Range_exc (x, y) ->
-      Range_exc
+    | `Range_exc (x, y) ->
+      `Range_exc
         ( time_pattern_of_hour_minute_expr ~base x,
           time_pattern_of_hour_minute_expr ~base y )
 
@@ -307,7 +309,7 @@ module To_time_pattern_lossy = struct
               | Ok start -> (
                   match time_pattern_of_time_point_expr end_exc with
                   | Error msg -> raise (Invalid_time_expr msg)
-                  | Ok end_exc -> [ Range_exc (start, end_exc) ] ) )
+                  | Ok end_exc -> [ `Range_exc (start, end_exc) ] ) )
           | Day_list_and_hour_minutes { hour_minutes; days } ->
             check_hour_minutes hour_minutes;
             List.map time_pattern_of_day_expr days

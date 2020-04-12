@@ -293,13 +293,14 @@ let matching_time_slots_time_range_pattern (search_param : search_param)
     | Some (_, end_exc') -> Some (start, end_exc')
   in
   let start_seq =
-    match range with Range_inc (t1, _) | Range_exc (t1, _) -> t1
+    match range with `Range_inc (t1, _) | `Range_exc (t1, _) -> t1
   in
   matching_time_slots search_param start_seq
   |>
   match range with
-  | Range_inc (_, t2) -> Seq.filter_map (search_and_get_end_exc search_param t2)
-  | Range_exc (_, t2) -> Seq.filter_map (search_and_get_start search_param t2)
+  | `Range_inc (_, t2) ->
+    Seq.filter_map (search_and_get_end_exc search_param t2)
+  | `Range_exc (_, t2) -> Seq.filter_map (search_and_get_start search_param t2)
 
 let next_match_time_slot_time_range_pattern (search_param : search_param)
     (range : time_range_pattern) : (int64 * int64) option =
@@ -409,14 +410,14 @@ module To_string = struct
   let debug_string_of_time_range_pattern ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) (t : time_range_pattern) : string =
     ( match t with
-      | Range.Range_inc (t1, t2) ->
+      | `Range_inc (t1, t2) ->
         Debug_print.bprintf ~indent_level buffer
           "time range pattern inclusive:\n";
         debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t1
         |> ignore;
         debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t2
         |> ignore
-      | Range.Range_exc (t1, t2) ->
+      | `Range_exc (t1, t2) ->
         Debug_print.bprintf ~indent_level buffer
           "time range pattern exclusive:\n";
         debug_string_of_time_pattern ~indent_level:(indent_level + 1) ~buffer t1

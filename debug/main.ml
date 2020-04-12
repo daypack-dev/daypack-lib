@@ -823,7 +823,7 @@ let debug_time_range_pattern_matching_time_slots () =
   let time_slots = [ (start, end_exc) ] in
   let pattern =
     let open Daypack_lib.Time_pattern in
-    Range.Range_inc
+    `Range_inc
       ( {
         years = [];
         months = [ `Feb ];
