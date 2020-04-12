@@ -1,9 +1,65 @@
+module Normalized = struct
+  type hour_minute_expr = { hour : int; minute : int }
+
+  type hour_minute_range_expr = {
+  }
+    hour_minute_expr range_expr
+
+  type day_expr = Time_expr_ast.day_expr
+
+  type day_range_expr = Time_expr_ast.day_range_expr
+
+  type month_expr = Time.month
+
+  type year_expr = int
+
+  type time_point_expr =
+    | Year_month_day_hour_minute of {
+        year : year_expr;
+        month : month_expr;
+        month_day : int;
+        hour_minute : hour_minute_expr;
+      }
+    | Month_day_hour_minute of {
+        month : month_expr;
+        month_day : int;
+        hour_minute : hour_minute_expr;
+      }
+    | Day_hour_minute of {
+        day : day_expr;
+        hour_minute : hour_minute_expr;
+      }
+    | Hour_minute of hour_minute_expr
+
+  type time_slots_expr =
+    | Single_time_slot of time_point_expr * time_point_expr
+    | Day_list_and_hour_minutes of {
+        hour_minutes : hour_minute_range_expr list;
+        days : day_expr list;
+      }
+    | Day_range_and_hour_minutes of {
+        hour_minutes : hour_minute_range_expr list;
+        days : day_range_expr;
+      }
+    | Month_list_and_month_day_list_and_hour_minutes of {
+        hour_minutes : hour_minute_range_expr list;
+        month_days : int list;
+        months : month_expr list;
+      }
+    | Month_list_and_weekday_list_and_hour_minutes of {
+        hour_minutes : hour_minute_range_expr list;
+        weekdays : Time.weekday list;
+        months : month_expr list;
+      }
+end
+
 open Time_expr_ast
 
 type search_param = Time_pattern.search_param
 
-module To_string = struct
+exception Invalid_time_expr of string
 
+module To_string = struct
   let debug_string_of_hour_minutes ({hour; minute; mode} : hour_minute_expr) : string =
     Printf.sprintf "Invalid hour minute: %d:%d%s" hour minute (match mode with
         | Hour_in_AM -> " am"
@@ -13,28 +69,27 @@ module To_string = struct
 end
 
 module Validate_and_normalize = struct
-  let validate_and_normalize_hour_minutes_expr ({ hour; minute; mode} : hour_minute_expr) : (hour_minute_expr, string) result =
+  let hour_minutes_expr ({ hour; minute; mode} : hour_minute_expr) : Normalized.hour_minute_expr =
     if 0 <= minute && minute < 60 then (
       match mode with
       | Hour_in_AM ->
         if 0 <= hour && hour < 12 then
-          Ok { hour; minute; mode = Hour_in_24_hours }
+          { hour; minute; mode = Hour_in_24_hours }
         else
-          Error "Invalid hour"
+          raise (Invalid_time_expr "Invalid hour")
       | Hour_in_PM ->
         if 0 <= hour && hour < 12 then
-          Ok { hour = hour + 12; minute; mode = Hour_in_24_hours }
+          { hour = hour + 12; minute; mode = Hour_in_24_hours }
         else
-          Error "Invalid hour"
+          raise (Invalid_time_expr "Invalid hour")
       | Hour_in_24_hours ->
         if 0 <= hour && hour < 24 then
-          Ok { hour; minute; mode = Hour_in_24_hours }
+          { hour; minute; mode = Hour_in_24_hours }
         else
-          Error "Invalid hour"
+          raise (Invalid_time_expr "Invalid hour")
     )
     else
-      Error "Invalid minute"
-
+      raise (Invalid_time_expr "Invalid minute")
 end
 
 module Interpret_string = struct
@@ -71,8 +126,6 @@ module Interpret_string = struct
 end
 
 module To_time_pattern_lossy = struct
-  exception Invalid_time_expr of string
-
   let check_hour_minute_expr ({ hour; minute } : hour_minute_expr) : unit =
     if Time.check_hour_minute ~hour ~minute then ()
     else

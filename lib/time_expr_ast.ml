@@ -2,12 +2,12 @@ type 'a range_expr =
   | Range_inc of 'a * 'a
   | Range_exc of 'a * 'a
 
-type hour_minutes_mode = Hour_in_AM | Hour_in_PM | Hour_in_24_hours
+type hour_minute_mode = Hour_in_AM | Hour_in_PM | Hour_in_24_hours
 
 type hour_minute_expr = {
   hour : int;
   minute : int;
-  mode : hour_minutes_mode;
+  mode : hour_minute_mode;
 }
 
 type hour_minute_range_expr = hour_minute_expr range_expr
