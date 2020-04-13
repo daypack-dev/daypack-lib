@@ -438,7 +438,8 @@ let matching_time_slots (search_param : search_param)
       match To_time_pattern_lossy.time_range_patterns_of_time_slots_expr e with
       | Error msg -> Error msg
       | Ok l ->
-        Time_pattern.Range_pattern.matching_time_slots_round_robin_non_decreasing search_param l
+        Time_pattern.Range_pattern
+        .matching_time_slots_round_robin_non_decreasing search_param l
         |> (match take_count with None -> fun x -> x | Some n -> OSeq.take n)
         |> Seq.flat_map List.to_seq
         |> Result.ok )
