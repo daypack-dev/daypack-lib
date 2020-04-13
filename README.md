@@ -2,10 +2,10 @@
 
 Daypack is a basic constraint solving automatic personal task scheduler
 
-This repo contains the core library of Daypack `daypack_lib`, and the cli frontend `daypc`.
+This repo contains the core library of Daypack Daypack\_lib, and the cli frontend Daypc.
 Other frontends (e.g. Electron, web) are underway.
 
-`Daypack_lib` was primarily developed for basic personal task scheduling (or day planning) and progress tracking,
+Daypack\_lib was primarily developed for basic personal task scheduling (or day planning) and progress tracking,
 but we are open to exploration of its use in more general scheduling scenarios as well
 
 ## Note: Daypack is still WIP
@@ -102,9 +102,9 @@ See here __TODO__
 
   - This feature is unlikely to land any time soon
 
-- `Daypack_lib` is offline (more for __devs__)
+- Daypack\_lib is offline (more for __devs__)
 
-  - `Daypack_lib` contains implementation of all functionalities, and has zero dependency on any online service
+  - Daypack\_lib contains implementation of all functionalities, and has zero dependency on any online service
 
   - This is not novel/unexpected or necessarily desirable, and is listed more for clarity's sake, as some similar software make use of online services
 
