@@ -45,7 +45,9 @@ See here __TODO__
 
   - All automatic scheduling strategies are available for recurring tasks as well
 
-- Time pattern (similar to cron time expression)
+- Time pattern (more for __devs__)
+
+  - Functionally very similar to cron time expression, but strictly less general than cron expression
 
   - This can be used to specify "fuzzy" starting and ending time of tasks in scheduling reuqests,
     time profiles, and also recurrence starting times
@@ -101,7 +103,7 @@ See here __TODO__
 
   - This feature is unlikely to land any time soon
 
-- `Daypack_lib` is offline (maybe a feature?)
+- `Daypack_lib` is offline
 
   - `Daypack_lib` contains implementation of all functionalities, and has zero dependency on any online service
 
