@@ -49,8 +49,7 @@ See here __TODO__
 
   - Functionally very similar to cron time expression, but strictly less general than cron expression
 
-  - This can be used to specify "fuzzy" starting and ending time of tasks in scheduling reuqests,
-    time profiles, and also recurrence starting times
+  - This is mainly used as a query for the time slot searching functions in `Time_pattern`
 
 - Time expression
 
@@ -60,9 +59,7 @@ See here __TODO__
 
 - Duration expression
 
-  - Similar to time expression, but much simpler
-
-  - Used for specifying duration of time
+  - A natural to use language with formal grammar for specifying duration of time
 
 - Time profiles
 
