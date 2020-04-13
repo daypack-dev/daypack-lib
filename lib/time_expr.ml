@@ -3,7 +3,7 @@ type search_param = Time_pattern.search_param
 module To_string = struct
   let debug_string_of_hour_minutes
       ({ hour; minute; mode } : Time_expr_ast.hour_minute_expr) : string =
-    Printf.sprintf "%d:%d%s" hour minute
+    Printf.sprintf "%02d:%02d%s" hour minute
       ( match mode with
         | Hour_in_AM -> " am"
         | Hour_in_PM -> " pm"
