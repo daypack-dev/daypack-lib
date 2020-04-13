@@ -260,6 +260,19 @@ let matching_time_slots (search_param : search_param) (t : t) :
       | Some time_slots -> Time_slot_ds.intersect (List.to_seq time_slots) l)
   |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
 
+let matching_time_slots_round_robin_non_decreasing (search_param : search_param)
+    (l: t list) : Time_slot_ds.t list Seq.t =
+  l
+  |> List.map (matching_time_slots search_param)
+  |> Time_slot_ds.collect_round_robin_non_decreasing
+  |> OSeq.take_while (List.for_all Option.is_some)
+  |> Seq.map (List.map Option.get)
+
+let matching_time_slots_round_robin_non_decreasing_flat (search_param : search_param)
+    (l: t list) : Time_slot_ds.t Seq.t =
+  matching_time_slots_round_robin_non_decreasing search_param l
+  |> Seq.flat_map List.to_seq
+
 let next_match_tm (search_param : search_param) (t : t) : Unix.tm option =
   match (matching_tm_seq search_param t) () with
   | Seq.Nil -> None
