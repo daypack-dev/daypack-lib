@@ -13,22 +13,17 @@ module Interpret_string = struct
     let lexbuf = Lexing.from_string s in
     try
       let Duration_expr_ast.{ days; hours; minutes } = parse lexbuf in
-      if days < 0 then
-        Error "Day count is negative"
-      else
-      if hours < 0 then
-        Error "Hour count is negative"
-      else
-      if minutes < 0 then
-        Error "Minute count is negative"
+      if days < 0 then Error "Day count is negative"
+      else if hours < 0 then Error "Hour count is negative"
+      else if minutes < 0 then Error "Minute count is negative"
       else
         let days = Int64.of_int days in
         let hours = Int64.of_int hours in
         let minutes = Int64.of_int minutes in
-        Ok ((days *^ Time.day_to_second_multiplier)
+        Ok
+          ( (days *^ Time.day_to_second_multiplier)
             +^ (hours *^ Time.hour_to_second_multiplier)
-            +^ (minutes *^ Time.hour_to_second_multiplier)
-           )
+            +^ (minutes *^ Time.hour_to_second_multiplier) )
     with
     | Duration_expr_lexer.Syntax_error msg ->
       Error (Printf.sprintf "%s: %s" (lexbuf_to_pos_str lexbuf) msg)
