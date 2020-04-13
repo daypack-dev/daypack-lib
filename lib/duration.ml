@@ -1,73 +1,39 @@
+open Int64_utils
+
 module Interpret_string = struct
-  let minute_unit_strings = [ "min"; "mins"; "minute"; "minutes" ]
+  let parse lexbuf : Duration_expr_ast.t =
+    Duration_expr_parser.parse Duration_expr_lexer.read lexbuf
 
-  let hour_unit_strings = [ "hr"; "hrs"; "hour"; "hours" ]
-
-  let day_unit_strings = [ "day"; "days" ]
-
-  let seconds_of_minutes_string (s : string) : (int64, unit) result =
-    try
-      Scanf.sscanf s "%Ld%c%s" (fun min _sep unit ->
-          if List.mem unit minute_unit_strings then
-            Ok (Int64.mul Time.minute_to_second_multiplier min)
-          else Error ())
-    with _ -> Error ()
-
-  let seconds_of_hours_string (s : string) : (int64, unit) result =
-    try
-      Scanf.sscanf s "%Ld%c%s" (fun min _sep unit ->
-          if List.mem unit hour_unit_strings then
-            Ok (Int64.mul Time.hour_to_second_multiplier min)
-          else Error ())
-    with _ -> Error ()
-
-  let seconds_of_day_string (s : string) : (int64, unit) result =
-    try
-      Scanf.sscanf s "%Ld%c%s" (fun min _sep unit ->
-          if List.mem unit day_unit_strings then
-            Ok (Int64.mul Time.day_to_second_multiplier min)
-          else Error ())
-    with _ -> Error ()
-
-  let seconds_of_hour_minute_string (s : string) : (int64, unit) result =
-    try
-      Scanf.sscanf s "%[^,]%[, ]%[^,]" (fun hour _sep min ->
-          match seconds_of_hours_string hour with
-          | Error () -> Error ()
-          | Ok hour_seconds -> (
-              match seconds_of_minutes_string min with
-              | Error () -> Error ()
-              | Ok min_seconds -> Ok (Int64.add hour_seconds min_seconds) ))
-    with _ -> Error ()
-
-  let seconds_of_day_hour_minute_string (s : string) : (int64, unit) result =
-    try
-      Scanf.sscanf s "%[^,]%[, ]%[^,]%[, ]%[^,]" (fun day _sep hour _sep min ->
-          match seconds_of_day_string day with
-          | Error () -> Error ()
-          | Ok day_seconds -> (
-              match seconds_of_hours_string hour with
-              | Error () -> Error ()
-              | Ok hour_seconds -> (
-                  match seconds_of_minutes_string min with
-                  | Error () -> Error ()
-                  | Ok min_seconds ->
-                    Ok
-                      (Int64.add
-                         (Int64.add day_seconds hour_seconds)
-                         min_seconds) ) ))
-    with _ -> Error ()
+  let lexbuf_to_pos_str lexbuf =
+    let open Lexing in
+    let pos = lexbuf.lex_curr_p in
+    Printf.sprintf "%d:%d" pos.pos_lnum (pos.pos_cnum - pos.pos_bol - 1)
 
   let of_string (s : string) : (int64, string) result =
-    match seconds_of_day_hour_minute_string s with
-    | Ok x -> Ok x
-    | Error () -> (
-        match seconds_of_hour_minute_string s with
-        | Ok x -> Ok x
-        | Error () -> (
-            match seconds_of_minutes_string s with
-            | Ok x -> Ok x
-            | Error () -> Error "Failed to interpret string as duration" ) )
+    let lexbuf = Lexing.from_string s in
+    try
+      let Duration_expr_ast.{ days; hours; minutes } = parse lexbuf in
+      if days < 0 then
+        Error "Day count is negative"
+      else
+      if hours < 0 then
+        Error "Hour count is negative"
+      else
+      if minutes < 0 then
+        Error "Minute count is negative"
+      else
+        let days = Int64.of_int days in
+        let hours = Int64.of_int hours in
+        let minutes = Int64.of_int minutes in
+        Ok ((days *^ Time.day_to_second_multiplier)
+            +^ (hours *^ Time.hour_to_second_multiplier)
+            +^ (minutes *^ Time.hour_to_second_multiplier)
+           )
+    with
+    | Duration_expr_lexer.Syntax_error msg ->
+      Error (Printf.sprintf "%s: %s" (lexbuf_to_pos_str lexbuf) msg)
+    | Duration_expr_parser.Error ->
+      Error (Printf.sprintf "%s: syntax error" (lexbuf_to_pos_str lexbuf))
 end
 
 module To_string = struct
