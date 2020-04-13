@@ -100,7 +100,7 @@ See here __TODO__
   - This allows rollbacks/undos should the user find the schedule resulted from an operation
     unsatisfactory
 
-- (WIP) Multiple user (supported by library, but frontend adoption is WIP)
+- (WIP) Multiple users (supported by library, but frontend adoption is WIP)
 
 - (WIP) Taking transit time into account during scheduling
 
