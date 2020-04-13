@@ -79,6 +79,8 @@ See here __TODO__
 
   - Time profile builder sites are being planned right now (similar to keyboard or mouse macro/profile building sites)
 
+  - See [user manual](#TODO) for details
+
 - Backup plan
 
   - You can specify multiple scheduling strategies for a given scheduling request,
