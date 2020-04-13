@@ -50,7 +50,15 @@ See here __TODO__
   - This can be used to specify "fuzzy" starting and ending time of tasks in scheduling reuqests,
     time profiles, and also recurrence starting times
 
-  - Interpretation functions of time pattern string are included in `Daypack_lib`
+- Time expression
+
+  - A natural to use language with formal grammar for specifying time point and time slots
+
+  - Can be seen as a more expressive layer over `Time_pattern`
+
+- Duration expression
+
+  - Similar to time expression, but much smaller, for specifying duration of time
 
 - Time profiles
 
