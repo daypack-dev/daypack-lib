@@ -19,21 +19,16 @@ module Validate_and_normalize = struct
     if 0 <= minute && minute < 60 then
       match mode with
       | Hour_in_AM ->
-        if 1 <= hour && hour <= 12 then (
-          let hour =
-            if hour = 12 then 0 else hour
-          in
+        if 1 <= hour && hour <= 12 then
+          let hour = if hour = 12 then 0 else hour in
           { hour; minute }
-        )
         else
           raise
             (Invalid_time_expr
                ("Invalid hour : " ^ To_string.debug_string_of_hour_minutes e))
       | Hour_in_PM ->
         if 1 <= hour && hour <= 12 then
-          let hour =
-            if hour = 12 then 0 else hour
-          in
+          let hour = if hour = 12 then 0 else hour in
           { hour = hour + 12; minute }
         else
           raise
@@ -241,9 +236,9 @@ module To_time_pattern_lossy = struct
   let time_pattern_of_day_expr ?(base : Time_pattern.t = Time_pattern.empty)
       (e : Time_expr_normalized_ast.day_expr) : Time_pattern.t =
     match e with
-    | Weekday x -> { base with days = `Weekdays [ x ] }
+    | Weekday x -> { base with weekdays = [ x ] }
     | Month_day x ->
-      if 1 <= x && x <= 31 then { base with days = `Month_days [ x ] }
+      if 1 <= x && x <= 31 then { base with month_days = [ x ] }
       else
         raise
           (Invalid_time_expr (Printf.sprintf "Invalid day of month: %d" x))

@@ -10,7 +10,8 @@ type days = [
 type t = {
   years : int list;
   months : month list;
-  days : days;
+  weekdays : weekday list;
+  month_days : int list;
   hours : int list;
   minutes : int list;
   seconds : int list;

@@ -15,15 +15,11 @@ type search_param =
       search_years_ahead : int;
     }
 
-type days =
-  [ `Weekdays of Time.weekday list
-  | `Month_days of int list
-  ]
-
 type t = {
   years : int list;
   months : Time.month list;
-  days : days;
+  month_days : int list;
+  weekdays : Time.weekday list;
   hours : int list;
   minutes : int list;
   seconds : int list;
@@ -94,7 +90,9 @@ module Equal : sig
 end
 
 module To_string : sig
-  val debug_string_of_days : days -> string
+  val debug_string_of_weekdays : Time.weekday list -> string
+
+  val debug_string_of_month_days : int list -> string
 
   val debug_string_of_time_pattern :
     ?indent_level:int -> ?buffer:Buffer.t -> t -> string
@@ -117,13 +115,9 @@ module Print : sig
 end
 
 module Serialize : sig
-  val pack_days : days -> Time_pattern_t.days
-
   val pack_pattern : t -> Time_pattern_t.t
 end
 
 module Deserialize : sig
-  val unpack_days : Time_pattern_t.days -> days
-
   val unpack_pattern : Time_pattern_t.t -> t
 end

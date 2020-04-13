@@ -711,7 +711,8 @@ let debug_time_pattern_matching_tm_seq () =
     {
       years = [];
       months = [ `Jun ];
-      days = `Month_days [];
+      month_days = [];
+      weekdays = [];
       hours = [ 11 ];
       minutes = [ 0 ];
       seconds = [];
@@ -774,7 +775,8 @@ let debug_time_pattern_matching_time_slots () =
     {
       years = [];
       months = [ `Feb ];
-      days = `Month_days [];
+      month_days = [];
+      weekdays = [];
       hours = [ 13 ];
       minutes = [];
       seconds = [];
@@ -827,7 +829,8 @@ let debug_time_range_pattern_matching_time_slots () =
       ( {
         years = [];
         months = [ `Feb ];
-        days = `Month_days [];
+        month_days = [];
+        weekdays = [];
         hours = [ 13 ];
         minutes = [];
         seconds = [];
@@ -835,7 +838,8 @@ let debug_time_range_pattern_matching_time_slots () =
         {
           years = [];
           months = [ `Feb ];
-          days = `Month_days [];
+          month_days = [];
+          weekdays = [];
           hours = [ 13 ];
           minutes = [];
           seconds = [];
@@ -867,7 +871,8 @@ let debug_time_profile_matching_time_slots_of_periods () =
       ( {
         years = [];
         months = [];
-        days = `Month_days [ 1 ];
+        month_days = [];
+        weekdays = [];
         hours = [];
         minutes = [];
         seconds = [];
@@ -875,7 +880,8 @@ let debug_time_profile_matching_time_slots_of_periods () =
         {
           years = [];
           months = [];
-          days = `Month_days [ 1 ];
+          month_days = [];
+          weekdays = [];
           hours = [];
           minutes = [];
           seconds = [];

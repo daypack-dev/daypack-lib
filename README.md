@@ -5,7 +5,7 @@ Daypack is a basic constraint solving automatic personal task scheduler
 This repo contains the core library of Daypack `daypack_lib`, and the cli frontend `daypc`.
 Other frontends (e.g. Electron, web) are underway.
 
-`Daypack_lib` was primarily developed for basic personal task scheduling (or day planning) and progress tracking,
+Daypack\_lib was primarily developed for basic personal task scheduling (or day planning) and progress tracking,
 but we are open to exploration of its use in more general scheduling scenarios as well
 
 ## Note: Daypack is still WIP
@@ -16,7 +16,7 @@ are still underway
 
 ## Goal
 
-Daypack as a user-facing personal task scheduler program aims to be ergonomic to use, and relatively featureful
+Daypack as a personal task scheduler program, aims 
 
 Daypack as a library aims to be powerful enough to accomodate everyday personal task scheduling needs
 
@@ -32,12 +32,14 @@ See here __TODO__
 
 ## Features
 
-<details><summary>Overview</summary>
+#### Overview
+
+<details><summary>Details</summary>
 <p>
 
 - Automatic scheduling
 
-  - See below for strategies supported in scheduling requests
+  - See [below](#constraints-or-scheduling-strategies-supported) for strategies supported in scheduling requests
 
 - Manual scheduling
 
@@ -45,12 +47,21 @@ See here __TODO__
 
   - All automatic scheduling strategies are available for recurring tasks as well
 
-- Time pattern (similar to cron time expression)
+- Time pattern (more for __devs__)
 
-  - This can be used to specify "fuzzy" starting and ending time of tasks in scheduling reuqests,
-    time profiles, and also recurrence starting times
+  - Functionally very similar to cron time expression, but strictly less general than cron expression
 
-  - Interpretation functions of time pattern string are included in `Daypack_lib`
+  - This is mainly used as a query for the time slot searching functions in `Time_pattern`
+
+- Time expression
+
+  - A natural to use language with formal grammar for specifying time point and time slots
+
+  - Can be seen as a more expressive layer over `Time_pattern`
+
+- Duration expression
+
+  - A natural to use language with formal grammar for specifying duration of time
 
 - Time profiles
 
@@ -67,6 +78,8 @@ See here __TODO__
     provided in the profile directory (see user manual)
 
   - Time profile builder sites are being planned right now (similar to keyboard or mouse macro/profile building sites)
+
+  - See [user manual](#TODO) for details
 
 - Backup plan
 
@@ -87,22 +100,24 @@ See here __TODO__
   - This allows rollbacks/undos should the user find the schedule resulted from an operation
     unsatisfactory
 
-- (WIP) Multiple user (supported by library, but frontend adoption is WIP)
+- (WIP) Multiple users (supported by library, but frontend adoption is WIP)
 
 - (WIP) Taking transit time into account during scheduling
 
   - This feature is unlikely to land any time soon
 
-- `Daypack_lib` is offline (maybe a feature?)
+- Daypack\_lib is offline (more for __devs__)
 
-  - `Daypack_lib` contains implementation of all functionalities, and has zero dependency on any online service
+  - Daypack\_lib contains implementation of all functionalities, and has zero dependency on any online service
 
   - This is not novel/unexpected or necessarily desirable, and is listed more for clarity's sake, as some similar software make use of online services
 
 </p>
 </details>
 
-<details><summary>Constraints (or scheduling strategies) supported</summary>
+#### Constraints (or scheduling strategies) supported
+
+<details><summary>Details</summary>
 <p>
 
 __Note:__ The following lists all the constraints supported by the core library,
