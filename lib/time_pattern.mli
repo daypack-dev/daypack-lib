@@ -37,33 +37,39 @@ type single_or_ranges =
 
 val empty : t
 
-val matching_tm_seq : search_param -> t -> Unix.tm Seq.t
+module Single_pattern : sig
+  val matching_tm_seq : search_param -> t -> Unix.tm Seq.t
 
-val matching_time_slots : search_param -> t -> Time_slot_ds.t Seq.t
+  val matching_time_slots : search_param -> t -> Time_slot_ds.t Seq.t
 
-val next_match_tm : search_param -> t -> Unix.tm option
+  val next_match_tm : search_param -> t -> Unix.tm option
 
-val next_match_unix_time : search_param -> t -> int64 option
+  val next_match_unix_time : search_param -> t -> int64 option
 
-val next_match_time_slot : search_param -> t -> (int64 * int64) option
+  val next_match_time_slot : search_param -> t -> (int64 * int64) option
+end
 
-val matching_time_slots_time_range_pattern :
-  search_param -> time_range_pattern -> Time_slot_ds.t Seq.t
+module Range_pattern : sig
+  val matching_time_slots :
+    search_param -> time_range_pattern -> Time_slot_ds.t Seq.t
 
-val next_match_time_slot_time_range_pattern :
-  search_param -> time_range_pattern -> (int64 * int64) option
+  val next_match_time_slot :
+    search_param -> time_range_pattern -> (int64 * int64) option
 
-val matching_time_slots_time_range_patterns :
-  search_param -> time_range_pattern list -> Time_slot_ds.t Seq.t
+  val matching_time_slots_multi :
+    search_param -> time_range_pattern list -> Time_slot_ds.t Seq.t
 
-val next_match_time_slot_time_range_patterns :
-  search_param -> time_range_pattern list -> (int64 * int64) option
+  val next_match_time_slot_multi :
+    search_param -> time_range_pattern list -> (int64 * int64) option
+end
 
-val matching_time_slots_single_or_ranges :
-  search_param -> single_or_ranges -> Time_slot_ds.t Seq.t
+module Single_or_ranges : sig
+  val matching_time_slots :
+    search_param -> single_or_ranges -> Time_slot_ds.t Seq.t
 
-val next_match_time_slot_single_or_ranges :
-  search_param -> single_or_ranges -> Time_slot_ds.t option
+  val next_match_time_slot :
+    search_param -> single_or_ranges -> Time_slot_ds.t option
+end
 
 module Equal : sig
   val equal : t -> t -> bool
