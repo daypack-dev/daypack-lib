@@ -141,7 +141,8 @@ let matching_hours (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     |> Seq.filter (fun pat_hour -> start <= pat_hour)
     |> Seq.map (fun pat_hour -> { acc with tm_hour = pat_hour })
 
-let matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+let matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t
+  =
   let year = acc.tm_year + Time.tm_year_offset in
   let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
   let day_count = Time.day_count_of_month ~year ~month in
@@ -157,11 +158,11 @@ let matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t 
     Seq.filter_map
       (fun mday ->
          let wday = Time.weekday_of_month_day ~year ~month ~mday in
-         if List.mem wday l then Some { acc with tm_mday = mday }
-         else None)
+         if List.mem wday l then Some { acc with tm_mday = mday } else None)
       OSeq.(start --^ day_count)
 
-let matching_month_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+let matching_month_days (t : t) (start : Unix.tm) (acc : Unix.tm) :
+  Unix.tm Seq.t =
   let year = acc.tm_year + Time.tm_year_offset in
   let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
   let day_count = Time.day_count_of_month ~year ~month in
@@ -455,18 +456,20 @@ module To_string = struct
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "years : [%s]\n"
       (aux t.years);
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "months : [%s]\n"
-      (aux_months t.months);
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "month days : %s\n"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "months : [%s]\n" (aux_months t.months);
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "month days : %s\n"
       (debug_string_of_month_days t.month_days);
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "weekdays : %s\n"
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "weekdays : %s\n"
       (debug_string_of_weekdays t.weekdays);
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "hours : [%s]\n"
       (aux t.hours);
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "minutes : [%s]\n"
-      (aux t.minutes);
-    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "seconds : [%s]\n"
-      (aux t.seconds);
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "minutes : [%s]\n" (aux t.minutes);
+    Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
+      "seconds : [%s]\n" (aux t.seconds);
     Buffer.contents buffer
 
   let debug_string_of_time_range_pattern ?(indent_level = 0)

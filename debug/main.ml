@@ -829,8 +829,8 @@ let debug_time_range_pattern_matching_time_slots () =
       ( {
         years = [];
         months = [ `Feb ];
-      month_days = [];
-      weekdays = [];
+        month_days = [];
+        weekdays = [];
         hours = [ 13 ];
         minutes = [];
         seconds = [];
@@ -838,8 +838,8 @@ let debug_time_range_pattern_matching_time_slots () =
         {
           years = [];
           months = [ `Feb ];
-      month_days = [];
-      weekdays = [];
+          month_days = [];
+          weekdays = [];
           hours = [ 13 ];
           minutes = [];
           seconds = [];
@@ -871,8 +871,8 @@ let debug_time_profile_matching_time_slots_of_periods () =
       ( {
         years = [];
         months = [];
-      month_days = [];
-      weekdays = [];
+        month_days = [];
+        weekdays = [];
         hours = [];
         minutes = [];
         seconds = [];
@@ -880,8 +880,8 @@ let debug_time_profile_matching_time_slots_of_periods () =
         {
           years = [];
           months = [];
-      month_days = [];
-      weekdays = [];
+          month_days = [];
+          weekdays = [];
           hours = [];
           minutes = [];
           seconds = [];

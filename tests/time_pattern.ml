@@ -10,5 +10,4 @@ let qc_unpack_is_inverse_of_pack_pattern =
         in
         pattern = pattern')
 
-let suite =
-  [ qc_unpack_is_inverse_of_pack_pattern ]
+let suite = [ qc_unpack_is_inverse_of_pack_pattern ]
