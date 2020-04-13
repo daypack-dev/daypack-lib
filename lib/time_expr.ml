@@ -236,9 +236,9 @@ module To_time_pattern_lossy = struct
   let time_pattern_of_day_expr ?(base : Time_pattern.t = Time_pattern.empty)
       (e : Time_expr_normalized_ast.day_expr) : Time_pattern.t =
     match e with
-    | Weekday x -> { base with days = `Weekdays [ x ] }
+    | Weekday x -> { base with weekdays = [ x ] }
     | Month_day x ->
-      if 1 <= x && x <= 31 then { base with days = `Month_days [ x ] }
+      if 1 <= x && x <= 31 then { base with month_days = [ x ] }
       else
         raise
           (Invalid_time_expr (Printf.sprintf "Invalid day of month: %d" x))
