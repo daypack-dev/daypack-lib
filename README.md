@@ -16,7 +16,7 @@ are still underway
 
 ## Goal
 
-Daypack as a user-facing personal task scheduler program aims to be ergonomic to use, and relatively featureful
+Daypack as a personal task scheduler program, aims 
 
 Daypack as a library aims to be powerful enough to accomodate everyday personal task scheduling needs
 
@@ -32,12 +32,14 @@ See here __TODO__
 
 ## Features
 
-<details><summary>Overview</summary>
+#### Overview
+
+<details><summary>Details</summary>
 <p>
 
 - Automatic scheduling
 
-  - See below for strategies supported in scheduling requests
+  - See [below](#TODO) for strategies supported in scheduling requests
 
 - Manual scheduling
 
@@ -111,7 +113,9 @@ See here __TODO__
 </p>
 </details>
 
-<details><summary>Constraints (or scheduling strategies) supported</summary>
+#### Constraints (or scheduling strategies) supported
+
+<details><summary>Details</summary>
 <p>
 
 __Note:__ The following lists all the constraints supported by the core library,
