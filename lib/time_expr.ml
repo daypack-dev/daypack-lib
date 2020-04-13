@@ -19,13 +19,22 @@ module Validate_and_normalize = struct
     if 0 <= minute && minute < 60 then
       match mode with
       | Hour_in_AM ->
-        if 0 <= hour && hour < 12 then { hour; minute }
+        if 1 <= hour && hour <= 12 then (
+          let hour =
+            if hour = 12 then 0 else hour
+          in
+          { hour; minute }
+        )
         else
           raise
             (Invalid_time_expr
                ("Invalid hour : " ^ To_string.debug_string_of_hour_minutes e))
       | Hour_in_PM ->
-        if 0 <= hour && hour < 12 then { hour = hour + 12; minute }
+        if 1 <= hour && hour <= 12 then
+          let hour =
+            if hour = 12 then 0 else hour
+          in
+          { hour = hour + 12; minute }
         else
           raise
             (Invalid_time_expr
