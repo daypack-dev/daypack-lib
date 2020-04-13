@@ -155,5 +155,7 @@
  (action  (run atdgen -j -j-std %{deps})))
 
 (ocamllex time_expr_lexer)
+(ocamllex duration_expr_lexer)
 
-(menhir (modules time_expr_parser))
+(menhir (modules time_expr_parser
+                 duration_expr_parser))
