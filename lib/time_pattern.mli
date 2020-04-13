@@ -81,6 +81,12 @@ module Single_or_ranges : sig
 
   val next_match_time_slot :
     search_param -> single_or_ranges -> Time_slot_ds.t option
+
+  val matching_time_slots_round_robin_non_decreasing :
+    search_param -> single_or_ranges -> Time_slot_ds.t list Seq.t
+
+  val matching_time_slots_round_robin_non_decreasing_flat :
+    search_param -> single_or_ranges -> Time_slot_ds.t Seq.t
 end
 
 module Equal : sig
