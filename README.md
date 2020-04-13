@@ -39,7 +39,7 @@ See here __TODO__
 
 - Automatic scheduling
 
-  - See [below](#TODO) for strategies supported in scheduling requests
+  - See [below](#constraints-or-scheduling-strategies-supported) for strategies supported in scheduling requests
 
 - Manual scheduling
 
