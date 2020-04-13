@@ -105,7 +105,7 @@ See here __TODO__
 
   - This feature is unlikely to land any time soon
 
-- `Daypack_lib` is offline
+- `Daypack_lib` is offline (more for __devs__)
 
   - `Daypack_lib` contains implementation of all functionalities, and has zero dependency on any online service
 
