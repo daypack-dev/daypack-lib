@@ -42,6 +42,10 @@ module Single_pattern : sig
 
   val matching_time_slots : search_param -> t -> Time_slot_ds.t Seq.t
 
+  val matching_time_slots_round_robin_non_decreasing : search_param -> t list -> Time_slot_ds.t list Seq.t
+
+  val matching_time_slots_round_robin_non_decreasing_flat : search_param -> t list -> Time_slot_ds.t Seq.t
+
   val next_match_tm : search_param -> t -> Unix.tm option
 
   val next_match_unix_time : search_param -> t -> int64 option
@@ -61,6 +65,10 @@ module Range_pattern : sig
 
   val next_match_time_slot_multi :
     search_param -> time_range_pattern list -> (int64 * int64) option
+
+  val matching_time_slots_round_robin_non_decreasing : search_param -> time_range_pattern list -> Time_slot_ds.t list Seq.t
+
+  val matching_time_slots_round_robin_non_decreasing_flat : search_param -> time_range_pattern list -> Time_slot_ds.t Seq.t
 end
 
 module Single_or_ranges : sig
