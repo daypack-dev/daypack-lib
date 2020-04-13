@@ -60,7 +60,9 @@ See here __TODO__
 
 - Duration expression
 
-  - Similar to time expression, but much smaller, for specifying duration of time
+  - Similar to time expression, but much simpler
+
+  - Used for specifying duration of time
 
 - Time profiles
 
