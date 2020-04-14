@@ -23,6 +23,14 @@ type month =
   | `Dec
   ]
 
+type weekday_range = weekday Range.t
+
+type month_day_range = int Range.t
+
+type day_range =
+  | Weekday_range of weekday_range
+  | Month_day_range of month_day_range
+
 let first_mday = 1
 
 let tm_year_offset = 1900
@@ -50,14 +58,6 @@ let next_weekday (wday : weekday) : weekday =
   | `Thu -> `Fri
   | `Fri -> `Sat
   | `Sat -> `Sun
-
-let weekday_list_of_weekday_range ~(start : weekday) ~(end_inc : weekday) :
-  weekday list =
-  let rec aux acc cur end_inc =
-    if cur = end_inc then List.rev (cur :: acc)
-    else aux (cur :: acc) (next_weekday cur) end_inc
-  in
-  aux [] start end_inc
 
 let tm_int_of_weekday (wday : weekday) : int =
   match wday with
@@ -99,6 +99,18 @@ let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
   | Thu -> `Thu
   | Fri -> `Fri
   | Sat -> `Sat
+
+let weekday_seq_of_weekday_range (x : weekday_range) : weekday Seq.t =
+  Range.flatten_seq ~modulo:7 ~of_int:weekday_of_tm_int ~to_int:tm_int_of_weekday x
+
+let weekday_list_of_weekday_range (x : weekday_range) : weekday list =
+  Range.flatten_list ~modulo:7 ~of_int:weekday_of_tm_int ~to_int:tm_int_of_weekday x
+
+let month_day_seq_of_month_day_range (x : int Range.t) : int Seq.t =
+  Range.flatten_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
+
+let month_day_list_of_month_day_range (x : int Range.t) : int list =
+  Range.flatten_list ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
 
 let tm_int_of_month (month : month) : int =
   match month with
