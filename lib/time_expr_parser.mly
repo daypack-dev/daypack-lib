@@ -106,10 +106,14 @@ time_slots_expr:
     }
 
   (* day list + hour minutes *)
-  | days = separated_nonempty_list(COMMA, day_expr);
+  | day_list = separated_nonempty_list(COMMA, day_expr);
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Day_list_and_hour_minutes { hour_minutes; days }
+      Days_and_hour_minutes
+        {
+          day_list;
+          hour_minutes;
+        }
     }
 
   (* weekday to weekday + hour minutes *)
