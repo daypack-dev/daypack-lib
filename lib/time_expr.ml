@@ -53,21 +53,33 @@ module Validate_and_normalize = struct
     | `Range_exc (t1, t2) ->
       `Range_exc (hour_minute_expr t1, hour_minute_expr t2)
 
+  let hour_minute_ranges_expr (l : Time_expr_ast.hour_minute_range_expr list) :
+    Time_expr_normalized_ast.hour_minute_range_expr list =
+    List.map hour_minute_range_expr l
+
   let month_day_expr (n : int) : int =
     if 1 <= n && n <= 31 then n
     else raise (Invalid_time_expr (Printf.sprintf "Invalid month day : %d" n))
 
+  let month_day_range_expr (x : int Range.t) : int Range.t =
+    match x with
+    | `Range_inc (x, y) -> `Range_inc (month_day_expr x, month_day_expr y)
+    | `Range_exc (x, y) -> `Range_inc (month_day_expr x, month_day_expr (y - 1))
+
+  let month_day_ranges_expr (l : int Range.t list) : int Range.t list =
+    List.map month_day_range_expr l
+
+  let weekday_expr (x : Time.weekday) : Time.weekday = x
+
+  let weekday_range_expr (x : Time.weekday Range.t) : Time.weekday Range.t =
+    x
+
+  let weekday_ranges_expr (l : Time.weekday Range.t list) : Time.weekday Range.t list =
+    List.map weekday_range_expr l
+
   let day_expr (e : Time_expr_ast.day_expr) : Time_expr_normalized_ast.day_expr
     =
     match e with Weekday _ -> e | Month_day n -> Month_day (month_day_expr n)
-
-  let day_range_expr (e : Time_expr_ast.day_range_expr) :
-    Time_expr_normalized_ast.day_range_expr =
-    match e with
-    | Time_expr_ast.Weekday_range (d1, d2) ->
-      Time_expr_ast.Weekday_range (d1, d2)
-    | Time_expr_ast.Month_day_range (d1, d2) ->
-      Time_expr_ast.Month_day_range (month_day_expr d1, month_day_expr d2)
 
   let month_expr (e : Time_expr_ast.month_expr) :
     Time_expr_normalized_ast.month_expr =
@@ -78,6 +90,14 @@ module Validate_and_normalize = struct
         | Error () ->
           raise (Invalid_time_expr (Printf.sprintf "Invalid month : %d" n))
         | Ok m -> m )
+
+  let month_range_expr (e : Time_expr_ast.month_expr Range.t) : Time_expr_normalized_ast.month_expr Range.t =
+    match e with
+    | `Range_inc (x, y) -> `Range_inc (month_expr x, month_expr y)
+    | `Range_exc (x, y) -> `Range_exc (month_expr x, month_expr y)
+
+  let month_ranges_expr (l : Time_expr_ast.month_expr Range.t list) : Time_expr_normalized_ast.month_expr Range.t list =
+    List.map month_range_expr l
 
   let year_expr (e : Time_expr_ast.year_expr) :
     Time_expr_normalized_ast.year_expr =
@@ -114,33 +134,34 @@ module Validate_and_normalize = struct
     | Time_expr_ast.Single_time_slot (e1, e2) ->
       Time_expr_normalized_ast.Single_time_slot
         (time_point_expr e1, time_point_expr e2)
-    | Time_expr_ast.Day_list_and_hour_minutes { hour_minutes; days } ->
-      Time_expr_normalized_ast.Day_list_and_hour_minutes
+    | Time_expr_ast.Month_days_and_hour_minutes { month_days; hour_minutes; } ->
+      Time_expr_normalized_ast.Month_days_and_hour_minutes
         {
-          days = List.map day_expr days;
-          hour_minutes = List.map hour_minute_range_expr hour_minutes;
+          month_days = month_day_ranges_expr month_days;
+          hour_minutes = hour_minute_ranges_expr hour_minutes;
         }
-    | Time_expr_ast.Day_range_and_hour_minutes { hour_minutes; days } ->
-      Time_expr_normalized_ast.Day_range_and_hour_minutes
+    | Time_expr_ast.Weekdays_and_hour_minutes { weekdays; hour_minutes; } ->
+      Time_expr_normalized_ast.Weekdays_and_hour_minutes
         {
-          days = day_range_expr days;
-          hour_minutes = List.map hour_minute_range_expr hour_minutes;
+          weekdays = weekday_ranges_expr weekdays;
+          hour_minutes = hour_minute_ranges_expr hour_minutes;
         }
-    | Time_expr_ast.Month_list_and_month_day_list_and_hour_minutes
+    | Time_expr_ast.Months_and_month_days_and_hour_minutes
         { months; month_days; hour_minutes } ->
-      Time_expr_normalized_ast.Month_list_and_month_day_list_and_hour_minutes
+      Time_expr_normalized_ast.Months_and_month_days_and_hour_minutes
         {
-          months = List.map month_expr months;
-          month_days = List.map month_day_expr month_days;
-          hour_minutes = List.map hour_minute_range_expr hour_minutes;
+          months = month_ranges_expr months;
+          month_days = month_day_ranges_expr month_days;
+          hour_minutes = hour_minute_ranges_expr hour_minutes;
         }
-    | Time_expr_ast.Month_list_and_weekday_list_and_hour_minutes
-        { months; weekdays; hour_minutes } ->
-      Time_expr_normalized_ast.Month_list_and_weekday_list_and_hour_minutes
+    | Time_expr_ast.Months_and_weekdays_and_hour_minutes
+        { months; weekdays; month_weekday_mode; hour_minutes } ->
+      Time_expr_normalized_ast.Months_and_weekdays_and_hour_minutes
         {
-          months = List.map month_expr months;
-          weekdays;
-          hour_minutes = List.map hour_minute_range_expr hour_minutes;
+          months = month_ranges_expr months;
+          weekdays = weekday_ranges_expr weekdays;
+          month_weekday_mode;
+          hour_minutes = hour_minute_ranges_expr hour_minutes;
         }
 
   let time_expr (e : Time_expr_ast.t) :
@@ -210,47 +231,6 @@ module To_time_pattern_lossy = struct
     unit =
     List.iter check_hour_minute_range_expr hour_minutes
 
-  (* let next_hour_minute_expr (e : hour_minute_expr) :
-   *   hour_minute_expr =
-   *   match Validate_and_normalize.hour_minutes_expr e with
-   *   | Error msg -> raise (Invalid_time_expr msg)
-   *   | Ok {hour; minute; mode} ->
-   *     match Time.next_hour_minute ~hour ~minute with
-   *     | Ok (hour, minute) -> { hour; minute;  mode }
-   *     | Error () ->
-   *       raise
-   *         (Invalid_time_expr
-   *            (To_string.debug_string_of_hour_minutes e)) *)
-
-  let days_of_day_range_expr (e : Time_expr_normalized_ast.day_range_expr) :
-    Time_expr_normalized_ast.day_expr list =
-    match e with
-    | Weekday_range (start, end_inc) ->
-      Time.weekday_list_of_weekday_range ~start ~end_inc
-      |> List.map (fun x -> Time_expr_ast.Weekday x)
-    | Month_day_range (start, end_inc) ->
-      OSeq.(start -- end_inc)
-      |> Seq.map (fun x -> Time_expr_ast.Month_day x)
-      |> List.of_seq
-
-  let time_pattern_of_day_expr ?(base : Time_pattern.t = Time_pattern.empty)
-      (e : Time_expr_normalized_ast.day_expr) : Time_pattern.t =
-    match e with
-    | Weekday x -> { base with weekdays = [ x ] }
-    | Month_day x ->
-      if 1 <= x && x <= 31 then { base with month_days = [ x ] }
-      else
-        raise
-          (Invalid_time_expr (Printf.sprintf "Invalid day of month: %d" x))
-
-  let time_pattern_of_month_expr ?(base : Time_pattern.t = Time_pattern.empty)
-      (e : Time_expr_normalized_ast.month_expr) : Time_pattern.t =
-    { base with months = [ e ] }
-
-  let time_pattern_of_year_expr ?(base : Time_pattern.t = Time_pattern.empty)
-      (e : Time_expr_normalized_ast.year_expr) : Time_pattern.t =
-    { base with years = [ e ] }
-
   let time_pattern_of_hour_minute_expr
       ?(base : Time_pattern.t = Time_pattern.empty)
       (e : Time_expr_normalized_ast.hour_minute_expr) : Time_pattern.t =
@@ -276,6 +256,43 @@ module To_time_pattern_lossy = struct
     Time_pattern.time_range_pattern Seq.t =
     List.to_seq l
     |> Seq.map (time_range_pattern_of_hour_minute_range_expr ~base)
+
+  (* let days_of_day_range_expr (e : Time_expr_normalized_ast.day_range_expr) :
+   *   Time_expr_normalized_ast.day_expr list =
+   *   match e with
+   *   | Weekday_range (start, end_inc) ->
+   *     Time.weekday_list_of_weekday_range ~start ~end_inc
+   *     |> List.map (fun x -> Time_expr_ast.Weekday x)
+   *   | Month_day_range (start, end_inc) ->
+   *     OSeq.(start -- end_inc)
+   *     |> Seq.map (fun x -> Time_expr_ast.Month_day x)
+   *     |> List.of_seq *)
+
+  let time_pattern_of_month_day_expr ?(base : Time_pattern.t = Time_pattern.empty)
+      (e : Time_expr_normalized_ast.month_day_expr) : Time_pattern.t =
+    {
+    }
+
+  let time_pattern_of_weekday_expr ?(base : Time_pattern.t = Time_pattern.empty)
+      (e : Time_expr_normalized_ast.weekday_expr) : Time_pattern.t =
+
+  let time_pattern_of_day_expr ?(base : Time_pattern.t = Time_pattern.empty)
+      (e : Time_expr_normalized_ast.day_expr) : Time_pattern.t =
+    match e with
+    | Weekday x -> { base with weekdays = [ x ] }
+    | Month_day x ->
+      if 1 <= x && x <= 31 then { base with month_days = [ x ] }
+      else
+        raise
+          (Invalid_time_expr (Printf.sprintf "Invalid day of month: %d" x))
+
+  let time_pattern_of_month_expr ?(base : Time_pattern.t = Time_pattern.empty)
+      (e : Time_expr_normalized_ast.month_expr) : Time_pattern.t =
+    { base with months = [ e ] }
+
+  let time_pattern_of_year_expr ?(base : Time_pattern.t = Time_pattern.empty)
+      (e : Time_expr_normalized_ast.year_expr) : Time_pattern.t =
+    { base with years = [ e ] }
 
   let time_pattern_of_time_point_expr
       (e : Time_expr_normalized_ast.time_point_expr) :
@@ -314,14 +331,14 @@ module To_time_pattern_lossy = struct
                   match time_pattern_of_time_point_expr end_exc with
                   | Error msg -> raise (Invalid_time_expr msg)
                   | Ok end_exc -> [ `Range_exc (start, end_exc) ] ) )
-          | Day_list_and_hour_minutes { hour_minutes; days } ->
+          | Month_days_and_hour_minutes { month_days; hour_minutes; } ->
             check_hour_minutes hour_minutes;
-            List.map time_pattern_of_day_expr days
+            List.map time_pattern_of_month_day_expr month_days
             |> List.to_seq
             |> Seq.flat_map (fun pat ->
                 time_range_pattern_seq_of_hour_minutes ~base:pat hour_minutes)
             |> List.of_seq
-          | Day_range_and_hour_minutes { hour_minutes; days } ->
+          | Weekdays_and_hour_minutes { weekdays; hour_minutes; } ->
             days
             |> days_of_day_range_expr
             |> List.to_seq
@@ -329,8 +346,8 @@ module To_time_pattern_lossy = struct
             |> Seq.flat_map (fun pat ->
                 time_range_pattern_seq_of_hour_minutes ~base:pat hour_minutes)
             |> List.of_seq
-          | Month_list_and_month_day_list_and_hour_minutes
-              { hour_minutes; month_days; months } ->
+          | Months_and_month_days_and_hour_minutes
+              { months; month_days; hour_minutes; } ->
             let month_pats = List.map time_pattern_of_month_expr months in
             let day_pats =
               month_pats
@@ -348,8 +365,8 @@ module To_time_pattern_lossy = struct
             |> Seq.flat_map (fun pat ->
                 time_range_pattern_seq_of_hour_minutes ~base:pat hour_minutes)
             |> List.of_seq
-          | Month_list_and_weekday_list_and_hour_minutes
-              { hour_minutes; weekdays; months } ->
+          | Months_and_weekdays_and_hour_minutes
+              { months; weekdays; hour_minutes; } ->
             let month_pats = List.map time_pattern_of_month_expr months in
             let day_pats =
               month_pats
@@ -365,7 +382,11 @@ module To_time_pattern_lossy = struct
             |> List.to_seq
             |> Seq.flat_map (fun pat ->
                 time_range_pattern_seq_of_hour_minutes ~base:pat hour_minutes)
-            |> List.of_seq )
+            |> List.of_seq
+          | Years_and_months_and_month_days_and_hour_minutes
+              { years; months; month_days; hour_minutes } ->
+            failwith "Not implemented"
+        )
     with Invalid_time_expr msg -> Error msg
 
   let single_or_ranges_of_time_expr (e : Time_expr_normalized_ast.t) :
