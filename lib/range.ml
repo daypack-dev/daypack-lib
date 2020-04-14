@@ -125,3 +125,8 @@ let compress_seq (type a) ~(to_int : a -> int) (s : a t Seq.t) : a t Seq.t =
       )
   in
   aux to_int None s
+
+let compress_list (type a) ~(to_int : a -> int) (l : a t list) : a t list =
+  List.to_seq l
+  |> compress_seq ~to_int
+  |> List.of_seq
