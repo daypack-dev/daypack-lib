@@ -3,6 +3,11 @@ type 'a t =
   | `Range_exc of 'a * 'a
   ]
 
+let b_is_next_of_a (type a) ~(to_int : a -> int) x y =
+  let x_int = to_int x in
+  let y_int = to_int y in
+  x_int + 1 = y_int
+
 let flatten_seq ?(modulo : int option = None) ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a Seq.t =
   match t with
   | `Range_inc (start, end_inc) ->
@@ -44,11 +49,6 @@ let flatten_list ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a lis
   |> List.of_seq
 
 let range_seq_of_seq (type a) ~(to_int : a -> int) (s : a Seq.t) : a t Seq.t =
-  let b_is_next_of_a (to_int : a -> int) x y =
-    let x_int = to_int x in
-    let y_int = to_int y in
-    x_int + 1 = y_int
-  in
   let rec aux to_int (acc_inc : (a * a) option) (s : a Seq.t) : a t Seq.t =
     match s () with
     | Seq.Nil -> (
@@ -60,7 +60,7 @@ let range_seq_of_seq (type a) ~(to_int : a -> int) (s : a Seq.t) : a t Seq.t =
       match acc_inc with
       | None -> aux to_int (Some (x, x)) rest
       | Some (start, end_inc) ->
-        if b_is_next_of_a to_int end_inc x then
+        if b_is_next_of_a ~to_int end_inc x then
           aux to_int (Some (start, x)) rest
         else
           fun () ->
@@ -82,3 +82,46 @@ let range_list_of_list (type a) ~(to_int : a -> int) (l : a list) : a t list =
   List.to_seq l
   |> range_seq_of_seq ~to_int
   |> List.of_seq
+
+let merge (type a) ~(to_int : a -> int) (x : a t) (y : a t) : a t option =
+  match x, y with
+  | `Range_inc (x_start, x_end_inc), `Range_inc (y_start, y_end_inc) ->
+    if b_is_next_of_a ~to_int x_end_inc y_start then
+      Some (`Range_inc (x_start, y_end_inc))
+    else
+      None
+  | `Range_inc (x_start, x_end_inc), `Range_exc (y_start, y_end_exc) ->
+    if b_is_next_of_a ~to_int x_end_inc y_start then
+      Some (`Range_exc (x_start, y_end_exc))
+    else
+      None
+  | `Range_exc (x_start, x_end_exc), `Range_inc (y_start, y_end_inc) ->
+    if x_end_exc = y_start then
+      Some (`Range_inc (x_start, y_end_inc))
+    else
+      None
+  | `Range_exc (x_start, x_end_exc), `Range_exc (y_start, y_end_exc) ->
+    if x_end_exc = y_start then
+      Some (`Range_exc (x_start, y_end_exc))
+    else
+      None
+
+let compress_seq (type a) ~(to_int : a -> int) (s : a t Seq.t) : a t Seq.t =
+  let rec aux (to_int : a -> int) (acc : a t option) (s : a t Seq.t) : a t Seq.t =
+    match s () with
+    | Seq.Nil -> (
+        match acc with
+        | None -> Seq.empty
+        | Some x -> Seq.return x
+      )
+    | Seq.Cons (x, rest) ->
+      (
+        match acc with
+        | None -> aux to_int (Some x) rest
+        | Some acc ->
+          match merge ~to_int acc x with
+          | None -> fun () -> Seq.Cons (acc, aux to_int (Some x) rest)
+          | Some res -> aux to_int (Some res) rest
+      )
+  in
+  aux to_int None s
