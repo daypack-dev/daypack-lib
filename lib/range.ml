@@ -3,7 +3,7 @@ type 'a t =
   | `Range_exc of 'a * 'a
   ]
 
-let flatten_seq ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a Seq.t =
+let flatten_seq ?(modulo : int option = None) ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a Seq.t =
   match t with
   | `Range_inc (start, end_inc) ->
     let start_int = to_int start in
@@ -11,8 +11,17 @@ let flatten_seq ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a Seq.
     if start_int <= end_inc_int then
       OSeq.(start_int -- end_inc_int)
       |> Seq.map of_int
-    else
-      raise (Invalid_argument "End is before start")
+    else (
+      match modulo with
+      | None -> raise (Invalid_argument "End is before start")
+      | Some modulo ->
+        if modulo <= 0 then
+          raise (Invalid_argument "Modulo is <= 0")
+        else
+          OSeq.append OSeq.(start_int --^ modulo)
+            OSeq.(0 -- end_inc_int)
+          |> Seq.map of_int
+    )
   | `Range_exc (start, end_exc) ->
     let start_int = to_int start in
     let end_exc_int = to_int end_exc in
@@ -20,7 +29,15 @@ let flatten_seq ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a Seq.
       OSeq.(start_int --^ end_exc_int)
       |> Seq.map of_int
     else
-      raise (Invalid_argument "End is before start")
+      match modulo with
+      | None -> raise (Invalid_argument "End is before start")
+      | Some modulo ->
+        if modulo <= 0 then
+          raise (Invalid_argument "Modulo is <= 0")
+        else
+          OSeq.append OSeq.(start_int --^ modulo)
+            OSeq.(0 --^ end_exc_int)
+          |> Seq.map of_int
 
 let flatten_list ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a list =
   flatten_seq ~of_int ~to_int t
