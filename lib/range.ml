@@ -8,7 +8,7 @@ let b_is_next_of_a (type a) ~(to_int : a -> int) x y =
   let y_int = to_int y in
   x_int + 1 = y_int
 
-let flatten_seq ?(modulo : int option = None) ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a Seq.t =
+let flatten_seq_internal ~(modulo : int option) ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a Seq.t =
   match t with
   | `Range_inc (start, end_inc) ->
     let start_int = to_int start in
@@ -44,8 +44,11 @@ let flatten_seq ?(modulo : int option = None) ~(of_int : int -> 'a) ~(to_int : '
             OSeq.(0 --^ end_exc_int)
           |> Seq.map of_int
 
-let flatten_list ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a list =
-  flatten_seq ~of_int ~to_int t
+let flatten_seq ?(modulo : int option) ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a Seq.t =
+  flatten_seq_internal ~modulo ~of_int ~to_int t
+
+let flatten_list ?(modulo : int option) ~(of_int : int -> 'a) ~(to_int : 'a -> int) (t : 'a t) : 'a list =
+  flatten_seq_internal ~modulo ~of_int ~to_int t
   |> List.of_seq
 
 let range_seq_of_seq (type a) ~(to_int : a -> int) (s : a Seq.t) : a t Seq.t =
