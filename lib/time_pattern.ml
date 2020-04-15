@@ -195,7 +195,7 @@ module Matching_hours = struct
     let start_tm = { acc with tm_hour = start_hour; tm_min = start_min; tm_sec = start_sec } in
     match t.minutes with
     | [] -> Seq.return (`Range_exc ( start_tm,
-                                     { acc with tm_hour = 60; tm_min = 0; tm_sec = 0 } ) )
+                                     { acc with tm_hour = 23; tm_min = 0; tm_sec = 0 } ) )
     | l ->
       let f_inc (x, y) =
         if x = start_hour then
@@ -271,7 +271,7 @@ module Matching_days = struct
     in
     let f_inc (x, y) =
       let end_tm =
-        { acc with tm_mday = y; tm_hour = 59; tm_min = 59; tm_sec = 59}
+        { acc with tm_mday = y; tm_hour = 23; tm_min = 59; tm_sec = 59}
       in
       if x = start_mday then
         start_tm, end_tm

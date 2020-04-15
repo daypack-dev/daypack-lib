@@ -775,7 +775,7 @@ let debug_time_pattern_matching_time_slots () =
     {
       years = [];
       months = [ `Feb ];
-      month_days = [];
+      month_days = [ ];
       weekdays = [];
       hours = [ 13 ];
       minutes = [];
@@ -1076,13 +1076,13 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_pattern_matching_time_slots ();
- *   print_newline () *)
-
 let () =
-  debug_time_range_pattern_matching_time_slots ();
+  debug_time_pattern_matching_time_slots ();
   print_newline ()
+
+(* let () =
+ *   debug_time_range_pattern_matching_time_slots ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
