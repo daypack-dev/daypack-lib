@@ -8,6 +8,11 @@ let b_is_next_of_a (type a) ~(to_int : a -> int) x y =
   let y_int = to_int y in
   x_int + 1 = y_int
 
+let map (f : 'a -> 'b) (t : 'a t) : 'b t =
+  match t with
+  | `Range_inc (x, y) -> `Range_inc (f x, f y)
+  | `Range_exc (x, y) -> `Range_exc (f x, f y)
+
 let flatten_into_seq_internal ~(modulo : int option) ~(of_int : int -> 'a)
     ~(to_int : 'a -> int) (t : 'a t) : 'a Seq.t =
   match t with
