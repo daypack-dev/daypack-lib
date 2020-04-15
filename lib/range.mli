@@ -3,7 +3,7 @@ type 'a t =
   | `Range_exc of 'a * 'a
   ]
 
-val map : ('a -> 'b) -> 'a t -> 'b t
+val map : f_inc:('a * 'a -> 'b * 'b) -> f_exc:('a * 'a -> 'b * 'b) -> 'a t -> 'b t
 
 val flatten_into_seq :
   ?modulo:int -> of_int:(int -> 'a) -> to_int:('a -> int) -> 'a t -> 'a Seq.t
