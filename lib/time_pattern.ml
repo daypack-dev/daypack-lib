@@ -100,11 +100,11 @@ let matching_seconds (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   in
   match t.seconds with
   | [] -> Seq.map (fun tm_sec -> { acc with tm_sec }) OSeq.(start --^ 60)
-  | pat_min_list ->
-    pat_min_list
+  | pat_sec_list ->
+    pat_sec_list
     |> List.to_seq
-    |> Seq.filter (fun pat_min -> start <= pat_min)
-    |> Seq.map (fun pat_min -> { acc with tm_min = pat_min })
+    |> Seq.filter (fun pat_sec -> start <= pat_sec)
+    |> Seq.map (fun pat_sec -> { acc with tm_min = pat_sec })
 
 let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
