@@ -101,18 +101,18 @@ let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
   | Sat -> `Sat
 
 let weekday_seq_of_weekday_range (x : weekday_range) : weekday Seq.t =
-  Range.flatten_to_seq ~modulo:7 ~of_int:weekday_of_tm_int
+  Range.flatten_into_seq ~modulo:7 ~of_int:weekday_of_tm_int
     ~to_int:tm_int_of_weekday x
 
 let weekday_list_of_weekday_range (x : weekday_range) : weekday list =
-  Range.flatten_to_list ~modulo:7 ~of_int:weekday_of_tm_int
+  Range.flatten_into_list ~modulo:7 ~of_int:weekday_of_tm_int
     ~to_int:tm_int_of_weekday x
 
 let month_day_seq_of_month_day_range (x : int Range.t) : int Seq.t =
-  Range.flatten_to_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
+  Range.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
 
 let month_day_list_of_month_day_range (x : int Range.t) : int list =
-  Range.flatten_to_list ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
+  Range.flatten_into_list ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
 
 let tm_int_of_month (month : month) : int =
   match month with
