@@ -321,10 +321,10 @@ module Range_pattern = struct
       | None -> None
       | Some (_, end_exc') -> Some (start, end_exc')
     in
-    let start_seq =
+    let start_pat =
       match range with `Range_inc (t1, _) | `Range_exc (t1, _) -> t1
     in
-    Single_pattern.matching_time_slots search_param start_seq
+    Single_pattern.matching_time_slots search_param start_pat
     |>
     match range with
     | `Range_inc (_, t2) ->
