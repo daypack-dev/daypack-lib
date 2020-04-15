@@ -53,16 +53,16 @@ end
 
 let normalize ?(skip_filter = false) ?(skip_sort = false) time_slots =
   time_slots
-  |> (fun l -> if skip_filter then l else Normalize.filter_invalid_or_empty l)
-  |> (fun l -> if skip_sort then l else Normalize.sort_uniq_time_slots l)
+  |> (fun s -> if skip_filter then s else Normalize.filter_invalid_or_empty s)
+  |> (fun s -> if skip_sort then s else Normalize.sort_uniq_time_slots s)
   |> Normalize.defrag_and_join_overlapping
 
 let normalize_list_in_seq_out ?(skip_filter = false) ?(skip_sort = false)
     time_slots =
   time_slots
-  |> (fun l ->
-      if skip_filter then l else Normalize.filter_invalid_or_empty_list l)
-  |> (fun l -> if skip_sort then l else Normalize.sort_uniq_time_slots_list l)
+  |> (fun s ->
+      if skip_filter then s else Normalize.filter_invalid_or_empty_list s)
+  |> (fun s -> if skip_sort then s else Normalize.sort_uniq_time_slots_list s)
   |> List.to_seq
   |> Normalize.defrag_and_join_overlapping
 
@@ -87,7 +87,7 @@ let seq_of_unix_time_seq ?(skip_sort = false) (s : int64 Seq.t) : t Seq.t =
                               aux (Some (t, Int64.succ t)) rest)
   in
   aux None s
-  |> normalize ~skip_filter:true ~skip_sort
+  |> fun s -> if skip_sort then s else normalize ~skip_filter:true ~skip_sort s
 
 module Slice = struct
   let slice_start ~start (time_slots : t Seq.t) : t Seq.t =
