@@ -69,22 +69,18 @@ let normalize_list_in_seq_out ?(skip_filter = false) ?(skip_sort = false)
 let seq_of_unix_time_seq ?(skip_sort = false) (s : int64 Seq.t) : t Seq.t =
   let rec aux (acc : t option) (s : int64 Seq.t) : t Seq.t =
     match s () with
-    | Seq.Nil -> (
+    | Seq.Nil -> ( match acc with None -> Seq.empty | Some x -> Seq.return x )
+    | Seq.Cons (t, rest) -> (
         match acc with
-        | None -> Seq.empty
-        | Some x -> Seq.return x
-      )
-    | Seq.Cons (t, rest) ->
-      match acc with
-      | None -> aux (Some (t, Int64.succ t)) rest
-      | Some (acc_start, acc_end_exc) ->
-        if acc_start <= t && t < acc_end_exc then
-          aux (Some (acc_start, acc_end_exc)) rest
-        else if t = acc_end_exc then
-          aux (Some (acc_start, Int64.succ t)) rest
-        else
-          fun () -> Seq.Cons ((acc_start, acc_end_exc),
-                              aux (Some (t, Int64.succ t)) rest)
+        | None -> aux (Some (t, Int64.succ t)) rest
+        | Some (acc_start, acc_end_exc) ->
+          if acc_start <= t && t < acc_end_exc then
+            aux (Some (acc_start, acc_end_exc)) rest
+          else if t = acc_end_exc then
+            aux (Some (acc_start, Int64.succ t)) rest
+          else fun () ->
+            Seq.Cons
+              ((acc_start, acc_end_exc), aux (Some (t, Int64.succ t)) rest) )
   in
   aux None s
   |> fun s -> if skip_sort then s else normalize ~skip_filter:true ~skip_sort s
