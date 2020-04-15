@@ -268,8 +268,10 @@ module Single_pattern = struct
     |> (fun l ->
         match time_slots with
         | None -> l
-        | Some time_slots -> Time_slot_ds.intersect (List.to_seq time_slots) l)
-    |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
+        | Some time_slots ->
+          Time_slot_ds.intersect (List.to_seq time_slots) l
+          |> Time_slot_ds.normalize ~skip_filter:false ~skip_sort:true
+      )
 
   let matching_time_slots_round_robin_non_decreasing
       (search_param : search_param) (l : t list) : Time_slot_ds.t list Seq.t =
