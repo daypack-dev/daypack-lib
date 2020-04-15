@@ -193,7 +193,7 @@ module Matching_hours = struct
   let matching_hour_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Range.t Seq.t =
     let start_hour, start_min, start_sec = get_start_hour_min_sec ~start ~acc in
     let start_tm = { acc with tm_hour = start_hour; tm_min = start_min; tm_sec = start_sec } in
-    match t.minutes with
+    match t.hours with
     | [] -> Seq.return (`Range_exc ( start_tm,
                                      { acc with tm_hour = 23; tm_min = 0; tm_sec = 0 } ) )
     | l ->
