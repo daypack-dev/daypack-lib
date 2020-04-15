@@ -1,5 +1,3 @@
-open Int64_utils
-
 type search_param =
   | Time_slots of {
       search_in_time_zone : Time.time_zone;
@@ -266,7 +264,7 @@ module Single_pattern = struct
     let search_in_time_zone = get_search_in_time_zone search_param in
     matching_tm_seq search_param t
     |> Seq.map (Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone)
-    |> Seq.map (fun time -> (time, time +^ 1L))
+    |> Time_slot_ds.seq_of_unix_time_seq ~skip_sort:true
     |> (fun l ->
         match time_slots with
         | None -> l
