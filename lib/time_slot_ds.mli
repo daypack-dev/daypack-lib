@@ -5,6 +5,8 @@ val normalize : ?skip_filter:bool -> ?skip_sort:bool -> t Seq.t -> t Seq.t
 val normalize_list_in_seq_out :
   ?skip_filter:bool -> ?skip_sort:bool -> t list -> t Seq.t
 
+val seq_of_unix_time_seq : ?skip_sort:bool -> int64 Seq.t -> t Seq.t
+
 val slice : ?start:int64 -> ?end_exc:int64 -> t Seq.t -> t Seq.t
 
 val slice_rev : ?start:int64 -> ?end_exc:int64 -> t Seq.t -> t Seq.t

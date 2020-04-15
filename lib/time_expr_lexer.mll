@@ -49,7 +49,7 @@ rule read =
 
   (* keywords *)
   | "to"    { TO }
-  | "of"    { OF }
+  (* | "of"    { OF } *)
   | "every" { EVERY }
   | "next"  { NEXT }
   | "am"

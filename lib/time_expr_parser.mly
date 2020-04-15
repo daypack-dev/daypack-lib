@@ -8,7 +8,7 @@
 %token <int> NAT
 
 (* keywords *)
-%token OF
+(* %token OF *)
 %token TO
 %token EVERY
 %token NEXT
@@ -105,44 +105,72 @@ time_slots_expr:
       Single_time_slot (start, end_exc)
     }
 
-  (* day list + hour minutes *)
-  | days = separated_nonempty_list(COMMA, day_expr);
+  (* month days + hour minutes *)
+  | month_days = month_day_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Day_list_and_hour_minutes { hour_minutes; days }
+      Month_days_and_hour_minutes
+        {
+          month_days;
+          hour_minutes;
+        }
     }
 
-  (* weekday to weekday + hour minutes *)
-  | day_start = weekday_expr; TO; day_end_inc = weekday_expr;
+  (* weekdays + hour minutes *)
+  | weekdays = weekday_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Day_range_and_hour_minutes { hour_minutes; days = Weekday_range (day_start, day_end_inc) }
+      Weekdays_and_hour_minutes
+        {
+          weekdays;
+          hour_minutes;
+        }
     }
 
-  (* month day to month day + hour minutes *)
-  | day_start = month_day_expr; TO; day_end_inc = month_day_expr;
+  (* months + month days + hour minutes *)
+  | months = month_ranges_expr;
+    DOT; month_days = month_day_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Day_range_and_hour_minutes { hour_minutes; days = Month_day_range (day_start, day_end_inc) }
+      Months_and_month_days_and_hour_minutes
+        {
+          hour_minutes;
+          month_days;
+          months;
+        }
     }
 
-  (* month list + month day list + hour minutes *)
-  | months = separated_nonempty_list(COMMA, direct_pick_month_expr);
-    DOT; month_days = separated_nonempty_list(COMMA, month_day_expr);
+  (* months + weekdays + hour minutes *)
+  | months = month_ranges_expr;
+    DOT; EVERY; weekdays = weekday_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Month_list_and_month_day_list_and_hour_minutes { hour_minutes; month_days; months }
+      Months_and_weekdays_and_hour_minutes
+        {
+          hour_minutes;
+          weekdays;
+          month_weekday_mode = Every_weekday;
+          months
+        }
     }
 
-  (* month list + weekday list + hour minutes *)
-  | months = separated_nonempty_list(COMMA, direct_pick_month_expr);
-    DOT; weekdays = separated_nonempty_list(COMMA, weekday_expr);
+  (* years + months + weekdays + hour minutes *)
+  | years = year_ranges_expr;
+    DOT; months = month_ranges_expr;
+    DOT; month_days = month_day_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
-      Month_list_and_weekday_list_and_hour_minutes { hour_minutes; weekdays; months }
+      Years_and_months_and_month_days_and_hour_minutes
+        {
+          years;
+          months;
+          month_days;
+          hour_minutes;
+        }
     }
   ;
 
+(* hour minutes expressions *)
 hour_minutes_expr:
   | l = separated_nonempty_list(COMMA, hour_minute_range_expr);
     {
@@ -183,6 +211,7 @@ hour_minute_expr:
     }
   ;
 
+(* day expressions *)
 month_day_expr:
   | x = NAT { x }
   ;
@@ -197,11 +226,31 @@ weekday_expr:
   | SATURDAY  { `Sat }
   ;
 
-day_expr:
-  | x = month_day_expr { Month_day x }
-  | x = weekday_expr   { Weekday x }
+weekday_range_expr:
+  | x = weekday_expr;
+    { `Range_inc (x, x) }
+  | x = weekday_expr; TO; y = weekday_expr;
+    { `Range_inc (x, y) }
   ;
 
+weekday_ranges_expr:
+  | l = separated_nonempty_list(COMMA, weekday_range_expr)
+    { Range.compress_list ~to_int:Time.tm_int_of_weekday l }
+  ;
+
+month_day_range_expr:
+  | x = month_day_expr;
+    { `Range_inc (x, x) }
+  | x = month_day_expr; TO; y = month_day_expr;
+    { `Range_inc (x, y) }
+  ;
+
+month_day_ranges_expr:
+  | l = separated_nonempty_list(COMMA, month_day_range_expr)
+    { Range.compress_list ~to_int:(fun x -> x) l }
+  ;
+
+(* month expressions *)
 human_int_month_expr:
   | x = NAT   { Human_int_month x }
   ;
@@ -224,3 +273,30 @@ direct_pick_month_expr:
 month_expr:
   | x = human_int_month_expr { x }
   | x = direct_pick_month_expr { x }
+  ;
+
+month_range_expr:
+  | x = month_expr
+    { `Range_inc (x, x) }
+  | x = month_expr; TO; y = month_expr;
+    { `Range_exc (x, y) }
+  ;
+
+month_ranges_expr:
+  | l = separated_nonempty_list(COMMA, month_range_expr);
+    { l }
+
+(* month expressions *)
+year_expr:
+  | x = NAT;
+    { x }
+
+year_range_expr:
+  | x = year_expr;
+    { `Range_inc(x, x) }
+  | x = year_expr; TO; y = year_expr;
+    { `Range_inc(x, y) }
+
+year_ranges_expr:
+  | l = separated_nonempty_list(COMMA, year_range_expr);
+    { l }

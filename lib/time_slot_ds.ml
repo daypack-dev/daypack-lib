@@ -53,18 +53,37 @@ end
 
 let normalize ?(skip_filter = false) ?(skip_sort = false) time_slots =
   time_slots
-  |> (fun l -> if skip_filter then l else Normalize.filter_invalid_or_empty l)
-  |> (fun l -> if skip_sort then l else Normalize.sort_uniq_time_slots l)
+  |> (fun s -> if skip_filter then s else Normalize.filter_invalid_or_empty s)
+  |> (fun s -> if skip_sort then s else Normalize.sort_uniq_time_slots s)
   |> Normalize.defrag_and_join_overlapping
 
 let normalize_list_in_seq_out ?(skip_filter = false) ?(skip_sort = false)
     time_slots =
   time_slots
-  |> (fun l ->
-      if skip_filter then l else Normalize.filter_invalid_or_empty_list l)
-  |> (fun l -> if skip_sort then l else Normalize.sort_uniq_time_slots_list l)
+  |> (fun s ->
+      if skip_filter then s else Normalize.filter_invalid_or_empty_list s)
+  |> (fun s -> if skip_sort then s else Normalize.sort_uniq_time_slots_list s)
   |> List.to_seq
   |> Normalize.defrag_and_join_overlapping
+
+let seq_of_unix_time_seq ?(skip_sort = false) (s : int64 Seq.t) : t Seq.t =
+  let rec aux (acc : t option) (s : int64 Seq.t) : t Seq.t =
+    match s () with
+    | Seq.Nil -> ( match acc with None -> Seq.empty | Some x -> Seq.return x )
+    | Seq.Cons (t, rest) -> (
+        match acc with
+        | None -> aux (Some (t, Int64.succ t)) rest
+        | Some (acc_start, acc_end_exc) ->
+          if acc_start <= t && t < acc_end_exc then
+            aux (Some (acc_start, acc_end_exc)) rest
+          else if t = acc_end_exc then
+            aux (Some (acc_start, Int64.succ t)) rest
+          else fun () ->
+            Seq.Cons
+              ((acc_start, acc_end_exc), aux (Some (t, Int64.succ t)) rest) )
+  in
+  aux None s
+  |> fun s -> if skip_sort then s else normalize ~skip_filter:true ~skip_sort s
 
 module Slice = struct
   let slice_start ~start (time_slots : t Seq.t) : t Seq.t =

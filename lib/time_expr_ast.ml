@@ -16,8 +16,8 @@ type day_expr =
   | Month_day of int
 
 type day_range_expr =
-  | Weekday_range of Time.weekday * Time.weekday
-  | Month_day_range of int * int
+  | Weekday_range of Time.weekday_range
+  | Month_day_range of Time.month_day_range
 
 (* type days_expr =
  *   | Next_n_days of int
@@ -55,24 +55,36 @@ type time_point_expr =
     }
   | Hour_minute of hour_minute_expr
 
+type month_weekday_mode =
+  | Every_weekday
+  | First_n of int
+  | Last_n of int
+
 type time_slots_expr =
   | Single_time_slot of time_point_expr * time_point_expr
-  | Day_list_and_hour_minutes of {
-      days : day_expr list;
+  | Month_days_and_hour_minutes of {
+      month_days : int Range.t list;
       hour_minutes : hour_minute_range_expr list;
     }
-  | Day_range_and_hour_minutes of {
-      days : day_range_expr;
+  | Weekdays_and_hour_minutes of {
+      weekdays : Time.weekday Range.t list;
       hour_minutes : hour_minute_range_expr list;
     }
-  | Month_list_and_month_day_list_and_hour_minutes of {
-      months : month_expr list;
-      month_days : int list;
+  | Months_and_month_days_and_hour_minutes of {
+      months : month_expr Range.t list;
+      month_days : int Range.t list;
       hour_minutes : hour_minute_range_expr list;
     }
-  | Month_list_and_weekday_list_and_hour_minutes of {
-      months : month_expr list;
-      weekdays : Time.weekday list;
+  | Months_and_weekdays_and_hour_minutes of {
+      months : month_expr Range.t list;
+      weekdays : Time.weekday Range.t list;
+      month_weekday_mode : month_weekday_mode;
+      hour_minutes : hour_minute_range_expr list;
+    }
+  | Years_and_months_and_month_days_and_hour_minutes of {
+      years : int Range.t list;
+      months : month_expr Range.t list;
+      month_days : int Range.t list;
       hour_minutes : hour_minute_range_expr list;
     }
 
