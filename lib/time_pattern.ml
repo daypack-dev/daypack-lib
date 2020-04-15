@@ -139,44 +139,57 @@ let matching_hours (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     |> Seq.filter (fun pat_hour -> start <= pat_hour)
     |> Seq.map (fun pat_hour -> { acc with tm_hour = pat_hour })
 
-let matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t
-  =
-  let year = acc.tm_year + Time.tm_year_offset in
-  let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
-  let day_count = Time.day_count_of_month ~year ~month in
-  let start =
-    if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
-      start.tm_mday
-    else 1
-  in
-  match t.weekdays with
-  | [] ->
-    Seq.map (fun tm_mday -> { acc with tm_mday }) OSeq.(start -- day_count)
-  | l ->
-    Seq.filter_map
-      (fun mday ->
-         let wday = Time.weekday_of_month_day ~year ~month ~mday in
-         if List.mem wday l then Some { acc with tm_mday = mday } else None)
+module Matching_days = struct
+  let matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm) : int list
+    =
+    let year = acc.tm_year + Time.tm_year_offset in
+    let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
+    let day_count = Time.day_count_of_month ~year ~month in
+    let start =
+      if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
+        start.tm_mday
+      else 1
+    in
+    match t.weekdays with
+    | [] ->
+      OSeq.(start -- day_count)
+      |> List.of_seq
+    | l ->
       OSeq.(start --^ day_count)
+      |> Seq.filter
+        (fun mday ->
+           let wday = Time.weekday_of_month_day ~year ~month ~mday in
+           List.mem wday l)
+      |> List.of_seq
 
-let matching_month_days (t : t) (start : Unix.tm) (acc : Unix.tm) :
-  Unix.tm Seq.t =
-  let year = acc.tm_year + Time.tm_year_offset in
-  let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
-  let day_count = Time.day_count_of_month ~year ~month in
-  let start =
-    if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
-      start.tm_mday
-    else 1
-  in
-  match t.month_days with
-  | [] ->
-    Seq.map (fun tm_mday -> { acc with tm_mday }) OSeq.(start -- day_count)
-  | l ->
-    l
-    |> List.to_seq
-    |> Seq.filter (fun pat_mday -> start <= pat_mday)
-    |> Seq.map (fun pat_mday -> { acc with tm_mday = pat_mday })
+  let matching_month_days (t : t) (start : Unix.tm) (acc : Unix.tm) :
+    int list =
+    let year = acc.tm_year + Time.tm_year_offset in
+    let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
+    let day_count = Time.day_count_of_month ~year ~month in
+    let start =
+      if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
+        start.tm_mday
+      else 1
+    in
+    match t.month_days with
+    | [] ->
+      OSeq.(start -- day_count)
+      |> List.of_seq
+    | l ->
+      List.filter (fun pat_mday -> start <= pat_mday) l
+end
+
+let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+  let matching_weekdays = Matching_days.matching_weekdays t start acc in
+  let matching_month_days = Matching_days.matching_month_days t start acc in
+  OSeq.(1 -- 31)
+  |> Seq.filter (fun mday ->
+      List.mem mday matching_weekdays && List.mem mday matching_month_days
+    )
+  |> Seq.map (fun mday ->
+      { acc with tm_mday = mday }
+    )
 
 let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
   let start =
@@ -248,8 +261,7 @@ module Single_pattern = struct
       (* let start = Time.zero_tm_sec start in *)
       matching_years ~search_years_ahead t start start
       |> Seq.flat_map (fun acc -> matching_months t start acc)
-      |> Seq.flat_map (fun acc -> matching_month_days t start acc)
-      |> Seq.flat_map (fun acc -> matching_weekdays t start acc)
+      |> Seq.flat_map (fun acc -> matching_days t start acc)
       |> Seq.flat_map (fun acc -> matching_hours t start acc)
       |> Seq.flat_map (fun acc -> matching_minutes t start acc)
       |> Seq.flat_map (fun acc -> matching_seconds t start acc)
