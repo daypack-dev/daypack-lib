@@ -3,9 +3,11 @@ type 'a t =
   | `Range_exc of 'a * 'a
   ]
 
-val flatten_to_seq : ?modulo:int -> of_int:(int -> 'a) -> to_int:('a -> int) -> 'a t -> 'a Seq.t
+val flatten_to_seq :
+  ?modulo:int -> of_int:(int -> 'a) -> to_int:('a -> int) -> 'a t -> 'a Seq.t
 
-val flatten_to_list : ?modulo:int -> of_int:(int -> 'a) -> to_int:('a -> int) -> 'a t -> 'a list
+val flatten_to_list :
+  ?modulo:int -> of_int:(int -> 'a) -> to_int:('a -> int) -> 'a t -> 'a list
 
 val range_seq_of_seq : to_int:('a -> int) -> 'a Seq.t -> 'a t Seq.t
 
