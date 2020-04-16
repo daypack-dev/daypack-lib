@@ -123,7 +123,7 @@ let process_time_string (s : string) : (int64, string) result =
   | Error msg -> Error msg
   | Ok expr -> (
       match
-        Daypack_lib.Time_expr.next_match_unix_time_time_point_expr
+        Daypack_lib.Time_expr.Time_point_expr.next_match_unix_time
           (Years_ahead_start_unix_time
              {
                search_in_time_zone = `Local;
@@ -136,13 +136,13 @@ let process_time_string (s : string) : (int64, string) result =
       | Ok None -> Error "Failed to find a matching time"
       | Ok (Some x) -> Ok x )
 
-let process_time_slot_string (s : string) : (int64 * int64, string) result =
+let process_time_slots_string (s : string) : ((int64 * int64) list, string) result =
   let cur_time = Daypack_lib.Time.Current.cur_unix_time () in
-  match Daypack_lib.Time_expr.Interpret_string.of_string s with
+  match Daypack_lib.Time_expr.Interpret_string.time_slots_expr_of_string s with
   | Error msg -> Error msg
   | Ok e -> (
       match
-        Daypack_lib.Time_expr.next_match_time_slot
+        Daypack_lib.Time_expr.Time_slots_expr.matching_time_slots
           (Years_ahead_start_unix_time
              {
                search_in_time_zone = `Local;
@@ -152,29 +152,33 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
           e
       with
       | Error msg -> Error msg
-      | Ok None -> Error "Failed to find a matching time slot"
-      | Ok (Some x) -> Ok x )
+      | Ok s ->
+        match List.of_seq s with
+        | [] -> Error "Failed to find matching time slots"
+        | l -> Ok l )
+
+let process_time_slot_string (s : string) : (int64 * int64, string) result =
+  match process_time_slots_string s with
+  | Error msg -> Error msg
+  | Ok [] -> Error "Failed to find matching time slots"
+  | Ok [ x ] -> Ok x
+  | Ok _ -> Error "Too many time slots"
 
 let ask_time ~indent_level ~(prompt : string) : int64 =
-  ask ~indent_level ~prompt process_time_string
+  ask ~indent_level ~prompt:(prompt ^ " (see `daypc grammar --time-point-expr` for grammar guide)") process_time_string
 
 let ask_time_slot ~indent_level ~(prompt : string) : int64 * int64 =
   ask ~indent_level
-    ~prompt:(prompt ^ " (single or pair of time pattern)")
+    ~prompt:(prompt ^ " (see `daypc grammar --time-slots-expr` for grammar guide)")
     process_time_slot_string
 
 let ask_time_slots ~indent_level ~(prompt : string) : (int64 * int64) list =
-  ask_multiple ~indent_level ~prompt:(prompt ^ " (format = start,end_exc)")
-    (fun s ->
-       try
-         Scanf.sscanf s "%[^,],%[^,]" (fun start_string end_exc_string ->
-             match process_time_string start_string with
-             | Error msg -> Error msg
-             | Ok start -> (
-                 match process_time_string end_exc_string with
-                 | Error msg -> Error msg
-                 | Ok end_exc -> Ok (start, end_exc) ))
-       with _ -> Error "Failed to parse time slot string")
+  ask_multiple ~indent_level ~prompt:(prompt  ^ " (see `daypc grammar --time-slots-expr` for grammar guide)")
+    process_time_slots_string
+  |> List.to_seq
+  |> Seq.flat_map (List.to_seq)
+  |> Daypack_lib.Time_slot_ds.normalize
+  |> List.of_seq
 
 let process_task_inst_alloc_req_string (s : string) :
   (Daypack_lib.Task_ds.task_seg_alloc_req, string) result =
