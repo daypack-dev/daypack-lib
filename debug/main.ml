@@ -20,7 +20,7 @@ let debug_single_task_seg_shift () =
   Task_seg_place_gens.single_task_seg_shift ~incre ~cur_pos ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task_ds.string_of_task_seg_id id)
+        (Task_ds.Id.string_of_task_seg_id id)
         start end_exc)
 
 let debug_single_task_seg_shift_rev () =
@@ -44,7 +44,7 @@ let debug_single_task_seg_shift_rev () =
     ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task_ds.string_of_task_seg_id id)
+        (Task_ds.Id.string_of_task_seg_id id)
         start end_exc)
 
 let debug_multi_task_segs_shift () =
@@ -58,7 +58,7 @@ let debug_multi_task_segs_shift () =
   List.iter
     (fun (id, size) ->
        Printf.printf "time seg id : %s size : %Ld\n"
-         (Task_ds.string_of_task_seg_id id)
+         (Task_ds.Id.string_of_task_seg_id id)
          size)
     task_segs;
   List.iteri
@@ -73,7 +73,7 @@ let debug_multi_task_segs_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.string_of_task_seg_id id)
+             (Task_ds.Id.string_of_task_seg_id id)
              start end_exc)
         pos_s)
 
@@ -110,7 +110,7 @@ let debug_single_task_seg_multi_splits_exact () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n" (Task_ds.string_of_task_seg_id id) x)
+           Printf.printf "  %s - %Ld\n" (Task_ds.Id.string_of_task_seg_id id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_max () =
@@ -131,7 +131,7 @@ let debug_single_task_seg_multi_splits_max () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n" (Task_ds.string_of_task_seg_id id) x)
+           Printf.printf "  %s - %Ld\n" (Task_ds.Id.string_of_task_seg_id id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_exact_shift () =
@@ -161,7 +161,7 @@ let debug_single_task_seg_multi_splits_exact_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.string_of_task_seg_id id)
+             (Task_ds.Id.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -191,7 +191,7 @@ let debug_single_task_seg_multi_splits_max_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.string_of_task_seg_id id)
+             (Task_ds.Id.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -214,7 +214,7 @@ let debug_multi_tasks_interleave () =
   Seq.iter
     (fun (id, start, end_exc) ->
        Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-         (Task_ds.string_of_task_seg_id id)
+         (Task_ds.Id.string_of_task_seg_id id)
          start end_exc)
     s
 
@@ -250,7 +250,7 @@ let debug_single_task_seg_multi_even_splits () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.string_of_task_seg_id id)
+             (Task_ds.Id.string_of_task_seg_id id)
              start end_exc)
         splits)
 
