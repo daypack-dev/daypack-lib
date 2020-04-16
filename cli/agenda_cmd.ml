@@ -10,14 +10,14 @@ let run (list_free_time_slots : bool) : unit =
       Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
     in
     let start = Daypack_lib.Time.Current.cur_unix_time () in
-    let end_exc = Daypack_lib.Time.Add.add_days_unix_time ~days:3 start in
+    let end_exc = Daypack_lib.Time.Add.add_days_unix_time ~days:Config.agenda_free_time_slot_search_day_count start in
     if list_free_time_slots then (
       let l =
         Daypack_lib.Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc
           hd
         |> List.of_seq
       in
-      Printf.printf "Free time slots displayed: %d\n" (List.length l);
+      Printf.printf "Free time slots in next %d days: %d\n" Config.agenda_free_time_slot_search_day_count (List.length l);
       List.iter
         (fun (start, end_exc) ->
            let start_str =
