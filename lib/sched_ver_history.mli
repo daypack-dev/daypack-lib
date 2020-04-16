@@ -1,5 +1,10 @@
 type t
 
+type action_record =
+  | Updated_head of Sched.sched_id
+  | Added_new_head of Sched.sched_id
+  | Did_nothing
+
 val make_empty : unit -> t
 
 val of_sched_list : Sched.sched list -> t
@@ -16,7 +21,7 @@ module In_place_head : sig
         Task_ds.task_data ->
         Task_ds.task_inst_data list ->
         t ->
-        Task_ds.task * Task_ds.task_inst list
+        Task_ds.task * Task_ds.task_inst list * action_record
     end
   end
 
@@ -26,7 +31,7 @@ module In_place_head : sig
         parent_task_id:Task_ds.task_id ->
         Task_ds.task_inst_data ->
         t ->
-        Task_ds.task_inst
+        Task_ds.task_inst * action_record
     end
   end
 
@@ -35,49 +40,49 @@ module In_place_head : sig
       val enqueue_sched_req :
         Sched_req_ds.sched_req_data ->
         t ->
-        (Sched_req_ds.sched_req, unit) result
+        (Sched_req_ds.sched_req, unit) result * action_record
     end
   end
 
   module Recur : sig
-    val instantiate : start:int64 -> end_exc:int64 -> t -> unit
+    val instantiate : start:int64 -> end_exc:int64 -> t -> action_record
   end
 
   module Progress : sig
     module Move : sig
-      val move_task_seg_to_completed : Task_ds.task_seg_id -> t -> unit
+      val move_task_seg_to_completed : Task_ds.task_seg_id -> t -> action_record
 
-      val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> t -> unit
+      val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> t -> action_record
 
-      val move_task_seg_to_discarded : Task_ds.task_seg_id -> t -> unit
+      val move_task_seg_to_discarded : Task_ds.task_seg_id -> t -> action_record
 
-      val move_task_inst_to_completed : Task_ds.task_inst_id -> t -> unit
+      val move_task_inst_to_completed : Task_ds.task_inst_id -> t -> action_record
 
-      val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> t -> unit
+      val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> t -> action_record
 
-      val move_task_inst_to_discarded : Task_ds.task_inst_id -> t -> unit
+      val move_task_inst_to_discarded : Task_ds.task_inst_id -> t -> action_record
     end
 
     module Add : sig
       val add_task_seg_progress_chunk :
-        Task_ds.task_seg_id -> int64 * int64 -> t -> unit
+        Task_ds.task_seg_id -> int64 * int64 -> t -> action_record
 
       val add_task_inst_progress_chunk :
-        Task_ds.task_inst_id -> int64 * int64 -> t -> unit
+        Task_ds.task_inst_id -> int64 * int64 -> t -> action_record
     end
   end
 end
 
 module Maybe_append_to_head : sig
-  val remove_task : Task_ds.task_id -> t -> unit
+  val remove_task : Task_ds.task_id -> t -> action_record
 
-  val remove_task_inst : Task_ds.task_inst_id -> t -> unit
+  val remove_task_inst : Task_ds.task_inst_id -> t -> action_record
 
   val remove_task_seg_progress_chunk :
-    Task_ds.task_seg_id -> int64 * int64 -> t -> unit
+    Task_ds.task_seg_id -> int64 * int64 -> t -> action_record
 
   val remove_task_inst_progress_chunk :
-    Task_ds.task_inst_id -> int64 * int64 -> t -> unit
+    Task_ds.task_inst_id -> int64 * int64 -> t -> action_record
 
   val sched :
     start:int64 ->
@@ -85,11 +90,11 @@ module Maybe_append_to_head : sig
     include_sched_reqs_partially_within_time_period:bool ->
     up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
     t ->
-    (unit, unit) result
+    (unit, unit) result * action_record
 end
 
 module Append_to_head : sig
-  val snapshot : t -> unit
+  val snapshot : t -> action_record
 end
 
 module Equal : sig

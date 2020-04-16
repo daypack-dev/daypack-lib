@@ -5,32 +5,54 @@ type head_choice =
   | New_head of Sched.sched
   | Do_nothing
 
+type action_record =
+  | Updated_head of Sched.sched_id
+  | Added_new_head of Sched.sched_id
+  | Did_nothing
+
 let make_empty () = { history = [] }
 
 let of_sched_list history = { history }
 
-let map_head (f : Sched.sched -> 'a * head_choice) (t : t) : 'a =
+let map_head (f : Sched.sched -> 'a * head_choice) (t : t) : 'a * action_record =
   match t.history with
   | [] ->
+    let empty_sid, _ = Sched.empty in
     let ret, choice = f Sched.empty in
+    ret,
     ( match choice with
-      | Replace_head x -> t.history <- [ x ]
-      | New_head x -> t.history <- [ x ]
-      | Do_nothing -> () );
-    ret
+      | Replace_head (_, sd) -> t.history <- [ (empty_sid, sd) ]; Added_new_head empty_sid
+      | New_head (sid, sd) -> t.history <- [ (sid, sd) ]; Added_new_head sid
+      | Do_nothing -> Did_nothing )
   | hd :: tl ->
-    let sid, _ = hd in
+    let hd_sid, hd_sd = hd in
     let ret, choice = f hd in
+    ret,
     ( match choice with
-      | Replace_head (_id, x) ->
-        t.history <- (sid, x) :: tl
-      | New_head (_id, x) ->
-        t.history <- (succ sid, x) :: hd :: tl
-      | Do_nothing -> () );
-    ret
+      | Replace_head (_, sd) ->
+        t.history <- (hd_sid, sd) :: tl;
+        if Sched.Equal.sched_data_equal hd_sd sd then
+          Did_nothing
+        else
+          Updated_head hd_sid
+      | New_head (_, sd) ->
+        let new_sid = succ hd_sid in
+        t.history <- (new_sid, sd) :: hd :: tl;
+        Added_new_head new_sid
+      | Do_nothing -> Did_nothing )
+
+let map_head_no_ret (f : Sched.sched -> head_choice) (t : t) : action_record =
+  let (), ret =
+    map_head
+      (fun x ->
+         (), f x)
+      t
+  in
+  ret
 
 module Read = struct
-  let get_head (t : t) : Sched.sched = map_head (fun s -> (s, Do_nothing)) t
+  let get_head (t : t) : Sched.sched =
+    let res, _ = map_head (fun s -> (s, Do_nothing)) t in res
 end
 
 module In_place_head = struct
@@ -38,7 +60,8 @@ module In_place_head = struct
     module Add = struct
       let add_task ~parent_user_id (data : Task_ds.task_data)
           (task_inst_data_list : Task_ds.task_inst_data list) (t : t) :
-        Task_ds.task * Task_ds.task_inst list =
+        Task_ds.task * Task_ds.task_inst list * action_record =
+        let (task, task_inst_list), ar =
         map_head
           (fun sched ->
              let task, task_inst_list, sched =
@@ -47,13 +70,15 @@ module In_place_head = struct
              in
              ((task, task_inst_list), Replace_head sched))
           t
+        in
+        task, task_inst_list, ar
     end
   end
 
   module Task_inst = struct
     module Add = struct
       let add_task_inst ~parent_task_id (data : Task_ds.task_inst_data) (t : t)
-        : Task_ds.task_inst =
+        : Task_ds.task_inst * action_record =
         map_head
           (fun sched ->
              let task_inst, sched =
@@ -67,7 +92,7 @@ module In_place_head = struct
   module Sched_req = struct
     module Enqueue = struct
       let enqueue_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
-        (Sched_req_ds.sched_req, unit) result =
+        (Sched_req_ds.sched_req, unit) result * action_record =
         map_head
           (fun sched ->
              match Sched.Sched_req.Enqueue.enqueue_sched_req_data data sched with
@@ -78,12 +103,12 @@ module In_place_head = struct
   end
 
   module Recur = struct
-    let instantiate ~start ~end_exc (t : t) : unit =
-      map_head
-        (fun sched ->
-           let sched = Sched.Recur.instantiate ~start ~end_exc sched in
-           ((), Replace_head sched))
-        t
+    let instantiate ~start ~end_exc (t : t) : action_record =
+        map_head_no_ret
+          (fun sched ->
+             let sched = Sched.Recur.instantiate ~start ~end_exc sched in
+             Replace_head sched)
+          t
   end
 
   module Progress = struct
@@ -91,27 +116,27 @@ module In_place_head = struct
       let move_task_seg_internal
           ~(move_task_seg_by_id :
               Task_ds.task_seg_id -> Sched.sched -> Sched.sched)
-          (task_seg_id : Task_ds.task_seg_id) (t : t) : unit =
-        map_head
+          (task_seg_id : Task_ds.task_seg_id) (t : t) : action_record =
+        map_head_no_ret
           (fun sched ->
              let sched = move_task_seg_by_id task_seg_id sched in
-             ((), Replace_head sched))
+             (Replace_head sched))
           t
 
       let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t)
-        : unit =
+        : action_record =
         move_task_seg_internal
           ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_completed
           task_seg_id t
 
       let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
-          (t : t) : unit =
+          (t : t) : action_record =
         move_task_seg_internal
           ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_uncompleted
           task_seg_id t
 
       let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id) (t : t)
-        : unit =
+        : action_record =
         move_task_seg_internal
           ~move_task_seg_by_id:Sched.Progress.Move.move_task_seg_to_discarded
           task_seg_id t
@@ -119,27 +144,27 @@ module In_place_head = struct
       let move_task_inst_internal
           ~(move_task_inst_by_id :
               Task_ds.task_inst_id -> Sched.sched -> Sched.sched)
-          (task_inst_id : Task_ds.task_inst_id) (t : t) : unit =
-        map_head
+          (task_inst_id : Task_ds.task_inst_id) (t : t) : action_record =
+        map_head_no_ret
           (fun sched ->
              let sched = move_task_inst_by_id task_inst_id sched in
-             ((), Replace_head sched))
+             (Replace_head sched))
           t
 
       let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id)
-          (t : t) : unit =
+          (t : t) : action_record =
         move_task_inst_internal
           ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_completed
           task_inst_id t
 
       let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
-          (t : t) : unit =
+          (t : t) : action_record =
         move_task_inst_internal
           ~move_task_inst_by_id:
             Sched.Progress.Move.move_task_inst_to_uncompleted task_inst_id t
 
       let move_task_inst_to_discarded (task_inst_id : Task_ds.task_inst_id)
-          (t : t) : unit =
+          (t : t) : action_record =
         move_task_inst_internal
           ~move_task_inst_by_id:Sched.Progress.Move.move_task_inst_to_discarded
           task_inst_id t
@@ -147,33 +172,33 @@ module In_place_head = struct
 
     module Add = struct
       let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
-          (chunk : int64 * int64) (t : t) : unit =
-        map_head
+          (chunk : int64 * int64) (t : t) : action_record =
+        map_head_no_ret
           (fun sched ->
              let sched =
                Sched.Progress.Add.add_task_seg_progress_chunk task_seg_id chunk
                  sched
              in
-             ((), Replace_head sched))
+             (Replace_head sched))
           t
 
       let add_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
-          (chunk : int64 * int64) (t : t) : unit =
-        map_head
-          (fun sched ->
-             let sched =
-               Sched.Progress.Add.add_task_inst_progress_chunk task_inst_id chunk
-                 sched
-             in
-             ((), Replace_head sched))
-          t
+          (chunk : int64 * int64) (t : t) : action_record =
+          map_head_no_ret
+            (fun sched ->
+               let sched =
+                 Sched.Progress.Add.add_task_inst_progress_chunk task_inst_id chunk
+                   sched
+               in
+               (Replace_head sched))
+            t
     end
   end
 end
 
 module Maybe_append_to_head = struct
-  let remove_task (task_id : Task_ds.task_id) (t : t) : unit =
-    map_head
+  let remove_task (task_id : Task_ds.task_id) (t : t) : action_record =
+    map_head_no_ret
       (fun hd ->
          let task_seg_place_seq =
            Sched.Agenda.Find.find_task_seg_place_seq_by_task_id task_id hd
@@ -199,18 +224,18 @@ module Maybe_append_to_head = struct
            no_task_seg_place_s_recorded
            && no_task_inst_progress_recorded
            && no_task_seg_progress_recorded
-         then ((), Replace_head hd')
+         then ( Replace_head hd')
          else
            let hd' =
              hd'
              |> Sched.Sched_req.Remove.remove_sched_req_record_by_task_id task_id
              |> Sched.Agenda.Remove.remove_task_seg_place_seq task_seg_place_seq
            in
-           ((), New_head hd'))
+           ( New_head hd'))
       t
 
-  let remove_task_inst (task_inst_id : Task_ds.task_inst_id) (t : t) : unit =
-    map_head
+  let remove_task_inst (task_inst_id : Task_ds.task_inst_id) (t : t) : action_record =
+    map_head_no_ret
       (fun hd ->
          let task_seg_place_seq =
            Sched.Agenda.Find.find_task_seg_place_seq_by_task_inst_id task_inst_id
@@ -239,7 +264,7 @@ module Maybe_append_to_head = struct
            no_task_seg_place_s_recorded
            && no_task_inst_progress_recorded
            && no_task_seg_progress_recorded
-         then ((), Replace_head hd')
+         then (Replace_head hd')
          else
            let hd' =
              hd'
@@ -247,12 +272,12 @@ module Maybe_append_to_head = struct
                task_inst_id
              |> Sched.Agenda.Remove.remove_task_seg_place_seq task_seg_place_seq
            in
-           ((), New_head hd'))
+           (New_head hd'))
       t
 
   let remove_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
-      (chunk : int64 * int64) (t : t) : unit =
-    map_head
+      (chunk : int64 * int64) (t : t) : action_record =
+    map_head_no_ret
       (fun sched ->
          let chunks =
            Sched.Progress.Find.find_task_seg_progress_chunk_set task_seg_id sched
@@ -263,13 +288,13 @@ module Maybe_append_to_head = struct
              |> Sched.Progress.Remove.remove_task_seg_progress_chunk task_seg_id
                chunk
            in
-           ((), Replace_head hd')
-         else ((), Do_nothing))
+           (Replace_head hd')
+         else (Do_nothing))
       t
 
   let remove_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
-      (chunk : int64 * int64) (t : t) : unit =
-    map_head
+      (chunk : int64 * int64) (t : t) : action_record =
+    map_head_no_ret
       (fun sched ->
          let chunks =
            Sched.Progress.Find.find_task_inst_progress_chunk_set task_inst_id
@@ -281,12 +306,12 @@ module Maybe_append_to_head = struct
              |> Sched.Progress.Remove.remove_task_inst_progress_chunk
                task_inst_id chunk
            in
-           ((), Replace_head hd')
-         else ((), Do_nothing))
+           (Replace_head hd')
+         else (Do_nothing))
       t
 
   let sched ~start ~end_exc ~include_sched_reqs_partially_within_time_period
-      ~up_to_sched_req_id_inc (t : t) : (unit, unit) result =
+      ~up_to_sched_req_id_inc (t : t) : (unit, unit) result * action_record =
     map_head
       (fun hd ->
          let sched_req_records, hd' =
@@ -312,7 +337,7 @@ module Maybe_append_to_head = struct
 end
 
 module Append_to_head = struct
-  let snapshot (t : t) : unit = map_head (fun sched -> ((), New_head sched)) t
+  let snapshot (t : t) : action_record = map_head_no_ret (fun sched -> (New_head sched)) t
 end
 
 module Equal = struct
