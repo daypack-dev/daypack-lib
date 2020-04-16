@@ -562,49 +562,72 @@ module To_time_pattern_lossy = struct
     | Error msg -> Error msg
 end
 
-let next_match_unix_time_time_point_expr (search_param : search_param)
-    (e : Time_expr_normalized_ast.time_point_expr) :
-  (int64 option, string) result =
-  match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
-  | Error msg -> Error msg
-  | Ok pat ->
-    Ok (Time_pattern.Single_pattern.next_match_unix_time search_param pat)
+module Time_point_expr = struct
+  let next_match_unix_time_time_point_expr (search_param : search_param)
+      (e : Time_expr_normalized_ast.time_point_expr) :
+    (int64 option, string) result =
+    match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
+    | Error msg -> Error msg
+    | Ok pat ->
+      Ok (Time_pattern.Single_pattern.next_match_unix_time search_param pat)
+
+  let matching_time_slots (search_param : search_param)
+      (e : Time_expr_normalized_ast.time_point_expr) : (Time_slot_ds.t Seq.t, string) result =
+    match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
+    | Error msg -> Error msg
+    | Ok pat ->
+      Time_pattern.Single_pattern.matching_time_slots search_param pat
+      |> OSeq.take 1
+      |> Result.ok
+
+  let next_match_time_slot (search_param : search_param)
+      (e : Time_expr_normalized_ast.time_point_expr) : ((int64 * int64) option, string) result =
+    match matching_time_slots search_param e with
+    | Error msg -> Error msg
+    | Ok seq -> (
+        match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
+end
+
+module Time_slots_expr = struct
+  let matching_time_slots (search_param : search_param)
+      (e : Time_expr_normalized_ast.time_slots_expr) : (Time_slot_ds.t Seq.t, string) result =
+    let take_count =
+      match e with
+      | Single_time_slot _ | Month_days_and_hour_minutes _
+      | Weekdays_and_hour_minutes _ | Months_and_month_days_and_hour_minutes _
+      | Years_and_months_and_month_days_and_hour_minutes _ ->
+        Some 1
+      | Months_and_weekdays_and_hour_minutes { month_weekday_mode; _ } -> (
+          match month_weekday_mode with
+          | Every_weekday -> None
+          | First_n n -> Some n
+          | Last_n _n -> failwith "Unimplemented" )
+    in
+    match To_time_pattern_lossy.time_range_patterns_of_time_slots_expr e with
+    | Error msg -> Error msg
+    | Ok l ->
+      Time_pattern.Range_pattern
+      .matching_time_slots_round_robin_non_decreasing search_param l
+      |> (match take_count with None -> fun x -> x | Some n -> OSeq.take n)
+      |> Seq.flat_map List.to_seq
+      |> Result.ok
+
+  let next_match_time_slot (search_param : search_param)
+      (e : Time_expr_normalized_ast.time_slots_expr) : ((int64 * int64) option, string) result =
+    match matching_time_slots search_param e with
+    | Error msg -> Error msg
+    | Ok seq -> (
+        match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
+end
 
 let matching_time_slots (search_param : search_param)
     (e : Time_expr_normalized_ast.t) : (Time_slot_ds.t Seq.t, string) result =
   match e with
-  | Time_point_expr e -> (
-      match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
-      | Error msg -> Error msg
-      | Ok pat ->
-        Time_pattern.Single_pattern.matching_time_slots search_param pat
-        |> OSeq.take 1
-        |> Result.ok )
-  | Time_slots_expr e -> (
-      let take_count =
-        match e with
-        | Single_time_slot _ | Month_days_and_hour_minutes _
-        | Weekdays_and_hour_minutes _ | Months_and_month_days_and_hour_minutes _
-        | Years_and_months_and_month_days_and_hour_minutes _ ->
-          Some 1
-        | Months_and_weekdays_and_hour_minutes { month_weekday_mode; _ } -> (
-            match month_weekday_mode with
-            | Every_weekday -> None
-            | First_n n -> Some n
-            | Last_n _n -> failwith "Unimplemented" )
-      in
-      match To_time_pattern_lossy.time_range_patterns_of_time_slots_expr e with
-      | Error msg -> Error msg
-      | Ok l ->
-        Time_pattern.Range_pattern
-        .matching_time_slots_round_robin_non_decreasing search_param l
-        |> (match take_count with None -> fun x -> x | Some n -> OSeq.take n)
-        |> Seq.flat_map List.to_seq
-        |> Result.ok )
+  | Time_point_expr e -> Time_point_expr.matching_time_slots search_param e
+  | Time_slots_expr e -> Time_slots_expr.matching_time_slots search_param e
 
-let next_match_time_slot (search_param : search_param)
-    (e : Time_expr_normalized_ast.t) : ((int64 * int64) option, string) result =
-  match matching_time_slots search_param e with
-  | Error msg -> Error msg
-  | Ok seq -> (
-      match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
+  let next_match_time_slot (search_param : search_param)
+      (e : Time_expr_normalized_ast.t) : ((int64 * int64) option, string) result =
+  match e with
+  | Time_point_expr e -> Time_point_expr.next_match_time_slot search_param e
+  | Time_slots_expr e -> Time_slots_expr.next_match_time_slot search_param e
