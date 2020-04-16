@@ -1263,7 +1263,8 @@ module Task = struct
 
     let find_task_any_opt (id : Task_ds.task_id) (sched : sched) :
       Task_ds.task_data option =
-      find_task_any_with_status_opt id sched |> Option.map (fun (_status, x) -> x)
+      find_task_any_with_status_opt id sched
+      |> Option.map (fun (_status, x) -> x)
 
     (*$*)
   end
