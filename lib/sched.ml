@@ -4236,6 +4236,12 @@ module Diff = struct
 end
 
 module To_string = struct
+  let string_of_task_related_status (status : task_related_status) : string =
+    match status with
+    | `Uncompleted -> "uncompleted"
+    | `Completed -> "completed"
+    | `Discarded -> "discarded"
+
   let debug_string_of_sched ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       (sid, sd) =
     Debug_print.bprintf ~indent_level buffer "schedule id : %s\n"

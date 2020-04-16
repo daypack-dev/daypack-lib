@@ -924,6 +924,8 @@ module Diff : sig
 end
 
 module To_string : sig
+  val string_of_task_related_status : task_related_status -> string
+
   val debug_string_of_sched :
     ?indent_level:int -> ?buffer:Buffer.t -> sched -> string
 end
