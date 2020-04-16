@@ -25,3 +25,5 @@ let time_profile_store_dir =
 let time_pattern_search_years_ahead = 5
 
 let agenda_display_task_seg_place_count = 100
+
+let agenda_free_time_slot_search_day_count = 7

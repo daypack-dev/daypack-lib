@@ -20,7 +20,7 @@ let debug_single_task_seg_shift () =
   Task_seg_place_gens.single_task_seg_shift ~incre ~cur_pos ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task_ds.string_of_task_seg_id id)
+        (Task_ds.Id.string_of_task_seg_id id)
         start end_exc)
 
 let debug_single_task_seg_shift_rev () =
@@ -44,7 +44,7 @@ let debug_single_task_seg_shift_rev () =
     ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task_ds.string_of_task_seg_id id)
+        (Task_ds.Id.string_of_task_seg_id id)
         start end_exc)
 
 let debug_multi_task_segs_shift () =
@@ -58,7 +58,7 @@ let debug_multi_task_segs_shift () =
   List.iter
     (fun (id, size) ->
        Printf.printf "time seg id : %s size : %Ld\n"
-         (Task_ds.string_of_task_seg_id id)
+         (Task_ds.Id.string_of_task_seg_id id)
          size)
     task_segs;
   List.iteri
@@ -73,7 +73,7 @@ let debug_multi_task_segs_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.string_of_task_seg_id id)
+             (Task_ds.Id.string_of_task_seg_id id)
              start end_exc)
         pos_s)
 
@@ -110,7 +110,9 @@ let debug_single_task_seg_multi_splits_exact () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n" (Task_ds.string_of_task_seg_id id) x)
+           Printf.printf "  %s - %Ld\n"
+             (Task_ds.Id.string_of_task_seg_id id)
+             x)
         splits)
 
 let debug_single_task_seg_multi_splits_max () =
@@ -131,7 +133,9 @@ let debug_single_task_seg_multi_splits_max () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n" (Task_ds.string_of_task_seg_id id) x)
+           Printf.printf "  %s - %Ld\n"
+             (Task_ds.Id.string_of_task_seg_id id)
+             x)
         splits)
 
 let debug_single_task_seg_multi_splits_exact_shift () =
@@ -161,7 +165,7 @@ let debug_single_task_seg_multi_splits_exact_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.string_of_task_seg_id id)
+             (Task_ds.Id.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -191,7 +195,7 @@ let debug_single_task_seg_multi_splits_max_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.string_of_task_seg_id id)
+             (Task_ds.Id.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -214,7 +218,7 @@ let debug_multi_tasks_interleave () =
   Seq.iter
     (fun (id, start, end_exc) ->
        Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-         (Task_ds.string_of_task_seg_id id)
+         (Task_ds.Id.string_of_task_seg_id id)
          start end_exc)
     s
 
@@ -250,7 +254,7 @@ let debug_single_task_seg_multi_even_splits () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.string_of_task_seg_id id)
+             (Task_ds.Id.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -463,11 +467,12 @@ let debug_sched_agenda_range () =
 
 let debug_sched_usage_simulation () =
   let add_task ~parent_user_id task_data task_inst_data_list t : unit =
-    let task, _task_inst_list =
+    let task, _task_inst_list, ar =
       Sched_ver_history.In_place_head.Task.Add.add_task ~parent_user_id
         task_data task_inst_data_list t
     in
     print_endline "Added task";
+    Sched_ver_history.Print.debug_print_action_record ar;
     Task_ds.Print.debug_print_task ~indent_level:1 task
   in
   let time_profile_store = Time_profile_store.make_empty () in
@@ -592,8 +597,10 @@ let debug_sched_usage_simulation () =
     ];
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
+  print_endline "Instantiating";
   Sched_ver_history.In_place_head.Recur.instantiate ~start:0L ~end_exc:100L
-    sched_ver_history;
+    sched_ver_history
+  |> Sched_ver_history.Print.debug_print_action_record;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
   ( match
@@ -601,14 +608,18 @@ let debug_sched_usage_simulation () =
         ~include_sched_reqs_partially_within_time_period:true
         ~up_to_sched_req_id_inc:None sched_ver_history
     with
-    | Ok () ->
+    | Ok (), ar ->
       print_endline "Scheduled successfully";
+      Sched_ver_history.Print.debug_print_action_record ar;
       Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history
-    | Error () -> print_endline "Scheduling failed" );
+    | Error (), ar ->
+      print_endline "Scheduling failed";
+      Sched_ver_history.Print.debug_print_action_record ar );
   print_endline "=====";
   print_endline "Removing task/task inst";
   Sched_ver_history.Maybe_append_to_head.remove_task_inst (0L, 0L, 0L)
-    sched_ver_history;
+    sched_ver_history
+  |> Sched_ver_history.Print.debug_print_action_record;
   (* Sched_ver_history.Maybe_append_to_head.remove_task (0L, 0L) sched_ver_history; *)
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
@@ -617,9 +628,11 @@ let debug_sched_usage_simulation () =
   (* Sched_ver_history.In_place_head.move_task_seg_to_completed
    *   (0L, 1L, 0L, 0L, None) sched_ver_history; *)
   Sched_ver_history.In_place_head.Progress.Move.move_task_inst_to_completed
-    (0L, 1L, 0L) sched_ver_history;
+    (0L, 1L, 0L) sched_ver_history
+  |> Sched_ver_history.Print.debug_print_action_record;
   Sched_ver_history.In_place_head.Progress.Add.add_task_seg_progress_chunk
-    (0L, 0L, 1L, 0L, None) (0L, 100L) sched_ver_history;
+    (0L, 0L, 1L, 0L, None) (0L, 100L) sched_ver_history
+  |> Sched_ver_history.Print.debug_print_action_record;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
   print_endline "Serializing sched_ver_history";

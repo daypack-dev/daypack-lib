@@ -19,15 +19,15 @@ module Print_utils = struct
 
   let time_slots = QCheck.Print.list time_slot
 
-  let task_inst_id = Daypack_lib.Task_ds.string_of_task_inst_id
+  let task_inst_id = Daypack_lib.Task_ds.Id.string_of_task_inst_id
 
-  let task_seg_id = Daypack_lib.Task_ds.string_of_task_seg_id
+  let task_seg_id = Daypack_lib.Task_ds.Id.string_of_task_seg_id
 
   let task_seg_id_set s =
     s
     |> Daypack_lib.Task_seg_id_set.to_seq
     |> List.of_seq
-    |> QCheck.Print.list Daypack_lib.Task_ds.string_of_task_seg_id
+    |> QCheck.Print.list Daypack_lib.Task_ds.Id.string_of_task_seg_id
 
   let task_seg = QCheck.Print.(pair task_seg_id int64)
 
@@ -768,7 +768,7 @@ let quota =
         |> Daypack_lib.Task_inst_id_map.to_seq
         |> List.of_seq
         |> QCheck.Print.list
-          (QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_inst_id
+          (QCheck.Print.pair Daypack_lib.Task_ds.Id.string_of_task_inst_id
              Print_utils.int64))
     quota_gen
 
@@ -785,7 +785,7 @@ let user_id_to_task_ids =
         |> Daypack_lib.User_id_map.to_seq
         |> List.of_seq
         |> QCheck.Print.list
-          (QCheck.Print.pair Daypack_lib.Task_ds.user_id_to_string
+          (QCheck.Print.pair Daypack_lib.Task_ds.Id.string_of_user_id
              Print_utils.int64_set))
     user_id_to_task_ids_gen
 
@@ -802,7 +802,7 @@ let task_id_to_task_inst_ids =
         |> Daypack_lib.Task_id_map.to_seq
         |> List.of_seq
         |> QCheck.Print.list
-          (QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_id
+          (QCheck.Print.pair Daypack_lib.Task_ds.Id.string_of_task_id
              Print_utils.int64_set))
     task_id_to_task_inst_ids_gen
 
@@ -820,7 +820,7 @@ let task_inst_id_to_task_seg_ids =
         |> Daypack_lib.Task_inst_id_map.to_seq
         |> List.of_seq
         |> QCheck.Print.list
-          (QCheck.Print.pair Daypack_lib.Task_ds.string_of_task_inst_id
+          (QCheck.Print.pair Daypack_lib.Task_ds.Id.string_of_task_inst_id
              Print_utils.int64_int64_option_set))
     task_inst_id_to_task_seg_ids_gen
 
