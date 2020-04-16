@@ -6,6 +6,7 @@ let run (list_free_time_slots : bool) : unit =
   match Context.load () with
   | Error msg -> print_endline msg
   | Ok context ->
+    Notification.display context;
     let hd =
       Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
     in
