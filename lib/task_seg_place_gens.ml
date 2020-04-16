@@ -93,7 +93,7 @@ let single_task_seg_single_split ~min_seg_size ~max_seg_size ~cur_split_pos
       else fun () ->
         Seq.Cons
           ( ( (task_seg_id, l_split_size),
-              (Task_ds.succ_task_seg_sub_id task_seg_id, r_split_size) ),
+              (Task_ds.Id.succ_task_seg_sub_id task_seg_id, r_split_size) ),
             aux min_seg_size max_seg_size (Int64.succ cur_split_pos) task_seg )
   in
   let _, task_seg_size = task_seg in
@@ -101,7 +101,7 @@ let single_task_seg_single_split ~min_seg_size ~max_seg_size ~cur_split_pos
   assert (max_seg_size > 0L);
   assert (cur_split_pos >= 0L);
   assert (task_seg_size > 0L);
-  let task_seg = Task_ds.init_task_seg_sub_id task_seg in
+  let task_seg = Task_ds.Id.init_task_seg_sub_id task_seg in
   aux min_seg_size max_seg_size cur_split_pos task_seg
 
 let single_task_seg_multi_splits_exact ~min_seg_size ~max_seg_size
