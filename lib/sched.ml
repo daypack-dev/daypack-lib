@@ -470,21 +470,21 @@ module Task_seg = struct
       Task_seg_id_map.find_opt id sd.store.task_seg_discarded_store
 
     let find_task_seg_any_with_status_opt (id : Task_ds.task_seg_id)
-        (sched : sched) : (task_related_status * Task_ds.task_seg_size) option =
+        (sched : sched) : (Task_ds.task_seg_size * task_related_status) option =
       match find_task_seg_uncompleted_opt id sched with
-      | Some x -> Some (`Uncompleted, x)
+      | Some x -> Some (x, `Uncompleted)
       | None -> (
           match find_task_seg_completed_opt id sched with
-          | Some x -> Some (`Completed, x)
+          | Some x -> Some (x, `Completed)
           | None -> (
               match find_task_seg_discarded_opt id sched with
-              | Some x -> Some (`Discarded, x)
+              | Some x -> Some (x, `Discarded)
               | None -> None ) )
 
     let find_task_seg_any_opt (id : Task_ds.task_seg_id) (sched : sched) :
       Task_ds.task_seg_size option =
       find_task_seg_any_with_status_opt id sched
-      |> Option.map (fun (_status, x) -> x)
+      |> Option.map (fun (x, _status) -> x)
 
     let find_task_seg_ids_by_task_inst_id (id : Task_ds.task_inst_id)
         ((_, sd) : sched) : Task_ds.task_seg_id Seq.t =
@@ -516,11 +516,11 @@ module Task_seg = struct
 
     let find_task_seg_seq_any_with_status_by_task_inst_id
         (id : Task_ds.task_inst_id) (sched : sched) :
-      (task_related_status * Task_ds.task_seg) Seq.t =
+      (Task_ds.task_seg * task_related_status) Seq.t =
       find_task_seg_ids_by_task_inst_id id sched
       |> Seq.filter_map (fun task_seg_id ->
           find_task_seg_any_with_status_opt task_seg_id sched
-          |> Option.map (fun (status, x) -> (status, (task_seg_id, x))))
+          |> Option.map (fun (x, status) -> ((task_seg_id, x), status)))
 
     let find_task_seg_seq_any_by_task_inst_id (id : Task_ds.task_inst_id)
         (sched : sched) : Task_ds.task_seg Seq.t =
@@ -563,11 +563,11 @@ module Task_seg = struct
           |> Option.map (fun task_seg_data -> (task_seg_id, task_seg_data)))
 
     let find_task_seg_seq_any_with_status_by_task_id (id : Task_ds.task_id)
-        (sched : sched) : (task_related_status * Task_ds.task_seg) Seq.t =
+        (sched : sched) : (Task_ds.task_seg * task_related_status) Seq.t =
       find_task_seg_ids_by_task_id id sched
       |> Seq.filter_map (fun task_seg_id ->
           find_task_seg_any_with_status_opt task_seg_id sched
-          |> Option.map (fun (status, x) -> (status, (task_seg_id, x))))
+          |> Option.map (fun (x, status) -> ((task_seg_id, x), status)))
 
     let find_task_seg_seq_any_by_task_id (id : Task_ds.task_id) (sched : sched)
       : Task_ds.task_seg Seq.t =
@@ -923,22 +923,22 @@ module Task_inst = struct
       Task_inst_id_map.find_opt id sd.store.task_inst_discarded_store
 
     let find_task_inst_any_with_status_opt (id : Task_ds.task_inst_id)
-        (sched : sched) : (task_related_status * Task_ds.task_inst_data) option
+        (sched : sched) : (Task_ds.task_inst_data * task_related_status) option
       =
       match find_task_inst_uncompleted_opt id sched with
-      | Some x -> Some (`Uncompleted, x)
+      | Some x -> Some (x, `Uncompleted)
       | None -> (
           match find_task_inst_completed_opt id sched with
-          | Some x -> Some (`Completed, x)
+          | Some x -> Some (x, `Completed)
           | None -> (
               match find_task_inst_discarded_opt id sched with
-              | Some x -> Some (`Discarded, x)
+              | Some x -> Some (x, `Discarded)
               | None -> None ) )
 
     let find_task_inst_any_opt (id : Task_ds.task_inst_id) (sched : sched) :
       Task_ds.task_inst_data option =
       find_task_inst_any_with_status_opt id sched
-      |> Option.map (fun (_status, x) -> x)
+      |> Option.map (fun (x, _status) -> x)
 
     let find_task_inst_ids_by_task_id (id : Task_ds.task_id) ((_, sd) : sched) :
       Task_ds.task_inst_id Seq.t =
@@ -972,11 +972,11 @@ module Task_inst = struct
               (task_inst_id, task_inst_data)))
 
     let find_task_inst_seq_any_with_status_by_task_id (id : Task_ds.task_id)
-        (sched : sched) : (task_related_status * Task_ds.task_inst) Seq.t =
+        (sched : sched) : (Task_ds.task_inst * task_related_status) Seq.t =
       find_task_inst_ids_by_task_id id sched
       |> Seq.filter_map (fun task_inst_id ->
           find_task_inst_any_with_status_opt task_inst_id sched
-          |> Option.map (fun (status, x) -> (status, (task_inst_id, x))))
+          |> Option.map (fun (x, status) -> ((task_inst_id, x), status)))
 
     let find_task_inst_seq_any_by_task_id (id : Task_ds.task_id) (sched : sched)
       : Task_ds.task_inst Seq.t =
@@ -1250,21 +1250,21 @@ module Task = struct
       Task_id_map.find_opt id sd.store.task_discarded_store
 
     let find_task_any_with_status_opt (id : Task_ds.task_id) (sched : sched) :
-      (task_related_status * Task_ds.task_data) option =
+      (Task_ds.task_data * task_related_status) option =
       match find_task_uncompleted_opt id sched with
-      | Some x -> Some (`Uncompleted, x)
+      | Some x -> Some (x, `Uncompleted)
       | None -> (
           match find_task_completed_opt id sched with
-          | Some x -> Some (`Completed, x)
+          | Some x -> Some (x, `Completed)
           | None -> (
               match find_task_discarded_opt id sched with
-              | Some x -> Some (`Discarded, x)
+              | Some x -> Some (x, `Discarded)
               | None -> None ) )
 
     let find_task_any_opt (id : Task_ds.task_id) (sched : sched) :
       Task_ds.task_data option =
       find_task_any_with_status_opt id sched
-      |> Option.map (fun (_status, x) -> x)
+      |> Option.map (fun (x, _status) -> x)
 
     (*$*)
   end
@@ -1408,17 +1408,17 @@ module Progress = struct
     let get_task_status (id : Task_ds.task_id) (sched : sched) :
       task_related_status option =
       Task.Find.find_task_any_with_status_opt id sched
-      |> Option.map (fun (status, _) -> status)
+      |> Option.map (fun (_, status) -> status)
 
     let get_task_inst_status (id : Task_ds.task_inst_id) (sched : sched) :
       task_related_status option =
       Task_inst.Find.find_task_inst_any_with_status_opt id sched
-      |> Option.map (fun (status, _) -> status)
+      |> Option.map (fun (_, status) -> status)
 
     let get_task_seg_status (id : Task_ds.task_seg_id) (sched : sched) :
       task_related_status option =
       Task_seg.Find.find_task_seg_any_with_status_opt id sched
-      |> Option.map (fun (status, _) -> status)
+      |> Option.map (fun (_, status) -> status)
   end
 
   module Move = struct
