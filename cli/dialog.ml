@@ -191,7 +191,9 @@ let process_task_inst_alloc_req_string (s : string) :
   (Daypack_lib.Task_ds.task_seg_alloc_req, string) result =
   try
     Scanf.sscanf s "%[^,],%Ld" (fun maybe_task_inst_id task_seg_size ->
-        match Daypack_lib.Task_ds.Id.task_inst_id_of_string maybe_task_inst_id with
+        match
+          Daypack_lib.Task_ds.Id.task_inst_id_of_string maybe_task_inst_id
+        with
         | Error () -> Error "Failed to parse task inst id string"
         | Ok task_inst_id -> Ok (task_inst_id, task_seg_size))
   with _ -> Error "Failed to parse task inst alloc req"

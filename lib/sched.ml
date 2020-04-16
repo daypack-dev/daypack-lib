@@ -1947,7 +1947,8 @@ module Agenda = struct
     let task_seg_place_set ~(start : int64 option) ~(end_exc : int64 option)
         ~(include_task_seg_place_partially_within_time_period : bool)
         ((_, sd) as sched : sched) : Task_seg_place_set.t =
-      task_seg_id_set ~start ~end_exc ~include_task_seg_place_partially_within_time_period sched
+      task_seg_id_set ~start ~end_exc
+        ~include_task_seg_place_partially_within_time_period sched
       |> Task_seg_id_set.to_seq
       |> Seq.map (fun task_seg_id ->
           let place_start, place_end_exc =
@@ -1978,8 +1979,7 @@ module Agenda = struct
           ~some:(fun x -> x)
           include_task_seg_place_partially_within_time_period
       in
-      Range.task_seg_place_set
-      ~start ~end_exc
+      Range.task_seg_place_set ~start ~end_exc
         ~include_task_seg_place_partially_within_time_period sched
       |> Task_seg_place_set.to_seq
   end

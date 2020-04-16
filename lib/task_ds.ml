@@ -81,7 +81,8 @@ module Id = struct
   let user_id_of_string (s : string) : (user_id, unit) result =
     try Ok (Int64.of_string s) with _ -> Error ()
 
-  let string_of_task_id ((id1, id2) : task_id) = Printf.sprintf "%Ld.%Ld" id1 id2
+  let string_of_task_id ((id1, id2) : task_id) =
+    Printf.sprintf "%Ld.%Ld" id1 id2
 
   let task_id_of_string (s : string) : (task_id, unit) result =
     try Scanf.sscanf s "%Ld.%Ld" (fun id1 id2 -> Ok (id1, id2))
@@ -108,13 +109,15 @@ module Id = struct
               Ok (id1, id2, id3, id4, Some id5))
         with _ -> Error () )
 
-  let task_id_of_task_inst_id (id1, id2, _id3 : task_inst_id) : task_id =
+  let task_id_of_task_inst_id ((id1, id2, _id3) : task_inst_id) : task_id =
     (id1, id2)
 
-  let task_id_of_task_seg_id (id1, id2, _id3, _id4, _id5 : task_seg_id) : task_id =
+  let task_id_of_task_seg_id ((id1, id2, _id3, _id4, _id5) : task_seg_id) :
+    task_id =
     (id1, id2)
 
-  let task_inst_id_of_task_seg_id (id1, id2, id3, _id4, _id5 : task_seg_id) : task_inst_id =
+  let task_inst_id_of_task_seg_id ((id1, id2, id3, _id4, _id5) : task_seg_id) :
+    task_inst_id =
     (id1, id2, id3)
 end
 
