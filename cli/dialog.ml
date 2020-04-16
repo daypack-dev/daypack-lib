@@ -67,19 +67,19 @@ let ask_ids (type a) ~indent_level ~(name : string)
       | Error () -> Error (Printf.sprintf "Failed to parse %s string" name))
 
 let ask_task_id ~indent_level : Daypack_lib.Task_ds.task_id =
-  ask_id ~indent_level ~name:"task ID" Daypack_lib.Task_ds.string_to_task_id
+  ask_id ~indent_level ~name:"task ID" Daypack_lib.Task_ds.Id.task_id_of_string
 
 let ask_task_inst_id ~indent_level : Daypack_lib.Task_ds.task_inst_id =
   ask_id ~indent_level ~name:"task inst ID"
-    Daypack_lib.Task_ds.string_to_task_inst_id
+    Daypack_lib.Task_ds.Id.task_inst_id_of_string
 
 let ask_task_inst_ids ~indent_level : Daypack_lib.Task_ds.task_inst_id list =
   ask_ids ~indent_level ~name:"task inst IDs"
-    Daypack_lib.Task_ds.string_to_task_inst_id
+    Daypack_lib.Task_ds.Id.task_inst_id_of_string
 
 let ask_task_seg_id ~indent_level : Daypack_lib.Task_ds.task_seg_id =
   ask_id ~indent_level ~name:"task seg ID"
-    Daypack_lib.Task_ds.string_to_task_seg_id
+    Daypack_lib.Task_ds.Id.task_seg_id_of_string
 
 let ask_pick_choice (type a) ~indent_level ~(prompt : string)
     (choices : (string * a) list) : a =
@@ -191,7 +191,7 @@ let process_task_inst_alloc_req_string (s : string) :
   (Daypack_lib.Task_ds.task_seg_alloc_req, string) result =
   try
     Scanf.sscanf s "%[^,],%Ld" (fun maybe_task_inst_id task_seg_size ->
-        match Daypack_lib.Task_ds.string_to_task_inst_id maybe_task_inst_id with
+        match Daypack_lib.Task_ds.Id.task_inst_id_of_string maybe_task_inst_id with
         | Error () -> Error "Failed to parse task inst id string"
         | Ok task_inst_id -> Ok (task_inst_id, task_seg_size))
   with _ -> Error "Failed to parse task inst alloc req"
