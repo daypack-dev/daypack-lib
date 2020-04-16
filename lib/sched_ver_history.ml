@@ -1,13 +1,13 @@
 type t = { mutable history : Sched.sched list }
 
-let make_empty () = { history = [] }
-
-let of_sched_list history = { history }
-
 type head_choice =
   | Replace_head of Sched.sched
   | New_head of Sched.sched
   | Do_nothing
+
+let make_empty () = { history = [] }
+
+let of_sched_list history = { history }
 
 let map_head (f : Sched.sched -> 'a * head_choice) (t : t) : 'a =
   match t.history with
