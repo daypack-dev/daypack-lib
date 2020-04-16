@@ -122,8 +122,13 @@ end
 module To_string : sig
   val debug_string_of_sched_ver_history :
     ?indent_level:int -> ?buffer:Buffer.t -> t -> string
+
+  val debug_string_of_action_record :
+    ?indent_level:int -> ?buffer:Buffer.t -> action_record -> string
 end
 
 module Print : sig
   val debug_print_sched_ver_history : ?indent_level:int -> t -> unit
+
+  val debug_print_action_record : ?indent_level:int -> action_record -> unit
 end

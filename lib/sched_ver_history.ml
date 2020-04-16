@@ -468,9 +468,22 @@ module To_string = struct
          |> ignore)
       (List.rev t.history);
     Buffer.contents buffer
+
+  let debug_string_of_action_record ?(indent_level = 0)
+      ?(buffer = Buffer.create 4096) (ar : action_record) =
+    Debug_print.bprintf ~indent_level buffer "action record: %s"
+      (match ar with
+       | Updated_head id -> Printf.sprintf "updated head sched #%d" id
+       | Added_new_head id -> Printf.sprintf "added new head sched #%d" id
+       | Did_nothing -> "did nothing"
+      );
+    Buffer.contents buffer
 end
 
 module Print = struct
   let debug_print_sched_ver_history ?(indent_level = 0) (t : t) =
     print_string (To_string.debug_string_of_sched_ver_history ~indent_level t)
+
+  let debug_print_action_record ?(indent_level = 0) (ar : action_record) =
+    print_endline (To_string.debug_string_of_action_record ~indent_level ar)
 end
