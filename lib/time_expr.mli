@@ -11,7 +11,7 @@ val matching_time_slots :
   ((int64 * int64) Seq.t, string) result
 
 module Time_point_expr : sig
-  val next_match_unix_time_time_point_expr :
+  val next_match_unix_time :
     search_param ->
     Time_expr_normalized_ast.time_point_expr ->
     (int64 option, string) result

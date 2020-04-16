@@ -563,7 +563,7 @@ module To_time_pattern_lossy = struct
 end
 
 module Time_point_expr = struct
-  let next_match_unix_time_time_point_expr (search_param : search_param)
+  let next_match_unix_time (search_param : search_param)
       (e : Time_expr_normalized_ast.time_point_expr) :
     (int64 option, string) result =
     match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
