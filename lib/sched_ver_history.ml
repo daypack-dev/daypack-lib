@@ -19,12 +19,13 @@ let map_head (f : Sched.sched -> 'a * head_choice) (t : t) : 'a =
       | Do_nothing -> () );
     ret
   | hd :: tl ->
+    let sid, _ = hd in
     let ret, choice = f hd in
     ( match choice with
-      | Replace_head x -> t.history <- x :: tl
+      | Replace_head (_id, x) ->
+        t.history <- (sid, x) :: tl
       | New_head (_id, x) ->
-        let id, _ = hd in
-        t.history <- (succ id, x) :: hd :: tl
+        t.history <- (succ sid, x) :: hd :: tl
       | Do_nothing -> () );
     ret
 
