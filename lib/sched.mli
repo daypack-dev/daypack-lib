@@ -184,7 +184,7 @@ module Task_seg : sig
     val find_task_seg_seq_any_by_task_inst_id :
       Task_ds.task_inst_id -> sched -> Task_ds.task_seg Seq.t
 
-    val find_task_seg_seq_any_w_status_by_task_inst_id :
+    val find_task_seg_seq_any_with_status_by_task_inst_id :
       Task_ds.task_inst_id ->
       sched ->
       (task_related_status * Task_ds.task_seg) Seq.t
@@ -204,7 +204,7 @@ module Task_seg : sig
     val find_task_seg_seq_any_by_task_id :
       Task_ds.task_id -> sched -> Task_ds.task_seg Seq.t
 
-    val find_task_seg_seq_any_w_status_by_task_id :
+    val find_task_seg_seq_any_with_status_by_task_id :
       Task_ds.task_id -> sched -> (task_related_status * Task_ds.task_seg) Seq.t
   end
 
@@ -275,7 +275,7 @@ module Task_inst : sig
     val find_task_inst_any_opt :
       Task_ds.task_inst_id -> sched -> Task_ds.task_inst_data option
 
-    val find_task_inst_any_w_status_opt :
+    val find_task_inst_any_with_status_opt :
       Task_ds.task_inst_id ->
       sched ->
       (task_related_status * Task_ds.task_inst_data) option
@@ -295,7 +295,7 @@ module Task_inst : sig
     val find_task_inst_seq_any_by_task_id :
       Task_ds.task_id -> sched -> Task_ds.task_inst Seq.t
 
-    val find_task_inst_seq_any_w_status_by_task_id :
+    val find_task_inst_seq_any_with_status_by_task_id :
       Task_ds.task_id ->
       sched ->
       (task_related_status * Task_ds.task_inst) Seq.t
@@ -384,7 +384,7 @@ module Task : sig
 
     val find_task_any_opt : Task_ds.task_id -> sched -> Task_ds.task_data option
 
-    val find_task_any_w_status_opt :
+    val find_task_any_with_status_opt :
       Task_ds.task_id ->
       sched ->
       (task_related_status * Task_ds.task_data) option

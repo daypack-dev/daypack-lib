@@ -66,12 +66,12 @@ and task_seg_place = task_seg_id * int64 * int64
 and progress = { chunks : Int64_int64_set.t }
 
 module Id = struct
-  let task_seg_id_w_first_sub_id ((id1, id2, id3, id4, id5) : task_seg_id) :
+  let task_seg_id_with_first_sub_id ((id1, id2, id3, id4, id5) : task_seg_id) :
     task_seg_id =
     (id1, id2, id3, id4, match id5 with None -> Some 0L | Some x -> Some x)
 
   let init_task_seg_sub_id ((id, len) : task_seg) : task_seg =
-    (task_seg_id_w_first_sub_id id, len)
+    (task_seg_id_with_first_sub_id id, len)
 
   let succ_task_seg_sub_id ((id1, id2, id3, id4, id5) : task_seg_id) =
     (id1, id2, id3, id4, Option.map (fun x -> x +^ 1L) id5)
