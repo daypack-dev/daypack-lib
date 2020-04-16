@@ -1943,6 +1943,18 @@ module Agenda = struct
         | None -> s
         | Some s' -> Task_seg_id_set.union s s'
       else task_seg_place_fully_within_range
+
+    let task_seg_place_set ~(start : int64 option) ~(end_exc : int64 option)
+        ~(include_task_seg_place_partially_within_time_period : bool)
+        ((_, sd) as sched : sched) : Task_seg_place_set.t =
+      task_seg_id_set ~start ~end_exc ~include_task_seg_place_partially_within_time_period sched
+      |> Task_seg_id_set.to_seq
+      |> Seq.map (fun task_seg_id ->
+          let place_start, place_end_exc =
+            Task_seg_id_map.find task_seg_id sd.agenda.indexed_by_task_seg_id
+          in
+          (task_seg_id, place_start, place_end_exc))
+      |> Task_seg_place_set.of_seq
   end
 
   module To_seq_internal = struct
@@ -1960,14 +1972,16 @@ module Agenda = struct
 
     let task_seg_places ~(start : int64 option) ~(end_exc : int64 option)
         ~(include_task_seg_place_partially_within_time_period : bool option)
-        ((_sid, sd) as sched : sched) : Task_ds.task_seg_place Seq.t =
-      task_seg_ids ~start ~end_exc
+        (sched : sched) : Task_ds.task_seg_place Seq.t =
+      let include_task_seg_place_partially_within_time_period =
+        Option.fold ~none:false
+          ~some:(fun x -> x)
+          include_task_seg_place_partially_within_time_period
+      in
+      Range.task_seg_place_set
+      ~start ~end_exc
         ~include_task_seg_place_partially_within_time_period sched
-      |> Seq.map (fun task_seg_id ->
-          let place_start, place_end_exc =
-            Task_seg_id_map.find task_seg_id sd.agenda.indexed_by_task_seg_id
-          in
-          (task_seg_id, place_start, place_end_exc))
+      |> Task_seg_place_set.to_seq
   end
 
   module Filter_internal = struct

@@ -559,6 +559,13 @@ module Agenda : sig
       include_task_seg_place_partially_within_time_period:bool ->
       sched ->
       Task_seg_id_set.t
+
+    val task_seg_place_set :
+      start:int64 option ->
+      end_exc:int64 option ->
+      include_task_seg_place_partially_within_time_period:bool ->
+      sched ->
+      Task_seg_place_set.t
   end
 
   module Filter : sig
