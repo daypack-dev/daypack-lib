@@ -11,9 +11,12 @@ let run () : unit =
           ~include_sched_reqs_partially_within_time_period:true
           ~up_to_sched_req_id_inc:None context.sched_ver_history
       with
-      | Ok () ->
+      | Ok (), ar ->
         Context.save context |> Result.get_ok;
-        ()
-      | Error () -> print_endline "Failed to schedule" )
+        Dialog.report_action_record ar
+      | Error (), ar ->
+        print_endline "Failed to schedule";
+        Dialog.report_action_record ar
+    )
 
 let cmd = (Term.(const run $ const ()), Term.info "sched")

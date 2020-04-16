@@ -348,3 +348,12 @@ let ask_sched_req_data_unit ~indent_level
            time_slots;
            incre = 1L;
          })
+
+let report_action_record (r : Daypack_lib.Sched_ver_history.action_record) : unit =
+  match r with
+  | Updated_head id ->
+    Printf.printf "Updated head sched #%d in history\n" id
+  | Added_new_head id ->
+    Printf.printf "Added new head sched #%d in history\n" id
+  | Did_nothing ->
+    print_endline "No changes were made to history"
