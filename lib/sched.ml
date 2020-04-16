@@ -2218,12 +2218,51 @@ module Sched_req = struct
   end
 
   module Filter = struct
+    let filter_pending_sched_req_seq (f : Sched_req_ds.sched_req -> bool)
+        (sched : sched) : Sched_req_ds.sched_req Seq.t =
+      To_seq.pending_sched_req_seq sched |> Seq.filter f
+
     let filter_sched_req_record_seq (f : Sched_req_ds.sched_req_record -> bool)
-        ((_, sd) : sched) : Sched_req_ds.sched_req_record Seq.t =
-      sd.store.sched_req_record_store |> Sched_req_id_map.to_seq |> Seq.filter f
+        (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
+      To_seq.sched_req_record_seq sched |> Seq.filter f
   end
 
   module Find = struct
+    let find_pending_sched_req (id : Sched_req_ds.sched_req_id)
+        ((_, sd) : sched) : Sched_req_ds.sched_req_data option =
+      Sched_req_id_map.find_opt id sd.store.sched_req_pending_store
+
+    let find_pending_sched_req_by_task_id ((id1, id2) : Task_ds.task_id)
+        (sched : sched) : Sched_req_ds.sched_req Seq.t =
+      Filter.filter_pending_sched_req_seq
+        (fun (_, l) ->
+           List.exists
+             (fun x ->
+                List.exists
+                  (fun ((id1', id2', _id3'), _) ->
+                     id1 = id1' && id2 = id2')
+                  (Sched_req_data_unit_skeleton.get_inner_data x))
+             l)
+        sched
+
+    let find_pending_sched_req_by_task_inst_id
+        ((id1, id2, id3) : Task_ds.task_inst_id) (sched : sched) :
+      Sched_req_ds.sched_req Seq.t =
+      Filter.filter_pending_sched_req_seq
+        (fun (_, l) ->
+           List.exists
+             (fun x ->
+                List.exists
+                  (fun ((id1', id2', id3'), _) ->
+                     id1 = id1' && id2 = id2' && id3 = id3')
+                  (Sched_req_data_unit_skeleton.get_inner_data x))
+             l)
+        sched
+
+    let find_sched_req_record (id : Sched_req_ds.sched_req_id)
+        ((_, sd) : sched) : Sched_req_ds.sched_req_record_data option =
+      Sched_req_id_map.find_opt id sd.store.sched_req_record_store
+
     let find_sched_req_record_by_task_id ((id1, id2) : Task_ds.task_id)
         (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
       Filter.filter_sched_req_record_seq
