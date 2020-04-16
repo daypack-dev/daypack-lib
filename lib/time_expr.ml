@@ -572,7 +572,8 @@ module Time_point_expr = struct
       Ok (Time_pattern.Single_pattern.next_match_unix_time search_param pat)
 
   let matching_time_slots (search_param : search_param)
-      (e : Time_expr_normalized_ast.time_point_expr) : (Time_slot_ds.t Seq.t, string) result =
+      (e : Time_expr_normalized_ast.time_point_expr) :
+    (Time_slot_ds.t Seq.t, string) result =
     match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
     | Error msg -> Error msg
     | Ok pat ->
@@ -581,7 +582,8 @@ module Time_point_expr = struct
       |> Result.ok
 
   let next_match_time_slot (search_param : search_param)
-      (e : Time_expr_normalized_ast.time_point_expr) : ((int64 * int64) option, string) result =
+      (e : Time_expr_normalized_ast.time_point_expr) :
+    ((int64 * int64) option, string) result =
     match matching_time_slots search_param e with
     | Error msg -> Error msg
     | Ok seq -> (
@@ -590,7 +592,8 @@ end
 
 module Time_slots_expr = struct
   let matching_time_slots (search_param : search_param)
-      (e : Time_expr_normalized_ast.time_slots_expr) : (Time_slot_ds.t Seq.t, string) result =
+      (e : Time_expr_normalized_ast.time_slots_expr) :
+    (Time_slot_ds.t Seq.t, string) result =
     let take_count =
       match e with
       | Single_time_slot _ | Month_days_and_hour_minutes _
@@ -613,7 +616,8 @@ module Time_slots_expr = struct
       |> Result.ok
 
   let next_match_time_slot (search_param : search_param)
-      (e : Time_expr_normalized_ast.time_slots_expr) : ((int64 * int64) option, string) result =
+      (e : Time_expr_normalized_ast.time_slots_expr) :
+    ((int64 * int64) option, string) result =
     match matching_time_slots search_param e with
     | Error msg -> Error msg
     | Ok seq -> (
@@ -626,8 +630,8 @@ let matching_time_slots (search_param : search_param)
   | Time_point_expr e -> Time_point_expr.matching_time_slots search_param e
   | Time_slots_expr e -> Time_slots_expr.matching_time_slots search_param e
 
-  let next_match_time_slot (search_param : search_param)
-      (e : Time_expr_normalized_ast.t) : ((int64 * int64) option, string) result =
+let next_match_time_slot (search_param : search_param)
+    (e : Time_expr_normalized_ast.t) : ((int64 * int64) option, string) result =
   match e with
   | Time_point_expr e -> Time_point_expr.next_match_time_slot search_param e
   | Time_slots_expr e -> Time_slots_expr.next_match_time_slot search_param e

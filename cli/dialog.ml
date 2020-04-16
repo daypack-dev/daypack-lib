@@ -136,7 +136,8 @@ let process_time_string (s : string) : (int64, string) result =
       | Ok None -> Error "Failed to find a matching time"
       | Ok (Some x) -> Ok x )
 
-let process_time_slots_string (s : string) : ((int64 * int64) list, string) result =
+let process_time_slots_string (s : string) :
+  ((int64 * int64) list, string) result =
   let cur_time = Daypack_lib.Time.Current.cur_unix_time () in
   match Daypack_lib.Time_expr.Interpret_string.time_slots_expr_of_string s with
   | Error msg -> Error msg
@@ -152,10 +153,10 @@ let process_time_slots_string (s : string) : ((int64 * int64) list, string) resu
           e
       with
       | Error msg -> Error msg
-      | Ok s ->
-        match List.of_seq s with
-        | [] -> Error "Failed to find matching time slots"
-        | l -> Ok l )
+      | Ok s -> (
+          match List.of_seq s with
+          | [] -> Error "Failed to find matching time slots"
+          | l -> Ok l ) )
 
 let process_time_slot_string (s : string) : (int64 * int64, string) result =
   match process_time_slots_string s with
@@ -165,18 +166,24 @@ let process_time_slot_string (s : string) : (int64 * int64, string) result =
   | Ok _ -> Error "Too many time slots"
 
 let ask_time ~indent_level ~(prompt : string) : int64 =
-  ask ~indent_level ~prompt:(prompt ^ " (see `daypc grammar --time-point-expr` for grammar guide)") process_time_string
+  ask ~indent_level
+    ~prompt:
+      (prompt ^ " (see `daypc grammar --time-point-expr` for grammar guide)")
+    process_time_string
 
 let ask_time_slot ~indent_level ~(prompt : string) : int64 * int64 =
   ask ~indent_level
-    ~prompt:(prompt ^ " (see `daypc grammar --time-slots-expr` for grammar guide)")
+    ~prompt:
+      (prompt ^ " (see `daypc grammar --time-slots-expr` for grammar guide)")
     process_time_slot_string
 
 let ask_time_slots ~indent_level ~(prompt : string) : (int64 * int64) list =
-  ask_multiple ~indent_level ~prompt:(prompt  ^ " (see `daypc grammar --time-slots-expr` for grammar guide)")
+  ask_multiple ~indent_level
+    ~prompt:
+      (prompt ^ " (see `daypc grammar --time-slots-expr` for grammar guide)")
     process_time_slots_string
   |> List.to_seq
-  |> Seq.flat_map (List.to_seq)
+  |> Seq.flat_map List.to_seq
   |> Daypack_lib.Time_slot_ds.normalize
   |> List.of_seq
 
@@ -349,11 +356,10 @@ let ask_sched_req_data_unit ~indent_level
            incre = 1L;
          })
 
-let report_action_record (r : Daypack_lib.Sched_ver_history.action_record) : unit =
+let report_action_record (r : Daypack_lib.Sched_ver_history.action_record) :
+  unit =
   match r with
-  | Updated_head id ->
-    Printf.printf "Updated head sched #%d in history\n" id
+  | Updated_head id -> Printf.printf "Updated head sched #%d in history\n" id
   | Added_new_head id ->
     Printf.printf "Added new head sched #%d in history\n" id
-  | Did_nothing ->
-    print_endline "No changes were made to history"
+  | Did_nothing -> print_endline "No changes were made to history"

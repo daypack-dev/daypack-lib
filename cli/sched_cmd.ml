@@ -16,7 +16,6 @@ let run () : unit =
         Dialog.report_action_record ar
       | Error (), ar ->
         print_endline "Failed to schedule";
-        Dialog.report_action_record ar
-    )
+        Dialog.report_action_record ar )
 
 let cmd = (Term.(const run $ const ()), Term.info "sched")

@@ -596,7 +596,7 @@ let debug_sched_usage_simulation () =
   print_endline "Instantiating";
   Sched_ver_history.In_place_head.Recur.instantiate ~start:0L ~end_exc:100L
     sched_ver_history
-|> Sched_ver_history.Print.debug_print_action_record;
+  |> Sched_ver_history.Print.debug_print_action_record;
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   print_endline "=====";
   ( match
@@ -608,9 +608,9 @@ let debug_sched_usage_simulation () =
       print_endline "Scheduled successfully";
       Sched_ver_history.Print.debug_print_action_record ar;
       Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history
-    | Error (), ar -> print_endline "Scheduling failed";
-      Sched_ver_history.Print.debug_print_action_record ar
-  );
+    | Error (), ar ->
+      print_endline "Scheduling failed";
+      Sched_ver_history.Print.debug_print_action_record ar );
   print_endline "=====";
   print_endline "Removing task/task inst";
   Sched_ver_history.Maybe_append_to_head.remove_task_inst (0L, 0L, 0L)
