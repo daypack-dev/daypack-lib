@@ -17,7 +17,7 @@ let run (list_free_time_slots : bool) : unit =
           hd
         |> List.of_seq
       in
-      Printf.printf "Free time slots count : %d\n" (List.length l);
+      Printf.printf "Free time slots displayed: %d\n" (List.length l);
       List.iter
         (fun (start, end_exc) ->
            let start_str =
@@ -51,6 +51,7 @@ let run (list_free_time_slots : bool) : unit =
           |> List.of_seq
         else places_within_period
       in
+      Printf.printf "Task segment placements displayed: %d\n" (List.length places);
       List.iter
         (fun (task_seg_id, place_start, place_end_exc) ->
            let start_str =
