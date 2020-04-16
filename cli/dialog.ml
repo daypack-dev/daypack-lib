@@ -125,7 +125,7 @@ let ask_task_seg_id ~indent_level ~(exists_in_sched : Daypack_lib.Sched.sched op
           Daypack_lib.Sched.Task_seg.Find.find_task_seg_any_opt id sched
         with
         | None ->
-          Error (Printf.sprintf "Failed to find task segance with ID: %s"
+          Error (Printf.sprintf "Failed to find task segment with ID: %s"
             (Daypack_lib.Task_ds.Id.string_of_task_seg_id id))
         | Some _ -> Ok id
         )
@@ -133,6 +133,50 @@ let ask_task_seg_id ~indent_level ~(exists_in_sched : Daypack_lib.Sched.sched op
   ask_id ~indent_level ~name:"task seg ID"
     ~f_until
     Daypack_lib.Task_ds.Id.task_seg_id_of_string
+
+let ask_pending_sched_req_id ~indent_level ~(exists_in_sched : Daypack_lib.Sched.sched option) : Daypack_lib.Sched_req_ds.sched_req_id =
+  let f_until =
+    match exists_in_sched with
+    | None -> None
+    | Some sched ->
+      Some (fun id ->
+        match
+          Daypack_lib.Sched.Sched_req.Find.find_pending_sched_req id sched
+        with
+        | None ->
+          Error (Printf.sprintf "Failed to find task segance with ID: %Ld" id)
+        | Some _ -> Ok id
+        )
+  in
+  ask_id ~indent_level ~name:"sched request ID"
+    ~f_until
+    (fun s ->
+       try
+         let x = Int64.of_string s in
+         if x >= 0L then Ok x else Error ()
+       with Failure _ -> Error ())
+
+let ask_sched_req_record_id ~indent_level ~(exists_in_sched : Daypack_lib.Sched.sched option) : Daypack_lib.Sched_req_ds.sched_req_id =
+  let f_until =
+    match exists_in_sched with
+    | None -> None
+    | Some sched ->
+      Some (fun id ->
+        match
+          Daypack_lib.Sched.Sched_req.Find.find_sched_req_record id sched
+        with
+        | None ->
+          Error (Printf.sprintf "Failed to find task segance with ID: %Ld" id)
+        | Some _ -> Ok id
+        )
+  in
+  ask_id ~indent_level ~name:"sched request ID"
+    ~f_until
+    (fun s ->
+       try
+         let x = Int64.of_string s in
+         if x >= 0L then Ok x else Error ()
+       with Failure _ -> Error ())
 
 let ask_pick_choice (type a) ~indent_level ~(prompt : string)
     (choices : (string * a) list) : a =

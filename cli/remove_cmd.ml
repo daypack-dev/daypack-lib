@@ -32,6 +32,10 @@ let run (remove_task : bool) (remove_task_inst : bool) (remove_task_seg : bool)
           Dialog.report_action_record action_record
         )
     );
+    ( if remove_pending_sched_req then
+        let sched_req_id = Dialog.ask_pending_sched_req_id ~indent_level:0 ~exists_in_sched:(Some hd) in
+        ()
+    );
     Context.save context |> Result.get_ok;
     ()
 
