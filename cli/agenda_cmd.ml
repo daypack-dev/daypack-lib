@@ -12,9 +12,13 @@ let run (list_free_time_slots : bool) : unit =
     let start = Daypack_lib.Time.Current.cur_unix_time () in
     let end_exc = Daypack_lib.Time.Add.add_days_unix_time ~days:3 start in
     if list_free_time_slots then
-      Daypack_lib.Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc
-        hd
-      |> Seq.iter (fun (start, end_exc) ->
+      let l =
+        Daypack_lib.Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc
+          hd
+        |> List.of_seq
+      in
+      Printf.printf "Free time slots count : %d\n" (List.length l);
+      List.iter (fun (start, end_exc) ->
           let start_str =
             Daypack_lib.Time.To_string.date_time_string_of_time
               ~display_in_time_zone:`Local start
@@ -26,6 +30,7 @@ let run (list_free_time_slots : bool) : unit =
           Printf.printf "| %s - %s | %s\n" start_str end_exc_str
             (Daypack_lib.Duration.To_string
              .human_readable_string_of_duration (Int64.sub end_exc start)))
+        l
     else
       let places_within_period =
         Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start
@@ -55,8 +60,16 @@ let run (list_free_time_slots : bool) : unit =
              Daypack_lib.Time.To_string.date_time_string_of_time
                ~display_in_time_zone:`Local place_end_exc
            in
-           Printf.printf "| %s - %s | %s\n" start_str end_exc_str
-             (Daypack_lib.Task_ds.string_of_task_seg_id task_seg_id))
+           let task_id =
+             Daypack_lib.Task_ds.Id.task_id_of_task_seg_id task_seg_id
+           in
+           let task =
+             Daypack_lib.Sched.Task.Find.find_task_any_opt task_id hd |> Option.get
+           in
+           Printf.printf "| %s - %s | %s | %s\n" start_str end_exc_str
+             (Daypack_lib.Task_ds.Id.string_of_task_seg_id task_seg_id)
+             (task.name)
+        )
         places
 
 let cmd = (Term.(const run $ free_time_slots_arg), Term.info "agenda")
