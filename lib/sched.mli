@@ -801,7 +801,8 @@ module Recur : sig
 end
 
 module Overdue : sig
-  val get_overdue_task_seg_places : deadline:int64 -> sched -> Task_ds.task_seg_place Seq.t
+  val get_overdue_task_seg_places :
+    deadline:int64 -> sched -> Task_ds.task_seg_place Seq.t
 
   val get_overdue_task_segs : deadline:int64 -> sched -> Task_ds.task_seg Seq.t
 

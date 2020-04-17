@@ -2933,7 +2933,8 @@ module Overdue = struct
         in
         (task_seg_id, task_seg_size))
 
-  let add_sched_reqs_for_overdue_task_segs ~start ~end_exc (sched : sched) : sched =
+  let add_sched_reqs_for_overdue_task_segs ~start ~end_exc (sched : sched) :
+    sched =
     let leftover_task_segs = get_overdue_task_segs ~deadline:start sched in
     let sched =
       Seq.fold_left
