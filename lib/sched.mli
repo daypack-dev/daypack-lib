@@ -649,111 +649,128 @@ module Sched_req : sig
       Sched_req_ds.sched_req_id -> sched -> sched_req_status option
   end
 
-  module Enqueue : sig
-    val enqueue_sched_req_data :
+  module Add : sig
+    val add_sched_req_data :
       Sched_req_ds.sched_req_data ->
       sched ->
       (Sched_req_ds.sched_req * sched, unit) result
 
-    val enqueue_sched_req_data_list :
+    val add_sched_req_data_list :
       Sched_req_ds.sched_req_data list ->
       sched ->
       (Sched_req_ds.sched_req list * sched, unit) result
   end
 
-  module Dequeue : sig
-    val dequeue_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
-  end
-
   module To_seq : sig
-    val pending_sched_req_seq : sched -> Sched_req_ds.sched_req Seq.t
+    module Pending : sig
+      val pending_sched_req_seq : sched -> Sched_req_ds.sched_req Seq.t
+    end
 
-    val sched_req_record_seq : sched -> Sched_req_ds.sched_req_record Seq.t
+    module Record : sig
+      val sched_req_record_seq : sched -> Sched_req_ds.sched_req_record Seq.t
+    end
   end
 
   module Filter : sig
-    val filter_pending_sched_req_seq :
-      (Sched_req_ds.sched_req -> bool) -> sched -> Sched_req_ds.sched_req Seq.t
+    module Pending : sig
+      val filter_pending_sched_req_seq :
+        (Sched_req_ds.sched_req -> bool) ->
+        sched ->
+        Sched_req_ds.sched_req Seq.t
+    end
 
-    val filter_sched_req_record_seq :
-      (Sched_req_ds.sched_req_record -> bool) ->
-      sched ->
-      Sched_req_ds.sched_req_record Seq.t
+    module Record : sig
+      val filter_sched_req_record_seq :
+        (Sched_req_ds.sched_req_record -> bool) ->
+        sched ->
+        Sched_req_ds.sched_req_record Seq.t
+    end
   end
 
   module Find : sig
-    val find_pending_sched_req :
-      Sched_req_ds.sched_req_id -> sched -> Sched_req_ds.sched_req_data option
+    module Pending : sig
+      val find_pending_sched_req :
+        Sched_req_ds.sched_req_id -> sched -> Sched_req_ds.sched_req_data option
 
-    val find_pending_sched_req_by_task_id :
-      Task_ds.task_id -> sched -> Sched_req_ds.sched_req Seq.t
+      val find_pending_sched_req_by_task_id :
+        Task_ds.task_id -> sched -> Sched_req_ds.sched_req Seq.t
 
-    val find_pending_sched_req_by_task_inst_id :
-      Task_ds.task_inst_id -> sched -> Sched_req_ds.sched_req Seq.t
+      val find_pending_sched_req_by_task_inst_id :
+        Task_ds.task_inst_id -> sched -> Sched_req_ds.sched_req Seq.t
+    end
 
-    val find_sched_req_record :
-      Sched_req_ds.sched_req_id ->
-      sched ->
-      Sched_req_ds.sched_req_record_data option
+    module Record : sig
+      val find_sched_req_record :
+        Sched_req_ds.sched_req_id ->
+        sched ->
+        Sched_req_ds.sched_req_record_data option
 
-    val find_sched_req_record_by_task_id :
-      Task_ds.task_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+      val find_sched_req_record_by_task_id :
+        Task_ds.task_id -> sched -> Sched_req_ds.sched_req_record Seq.t
 
-    val find_sched_req_record_by_task_inst_id :
-      Task_ds.task_inst_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+      val find_sched_req_record_by_task_inst_id :
+        Task_ds.task_inst_id -> sched -> Sched_req_ds.sched_req_record Seq.t
 
-    val find_sched_req_record_by_task_seg_id :
-      Task_ds.task_seg_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+      val find_sched_req_record_by_task_seg_id :
+        Task_ds.task_seg_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+    end
   end
 
   module Remove : sig
-    val remove_sched_req_record : Sched_req_ds.sched_req_id -> sched -> sched
+    module Pending : sig
+      val remove_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
 
-    val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
-      (Task_ds.task_seg_alloc_req -> bool) -> sched -> sched
+      val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
+        (Task_ds.task_seg_alloc_req -> bool) -> sched -> sched
 
-    val remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req :
-      (Task_ds.task_seg_alloc_req -> bool) -> sched -> sched
+      val remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req :
+        (Task_ds.task_seg_alloc_req -> bool) -> sched -> sched
 
-    val remove_sched_req_record_if_contains_matching_task_seg :
-      (Task_ds.task_seg -> bool) -> sched -> sched
+      val remove_pending_sched_req_by_task_id :
+        Task_ds.task_id -> sched -> sched
 
-    val remove_sched_req_record_data_unit_if_contains_matching_task_seg :
-      (Task_ds.task_seg -> bool) -> sched -> sched
+      val remove_pending_sched_req_by_task_inst_id :
+        Task_ds.task_inst_id -> sched -> sched
 
-    val remove_pending_sched_req_by_task_id : Task_ds.task_id -> sched -> sched
+      val remove_pending_sched_req_by_task_seg_id :
+        Task_ds.task_seg_id -> sched -> sched
 
-    val remove_pending_sched_req_by_task_inst_id :
-      Task_ds.task_inst_id -> sched -> sched
+      val remove_pending_sched_req_data_unit_by_task_id :
+        Task_ds.task_id -> sched -> sched
 
-    val remove_pending_sched_req_by_task_seg_id :
-      Task_ds.task_seg_id -> sched -> sched
+      val remove_pending_sched_req_data_unit_by_task_inst_id :
+        Task_ds.task_inst_id -> sched -> sched
 
-    val remove_pending_sched_req_data_unit_by_task_id :
-      Task_ds.task_id -> sched -> sched
+      val remove_pending_sched_req_data_unit_by_task_seg_id :
+        Task_ds.task_seg_id -> sched -> sched
+    end
 
-    val remove_pending_sched_req_data_unit_by_task_inst_id :
-      Task_ds.task_inst_id -> sched -> sched
+    module Record : sig
+      val remove_sched_req_record : Sched_req_ds.sched_req_id -> sched -> sched
 
-    val remove_pending_sched_req_data_unit_by_task_seg_id :
-      Task_ds.task_seg_id -> sched -> sched
+      val remove_sched_req_record_if_contains_matching_task_seg :
+        (Task_ds.task_seg -> bool) -> sched -> sched
 
-    val remove_sched_req_record_by_task_id : Task_ds.task_id -> sched -> sched
+      val remove_sched_req_record_data_unit_if_contains_matching_task_seg :
+        (Task_ds.task_seg -> bool) -> sched -> sched
 
-    val remove_sched_req_record_by_task_inst_id :
-      Task_ds.task_inst_id -> sched -> sched
+      val remove_sched_req_record_by_task_id : Task_ds.task_id -> sched -> sched
 
-    val remove_sched_req_record_by_task_seg_id :
-      Task_ds.task_seg_id -> sched -> sched
+      val remove_sched_req_record_by_task_inst_id :
+        Task_ds.task_inst_id -> sched -> sched
 
-    val remove_sched_req_record_data_unit_by_task_id :
-      Task_ds.task_id -> sched -> sched
+      val remove_sched_req_record_by_task_seg_id :
+        Task_ds.task_seg_id -> sched -> sched
 
-    val remove_sched_req_record_data_unit_by_task_inst_id :
-      Task_ds.task_inst_id -> sched -> sched
+      val remove_sched_req_record_data_unit_by_task_id :
+        Task_ds.task_id -> sched -> sched
 
-    val remove_sched_req_record_data_unit_by_task_seg_id :
-      Task_ds.task_seg_id -> sched -> sched
+      val remove_sched_req_record_data_unit_by_task_inst_id :
+        Task_ds.task_inst_id -> sched -> sched
+
+      val remove_sched_req_record_data_unit_by_task_seg_id :
+        Task_ds.task_seg_id -> sched -> sched
+    end
   end
 
   module Discard : sig
