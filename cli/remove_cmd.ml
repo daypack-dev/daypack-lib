@@ -15,7 +15,7 @@ let run (remove_task : bool) (remove_task_inst : bool) (remove_task_seg : bool)
   match Context.load () with
   | Error msg -> print_endline msg
   | Ok context ->
-    Notification.display context;
+    Header.display context;
     let hd =
       Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
     in

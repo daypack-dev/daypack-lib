@@ -34,6 +34,7 @@ module Time_slots_expr : sig
     ((int64 * int64) option, string) result
 
   val matching_time_slots :
+    ?force_match_mode:Time_expr_ast.match_mode ->
     search_param ->
     Time_expr_normalized_ast.time_slots_expr ->
     ((int64 * int64) Seq.t, string) result

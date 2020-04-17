@@ -11,6 +11,8 @@
 (* %token OF *)
 %token TO
 %token EVERY
+%token FIRST
+%token LAST
 %token NEXT
 %token AM
 %token PM
@@ -102,7 +104,12 @@ time_slots_expr:
   (* time point to time point *)
   | start = time_point_expr; TO; end_exc = time_point_expr;
     {
-      Single_time_slot (start, end_exc)
+      Single_time_slot
+        {
+          start;
+          end_exc;
+          match_mode = `Next;
+        }
     }
 
   (* month days + hour minutes *)
@@ -113,6 +120,7 @@ time_slots_expr:
         {
           month_days;
           hour_minutes;
+          match_mode = `Next;
         }
     }
 
@@ -124,6 +132,7 @@ time_slots_expr:
         {
           weekdays;
           hour_minutes;
+          match_mode = `Next;
         }
     }
 
@@ -137,20 +146,50 @@ time_slots_expr:
           hour_minutes;
           month_days;
           months;
+          match_mode = `Next;
         }
     }
 
   (* months + weekdays + hour minutes *)
   | months = month_ranges_expr;
-    DOT; EVERY; weekdays = weekday_ranges_expr;
+    DOT; weekdays = weekday_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
       Months_and_weekdays_and_hour_minutes
         {
           hour_minutes;
           weekdays;
-          month_weekday_mode = Every_weekday;
-          months
+          months;
+          match_mode = `Next;
+        }
+    }
+
+  (* months + weekday + hour minutes *)
+  | months = month_ranges_expr;
+    DOT; FIRST; n = NAT; weekday = weekday_expr;
+    DOT; hour_minutes = hour_minutes_expr;
+    {
+      Months_and_weekday_and_hour_minutes
+        {
+          months;
+          weekday;
+          hour_minutes;
+          match_mode = `Next;
+          month_weekday_mode = Some (First_n n);
+        }
+    }
+
+  | months = month_ranges_expr;
+    DOT; LAST; n = NAT; weekday = weekday_expr;
+    DOT; hour_minutes = hour_minutes_expr;
+    {
+      Months_and_weekday_and_hour_minutes
+        {
+          months;
+          weekday;
+          hour_minutes;
+          month_weekday_mode = Some (Last_n n);
+          match_mode = `Next;
         }
     }
 
@@ -166,6 +205,7 @@ time_slots_expr:
           months;
           month_days;
           hour_minutes;
+          match_mode = `Next;
         }
     }
   ;

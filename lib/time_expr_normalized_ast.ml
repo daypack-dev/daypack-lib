@@ -33,32 +33,49 @@ type time_point_expr =
 
 type month_weekday_mode = Time_expr_ast.month_weekday_mode
 
+type match_mode = Time_expr_ast.match_mode
+
 type time_slots_expr =
-  | Single_time_slot of time_point_expr * time_point_expr
+  | Single_time_slot of {
+      start : time_point_expr;
+      end_exc : time_point_expr;
+      match_mode : match_mode;
+    }
   | Month_days_and_hour_minutes of {
       month_days : int Range.t list;
       hour_minutes : hour_minute_range_expr list;
+      match_mode : match_mode;
     }
   | Weekdays_and_hour_minutes of {
       weekdays : Time.weekday Range.t list;
       hour_minutes : hour_minute_range_expr list;
+      match_mode : match_mode;
     }
   | Months_and_month_days_and_hour_minutes of {
       months : month_expr Range.t list;
       month_days : int Range.t list;
       hour_minutes : hour_minute_range_expr list;
+      match_mode : match_mode;
     }
   | Months_and_weekdays_and_hour_minutes of {
       months : month_expr Range.t list;
       weekdays : Time.weekday Range.t list;
-      month_weekday_mode : month_weekday_mode;
       hour_minutes : hour_minute_range_expr list;
+      match_mode : match_mode;
+    }
+  | Months_and_weekday_and_hour_minutes of {
+      months : month_expr Range.t list;
+      weekday : Time.weekday;
+      hour_minutes : hour_minute_range_expr list;
+      match_mode : match_mode;
+      month_weekday_mode : month_weekday_mode option;
     }
   | Years_and_months_and_month_days_and_hour_minutes of {
       years : int Range.t list;
       months : month_expr Range.t list;
       month_days : int Range.t list;
       hour_minutes : hour_minute_range_expr list;
+      match_mode : match_mode;
     }
 
 type t =

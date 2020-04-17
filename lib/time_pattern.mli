@@ -31,6 +31,8 @@ type single_or_ranges =
   | Single_time_pattern of t
   | Time_range_patterns of time_range_pattern list
 
+val search_in_time_zone_of_search_param : search_param -> Time.time_zone
+
 val empty : t
 
 module Single_pattern : sig
