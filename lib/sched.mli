@@ -123,6 +123,11 @@ module Quota : sig
 end
 
 module Task_seg : sig
+  module Status : sig
+    val get_task_seg_status :
+      Task_ds.task_seg_id -> sched -> task_related_status option
+  end
+
   module Add : sig
     val add_task_seg :
       parent_task_inst_id:Task_ds.task_inst_id ->
@@ -235,9 +240,22 @@ module Task_seg : sig
     val remove_task_seg_discarded_seq :
       Task_ds.task_seg_id Seq.t -> sched -> sched
   end
+
+  module Move : sig
+    val move_task_seg_to_completed : Task_ds.task_seg_id -> sched -> sched
+
+    val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> sched -> sched
+
+    val move_task_seg_to_discarded : Task_ds.task_seg_id -> sched -> sched
+  end
 end
 
 module Task_inst : sig
+  module Status : sig
+    val get_task_inst_status :
+      Task_ds.task_inst_id -> sched -> task_related_status option
+  end
+
   module Add : sig
     val add_task_inst :
       parent_task_id:Task_ds.task_id ->
@@ -350,9 +368,21 @@ module Task_inst : sig
       sched ->
       sched
   end
+
+  module Move : sig
+    val move_task_inst_to_completed : Task_ds.task_inst_id -> sched -> sched
+
+    val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> sched -> sched
+
+    val move_task_inst_to_discarded : Task_ds.task_inst_id -> sched -> sched
+  end
 end
 
 module Task : sig
+  module Status : sig
+    val get_task_status : Task_ds.task_id -> sched -> task_related_status option
+  end
+
   module Add : sig
     val add_task :
       parent_user_id:Task_ds.user_id ->
@@ -440,39 +470,17 @@ module Task : sig
       sched ->
       (sched, unit) result
   end
-end
-
-module Progress : sig
-  module Status : sig
-    val get_task_status : Task_ds.task_id -> sched -> task_related_status option
-
-    val get_task_inst_status :
-      Task_ds.task_inst_id -> sched -> task_related_status option
-
-    val get_task_seg_status :
-      Task_ds.task_seg_id -> sched -> task_related_status option
-  end
 
   module Move : sig
-    val move_task_seg_to_completed : Task_ds.task_seg_id -> sched -> sched
-
-    val move_task_seg_to_uncompleted : Task_ds.task_seg_id -> sched -> sched
-
-    val move_task_seg_to_discarded : Task_ds.task_seg_id -> sched -> sched
-
-    val move_task_inst_to_completed : Task_ds.task_inst_id -> sched -> sched
-
-    val move_task_inst_to_uncompleted : Task_ds.task_inst_id -> sched -> sched
-
-    val move_task_inst_to_discarded : Task_ds.task_inst_id -> sched -> sched
-
     val move_task_to_completed : Task_ds.task_id -> sched -> sched
 
     val move_task_to_uncompleted : Task_ds.task_id -> sched -> sched
 
     val move_task_to_discarded : Task_ds.task_id -> sched -> sched
   end
+end
 
+module Progress : sig
   module Add : sig
     val add_task_seg_progress_chunk :
       Task_ds.task_seg_id -> int64 * int64 -> sched -> sched
