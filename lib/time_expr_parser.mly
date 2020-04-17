@@ -64,6 +64,7 @@ time_point_expr:
           month;
           month_day;
           hour_minute;
+          match_mode = `Next;
         }
     }
   | HYPHEN; month = human_int_month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
@@ -74,6 +75,7 @@ time_point_expr:
           month;
           month_day;
           hour_minute;
+          match_mode = `Next;
         }
     }
   | HYPHEN; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
@@ -83,12 +85,17 @@ time_point_expr:
         {
           day = Month_day month_day;
           hour_minute;
+          match_mode = `Next;
         }
     }
   | HYPHEN; HYPHEN; hour_minute = hour_minute_expr;
   | hour_minute = hour_minute_expr;
     {
-      Hour_minute hour_minute
+      Hour_minute
+        {
+          hour_minute;
+          match_mode = `Next;
+        }
     }
   | weekday = weekday_expr; hour_minute = hour_minute_expr;
     {
@@ -96,6 +103,7 @@ time_point_expr:
         {
           day = Weekday weekday;
           hour_minute;
+          match_mode = `Next;
         }
     }
   ;

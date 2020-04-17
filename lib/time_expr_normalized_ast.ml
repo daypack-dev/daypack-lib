@@ -13,27 +13,33 @@ type month_expr = Time.month
 
 type year_expr = int
 
+type match_mode = Time_expr_ast.match_mode
+
 type time_point_expr =
   | Year_month_day_hour_minute of {
       year : year_expr;
       month : month_expr;
       month_day : int;
       hour_minute : hour_minute_expr;
+      match_mode : match_mode;
     }
   | Month_day_hour_minute of {
       month : month_expr;
       month_day : int;
       hour_minute : hour_minute_expr;
+      match_mode : match_mode;
     }
   | Day_hour_minute of {
       day : day_expr;
       hour_minute : hour_minute_expr;
+      match_mode : match_mode;
     }
-  | Hour_minute of hour_minute_expr
+  | Hour_minute of {
+      hour_minute : hour_minute_expr;
+      match_mode : match_mode;
+    }
 
 type month_weekday_mode = Time_expr_ast.month_weekday_mode
-
-type match_mode = Time_expr_ast.match_mode
 
 type time_slots_expr =
   | Single_time_slot of {
