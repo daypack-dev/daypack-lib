@@ -6,7 +6,7 @@ let run (add_task : bool) : unit =
   match Context.load () with
   | Error msg -> print_endline msg
   | Ok context ->
-    Notification.display context;
+    Header.display context;
     ( if add_task then
         let name =
           Dialog.ask ~indent_level:0 ~prompt:"Enter task name" ~f_until:None
