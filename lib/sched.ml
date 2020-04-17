@@ -319,9 +319,10 @@ module Id = struct
     (task_seg_id, add_task_seg_id task_seg_id (sid, sd))
 
   let task_seg_id_seq_of_task_inst_id ((_, sd) : sched)
-      ((id1, id2, id3) : Task_ds.task_inst_id) : Task_ds.task_seg_id Seq.t =
+      ((id1, id2, id3) as task_inst_id : Task_ds.task_inst_id) :
+    Task_ds.task_seg_id Seq.t =
     match
-      Task_inst_id_map.find_opt (id1, id2, id3)
+      Task_inst_id_map.find_opt task_inst_id
         sd.store.task_inst_id_to_task_seg_ids
     with
     | None -> Seq.empty
@@ -340,7 +341,7 @@ module Id = struct
     let task_inst_id = (id1, id2, id3) in
     let task_seg_ids =
       match
-        Task_inst_id_map.find_opt (id1, id2, id3)
+        Task_inst_id_map.find_opt task_inst_id
           sd.store.task_inst_id_to_task_seg_ids
       with
       | None ->
@@ -720,7 +721,7 @@ module Task_seg = struct
         ((id, start, end_exc) : Task_ds.task_seg_place) (sched : sched) : sched
       =
       let id1, id2, id3, id4, sub_id = id in
-      let parent_task_inst_id = (id1, id2, id3) in
+      let parent_task_inst_id = Task_ds.Id.task_inst_id_of_task_seg_id id in
       let task_seg_size = end_exc -^ start in
       sched
       |> (fun sched ->
@@ -2052,15 +2053,16 @@ module Agenda = struct
     let find_task_seg_place_seq_by_task_id (task_id : Task_ds.task_id)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       Filter.filter_task_seg_place_seq
-        (fun ((id1, id2, _id3, _id4, _id5), _, _) -> (id1, id2) = task_id)
+        (fun (task_seg_id, _, _) ->
+           Task_ds.Id.task_seg_id_matches_task_id task_seg_id task_id)
         sched
 
     let find_task_seg_place_seq_by_task_inst_id
         (task_inst_id : Task_ds.task_inst_id) (sched : sched) :
       Task_ds.task_seg_place Seq.t =
       Filter.filter_task_seg_place_seq
-        (fun ((id1, id2, id3, _id4, _id5), _, _) ->
-           (id1, id2, id3) = task_inst_id)
+        (fun (task_seg_id, _, _) ->
+           Task_ds.Id.task_seg_id_matches_task_inst_id task_seg_id task_inst_id)
         sched
 
     let find_task_seg_place_opt_by_task_seg_id
@@ -2075,7 +2077,7 @@ module Agenda = struct
     let remove_task_seg_place
         ((task_seg_id, start, end_exc) : Task_ds.task_seg_place)
         ((sid, sd) : sched) : sched =
-      let id1, id2, id3, _, _ = task_seg_id in
+      let task_inst_id = Task_ds.Id.task_inst_id_of_task_seg_id task_seg_id in
       let indexed_by_task_seg_id =
         Task_seg_id_map.remove task_seg_id sd.agenda.indexed_by_task_seg_id
       in
@@ -2096,7 +2098,7 @@ module Agenda = struct
           sd.agenda.indexed_by_end_exc
       in
       let quota =
-        Task_inst_id_map.update (id1, id2, id3)
+        Task_inst_id_map.update task_inst_id
           (Option.map (fun x -> x +^ (end_exc -^ start)))
           sd.store.quota
       in
@@ -2937,8 +2939,10 @@ module Leftover = struct
     in
     let sched_req_data_seq =
       leftover_task_segs
-      |> Seq.map (fun ((id1, id2, id3, _, _), task_seg_size) ->
-          ( let task_inst_id = (id1, id2, id3) in
+      |> Seq.map (fun (task_seg_id, task_seg_size) ->
+          ( let task_inst_id =
+              Task_ds.Id.task_inst_id_of_task_seg_id task_seg_id
+            in
             [
               Sched_req_data_unit_skeleton.Shift
                 {
