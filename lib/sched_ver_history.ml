@@ -89,8 +89,8 @@ module In_place_head = struct
   end
 
   module Sched_req = struct
-    module Enqueue = struct
-      let enqueue_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
+    module Add = struct
+      let add_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
         (Sched_req_ds.sched_req, unit) result * action_record =
         map_head
           (fun sched ->
