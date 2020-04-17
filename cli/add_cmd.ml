@@ -49,9 +49,15 @@ let run (add_task : bool) : unit =
               | Error msg -> print_endline msg
               | Ok sched_req_data_unit ->
                 let sched_req_data = [ sched_req_data_unit ] in
-                Daypack_lib.Sched_ver_history.In_place_head.Sched_req.Enqueue
-                .enqueue_sched_req sched_req_data context.sched_ver_history
-                |> ignore );
+                match Daypack_lib.Sched_ver_history.In_place_head.Sched_req.Enqueue
+                      .enqueue_sched_req sched_req_data context.sched_ver_history with
+                | Ok _, ar ->
+                  print_endline "Lodging was successful";
+                  Dialog.report_action_record ar
+                | Error _, ar ->
+                  print_endline "Lodging was successful";
+                  Dialog.report_action_record ar
+          );
           ( if
             Dialog.ask_yn ~indent_level:0
               ~prompt:"Resolve all pending scheduling requests now?"
