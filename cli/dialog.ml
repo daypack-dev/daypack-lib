@@ -145,7 +145,8 @@ let ask_pending_sched_req_id ~indent_level
       Some
         (fun id ->
            match
-             Daypack_lib.Sched.Sched_req.Find.Pending.find_pending_sched_req id sched
+             Daypack_lib.Sched.Sched_req.Find.Pending.find_pending_sched_req id
+               sched
            with
            | None ->
              Error
@@ -169,7 +170,8 @@ let ask_sched_req_record_id ~indent_level
       Some
         (fun id ->
            match
-             Daypack_lib.Sched.Sched_req.Find.Record.find_sched_req_record id sched
+             Daypack_lib.Sched.Sched_req.Find.Record.find_sched_req_record id
+               sched
            with
            | None ->
              Error

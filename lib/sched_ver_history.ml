@@ -216,8 +216,10 @@ module Maybe_append_to_head = struct
          let hd' =
            hd
            |> Sched.Task.Remove.remove_task_all task_id
-           |> Sched.Sched_req.Remove.Pending.remove_pending_sched_req_by_task_id task_id
-           |> Sched.Sched_req.Remove.Record.remove_sched_req_record_by_task_id task_id
+           |> Sched.Sched_req.Remove.Pending.remove_pending_sched_req_by_task_id
+             task_id
+           |> Sched.Sched_req.Remove.Record.remove_sched_req_record_by_task_id
+             task_id
          in
          if
            no_task_seg_place_s_recorded
@@ -227,7 +229,8 @@ module Maybe_append_to_head = struct
          else
            let hd' =
              hd'
-             |> Sched.Sched_req.Remove.Record.remove_sched_req_record_by_task_id task_id
+             |> Sched.Sched_req.Remove.Record.remove_sched_req_record_by_task_id
+               task_id
              |> Sched.Agenda.Remove.remove_task_seg_place_seq task_seg_place_seq
            in
            New_head hd')
@@ -255,10 +258,10 @@ module Maybe_append_to_head = struct
          let hd' =
            hd
            |> Sched.Task_inst.Remove.remove_task_inst_all task_inst_id
-           |> Sched.Sched_req.Remove.Pending.remove_pending_sched_req_by_task_inst_id
-             task_inst_id
-           |> Sched.Sched_req.Remove.Record.remove_sched_req_record_by_task_inst_id
-             task_inst_id
+           |> Sched.Sched_req.Remove.Pending
+              .remove_pending_sched_req_by_task_inst_id task_inst_id
+           |> Sched.Sched_req.Remove.Record
+              .remove_sched_req_record_by_task_inst_id task_inst_id
          in
          if
            no_task_seg_place_s_recorded
@@ -268,8 +271,8 @@ module Maybe_append_to_head = struct
          else
            let hd' =
              hd'
-             |> Sched.Sched_req.Remove.Record.remove_sched_req_record_by_task_inst_id
-               task_inst_id
+             |> Sched.Sched_req.Remove.Record
+                .remove_sched_req_record_by_task_inst_id task_inst_id
              |> Sched.Agenda.Remove.remove_task_seg_place_seq task_seg_place_seq
            in
            New_head hd')
@@ -320,7 +323,8 @@ module Maybe_append_to_head = struct
          | None -> Do_nothing
          | Some _ ->
            New_head
-             (Sched.Sched_req.Remove.Pending.remove_pending_sched_req sched_req_id sched))
+             (Sched.Sched_req.Remove.Pending.remove_pending_sched_req
+                sched_req_id sched))
       t
 
   let sched ~start ~end_exc ~include_sched_reqs_partially_within_time_period

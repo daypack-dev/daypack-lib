@@ -44,8 +44,8 @@ let run (remove_task : bool) (remove_task_inst : bool) (remove_task_seg : bool)
           ~exists_in_sched:(Some hd)
       in
       let sched_req_data =
-        Daypack_lib.Sched.Sched_req.Find.Pending.find_pending_sched_req sched_req_id
-          hd
+        Daypack_lib.Sched.Sched_req.Find.Pending.find_pending_sched_req
+          sched_req_id hd
         |> Option.get
       in
       Daypack_lib.Sched_req_ds.Print.debug_print_sched_req_data sched_req_data;

@@ -1187,8 +1187,8 @@ module Task_inst = struct
           Task_seg.Find.find_task_seg_ids_by_task_inst_id task_inst_id sched
         in
         sched
-        |> Remove.remove_task_inst_all
-          ~remove_children_task_segs:false task_inst_id
+        |> Remove.remove_task_inst_all ~remove_children_task_segs:false
+          task_inst_id
         |> add_task_inst task_inst_id task_inst_data
         |> fun sched ->
         Seq.fold_left
@@ -1201,21 +1201,23 @@ module Task_inst = struct
       | None -> sched
       | Some task_inst_data ->
         sched
-        |> Remove.remove_task_inst_all
-          ~remove_children_task_segs:false task_inst_id
+        |> Remove.remove_task_inst_all ~remove_children_task_segs:false
+          task_inst_id
         |> Add.add_task_inst_uncompleted task_inst_id task_inst_data
 
     let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id)
         (sched : sched) : sched =
       move_task_inst_and_task_segs_internal
         ~add_task_inst:Add.add_task_inst_completed
-        ~move_task_seg_by_id:Task_seg.Move.move_task_seg_to_completed task_inst_id sched
+        ~move_task_seg_by_id:Task_seg.Move.move_task_seg_to_completed
+        task_inst_id sched
 
     let move_task_inst_to_discarded (task_inst_id : Task_ds.task_inst_id)
         (sched : sched) : sched =
       move_task_inst_and_task_segs_internal
         ~add_task_inst:Add.add_task_inst_discarded
-        ~move_task_seg_by_id:Task_seg.Move.move_task_seg_to_discarded task_inst_id sched
+        ~move_task_seg_by_id:Task_seg.Move.move_task_seg_to_discarded
+        task_inst_id sched
   end
 end
 
@@ -1529,13 +1531,15 @@ module Task = struct
       sched =
       move_task_and_task_inst_and_task_segs_internal
         ~add_task:Add.add_task_completed
-        ~move_task_inst_by_id:Task_inst.Move.move_task_inst_to_completed task_id sched
+        ~move_task_inst_by_id:Task_inst.Move.move_task_inst_to_completed task_id
+        sched
 
     let move_task_to_discarded (task_id : Task_ds.task_id) (sched : sched) :
       sched =
       move_task_and_task_inst_and_task_segs_internal
         ~add_task:Add.add_task_discarded
-        ~move_task_inst_by_id:Task_inst.Move.move_task_inst_to_discarded task_id sched
+        ~move_task_inst_by_id:Task_inst.Move.move_task_inst_to_discarded task_id
+        sched
   end
 end
 
@@ -2161,38 +2165,38 @@ end
 
 module Sched_req = struct
   module Add = struct
-      let add_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
-          (sched : sched) : (Sched_req_ds.sched_req * sched, unit) result =
-        if Sched_req_ds.Check.check_sched_req_data sched_req_data then
-          let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
-          Ok
-            ( (sched_req_id, sched_req_data),
-              ( sid,
-                {
-                  sd with
-                  store =
-                    {
-                      sd.store with
-                      sched_req_pending_store =
-                        Sched_req_id_map.add sched_req_id sched_req_data
-                          sd.store.sched_req_pending_store;
-                    };
-                } ) )
-        else Error ()
+    let add_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
+        (sched : sched) : (Sched_req_ds.sched_req * sched, unit) result =
+      if Sched_req_ds.Check.check_sched_req_data sched_req_data then
+        let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
+        Ok
+          ( (sched_req_id, sched_req_data),
+            ( sid,
+              {
+                sd with
+                store =
+                  {
+                    sd.store with
+                    sched_req_pending_store =
+                      Sched_req_id_map.add sched_req_id sched_req_data
+                        sd.store.sched_req_pending_store;
+                  };
+              } ) )
+      else Error ()
 
-      let add_sched_req_data_list
-          (sched_req_data_list : Sched_req_ds.sched_req_data list)
-          (sched : sched) : (Sched_req_ds.sched_req list * sched, unit) result =
-        if Sched_req_ds.Check.check_sched_req_data_list sched_req_data_list then
-          List.fold_left
-            (fun (sched_reqs, sched) sched_req_data ->
-               let sched_req, sched =
-                 add_sched_req_data sched_req_data sched |> Result.get_ok
-               in
-               (sched_req :: sched_reqs, sched))
-            ([], sched) sched_req_data_list
-          |> fun (l, s) -> (List.rev l, s) |> Result.ok
-        else Error ()
+    let add_sched_req_data_list
+        (sched_req_data_list : Sched_req_ds.sched_req_data list) (sched : sched)
+      : (Sched_req_ds.sched_req list * sched, unit) result =
+      if Sched_req_ds.Check.check_sched_req_data_list sched_req_data_list then
+        List.fold_left
+          (fun (sched_reqs, sched) sched_req_data ->
+             let sched_req, sched =
+               add_sched_req_data sched_req_data sched |> Result.get_ok
+             in
+             (sched_req :: sched_reqs, sched))
+          ([], sched) sched_req_data_list
+        |> fun (l, s) -> (List.rev l, s) |> Result.ok
+      else Error ()
   end
 
   module To_seq = struct
@@ -2958,8 +2962,7 @@ module Leftover = struct
     Seq.fold_left
       (fun sched sched_req_data ->
          let _, sched =
-           Sched_req.Add.add_sched_req_data sched_req_data sched
-           |> Result.get_ok
+           Sched_req.Add.add_sched_req_data sched_req_data sched |> Result.get_ok
          in
          sched)
       sched sched_req_data_seq

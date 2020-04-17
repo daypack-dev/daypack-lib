@@ -88,8 +88,7 @@ module Maybe_append_to_head : sig
   val remove_task_inst_progress_chunk :
     Task_ds.task_inst_id -> int64 * int64 -> t -> action_record
 
-  val remove_pending_sched_req :
-    Sched_req_ds.sched_req_id -> t -> action_record
+  val remove_pending_sched_req : Sched_req_ds.sched_req_id -> t -> action_record
 
   val sched :
     start:int64 ->
