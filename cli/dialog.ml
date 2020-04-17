@@ -465,7 +465,7 @@ let ask_sched_req_data_unit ~indent_level
 let report_action_record (r : Daypack_lib.Sched_ver_history.action_record) :
   unit =
   match r with
-  | Updated_head id -> Printf.printf "Updated head sched #%d in history\n" id
+  | Updated_head id -> Printf.printf "Updated head schedule #%d in history\n" id
   | Added_new_head id ->
-    Printf.printf "Added new head sched #%d in history\n" id
+    Printf.printf "Added new head schedule #%d in history\n" id
   | Did_nothing -> print_endline "No changes were made to history"
