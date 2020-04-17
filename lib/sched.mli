@@ -673,9 +673,7 @@ module Sched_req : sig
 
   module Filter : sig
     val filter_pending_sched_req_seq :
-      (Sched_req_ds.sched_req -> bool) ->
-      sched ->
-      Sched_req_ds.sched_req Seq.t
+      (Sched_req_ds.sched_req -> bool) -> sched -> Sched_req_ds.sched_req Seq.t
 
     val filter_sched_req_record_seq :
       (Sched_req_ds.sched_req_record -> bool) ->
@@ -684,7 +682,8 @@ module Sched_req : sig
   end
 
   module Find : sig
-    val find_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> Sched_req_ds.sched_req_data option
+    val find_pending_sched_req :
+      Sched_req_ds.sched_req_id -> sched -> Sched_req_ds.sched_req_data option
 
     val find_pending_sched_req_by_task_id :
       Task_ds.task_id -> sched -> Sched_req_ds.sched_req Seq.t
@@ -692,7 +691,10 @@ module Sched_req : sig
     val find_pending_sched_req_by_task_inst_id :
       Task_ds.task_inst_id -> sched -> Sched_req_ds.sched_req Seq.t
 
-    val find_sched_req_record : Sched_req_ds.sched_req_id -> sched -> Sched_req_ds.sched_req_record_data option
+    val find_sched_req_record :
+      Sched_req_ds.sched_req_id ->
+      sched ->
+      Sched_req_ds.sched_req_record_data option
 
     val find_sched_req_record_by_task_id :
       Task_ds.task_id -> sched -> Sched_req_ds.sched_req_record Seq.t
