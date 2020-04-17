@@ -8,7 +8,7 @@ let loop_until_success (type a) (f : unit -> (a, string) result) : a =
     match f () with
     | Ok x -> x
     | Error msg ->
-      Printf.printf "Error : %s\n" msg;
+      Printf.printf "Error: %s\n" msg;
       aux ()
   in
   aux ()
@@ -50,7 +50,7 @@ let ask_multiple (type a) ~indent_level ~(prompt : string)
         match f s with
         | Ok x -> aux (x :: acc)
         | Error msg ->
-          Printf.printf "Error : %s\n" msg;
+          Printf.printf "Error: %s\n" msg;
           aux acc )
   in
   Printf.printf "%s (empty to end loop) :\n" prompt;
