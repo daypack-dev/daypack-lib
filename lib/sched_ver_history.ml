@@ -333,8 +333,6 @@ module Maybe_append_to_head = struct
       (fun hd ->
          let sched_req_records, hd' =
            hd
-           |> Sched.Recur.instantiate ~start ~end_exc
-           |> Sched.Leftover.sched_for_leftover_task_segs ~start ~end_exc
            |> Sched.Sched_req.Allocate_task_segs
               .allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
              ~include_sched_reqs_partially_within_time_period

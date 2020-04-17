@@ -803,7 +803,7 @@ end
 module Leftover : sig
   val get_leftover_task_segs : before:int64 -> sched -> Task_ds.task_seg Seq.t
 
-  val sched_for_leftover_task_segs :
+  val add_sched_reqs_for_leftover_task_segs :
     start:int64 -> end_exc:int64 -> sched -> sched
 end
 
