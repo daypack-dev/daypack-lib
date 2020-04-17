@@ -2917,10 +2917,10 @@ module Recur = struct
       sd.store.task_uncompleted_store (sid, sd)
 end
 
-module Leftover = struct
-  let get_leftover_task_segs ~(before : int64) (sched : sched) :
+module Overdue = struct
+  let get_overdue_task_segs ~(deadline : int64) (sched : sched) :
     Task_ds.task_seg Seq.t =
-    Agenda.To_seq.task_seg_place_uncompleted ~end_exc:before
+    Agenda.To_seq.task_seg_place_uncompleted ~end_exc:deadline
       ~include_task_seg_place_partially_within_time_period:false sched
     |> Seq.map (fun (task_seg_id, _, _) ->
         let task_seg_size =
@@ -2929,8 +2929,8 @@ module Leftover = struct
         in
         (task_seg_id, task_seg_size))
 
-  let add_sched_reqs_for_leftover_task_segs ~start ~end_exc (sched : sched) : sched =
-    let leftover_task_segs = get_leftover_task_segs ~before:start sched in
+  let add_sched_reqs_for_overdue_task_segs ~start ~end_exc (sched : sched) : sched =
+    let leftover_task_segs = get_overdue_task_segs ~deadline:start sched in
     let sched =
       Seq.fold_left
         (fun sched (task_seg_id, _) ->
