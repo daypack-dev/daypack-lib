@@ -734,13 +734,13 @@ module Task_seg = struct
       |> fun (_, x) -> x
 
     let add_task_segs_via_task_seg_place_list
-        (place_s : Task_ds.task_seg_place list) (sched : sched) : sched =
+        (places : Task_ds.task_seg_place list) (sched : sched) : sched =
       List.fold_left
         (fun sched place -> add_task_seg_via_task_seg_place place sched)
         sched place_s
 
     let add_task_segs_via_task_seg_place_seq
-        (place_s : Task_ds.task_seg_place Seq.t) (sched : sched) : sched =
+        (places : Task_ds.task_seg_place Seq.t) (sched : sched) : sched =
       Seq.fold_left
         (fun sched place -> add_task_seg_via_task_seg_place place sched)
         sched place_s
@@ -1862,13 +1862,13 @@ module Agenda = struct
         } )
       |> Task_seg.Add.add_task_seg_via_task_seg_place task_seg_place
 
-    let add_task_seg_place_list (task_seg_place_s : Task_ds.task_seg_place list)
+    let add_task_seg_place_list (task_seg_places : Task_ds.task_seg_place list)
         (sched : sched) : sched =
       List.fold_left
         (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
         sched task_seg_place_s
 
-    let add_task_seg_place_seq (task_seg_place_s : Task_ds.task_seg_place Seq.t)
+    let add_task_seg_place_seq (task_seg_places : Task_ds.task_seg_place Seq.t)
         (sched : sched) : sched =
       Seq.fold_left
         (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
