@@ -978,22 +978,22 @@ let print_task_seg_find () =
        Printf.printf "Task_seg_id_map.find_opt id sd.store.task_seg_%s_store\n" s)
     store_types;
   Printf.printf
-    "let find_task_seg_any_w_status_opt (id : Task_ds.task_seg_id) (sched : \
-     sched) : (task_related_status * Task_ds.task_seg_size) option =\n";
+    "let find_task_seg_any_with_status_opt (id : Task_ds.task_seg_id) (sched : \
+     sched) : (Task_ds.task_seg_size * task_related_status) option =\n";
   Printf.printf "match find_task_seg_uncompleted_opt id sched with\n";
-  Printf.printf "| Some x -> Some (`Uncompleted, x)\n";
+  Printf.printf "| Some x -> Some (x, `Uncompleted)\n";
   Printf.printf "| None ->\n";
   Printf.printf "match find_task_seg_completed_opt id sched with\n";
-  Printf.printf "| Some x -> Some (`Completed, x)\n";
+  Printf.printf "| Some x -> Some (x, `Completed)\n";
   Printf.printf "| None ->\n";
   Printf.printf "match find_task_seg_discarded_opt id sched with\n";
-  Printf.printf "| Some x -> Some (`Discarded, x)\n";
+  Printf.printf "| Some x -> Some (x, `Discarded)\n";
   Printf.printf "| None -> None\n";
   Printf.printf
     "let find_task_seg_any_opt (id : Task_ds.task_seg_id) (sched : sched) : \
      Task_ds.task_seg_size option =\n";
-  Printf.printf "find_task_seg_any_w_status_opt id sched\n";
-  Printf.printf "|> Option.map (fun (_status, x) -> x)\n"
+  Printf.printf "find_task_seg_any_with_status_opt id sched\n";
+  Printf.printf "|> Option.map (fun (x, _status) -> x)\n"
 
 let print_task_seg_ids_find_by_task_inst_id () =
   Printf.printf
@@ -1021,14 +1021,14 @@ let print_task_seg_seq_find_by_task_inst_id () =
        Printf.printf ")\n")
     store_types;
   Printf.printf
-    "let find_task_seg_seq_any_w_status_by_task_inst_id (id : \
+    "let find_task_seg_seq_any_with_status_by_task_inst_id (id : \
      Task_ds.task_inst_id)\n\
-     ( sched : sched) : (task_related_status * Task_ds.task_seg) Seq.t =\n";
+     ( sched : sched) : (Task_ds.task_seg * task_related_status) Seq.t =\n";
   Printf.printf "find_task_seg_ids_by_task_inst_id id sched\n";
   Printf.printf "|> Seq.filter_map (fun task_seg_id ->\n";
-  Printf.printf "  find_task_seg_any_w_status_opt task_seg_id sched\n";
+  Printf.printf "  find_task_seg_any_with_status_opt task_seg_id sched\n";
   Printf.printf
-    "  |> Option.map (fun (status, x) -> (status, (task_seg_id, x)))\n";
+    "  |> Option.map (fun (x, status) -> ((task_seg_id, x), status))\n";
   Printf.printf ")\n";
   Printf.printf
     "let find_task_seg_seq_any_by_task_inst_id (id : Task_ds.task_inst_id)\n\
@@ -1071,13 +1071,13 @@ let print_task_seg_seq_find_by_task_id () =
        Printf.printf ")\n")
     store_types;
   Printf.printf
-    "let find_task_seg_seq_any_w_status_by_task_id (id : Task_ds.task_id)\n\
-     (sched : sched) : (task_related_status * Task_ds.task_seg) Seq.t =\n";
+    "let find_task_seg_seq_any_with_status_by_task_id (id : Task_ds.task_id)\n\
+     (sched : sched) : (Task_ds.task_seg * task_related_status) Seq.t =\n";
   Printf.printf "find_task_seg_ids_by_task_id id sched\n";
   Printf.printf "|> Seq.filter_map (fun task_seg_id ->\n";
-  Printf.printf "  find_task_seg_any_w_status_opt task_seg_id sched\n";
+  Printf.printf "  find_task_seg_any_with_status_opt task_seg_id sched\n";
   Printf.printf
-    "  |> Option.map (fun (status, x) -> (status, (task_seg_id, x)))\n";
+    "  |> Option.map (fun (x, status) -> ((task_seg_id, x), status))\n";
   Printf.printf ")\n";
   Printf.printf
     "let find_task_seg_seq_any_by_task_id (id : Task_ds.task_id)\n\
@@ -1180,22 +1180,22 @@ let print_task_inst_find () =
          s)
     store_types;
   Printf.printf
-    "let find_task_inst_any_w_status_opt (id : Task_ds.task_inst_id) (sched : \
-     sched) : (task_related_status * Task_ds.task_inst_data) option =\n";
+    "let find_task_inst_any_with_status_opt (id : Task_ds.task_inst_id) (sched \
+     : sched) : (Task_ds.task_inst_data * task_related_status) option =\n";
   Printf.printf "match find_task_inst_uncompleted_opt id sched with\n";
-  Printf.printf "| Some x -> Some (`Uncompleted, x)\n";
+  Printf.printf "| Some x -> Some (x, `Uncompleted)\n";
   Printf.printf "| None ->\n";
   Printf.printf "match find_task_inst_completed_opt id sched with\n";
-  Printf.printf "| Some x -> Some (`Completed, x)\n";
+  Printf.printf "| Some x -> Some (x, `Completed)\n";
   Printf.printf "| None ->\n";
   Printf.printf "match find_task_inst_discarded_opt id sched with\n";
-  Printf.printf "| Some x -> Some (`Discarded, x)\n";
+  Printf.printf "| Some x -> Some (x, `Discarded)\n";
   Printf.printf "| None -> None\n";
   Printf.printf
     "let find_task_inst_any_opt (id : Task_ds.task_inst_id) (sched : sched) : \
      Task_ds.task_inst_data option =\n";
-  Printf.printf "find_task_inst_any_w_status_opt id sched\n";
-  Printf.printf "|> Option.map (fun (_status, x) -> x)\n"
+  Printf.printf "find_task_inst_any_with_status_opt id sched\n";
+  Printf.printf "|> Option.map (fun (x, _status) -> x)\n"
 
 let print_task_inst_ids_find_by_task_id () =
   Printf.printf
@@ -1221,13 +1221,13 @@ let print_task_inst_seq_find_by_task_id () =
        Printf.printf ")\n")
     store_types;
   Printf.printf
-    "let find_task_inst_seq_any_w_status_by_task_id (id : Task_ds.task_id)\n\
-     (sched : sched) : (task_related_status * Task_ds.task_inst) Seq.t =\n";
+    "let find_task_inst_seq_any_with_status_by_task_id (id : Task_ds.task_id)\n\
+     (sched : sched) : (Task_ds.task_inst * task_related_status) Seq.t =\n";
   Printf.printf "find_task_inst_ids_by_task_id id sched\n";
   Printf.printf "|> Seq.filter_map (fun task_inst_id ->\n";
-  Printf.printf "  find_task_inst_any_w_status_opt task_inst_id sched\n";
+  Printf.printf "  find_task_inst_any_with_status_opt task_inst_id sched\n";
   Printf.printf
-    "  |> Option.map (fun (status, x) -> (status, (task_inst_id, x)))\n";
+    "  |> Option.map (fun (x, status) -> ((task_inst_id, x), status))\n";
   Printf.printf ")\n";
   Printf.printf
     "let find_task_inst_seq_any_by_task_id (id : Task_ds.task_id)\n\
@@ -1349,22 +1349,22 @@ let print_task_find () =
        Printf.printf "Task_id_map.find_opt id sd.store.task_%s_store\n" s)
     store_types;
   Printf.printf
-    "let find_task_any_w_status_opt (id : Task_ds.task_id) (sched : sched) : \
-     (task_related_status * Task_ds.task_data) option =\n";
+    "let find_task_any_with_status_opt (id : Task_ds.task_id) (sched : sched) \
+     : (Task_ds.task_data * task_related_status) option =\n";
   Printf.printf "match find_task_uncompleted_opt id sched with\n";
-  Printf.printf "| Some x -> Some (`Uncompleted, x)\n";
+  Printf.printf "| Some x -> Some (x, `Uncompleted)\n";
   Printf.printf "| None ->\n";
   Printf.printf "match find_task_completed_opt id sched with\n";
-  Printf.printf "| Some x -> Some (`Completed, x)\n";
+  Printf.printf "| Some x -> Some (x, `Completed)\n";
   Printf.printf "| None ->\n";
   Printf.printf "match find_task_discarded_opt id sched with\n";
-  Printf.printf "| Some x -> Some (`Discarded, x)\n";
+  Printf.printf "| Some x -> Some (x, `Discarded)\n";
   Printf.printf "| None -> None\n";
   Printf.printf
     "let find_task_any_opt (id : Task_ds.task_id) (sched : sched) : \
      Task_ds.task_data option =\n";
-  Printf.printf "find_task_any_w_status_opt id sched\n";
-  Printf.printf "|> Option.map (fun (_status, x) -> x)\n"
+  Printf.printf "find_task_any_with_status_opt id sched\n";
+  Printf.printf "|> Option.map (fun (x, _status) -> x)\n"
 
 let print_task_remove () =
   List.iter

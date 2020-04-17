@@ -11,14 +11,18 @@ let run (list_free_time_slots : bool) : unit =
       Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
     in
     let start = Daypack_lib.Time.Current.cur_unix_time () in
-    let end_exc = Daypack_lib.Time.Add.add_days_unix_time ~days:Config.agenda_free_time_slot_search_day_count start in
+    let end_exc =
+      Daypack_lib.Time.Add.add_days_unix_time
+        ~days:Config.agenda_free_time_slot_search_day_count start
+    in
     if list_free_time_slots then (
       let l =
         Daypack_lib.Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc
           hd
         |> List.of_seq
       in
-      Printf.printf "Free time slots in next %d days: %d\n" Config.agenda_free_time_slot_search_day_count (List.length l);
+      Printf.printf "Free time slots in next %d days: %d\n"
+        Config.agenda_free_time_slot_search_day_count (List.length l);
       List.iter
         (fun (start, end_exc) ->
            let start_str =
@@ -52,7 +56,8 @@ let run (list_free_time_slots : bool) : unit =
           |> List.of_seq
         else places_within_period
       in
-      Printf.printf "Task segment placements displayed: %d\n" (List.length places);
+      Printf.printf "Task segment placements displayed: %d\n"
+        (List.length places);
       List.iter
         (fun (task_seg_id, place_start, place_end_exc) ->
            let start_str =

@@ -205,7 +205,7 @@ module To_string = struct
     Sched_req_data_unit_skeleton.To_string
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
-          Printf.sprintf "id : %s, len : %Ld\n"
+          Printf.sprintf "task_id : %s, len : %Ld\n"
             (Task_ds.Id.string_of_task_inst_id id)
             len)
       ~string_of_time:Int64.to_string
@@ -233,7 +233,7 @@ module To_string = struct
     Sched_req_data_unit_skeleton.To_string
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
-          Printf.sprintf "id : %s, len : %Ld\n"
+          Printf.sprintf "task_seg_id : %s, len : %Ld\n"
             (Task_ds.Id.string_of_task_seg_id id)
             len)
       ~string_of_time:Int64.to_string

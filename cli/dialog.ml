@@ -15,17 +15,21 @@ let loop_until_success (type a) (f : unit -> (a, string) result) : a =
 
 let indent_str ~indent_level = String.make (indent_level * 2) ' '
 
-let ask (type a) ?(skip_colon : bool = false) ~indent_level ~(prompt : string)
-    (f : string -> (a, string) result) : a =
+let ask (type a) ?(skip_colon : bool = false)
+    ~(f_until : (a -> (a, string) result) option) ~indent_level
+    ~(prompt : string) (f : string -> (a, string) result) : a =
   loop_until_success (fun () ->
       let indent_str = String.make (indent_level * 2) ' ' in
       if skip_colon then Printf.printf "%s%s " indent_str prompt
-      else Printf.printf "%s%s : " indent_str prompt;
+      else Printf.printf "%s%s: " indent_str prompt;
       let s = read_line () in
-      f s)
+      match f s with
+      | Error msg -> Error msg
+      | Ok x -> (
+          match f_until with None -> Ok x | Some f_until -> f_until x ))
 
 let ask_yn ~indent_level ~prompt : yn =
-  ask ~indent_level ~prompt:(prompt ^ " (yes/no)") (fun s ->
+  ask ~indent_level ~prompt:(prompt ^ " (yes/no)") ~f_until:None (fun s ->
       let matching_choices =
         Daypack_lib.Misc_utils.prefix_string_match
           [ ("yes", `Yes); ("no", `No) ]
@@ -52,9 +56,9 @@ let ask_multiple (type a) ~indent_level ~(prompt : string)
   Printf.printf "%s (empty to end loop) :\n" prompt;
   aux []
 
-let ask_id (type a) ~indent_level ~(name : string)
+let ask_id (type a) ~indent_level ~(name : string) ~f_until
     (f : string -> (a, unit) result) : a =
-  ask ~indent_level ~prompt:("Please enter " ^ name) (fun s ->
+  ask ~indent_level ~prompt:("Please enter " ^ name) ~f_until (fun s ->
       match f s with
       | Ok x -> Ok x
       | Error () -> Error (Printf.sprintf "Failed to parse %s string" name))
@@ -66,20 +70,120 @@ let ask_ids (type a) ~indent_level ~(name : string)
       | Ok x -> Ok x
       | Error () -> Error (Printf.sprintf "Failed to parse %s string" name))
 
-let ask_task_id ~indent_level : Daypack_lib.Task_ds.task_id =
-  ask_id ~indent_level ~name:"task ID" Daypack_lib.Task_ds.Id.task_id_of_string
+let ask_task_id ~indent_level
+    ~(exists_in_sched : Daypack_lib.Sched.sched option) :
+  Daypack_lib.Task_ds.task_id =
+  let f_until =
+    match exists_in_sched with
+    | None -> None
+    | Some sched ->
+      Some
+        (fun id ->
+           match Daypack_lib.Sched.Task.Find.find_task_any_opt id sched with
+           | None ->
+             Error
+               (Printf.sprintf "Failed to find task with ID: %s"
+                  (Daypack_lib.Task_ds.Id.string_of_task_id id))
+           | Some _ -> Ok id)
+  in
+  ask_id ~indent_level ~name:"task ID" ~f_until
+    Daypack_lib.Task_ds.Id.task_id_of_string
 
-let ask_task_inst_id ~indent_level : Daypack_lib.Task_ds.task_inst_id =
-  ask_id ~indent_level ~name:"task inst ID"
+let ask_task_inst_id ~indent_level
+    ~(exists_in_sched : Daypack_lib.Sched.sched option) :
+  Daypack_lib.Task_ds.task_inst_id =
+  let f_until =
+    match exists_in_sched with
+    | None -> None
+    | Some sched ->
+      Some
+        (fun id ->
+           match
+             Daypack_lib.Sched.Task_inst.Find.find_task_inst_any_opt id sched
+           with
+           | None ->
+             Error
+               (Printf.sprintf "Failed to find task instance with ID: %s"
+                  (Daypack_lib.Task_ds.Id.string_of_task_inst_id id))
+           | Some _ -> Ok id)
+  in
+  ask_id ~indent_level ~name:"task inst ID" ~f_until
     Daypack_lib.Task_ds.Id.task_inst_id_of_string
 
 let ask_task_inst_ids ~indent_level : Daypack_lib.Task_ds.task_inst_id list =
   ask_ids ~indent_level ~name:"task inst IDs"
     Daypack_lib.Task_ds.Id.task_inst_id_of_string
 
-let ask_task_seg_id ~indent_level : Daypack_lib.Task_ds.task_seg_id =
-  ask_id ~indent_level ~name:"task seg ID"
+let ask_task_seg_id ~indent_level
+    ~(exists_in_sched : Daypack_lib.Sched.sched option) :
+  Daypack_lib.Task_ds.task_seg_id =
+  let f_until =
+    match exists_in_sched with
+    | None -> None
+    | Some sched ->
+      Some
+        (fun id ->
+           match
+             Daypack_lib.Sched.Task_seg.Find.find_task_seg_any_opt id sched
+           with
+           | None ->
+             Error
+               (Printf.sprintf "Failed to find task segment with ID: %s"
+                  (Daypack_lib.Task_ds.Id.string_of_task_seg_id id))
+           | Some _ -> Ok id)
+  in
+  ask_id ~indent_level ~name:"task seg ID" ~f_until
     Daypack_lib.Task_ds.Id.task_seg_id_of_string
+
+let ask_pending_sched_req_id ~indent_level
+    ~(exists_in_sched : Daypack_lib.Sched.sched option) :
+  Daypack_lib.Sched_req_ds.sched_req_id =
+  let f_until =
+    match exists_in_sched with
+    | None -> None
+    | Some sched ->
+      Some
+        (fun id ->
+           match
+             Daypack_lib.Sched.Sched_req.Find.Pending.find_pending_sched_req id
+               sched
+           with
+           | None ->
+             Error
+               (Printf.sprintf
+                  "Failed to find pending schedule request with ID: %Ld" id)
+           | Some _ -> Ok id)
+  in
+  ask_id ~indent_level ~name:"sched request ID" ~f_until (fun s ->
+      try
+        let x = Int64.of_string s in
+        if x >= 0L then Ok x else Error ()
+      with Failure _ -> Error ())
+
+let ask_sched_req_record_id ~indent_level
+    ~(exists_in_sched : Daypack_lib.Sched.sched option) :
+  Daypack_lib.Sched_req_ds.sched_req_id =
+  let f_until =
+    match exists_in_sched with
+    | None -> None
+    | Some sched ->
+      Some
+        (fun id ->
+           match
+             Daypack_lib.Sched.Sched_req.Find.Record.find_sched_req_record id
+               sched
+           with
+           | None ->
+             Error
+               (Printf.sprintf
+                  "Failed to find schedule request record with ID: %Ld" id)
+           | Some _ -> Ok id)
+  in
+  ask_id ~indent_level ~name:"sched request ID" ~f_until (fun s ->
+      try
+        let x = Int64.of_string s in
+        if x >= 0L then Ok x else Error ()
+      with Failure _ -> Error ())
 
 let ask_pick_choice (type a) ~indent_level ~(prompt : string)
     (choices : (string * a) list) : a =
@@ -88,24 +192,24 @@ let ask_pick_choice (type a) ~indent_level ~(prompt : string)
   ask ~indent_level
     ~prompt:
       "Please enter choice (case insensitive full/prefix string of the choice)"
-    (fun s ->
-       let matching_choices =
-         Daypack_lib.Misc_utils.prefix_string_match choices s
-       in
-       match matching_choices with
-       | [] -> Error "Input does not match any choice"
-       | [ (_k, v) ] -> Ok v
-       | _ -> Error "Input is too ambiguous and matches multiple choices")
+    ~f_until:None (fun s ->
+        let matching_choices =
+          Daypack_lib.Misc_utils.prefix_string_match choices s
+        in
+        match matching_choices with
+        | [] -> Error "Input does not match any choice"
+        | [ (_k, v) ] -> Ok v
+        | _ -> Error "Input is too ambiguous and matches multiple choices")
 
 let ask_uint ~indent_level ~(prompt : string) : int =
-  ask ~indent_level ~prompt (fun s ->
+  ask ~indent_level ~prompt ~f_until:None (fun s ->
       try
         let x = int_of_string s in
         if x >= 0 then Ok x else Error "Input is negative"
       with Failure msg -> Error msg)
 
 let ask_uint64 ~indent_level ~(prompt : string) : int64 =
-  ask ~indent_level ~prompt (fun s ->
+  ask ~indent_level ~prompt ~f_until:None (fun s ->
       try
         let x = Int64.of_string s in
         if x >= 0L then Ok x else Error "Input is negative"
@@ -169,13 +273,13 @@ let ask_time ~indent_level ~(prompt : string) : int64 =
   ask ~indent_level
     ~prompt:
       (prompt ^ " (see `daypc grammar --time-point-expr` for grammar guide)")
-    process_time_string
+    ~f_until:None process_time_string
 
 let ask_time_slot ~indent_level ~(prompt : string) : int64 * int64 =
   ask ~indent_level
     ~prompt:
       (prompt ^ " (see `daypc grammar --time-slots-expr` for grammar guide)")
-    process_time_slot_string
+    ~f_until:None process_time_slot_string
 
 let ask_time_slots ~indent_level ~(prompt : string) : (int64 * int64) list =
   ask_multiple ~indent_level
@@ -206,7 +310,7 @@ let ask_task_inst_alloc_req ~indent_level ~task_inst_id :
       ~prompt:
         "Please enter task inst alloc req (format = \
          task_inst_id,task_seg_size)"
-      process_task_inst_alloc_req_string
+      ~f_until:None process_task_inst_alloc_req_string
   | Some task_inst_id ->
     let task_seg_size =
       ask_uint64 ~indent_level
@@ -246,12 +350,12 @@ let ask_sched_req_data_unit ~indent_level
   | `Fixed ->
     let task_inst_id =
       match task_inst_id with
-      | None -> ask_task_inst_id ~indent_level
+      | None -> ask_task_inst_id ~indent_level ~exists_in_sched:None
       | Some x -> x
     in
     let start = ask_time ~indent_level ~prompt:"Enter start time" in
     let duration =
-      ask ~indent_level ~prompt:"Enter duration"
+      ask ~indent_level ~prompt:"Enter duration" ~f_until:None
         Daypack_lib.Duration.Interpret_string.of_string
     in
     Ok
