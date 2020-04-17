@@ -615,8 +615,7 @@ module Time_point_expr = struct
     | Ok pat ->
       Ok (Time_pattern.Single_pattern.next_match_unix_time search_param pat)
 
-  let matching_unix_times_internal
-      ~(force_match_mode : Time_expr_ast.match_mode option)
+  let matching_unix_times ?(force_match_mode : Time_expr_ast.match_mode option)
       (search_param : search_param)
       (e : Time_expr_normalized_ast.time_point_expr) :
     (int64 Seq.t, string) result =
@@ -637,12 +636,6 @@ module Time_point_expr = struct
       |> Seq.map (fun (x, _) -> x)
       |> selector
       |> Result.ok
-
-  let matching_unix_times ?(force_match_mode : Time_expr_ast.match_mode option)
-      (search_param : search_param)
-      (e : Time_expr_normalized_ast.time_point_expr) :
-    (int64 Seq.t, string) result =
-    matching_unix_times_internal ~force_match_mode search_param e
 
   (* let matching_time_slots (search_param : search_param)
    *     (e : Time_expr_normalized_ast.time_point_expr) :
@@ -706,8 +699,7 @@ module Time_slots_expr = struct
         ( Time.unix_time_of_tm ~time_zone_of_tm x,
           Time.unix_time_of_tm ~time_zone_of_tm y ))
 
-  let matching_time_slots_internal
-      ~(force_match_mode : Time_expr_ast.match_mode option)
+  let matching_time_slots ?(force_match_mode : Time_expr_ast.match_mode option)
       (search_param : search_param)
       (e : Time_expr_normalized_ast.time_slots_expr) :
     (Time_slot_ds.t Seq.t, string) result =
@@ -751,12 +743,6 @@ module Time_slots_expr = struct
       |> flat_selector
       |> Result.ok
 
-  let matching_time_slots ?(force_match_mode : Time_expr_ast.match_mode option)
-      (search_param : search_param)
-      (e : Time_expr_normalized_ast.time_slots_expr) :
-    (Time_slot_ds.t Seq.t, string) result =
-    matching_time_slots_internal ~force_match_mode search_param e
-
   let next_match_time_slot (search_param : search_param)
       (e : Time_expr_normalized_ast.time_slots_expr) :
     ((int64 * int64) option, string) result =
@@ -766,18 +752,18 @@ module Time_slots_expr = struct
         match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
 end
 
-let matching_time_slots ?(force_match_mode : Time_expr_ast.match_mode option)
-    (search_param : search_param) (e : Time_expr_normalized_ast.t) :
-  (Time_slot_ds.t Seq.t option, string) result =
-  match e with
-  | Time_point_expr _ -> Ok None
-  | Time_slots_expr e ->
-    Time_slots_expr.matching_time_slots_internal ~force_match_mode
-      search_param e
-    |> Result.map Option.some
-
-let next_match_time_slot (search_param : search_param)
-    (e : Time_expr_normalized_ast.t) : ((int64 * int64) option, string) result =
-  match e with
-  | Time_point_expr _ -> Ok None
-  | Time_slots_expr e -> Time_slots_expr.next_match_time_slot search_param e
+(* let matching_time_slots ?(force_match_mode : Time_expr_ast.match_mode option)
+ *     (search_param : search_param) (e : Time_expr_normalized_ast.t) :
+ *   (Time_slot_ds.t Seq.t option, string) result =
+ *   match e with
+ *   | Time_point_expr _ -> Ok None
+ *   | Time_slots_expr e ->
+ *     Time_slots_expr.matching_time_slots_internal ~force_match_mode
+ *       search_param e
+ *     |> Result.map Option.some
+ * 
+ * let next_match_time_slot (search_param : search_param)
+ *     (e : Time_expr_normalized_ast.t) : ((int64 * int64) option, string) result =
+ *   match e with
+ *   | Time_point_expr _ -> Ok None
+ *   | Time_slots_expr e -> Time_slots_expr.next_match_time_slot search_param e *)

@@ -1,16 +1,5 @@
 type search_param = Time_pattern.search_param
 
-val next_match_time_slot :
-  search_param ->
-  Time_expr_normalized_ast.t ->
-  ((int64 * int64) option, string) result
-
-val matching_time_slots :
-  ?force_match_mode:Time_expr_ast.match_mode ->
-  search_param ->
-  Time_expr_normalized_ast.t ->
-  ((int64 * int64) Seq.t option, string) result
-
 module Time_point_expr : sig
   val next_match_unix_time :
     search_param ->
