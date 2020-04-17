@@ -2337,6 +2337,34 @@ module Sched_req = struct
   end
 
   module Remove = struct
+    let remove_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id)
+        ((sid, sd) : sched) : sched =
+      (sid,
+       {
+         sd with
+         store =
+           {
+             sd.store with
+             sched_req_pending_store =
+               Sched_req_id_map.remove sched_req_id sd.store.sched_req_pending_store
+           }
+       }
+      )
+
+    let remove_sched_req_record (sched_req_id : Sched_req_ds.sched_req_id)
+        ((sid, sd) : sched) : sched =
+      (sid,
+       {
+         sd with
+         store =
+           {
+             sd.store with
+             sched_req_record_store =
+               Sched_req_id_map.remove sched_req_id sd.store.sched_req_record_store
+           }
+       }
+      )
+
     let remove_pending_sched_req_if_contains_matching_task_seg_alloc_req
         (f : Task_ds.task_seg_alloc_req -> bool) ((sid, sd) : sched) : sched =
       ( sid,
