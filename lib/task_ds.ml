@@ -120,13 +120,16 @@ module Id = struct
     task_inst_id =
     (id1, id2, id3)
 
-  let task_inst_id_matches_task_id (task_inst_id : task_inst_id) (task_id : task_id) : bool =
+  let task_inst_id_matches_task_id (task_inst_id : task_inst_id)
+      (task_id : task_id) : bool =
     task_id = task_id_of_task_inst_id task_inst_id
 
-  let task_seg_id_matches_task_id (task_seg_id : task_seg_id) (task_id : task_id) : bool =
+  let task_seg_id_matches_task_id (task_seg_id : task_seg_id)
+      (task_id : task_id) : bool =
     task_id = task_id_of_task_seg_id task_seg_id
 
-  let task_seg_id_matches_task_inst_id (task_seg_id : task_seg_id) (task_inst_id : task_inst_id) : bool =
+  let task_seg_id_matches_task_inst_id (task_seg_id : task_seg_id)
+      (task_inst_id : task_inst_id) : bool =
     task_inst_id = task_inst_id_of_task_seg_id task_seg_id
 
   let task_seg_id_matches_task_seg_id_ignore_sub_id

@@ -9,8 +9,9 @@ let run (add_task : bool) : unit =
     Notification.display context;
     ( if add_task then
         let name =
-          Dialog.ask ~indent_level:0 ~prompt:"Enter task name" ~f_until:None (fun s ->
-              if s = "" then Error "Task name cannot be empty" else Ok s)
+          Dialog.ask ~indent_level:0 ~prompt:"Enter task name" ~f_until:None
+            (fun s ->
+               if s = "" then Error "Task name cannot be empty" else Ok s)
         in
         let task_type_choice =
           Dialog.ask_pick_choice ~indent_level:0 ~prompt:"Pick task type"
