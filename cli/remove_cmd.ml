@@ -31,20 +31,34 @@ let run (remove_task : bool) (remove_task_inst : bool) (remove_task_seg : bool)
       Printf.printf "Task status: %s\n"
         (Daypack_lib.Sched.To_string.string_of_task_related_status status);
       if
-        Dialog.ask_yn ~indent_level:0 ~prompt:"Really remove the task?" = `Yes
+        Dialog.ask_yn ~indent_level:0 ~prompt:"Really remove task?" = `Yes
       then (
         Printf.printf "Removing task\n";
         let action_record =
           Daypack_lib.Sched_ver_history.Maybe_append_to_head.remove_task
             task_id context.sched_ver_history
         in
-        Dialog.report_action_record action_record ) );
+        Dialog.report_action_record action_record )
+    );
     ( if remove_pending_sched_req then
         let sched_req_id =
           Dialog.ask_pending_sched_req_id ~indent_level:0
             ~exists_in_sched:(Some hd)
         in
-        () );
+        let sched_req_data =
+          Daypack_lib.Sched.Sched_req.Find.find_pending_sched_req sched_req_id hd |> Option.get
+        in
+        Daypack_lib.Sched_req_ds.Print.debug_print_sched_req_data sched_req_data;
+        if
+          Dialog.ask_yn ~indent_level:0 ~prompt:"Really remove pending schedule request?" = `Yes
+        then (
+          Printf.printf "Removing schedule request\n";
+          let action_record =
+            Daypack_lib.Sched_ver_history.Maybe_append_to_head.remove_pending_sched_req
+              sched_req_id context.sched_ver_history
+          in
+          Dialog.report_action_record action_record )
+    );
     Context.save context |> Result.get_ok;
     ()
 

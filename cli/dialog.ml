@@ -149,7 +149,7 @@ let ask_pending_sched_req_id ~indent_level
            with
            | None ->
              Error
-               (Printf.sprintf "Failed to find task segance with ID: %Ld" id)
+               (Printf.sprintf "Failed to find pending schedule request with ID: %Ld" id)
            | Some _ -> Ok id)
   in
   ask_id ~indent_level ~name:"sched request ID" ~f_until (fun s ->
@@ -172,7 +172,7 @@ let ask_sched_req_record_id ~indent_level
            with
            | None ->
              Error
-               (Printf.sprintf "Failed to find task segance with ID: %Ld" id)
+               (Printf.sprintf "Failed to find schedule request record with ID: %Ld" id)
            | Some _ -> Ok id)
   in
   ask_id ~indent_level ~name:"sched request ID" ~f_until (fun s ->
