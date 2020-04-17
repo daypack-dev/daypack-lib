@@ -2,7 +2,8 @@ let display_current_time () : unit =
   let cur_time_str = Daypack_lib.Time.Current.cur_unix_time ()
                    |> Daypack_lib.Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
   in
-  Printf.printf "Time right now: %s\n" cur_time_str
+  print_endline "Time right now:";
+  Printf.printf "  - %s\n" cur_time_str
 
 let display_pending_sched_reqs (context : Context.t) : unit =
   let hd =
@@ -74,6 +75,7 @@ let display_todos (context : Context.t) : unit =
 
 let display (context : Context.t) : unit =
   display_current_time ();
+  print_newline ();
   print_endline "Notifications:";
   display_overdue_task_segs context;
   display_pending_sched_reqs context;
