@@ -257,7 +257,7 @@ let single_task_seg_multi_even_splits ~incre ~(task_seg : Task_ds.task_seg)
          Seq.flat_map
            (fun places ->
               single_task_seg_shift ~incre ~cur_pos:0L ~task_seg bucket
-              |> Seq.map (fun place -> place :: place_s))
+              |> Seq.map (fun place -> place :: places))
            places_seq)
       (Seq.return [])
     |> Seq.map List.rev

@@ -737,13 +737,13 @@ module Task_seg = struct
         (places : Task_ds.task_seg_place list) (sched : sched) : sched =
       List.fold_left
         (fun sched place -> add_task_seg_via_task_seg_place place sched)
-        sched place_s
+        sched places
 
     let add_task_segs_via_task_seg_place_seq
         (places : Task_ds.task_seg_place Seq.t) (sched : sched) : sched =
       Seq.fold_left
         (fun sched place -> add_task_seg_via_task_seg_place place sched)
-        sched place_s
+        sched places
 
     (*$ #use "lib/sched.cinaps";;
 
@@ -1866,13 +1866,13 @@ module Agenda = struct
         (sched : sched) : sched =
       List.fold_left
         (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
-        sched task_seg_place_s
+        sched task_seg_places
 
     let add_task_seg_place_seq (task_seg_places : Task_ds.task_seg_place Seq.t)
         (sched : sched) : sched =
       Seq.fold_left
         (fun acc task_seg_place -> add_task_seg_place task_seg_place acc)
-        sched task_seg_place_s
+        sched task_seg_places
   end
 
   module Range = struct
