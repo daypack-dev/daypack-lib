@@ -310,6 +310,18 @@ module Maybe_append_to_head = struct
          else Do_nothing)
       t
 
+  let remove_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id)
+      (t : t) : action_record =
+    map_head_no_ret
+      (fun sched ->
+         match Sched.Sched_req.Find.find_pending_sched_req sched_req_id sched with
+         | None -> Do_nothing
+         | Some _ ->
+           New_head
+             (Sched.Sched_req.Remove.remove_pending_sched_req sched_req_id sched)
+      )
+      t
+
   let sched ~start ~end_exc ~include_sched_reqs_partially_within_time_period
       ~up_to_sched_req_id_inc (t : t) : (unit, unit) result * action_record =
     map_head
