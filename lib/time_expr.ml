@@ -591,45 +591,47 @@ module Time_point_expr = struct
 end
 
 module Time_slots_expr = struct
-  let get_first_or_last_n_matches_of_same_month_tm_pair_seq ~(first_or_last : [`First | `Last]) ~(n : int)
+  let get_first_or_last_n_matches_of_same_month_tm_pair_seq
+      ~(first_or_last : [ `First | `Last ]) ~(n : int)
       (s : (Unix.tm * Unix.tm) Seq.t) : (Unix.tm * Unix.tm) Seq.t =
-    let flush_acc first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list) : (Unix.tm * Unix.tm) Seq.t =
-      (match first_or_last with
-      | `First -> List.rev acc
-      | `Last -> acc)
+    let flush_acc first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list) :
+      (Unix.tm * Unix.tm) Seq.t =
+      (match first_or_last with `First -> List.rev acc | `Last -> acc)
       |> List.to_seq
       |> OSeq.take n
     in
-    let rec aux first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list) (s : (Unix.tm * Unix.tm) Seq.t) : (Unix.tm * Unix.tm) Seq.t =
+    let rec aux first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list)
+        (s : (Unix.tm * Unix.tm) Seq.t) : (Unix.tm * Unix.tm) Seq.t =
       match s () with
-      | Seq.Nil ->
-        flush_acc first_or_last n acc
-      | Seq.Cons ((start, end_exc), rest) ->
-        match acc with
-        | [] -> aux first_or_last n [ (start, end_exc) ] rest
-        | (tm, _) :: _ ->
-          if tm.tm_mon = start.tm_mon then
-            aux first_or_last n ((start, end_exc) :: acc) rest
-          else
-            OSeq.append
-              (flush_acc first_or_last n acc)
-              (aux first_or_last n [(start, end_exc)] rest)
+      | Seq.Nil -> flush_acc first_or_last n acc
+      | Seq.Cons ((start, end_exc), rest) -> (
+          match acc with
+          | [] -> aux first_or_last n [ (start, end_exc) ] rest
+          | (tm, _) :: _ ->
+            if tm.tm_mon = start.tm_mon then
+              aux first_or_last n ((start, end_exc) :: acc) rest
+            else
+              OSeq.append
+                (flush_acc first_or_last n acc)
+                (aux first_or_last n [ (start, end_exc) ] rest) )
     in
     aux first_or_last n [] s
 
-  let get_first_or_last_n_matches_of_same_month ~(first_or_last : [`First | `Last])~(n : int) (search_param : search_param) (s : Time_slot_ds.t Seq.t)
-    : Time_slot_ds.t Seq.t =
-    let time_zone_of_tm = Time_pattern.search_in_time_zone_of_search_param search_param in
+  let get_first_or_last_n_matches_of_same_month
+      ~(first_or_last : [ `First | `Last ]) ~(n : int)
+      (search_param : search_param) (s : Time_slot_ds.t Seq.t) :
+    Time_slot_ds.t Seq.t =
+    let time_zone_of_tm =
+      Time_pattern.search_in_time_zone_of_search_param search_param
+    in
     s
     |> Seq.map (fun (x, y) ->
-        (Time.tm_of_unix_time ~time_zone_of_tm x,
-        Time.tm_of_unix_time ~time_zone_of_tm y)
-      )
+        ( Time.tm_of_unix_time ~time_zone_of_tm x,
+          Time.tm_of_unix_time ~time_zone_of_tm y ))
     |> get_first_or_last_n_matches_of_same_month_tm_pair_seq ~first_or_last ~n
     |> Seq.map (fun (x, y) ->
-        (Time.unix_time_of_tm ~time_zone_of_tm x,
-        Time.unix_time_of_tm ~time_zone_of_tm y)
-      )
+        ( Time.unix_time_of_tm ~time_zone_of_tm x,
+          Time.unix_time_of_tm ~time_zone_of_tm y ))
 
   let matching_time_slots (search_param : search_param)
       (e : Time_expr_normalized_ast.time_slots_expr) :
@@ -640,9 +642,7 @@ module Time_slots_expr = struct
       | Weekdays_and_hour_minutes _ | Months_and_month_days_and_hour_minutes _
       | Years_and_months_and_month_days_and_hour_minutes _ ->
         OSeq.take 1
-      | Months_and_weekdays_and_hour_minutes _ -> (
-          fun x -> x
-        )
+      | Months_and_weekdays_and_hour_minutes _ -> fun x -> x
     in
     let flat_selector =
       match e with
@@ -654,10 +654,11 @@ module Time_slots_expr = struct
           match month_weekday_mode with
           | Every_weekday -> fun x -> x
           | First_n n ->
-            get_first_or_last_n_matches_of_same_month ~first_or_last:`First ~n search_param
+            get_first_or_last_n_matches_of_same_month ~first_or_last:`First ~n
+              search_param
           | Last_n n ->
-            get_first_or_last_n_matches_of_same_month ~first_or_last:`Last ~n search_param
-        )
+            get_first_or_last_n_matches_of_same_month ~first_or_last:`Last ~n
+              search_param )
     in
     match To_time_pattern_lossy.time_range_patterns_of_time_slots_expr e with
     | Error msg -> Error msg

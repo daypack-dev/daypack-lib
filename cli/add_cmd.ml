@@ -50,8 +50,7 @@ let run (add_task : bool) : unit =
               | Ok sched_req_data_unit -> (
                   let sched_req_data = [ sched_req_data_unit ] in
                   match
-                    Daypack_lib.Sched_ver_history.In_place_head.Sched_req
-                    .Add
+                    Daypack_lib.Sched_ver_history.In_place_head.Sched_req.Add
                     .add_sched_req sched_req_data context.sched_ver_history
                   with
                   | Ok _, ar ->

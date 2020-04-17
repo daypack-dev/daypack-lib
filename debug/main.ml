@@ -520,8 +520,8 @@ let debug_sched_usage_simulation () =
     sched_ver_history;
   List.iter
     (fun sched_req_data ->
-       Sched_ver_history.In_place_head.Sched_req.Add.add_sched_req
-         sched_req_data sched_ver_history
+       Sched_ver_history.In_place_head.Sched_req.Add.add_sched_req sched_req_data
+         sched_ver_history
        |> ignore)
     [
       [

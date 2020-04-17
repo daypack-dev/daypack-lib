@@ -42,7 +42,8 @@ let empty =
     seconds = [];
   }
 
-let search_in_time_zone_of_search_param (param : search_param) : Time.time_zone =
+let search_in_time_zone_of_search_param (param : search_param) : Time.time_zone
+  =
   match param with
   | Time_slots { search_in_time_zone; _ } -> search_in_time_zone
   | Years_ahead_start_unix_time { search_in_time_zone; _ } ->
@@ -617,7 +618,9 @@ module Single_pattern = struct
       | Time_slots { time_slots; _ } -> Some time_slots
       | _ -> None
     in
-    let search_in_time_zone = search_in_time_zone_of_search_param search_param in
+    let search_in_time_zone =
+      search_in_time_zone_of_search_param search_param
+    in
     let f (x, y) =
       ( Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone x,
         Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone y )
@@ -655,7 +658,9 @@ module Single_pattern = struct
 
   let next_match_unix_time (search_param : search_param) (t : t) : int64 option
     =
-    let search_in_time_zone = search_in_time_zone_of_search_param search_param in
+    let search_in_time_zone =
+      search_in_time_zone_of_search_param search_param
+    in
     next_match_tm search_param t
     |> Option.map (Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone)
 
