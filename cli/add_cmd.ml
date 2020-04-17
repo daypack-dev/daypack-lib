@@ -38,11 +38,10 @@ let run (add_task : bool) : unit =
           in
           Dialog.report_action_record ar;
           let task_inst_id, _task_inst_data = List.hd task_inst_list in
-          ( match
+          (if
               Dialog.ask_yn ~indent_level:0
-                ~prompt:"Lodge scheduling request for above task?"
-            with
-            | `Yes -> (
+                ~prompt:"Lodge scheduling request for above task?" = `Yes then
+            (
                 match
                   Dialog.ask_sched_req_data_unit ~indent_level:0 ~task_inst_id
                     ()
@@ -54,8 +53,25 @@ let run (add_task : bool) : unit =
                   .Enqueue
                   .enqueue_sched_req sched_req_data context.sched_ver_history
                   |> ignore )
-            | `No -> () );
-          Printf.printf "Allocated task under ID : %s\n"
+            );
+            if Dialog.ask_yn ~indent_level:0
+                ~prompt:"Resolve all pending scheduling requests now?" = `Yes then
+              (
+                let cur_time = Daypack_lib.Time.Current.cur_unix_time () in
+                match
+                  Daypack_lib.Sched_ver_history.Maybe_append_to_head.sched ~start:cur_time
+                    ~end_exc:(Daypack_lib.Time.Add.add_days_unix_time ~days:Config.sched_day_count cur_time)
+                    ~include_sched_reqs_partially_within_time_period:true
+                    ~up_to_sched_req_id_inc:None context.sched_ver_history
+                with
+                | Ok (), ar ->
+                  print_endline "Scheduling was successful";
+                  Dialog.report_action_record ar
+                | Error (), ar ->
+                  print_endline "Failed to schedule";
+                  Dialog.report_action_record ar
+              );
+            Printf.printf "Allocated task under ID : %s\n"
             (Daypack_lib.Task_ds.Id.string_of_task_id task_id);
           Printf.printf "Allocated task inst under ID : %s\n"
             (Daypack_lib.Task_ds.Id.string_of_task_inst_id task_inst_id)

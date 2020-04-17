@@ -27,3 +27,5 @@ let time_pattern_search_years_ahead = 5
 let agenda_display_task_seg_place_max_count = 100
 
 let agenda_search_day_count = 30
+
+let sched_day_count = 7
