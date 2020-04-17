@@ -2918,10 +2918,14 @@ module Recur = struct
 end
 
 module Overdue = struct
-  let get_overdue_task_segs ~(deadline : int64) (sched : sched) :
-    Task_ds.task_seg Seq.t =
+  let get_overdue_task_seg_places ~(deadline : int64) (sched : sched) :
+    Task_ds.task_seg_place Seq.t =
     Agenda.To_seq.task_seg_place_uncompleted ~end_exc:deadline
       ~include_task_seg_place_partially_within_time_period:false sched
+
+  let get_overdue_task_segs ~(deadline : int64) (sched : sched) :
+    Task_ds.task_seg Seq.t =
+    get_overdue_task_seg_places ~deadline sched
     |> Seq.map (fun (task_seg_id, _, _) ->
         let task_seg_size =
           Task_seg.Find.find_task_seg_uncompleted_opt task_seg_id sched
