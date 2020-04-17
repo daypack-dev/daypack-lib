@@ -202,7 +202,7 @@ module Maybe_append_to_head = struct
          let task_seg_place_seq =
            Sched.Agenda.Find.find_task_seg_place_seq_by_task_id task_id hd
          in
-         let no_task_seg_place_s_recorded = OSeq.is_empty task_seg_place_seq in
+         let no_task_seg_places_recorded = OSeq.is_empty task_seg_place_seq in
          let no_task_inst_progress_recorded =
            OSeq.is_empty
              (Sched.Progress.Find.find_task_inst_progress_chunk_seq_by_task_id
@@ -222,7 +222,7 @@ module Maybe_append_to_head = struct
              task_id
          in
          if
-           no_task_seg_place_s_recorded
+           no_task_seg_places_recorded
            && no_task_inst_progress_recorded
            && no_task_seg_progress_recorded
          then Replace_head hd'
@@ -244,7 +244,7 @@ module Maybe_append_to_head = struct
            Sched.Agenda.Find.find_task_seg_place_seq_by_task_inst_id task_inst_id
              hd
          in
-         let no_task_seg_place_s_recorded = OSeq.is_empty task_seg_place_seq in
+         let no_task_seg_places_recorded = OSeq.is_empty task_seg_place_seq in
          let no_task_inst_progress_recorded =
            OSeq.is_empty
              (Sched.Progress.Find.find_task_inst_progress_chunk_seq task_inst_id
@@ -264,7 +264,7 @@ module Maybe_append_to_head = struct
               .remove_sched_req_record_by_task_inst_id task_inst_id
          in
          if
-           no_task_seg_place_s_recorded
+           no_task_seg_places_recorded
            && no_task_inst_progress_recorded
            && no_task_seg_progress_recorded
          then Replace_head hd'
@@ -333,8 +333,6 @@ module Maybe_append_to_head = struct
       (fun hd ->
          let sched_req_records, hd' =
            hd
-           |> Sched.Recur.instantiate ~start ~end_exc
-           |> Sched.Leftover.sched_for_leftover_task_segs ~start ~end_exc
            |> Sched.Sched_req.Allocate_task_segs
               .allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
              ~include_sched_reqs_partially_within_time_period

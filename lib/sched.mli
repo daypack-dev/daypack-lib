@@ -800,10 +800,13 @@ module Recur : sig
   val instantiate : start:int64 -> end_exc:int64 -> sched -> sched
 end
 
-module Leftover : sig
-  val get_leftover_task_segs : before:int64 -> sched -> Task_ds.task_seg Seq.t
+module Overdue : sig
+  val get_overdue_task_seg_places :
+    deadline:int64 -> sched -> Task_ds.task_seg_place Seq.t
 
-  val sched_for_leftover_task_segs :
+  val get_overdue_task_segs : deadline:int64 -> sched -> Task_ds.task_seg Seq.t
+
+  val add_sched_reqs_for_overdue_task_segs :
     start:int64 -> end_exc:int64 -> sched -> sched
 end
 

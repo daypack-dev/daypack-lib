@@ -8,7 +8,7 @@ let loop_until_success (type a) (f : unit -> (a, string) result) : a =
     match f () with
     | Ok x -> x
     | Error msg ->
-      Printf.printf "Error : %s\n" msg;
+      Printf.printf "Error: %s\n" msg;
       aux ()
   in
   aux ()
@@ -50,7 +50,7 @@ let ask_multiple (type a) ~indent_level ~(prompt : string)
         match f s with
         | Ok x -> aux (x :: acc)
         | Error msg ->
-          Printf.printf "Error : %s\n" msg;
+          Printf.printf "Error: %s\n" msg;
           aux acc )
   in
   Printf.printf "%s (empty to end loop) :\n" prompt;
@@ -465,7 +465,7 @@ let ask_sched_req_data_unit ~indent_level
 let report_action_record (r : Daypack_lib.Sched_ver_history.action_record) :
   unit =
   match r with
-  | Updated_head id -> Printf.printf "Updated head sched #%d in history\n" id
+  | Updated_head id -> Printf.printf "Updated head schedule #%d in history\n" id
   | Added_new_head id ->
-    Printf.printf "Added new head sched #%d in history\n" id
+    Printf.printf "Added new head schedule #%d in history\n" id
   | Did_nothing -> print_endline "No changes were made to history"

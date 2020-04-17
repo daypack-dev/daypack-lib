@@ -52,10 +52,10 @@ let multi_task_segs_shift ~incre ~(task_segs : Task_ds.task_seg list)
   | [] -> Seq.empty
   | _ ->
     List.fold_left
-      (fun place_s_seq task_seg ->
+      (fun places_seq task_seg ->
          Seq.flat_map
-           (fun place_s ->
-              match place_s with
+           (fun places ->
+              match places with
               | [] ->
                 single_task_seg_shift ~incre ~cur_pos:0L ~task_seg time_slots
                 |> Seq.map (fun x -> [ x ])
@@ -71,7 +71,7 @@ let multi_task_segs_shift ~incre ~(task_segs : Task_ds.task_seg list)
                     (id, start, end_exc)
                     :: (last_id, last_start, last_end_exc)
                     :: pos_s))
-           place_s_seq)
+           places_seq)
       (Seq.return []) task_segs
     |> Seq.map List.rev
 
@@ -251,13 +251,13 @@ let single_task_seg_multi_even_splits ~incre ~(task_seg : Task_ds.task_seg)
     |> List.to_seq
     |> OSeq.mapi (fun i bucket -> (Int64.of_int i, List.to_seq bucket))
     |> Seq.fold_left
-      (fun place_s_seq (bucket_id, bucket) ->
+      (fun places_seq (bucket_id, bucket) ->
          let id = (id1, id2, id3, id4, Some bucket_id) in
          let task_seg = (id, task_seg_part_size) in
          Seq.flat_map
-           (fun place_s ->
+           (fun places ->
               single_task_seg_shift ~incre ~cur_pos:0L ~task_seg bucket
-              |> Seq.map (fun place -> place :: place_s))
-           place_s_seq)
+              |> Seq.map (fun place -> place :: places))
+           places_seq)
       (Seq.return [])
     |> Seq.map List.rev

@@ -22,14 +22,14 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
          in
          Task_seg_place_gens.multi_task_segs_shift ~incre:1L
            ~task_segs:[ task_seg ] usable_time_slots
-         |> OSeq.map (fun place_s ->
-             base |> Sched.Agenda.Add.add_task_seg_place_list place_s)
+         |> OSeq.map (fun places ->
+             base |> Sched.Agenda.Add.add_task_seg_place_list places)
        | Shift x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          Task_seg_place_gens.multi_task_segs_shift ~incre:x.incre
            ~task_segs:x.task_seg_related_data_list usable_time_slots
-         |> OSeq.map (fun place_s ->
-             base |> Sched.Agenda.Add.add_task_seg_place_list place_s)
+         |> OSeq.map (fun places ->
+             base |> Sched.Agenda.Add.add_task_seg_place_list places)
        | Split_and_shift x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          ( match x.split_count with
@@ -43,15 +43,15 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
                ~min_seg_size:x.min_seg_size ~max_seg_size:x.max_seg_size
                ~split_count ~incre:x.incre ~task_seg:x.task_seg_related_data
                usable_time_slots )
-         |> OSeq.map (fun place_s ->
-             base |> Sched.Agenda.Add.add_task_seg_place_list place_s)
+         |> OSeq.map (fun places ->
+             base |> Sched.Agenda.Add.add_task_seg_place_list places)
        | Split_even x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          Task_seg_place_gens.single_task_seg_multi_even_splits ~incre:x.incre
            ~task_seg:x.task_seg_related_data ~buckets:x.buckets
            ~usable_time_slots
-         |> OSeq.map (fun place_s ->
-             base |> Sched.Agenda.Add.add_task_seg_place_list place_s)
+         |> OSeq.map (fun places ->
+             base |> Sched.Agenda.Add.add_task_seg_place_list places)
        | Time_share x ->
          let usable_time_slots = get_usable_time_slots x.time_slots in
          let s =
