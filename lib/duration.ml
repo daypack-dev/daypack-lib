@@ -23,7 +23,7 @@ module Interpret_string = struct
         Ok
           ( (days *^ Time.day_to_second_multiplier)
             +^ (hours *^ Time.hour_to_second_multiplier)
-            +^ (minutes *^ Time.hour_to_second_multiplier) )
+            +^ (minutes *^ Time.minute_to_second_multiplier) )
     with
     | Duration_expr_lexer.Syntax_error msg ->
       Error (Printf.sprintf "%s: %s" (lexbuf_to_pos_str lexbuf) msg)
