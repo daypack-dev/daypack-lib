@@ -59,17 +59,17 @@ type month_weekday_mode =
   | First_n of int
   | Last_n of int
 
-type match_mode = [
-  | `Every
+type match_mode =
+  [ `Every
   | `Next
-]
+  ]
 
 type time_slots_expr =
   | Single_time_slot of {
       start : time_point_expr;
       end_exc : time_point_expr;
       match_mode : match_mode;
-  }
+    }
   | Month_days_and_hour_minutes of {
       month_days : int Range.t list;
       hour_minutes : hour_minute_range_expr list;
