@@ -10,6 +10,19 @@ let display_pending_sched_reqs (context : Context.t) : unit =
   if count = 0 then print_endline "  - No pending scheduling requests"
   else Printf.printf "  - Pending scheduling requests: %d\n" count
 
+let display_overdue_task_segs (context : Context.t) : unit =
+  let hd =
+    Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
+  in
+  let overdue_task_segs =
+    Daypack_lib.Sched.Overdue.get_overdue_task_segs ~deadline:(Daypack_lib.Time.Current.cur_unix_time ())
+      hd
+    |> List.of_seq
+  in
+  let count = List.length overdue_task_segs in
+  if count = 0 then print_endline "  - No overdue task segments"
+  else Printf.printf "  - Overdue task segments: %d\n" count
+
 let display_todos (context : Context.t) : unit =
   let hd =
     Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
@@ -31,6 +44,7 @@ let display_todos (context : Context.t) : unit =
 
 let display (context : Context.t) : unit =
   print_endline "Notifications:";
+  display_overdue_task_segs context;
   display_pending_sched_reqs context;
   display_todos context;
   print_newline ()
