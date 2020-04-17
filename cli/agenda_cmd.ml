@@ -56,9 +56,10 @@ let run (list_free_time_slots : bool) : unit =
           |> List.of_seq
         else places_within_period
       in
-      Printf.printf "Agenda of next %d days (displaying up to %d task segment placements):\n"
+      Printf.printf
+        "Agenda of next %d days (displaying up to %d task segment placements):\n"
         Config.agenda_search_day_count
-         Config.agenda_display_task_seg_place_max_count;
+        Config.agenda_display_task_seg_place_max_count;
       List.iter
         (fun (task_seg_id, place_start, place_end_exc) ->
            let start_str =
