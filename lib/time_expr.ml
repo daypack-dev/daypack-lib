@@ -672,8 +672,8 @@ module Time_slots_expr = struct
       | Months_and_weekday_and_hour_minutes {match_mode; _ }
       | Years_and_months_and_month_days_and_hour_minutes { match_mode; _ } ->
         (match Option.value ~default:match_mode force_match_mode with
-         | Next -> OSeq.take 1
-         | Every -> fun x -> x
+         | `Next -> OSeq.take 1
+         | `Every -> fun x -> x
         )
     in
     let flat_selector =

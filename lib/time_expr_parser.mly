@@ -108,7 +108,7 @@ time_slots_expr:
         {
           start;
           end_exc;
-          match_mode = Next;
+          match_mode = `Next;
         }
     }
 
@@ -120,7 +120,7 @@ time_slots_expr:
         {
           month_days;
           hour_minutes;
-          match_mode = Next;
+          match_mode = `Next;
         }
     }
 
@@ -132,7 +132,7 @@ time_slots_expr:
         {
           weekdays;
           hour_minutes;
-          match_mode = Next;
+          match_mode = `Next;
         }
     }
 
@@ -146,7 +146,7 @@ time_slots_expr:
           hour_minutes;
           month_days;
           months;
-          match_mode = Next;
+          match_mode = `Next;
         }
     }
 
@@ -160,7 +160,7 @@ time_slots_expr:
           hour_minutes;
           weekdays;
           months;
-          match_mode = Next;
+          match_mode = `Next;
         }
     }
 
@@ -174,7 +174,7 @@ time_slots_expr:
           months;
           weekday;
           hour_minutes;
-          match_mode = Next;
+          match_mode = `Next;
           month_weekday_mode = Some (First_n n);
         }
     }
@@ -189,7 +189,7 @@ time_slots_expr:
           weekday;
           hour_minutes;
           month_weekday_mode = Some (Last_n n);
-          match_mode = Next;
+          match_mode = `Next;
         }
     }
 
@@ -205,7 +205,7 @@ time_slots_expr:
           months;
           month_days;
           hour_minutes;
-          match_mode = Next;
+          match_mode = `Next;
         }
     }
   ;

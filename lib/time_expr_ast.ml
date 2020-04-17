@@ -59,9 +59,10 @@ type month_weekday_mode =
   | First_n of int
   | Last_n of int
 
-type match_mode =
-  | Every
-  | Next
+type match_mode = [
+  | `Every
+  | `Next
+]
 
 type time_slots_expr =
   | Single_time_slot of {
