@@ -51,6 +51,8 @@ rule read =
   | "to"    { TO }
   (* | "of"    { OF } *)
   | "every" { EVERY }
+  | "first" { FIRST }
+  | "last"  { LAST }
   | "next"  { NEXT }
   | "am"
   | "AM"
