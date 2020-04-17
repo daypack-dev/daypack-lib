@@ -310,7 +310,7 @@ module Maybe_append_to_head = struct
          else Do_nothing)
       t
 
-  let remove_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id)
+  let dequeue_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id)
       (t : t) : action_record =
     map_head_no_ret
       (fun sched ->
@@ -318,7 +318,7 @@ module Maybe_append_to_head = struct
          | None -> Do_nothing
          | Some _ ->
            New_head
-             (Sched.Sched_req.Remove.remove_pending_sched_req sched_req_id sched)
+             (Sched.Sched_req.Dequeue.dequeue_sched_req sched_req_id sched)
       )
       t
 

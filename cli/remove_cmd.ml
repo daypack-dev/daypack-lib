@@ -50,11 +50,11 @@ let run (remove_task : bool) (remove_task_inst : bool) (remove_task_seg : bool)
         in
         Daypack_lib.Sched_req_ds.Print.debug_print_sched_req_data sched_req_data;
         if
-          Dialog.ask_yn ~indent_level:0 ~prompt:"Really remove pending schedule request?" = `Yes
+          Dialog.ask_yn ~indent_level:0 ~prompt:"Really dequeue pending schedule request?" = `Yes
         then (
-          Printf.printf "Removing schedule request\n";
+          Printf.printf "Dequeuing schedule request\n";
           let action_record =
-            Daypack_lib.Sched_ver_history.Maybe_append_to_head.remove_pending_sched_req
+            Daypack_lib.Sched_ver_history.Maybe_append_to_head.dequeue_pending_sched_req
               sched_req_id context.sched_ver_history
           in
           Dialog.report_action_record action_record )

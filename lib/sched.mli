@@ -707,8 +707,6 @@ module Sched_req : sig
   end
 
   module Remove : sig
-    val remove_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
-
     val remove_sched_req_record : Sched_req_ds.sched_req_id -> sched -> sched
 
     val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
