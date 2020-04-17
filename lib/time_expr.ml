@@ -141,7 +141,8 @@ module Validate_and_normalize = struct
           hour_minute = Hour_minute.hour_minute_expr hour_minute;
           match_mode;
         }
-    | Time_expr_ast.Month_day_hour_minute { month; month_day; hour_minute; match_mode } ->
+    | Time_expr_ast.Month_day_hour_minute
+        { month; month_day; hour_minute; match_mode } ->
       Time_expr_normalized_ast.Month_day_hour_minute
         {
           month = Month.month_expr month;
@@ -157,10 +158,8 @@ module Validate_and_normalize = struct
           match_mode;
         }
     | Time_expr_ast.Hour_minute { hour_minute; match_mode } ->
-      Time_expr_normalized_ast.Hour_minute {
-        hour_minute = (Hour_minute.hour_minute_expr hour_minute);
-          match_mode;
-      }
+      Time_expr_normalized_ast.Hour_minute
+        { hour_minute = Hour_minute.hour_minute_expr hour_minute; match_mode }
 
   let time_slots_expr (e : Time_expr_ast.time_slots_expr) :
     Time_expr_normalized_ast.time_slots_expr =
@@ -440,14 +439,16 @@ module To_time_pattern_lossy = struct
     try
       Ok
         ( match e with
-          | Year_month_day_hour_minute { year; month; month_day; hour_minute; match_mode = _ } ->
+          | Year_month_day_hour_minute
+              { year; month; month_day; hour_minute; match_mode = _ } ->
             Time_pattern.empty
             |> Year.update_time_pattern_using_year_expr year
             |> Month.update_time_pattern_using_month_expr month
             |> Month_day.update_time_pattern_using_month_day_expr month_day
             |> Hour_minute.update_time_pattern_using_hour_minute_expr
               hour_minute
-          | Month_day_hour_minute { month; month_day; hour_minute; match_mode = _ } ->
+          | Month_day_hour_minute
+              { month; month_day; hour_minute; match_mode = _ } ->
             Time_pattern.empty
             |> Month.update_time_pattern_using_month_expr month
             |> Month_day.update_time_pattern_using_month_day_expr month_day
@@ -458,7 +459,7 @@ module To_time_pattern_lossy = struct
             |> Day.update_time_pattern_using_day_expr day
             |> Hour_minute.update_time_pattern_using_hour_minute_expr
               hour_minute
-          | Hour_minute { hour_minute; match_mode = _ }->
+          | Hour_minute { hour_minute; match_mode = _ } ->
             Hour_minute.update_time_pattern_using_hour_minute_expr hour_minute
               Time_pattern.empty )
     with Invalid_time_expr msg -> Error msg
@@ -627,18 +628,17 @@ module Time_point_expr = struct
         | Year_month_day_hour_minute { match_mode; _ }
         | Month_day_hour_minute { match_mode; _ }
         | Day_hour_minute { match_mode; _ }
-        | Hour_minute { match_mode; _ } ->
-          match Option.value ~default:match_mode force_match_mode with
-          | `Next -> OSeq.take 1
-          | `Every -> fun x -> x
+        | Hour_minute { match_mode; _ } -> (
+            match Option.value ~default:match_mode force_match_mode with
+            | `Next -> OSeq.take 1
+            | `Every -> fun x -> x )
       in
       Time_pattern.Single_pattern.matching_time_slots search_param pat
       |> Seq.map (fun (x, _) -> x)
       |> selector
       |> Result.ok
 
-  let matching_unix_times
-      ?(force_match_mode : Time_expr_ast.match_mode option)
+  let matching_unix_times ?(force_match_mode : Time_expr_ast.match_mode option)
       (search_param : search_param)
       (e : Time_expr_normalized_ast.time_point_expr) :
     (int64 Seq.t, string) result =
@@ -706,7 +706,8 @@ module Time_slots_expr = struct
         ( Time.unix_time_of_tm ~time_zone_of_tm x,
           Time.unix_time_of_tm ~time_zone_of_tm y ))
 
-  let matching_time_slots_internal ~(force_match_mode : Time_expr_ast.match_mode option)
+  let matching_time_slots_internal
+      ~(force_match_mode : Time_expr_ast.match_mode option)
       (search_param : search_param)
       (e : Time_expr_normalized_ast.time_slots_expr) :
     (Time_slot_ds.t Seq.t, string) result =
@@ -765,12 +766,14 @@ module Time_slots_expr = struct
         match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
 end
 
-let matching_time_slots ?(force_match_mode : Time_expr_ast.match_mode option) (search_param : search_param)
-    (e : Time_expr_normalized_ast.t) : (Time_slot_ds.t Seq.t option, string) result =
+let matching_time_slots ?(force_match_mode : Time_expr_ast.match_mode option)
+    (search_param : search_param) (e : Time_expr_normalized_ast.t) :
+  (Time_slot_ds.t Seq.t option, string) result =
   match e with
   | Time_point_expr _ -> Ok None
   | Time_slots_expr e ->
-    Time_slots_expr.matching_time_slots_internal ~force_match_mode search_param e
+    Time_slots_expr.matching_time_slots_internal ~force_match_mode
+      search_param e
     |> Result.map Option.some
 
 let next_match_time_slot (search_param : search_param)
