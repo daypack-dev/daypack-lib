@@ -461,14 +461,14 @@ module To_time_pattern_lossy = struct
     try
       Ok
         ( match e with
-          | Single_time_slot (start, end_exc) -> (
+          | Single_time_slot {start; end_exc; match_mode = _ } -> (
               match time_pattern_of_time_point_expr start with
               | Error msg -> raise (Invalid_time_expr msg)
               | Ok start -> (
                   match time_pattern_of_time_point_expr end_exc with
                   | Error msg -> raise (Invalid_time_expr msg)
                   | Ok end_exc -> [ `Range_exc (start, end_exc) ] ) )
-          | Month_days_and_hour_minutes { month_days; hour_minutes } ->
+          | Month_days_and_hour_minutes { month_days; hour_minutes; match_mode = _ } ->
             (* check_hour_minutes hour_minutes; *)
             Month_day.flatten_month_day_ranges month_days
             |> Seq.map Month_day.time_pattern_of_month_day_expr
@@ -477,7 +477,7 @@ module To_time_pattern_lossy = struct
                .time_range_patterns_of_hour_minute_ranges_and_base_time_pattern
                  hour_minutes)
             |> List.of_seq
-          | Weekdays_and_hour_minutes { weekdays; hour_minutes } ->
+          | Weekdays_and_hour_minutes { weekdays; hour_minutes; match_mode = _ } ->
             Weekday.flatten_weekday_ranges weekdays
             |> Seq.map Weekday.time_pattern_of_weekday_expr
             |> Seq.flat_map
@@ -486,7 +486,7 @@ module To_time_pattern_lossy = struct
                  hour_minutes)
             |> List.of_seq
           | Months_and_month_days_and_hour_minutes
-              { months; month_days; hour_minutes } ->
+              { months; month_days; hour_minutes; match_mode = _ } ->
             let month_days =
               Month_day.flatten_month_day_ranges month_days |> List.of_seq
             in
@@ -501,7 +501,7 @@ module To_time_pattern_lossy = struct
                  hour_minutes)
             |> List.of_seq
           | Months_and_weekdays_and_hour_minutes
-              { months; weekdays; hour_minutes } ->
+              { months; weekdays; hour_minutes; match_mode = _ } ->
             let weekdays =
               Weekday.flatten_weekday_ranges weekdays |> List.of_seq
             in
@@ -516,7 +516,7 @@ module To_time_pattern_lossy = struct
                  hour_minutes)
             |> List.of_seq
           | Months_and_weekday_and_hour_minutes
-              { months; weekday; month_weekday_mode = _; hour_minutes } ->
+              { months; weekday; hour_minutes; month_weekday_mode = _; match_mode = _ } ->
             Month.flatten_month_ranges months
             |> Seq.map Month.time_pattern_of_month_expr
             |> Seq.map
@@ -527,7 +527,7 @@ module To_time_pattern_lossy = struct
                  hour_minutes)
             |> List.of_seq
           | Years_and_months_and_month_days_and_hour_minutes
-              { years; months; month_days; hour_minutes } ->
+              { years; months; month_days; hour_minutes; match_mode = _ } ->
             let months = Month.flatten_month_ranges months |> List.of_seq in
             let month_days =
               Month_day.flatten_month_day_ranges month_days |> List.of_seq
@@ -661,17 +661,20 @@ module Time_slots_expr = struct
         ( Time.unix_time_of_tm ~time_zone_of_tm x,
           Time.unix_time_of_tm ~time_zone_of_tm y ))
 
-  let matching_time_slots (search_param : search_param)
+  let matching_time_slots ?(force_match_mode : Time_expr_ast.match_mode option) (search_param : search_param)
       (e : Time_expr_normalized_ast.time_slots_expr) :
     (Time_slot_ds.t Seq.t, string) result =
     let list_selector =
       match e with
-      | Single_time_slot _ | Month_days_and_hour_minutes _
-      | Weekdays_and_hour_minutes _ | Months_and_month_days_and_hour_minutes _
-      | Months_and_weekdays_and_hour_minutes _
-      | Years_and_months_and_month_days_and_hour_minutes _ ->
-        OSeq.take 1
-      | Months_and_weekday_and_hour_minutes _ -> fun x -> x
+      | Single_time_slot { match_mode; _ } | Month_days_and_hour_minutes { match_mode; _ }
+      | Weekdays_and_hour_minutes { match_mode; _ } | Months_and_month_days_and_hour_minutes { match_mode; _ }
+      | Months_and_weekdays_and_hour_minutes { match_mode; _ }
+      | Months_and_weekday_and_hour_minutes {match_mode; _ }
+      | Years_and_months_and_month_days_and_hour_minutes { match_mode; _ } ->
+        (match Option.value ~default:match_mode force_match_mode with
+         | Next -> OSeq.take 1
+         | Every -> fun x -> x
+        )
     in
     let flat_selector =
       match e with
