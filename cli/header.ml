@@ -1,6 +1,8 @@
 let display_current_time () : unit =
-  let cur_time_str = Daypack_lib.Time.Current.cur_unix_time ()
-                   |> Daypack_lib.Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
+  let cur_time_str =
+    Daypack_lib.Time.Current.cur_unix_time ()
+    |> Daypack_lib.Time.To_string.date_time_string_of_time
+      ~display_in_time_zone:`Local
   in
   print_endline "Time right now:";
   Printf.printf "  - %s\n" cur_time_str
