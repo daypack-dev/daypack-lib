@@ -1246,7 +1246,8 @@ let print_task_inst_remove () =
           (id : Task_ds.task_inst_id) (sched : sched) : sched =\n"
          s;
        Printf.printf
-         "let children_task_seg_ids = Id.get_task_seg_id_seq id sched in\n";
+         "let children_task_seg_ids = Id.task_seg_id_seq_of_task_inst_id sched \
+          id in\n";
        print_endline "sched";
        Printf.printf
          "|> (fun sched -> if remove_children_task_segs then \
@@ -1375,7 +1376,7 @@ let print_task_remove () =
           (sched : sched) : sched =\n"
          s;
        Printf.printf
-         "let children_task_inst_ids = Id.get_task_inst_id_seq id sched in\n";
+         "let children_task_inst_ids = Id.task_inst_id_seq_of_task_id sched id in\n";
        print_endline "sched";
        Printf.printf
          "|> (fun sched -> if remove_children_task_insts then \

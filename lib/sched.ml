@@ -251,8 +251,8 @@ module Id = struct
     let task_inst_id = (user_id, task_part, task_inst_part) in
     (task_inst_id, add_task_inst_id task_inst_id (sid, sd))
 
-  let get_task_inst_id_seq ((id1, id2) : Task_ds.task_id) ((_, sd) : sched) :
-    Task_ds.task_inst_id Seq.t =
+  let task_inst_id_seq_of_task_id ((_, sd) : sched)
+      ((id1, id2) : Task_ds.task_id) : Task_ds.task_inst_id Seq.t =
     match Task_id_map.find_opt (id1, id2) sd.store.task_id_to_task_inst_ids with
     | None -> Seq.empty
     | Some s -> s |> Int64_set.to_seq |> Seq.map (fun id -> (id1, id2, id))
@@ -318,8 +318,8 @@ module Id = struct
     in
     (task_seg_id, add_task_seg_id task_seg_id (sid, sd))
 
-  let get_task_seg_id_seq ((id1, id2, id3) : Task_ds.task_inst_id)
-      ((_, sd) : sched) : Task_ds.task_seg_id Seq.t =
+  let task_seg_id_seq_of_task_inst_id ((_, sd) : sched)
+      ((id1, id2, id3) : Task_ds.task_inst_id) : Task_ds.task_seg_id Seq.t =
     match
       Task_inst_id_map.find_opt (id1, id2, id3)
         sd.store.task_inst_id_to_task_seg_ids
@@ -329,6 +329,11 @@ module Id = struct
       s
       |> Int64_int64_option_set.to_seq
       |> Seq.map (fun (id, opt) -> (id1, id2, id3, id, opt))
+
+  let task_seg_id_seq_of_task_id (sched : sched) (task_id : Task_ds.task_id) :
+    Task_ds.task_seg_id Seq.t =
+    task_inst_id_seq_of_task_id sched task_id
+    |> Seq.flat_map (task_seg_id_seq_of_task_inst_id sched)
 
   let add_task_seg_id ((id1, id2, id3, id4, id5) : Task_ds.task_seg_id)
       ((sid, sd) : sched) : sched =
@@ -1040,7 +1045,7 @@ module Task_inst = struct
 
     let remove_task_inst_uncompleted ?(remove_children_task_segs : bool = true)
         (id : Task_ds.task_inst_id) (sched : sched) : sched =
-      let children_task_seg_ids = Id.get_task_seg_id_seq id sched in
+      let children_task_seg_ids = Id.task_seg_id_seq_of_task_inst_id sched id in
       sched
       |> (fun sched ->
           if remove_children_task_segs then
@@ -1066,7 +1071,7 @@ module Task_inst = struct
 
     let remove_task_inst_completed ?(remove_children_task_segs : bool = true)
         (id : Task_ds.task_inst_id) (sched : sched) : sched =
-      let children_task_seg_ids = Id.get_task_seg_id_seq id sched in
+      let children_task_seg_ids = Id.task_seg_id_seq_of_task_inst_id sched id in
       sched
       |> (fun sched ->
           if remove_children_task_segs then
@@ -1092,7 +1097,7 @@ module Task_inst = struct
 
     let remove_task_inst_discarded ?(remove_children_task_segs : bool = true)
         (id : Task_ds.task_inst_id) (sched : sched) : sched =
-      let children_task_seg_ids = Id.get_task_seg_id_seq id sched in
+      let children_task_seg_ids = Id.task_seg_id_seq_of_task_inst_id sched id in
       sched
       |> (fun sched ->
           if remove_children_task_segs then
@@ -1374,7 +1379,7 @@ module Task = struct
     let remove_task_uncompleted ?(remove_children_task_insts : bool = true)
         ?(remove_children_task_segs : bool = true) (id : Task_ds.task_id)
         (sched : sched) : sched =
-      let children_task_inst_ids = Id.get_task_inst_id_seq id sched in
+      let children_task_inst_ids = Id.task_inst_id_seq_of_task_id sched id in
       sched
       |> (fun sched ->
           if remove_children_task_insts then
@@ -1401,7 +1406,7 @@ module Task = struct
     let remove_task_completed ?(remove_children_task_insts : bool = true)
         ?(remove_children_task_segs : bool = true) (id : Task_ds.task_id)
         (sched : sched) : sched =
-      let children_task_inst_ids = Id.get_task_inst_id_seq id sched in
+      let children_task_inst_ids = Id.task_inst_id_seq_of_task_id sched id in
       sched
       |> (fun sched ->
           if remove_children_task_insts then
@@ -1428,7 +1433,7 @@ module Task = struct
     let remove_task_discarded ?(remove_children_task_insts : bool = true)
         ?(remove_children_task_segs : bool = true) (id : Task_ds.task_id)
         (sched : sched) : sched =
-      let children_task_inst_ids = Id.get_task_inst_id_seq id sched in
+      let children_task_inst_ids = Id.task_inst_id_seq_of_task_id sched id in
       sched
       |> (fun sched ->
           if remove_children_task_insts then
