@@ -1877,7 +1877,7 @@ module Agenda = struct
 
   module Range = struct
     let task_seg_id_set ~(start : int64 option) ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool)
+        ~(include_task_seg_place_partially_within_time_slot : bool)
         ((_, sd) : sched) : Task_seg_id_set.t =
       let start_fully_within_range =
         let m =
@@ -1899,7 +1899,7 @@ module Agenda = struct
         Task_seg_id_set.inter start_fully_within_range
           end_exc_fully_within_range
       in
-      if include_task_seg_place_partially_within_time_period then
+      if include_task_seg_place_partially_within_time_slot then
         let crossing_start =
           match start with
           | None -> None
@@ -1950,10 +1950,10 @@ module Agenda = struct
       else task_seg_place_fully_within_range
 
     let task_seg_place_set ~(start : int64 option) ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool)
+        ~(include_task_seg_place_partially_within_time_slot : bool)
         ((_, sd) as sched : sched) : Task_seg_place_set.t =
       task_seg_id_set ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
       |> Task_seg_id_set.to_seq
       |> Seq.map (fun task_seg_id ->
           let place_start, place_end_exc =
@@ -1965,49 +1965,49 @@ module Agenda = struct
 
   module To_seq_internal = struct
     let task_seg_ids ~(start : int64 option) ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool option)
+        ~(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_id Seq.t =
-      let include_task_seg_place_partially_within_time_period =
+      let include_task_seg_place_partially_within_time_slot =
         Option.fold ~none:false
           ~some:(fun x -> x)
-          include_task_seg_place_partially_within_time_period
+          include_task_seg_place_partially_within_time_slot
       in
       Range.task_seg_id_set ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
       |> Task_seg_id_set.to_seq
 
     let task_seg_places ~(start : int64 option) ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool option)
+        ~(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
-      let include_task_seg_place_partially_within_time_period =
+      let include_task_seg_place_partially_within_time_slot =
         Option.fold ~none:false
           ~some:(fun x -> x)
-          include_task_seg_place_partially_within_time_period
+          include_task_seg_place_partially_within_time_slot
       in
       Range.task_seg_place_set ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
       |> Task_seg_place_set.to_seq
   end
 
   module Filter_internal = struct
     let filter_task_seg_place_seq ~(start : int64 option)
         ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool option)
+        ~(include_task_seg_place_partially_within_time_slot : bool option)
         (f : Task_ds.task_seg_place -> bool) (sched : sched) :
       Task_ds.task_seg_place Seq.t =
       To_seq_internal.task_seg_places ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
       |> Seq.filter f
   end
 
   module Filter = struct
     let filter_task_seg_place_seq ?(start : int64 option)
         ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (f : Task_ds.task_seg_place -> bool) (sched : sched) :
       Task_ds.task_seg_place Seq.t =
       Filter_internal.filter_task_seg_place_seq ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period f sched
+        ~include_task_seg_place_partially_within_time_slot f sched
   end
 
   module To_seq = struct
@@ -2017,36 +2017,36 @@ module Agenda = struct
 
     let task_seg_place_uncompleted ?(start : int64 option)
         ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       Filter_internal.filter_task_seg_place_seq ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period
+        ~include_task_seg_place_partially_within_time_slot
         (task_seg_place_is sched `Uncompleted)
         sched
 
     let task_seg_place_completed ?(start : int64 option)
         ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       Filter_internal.filter_task_seg_place_seq ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period
+        ~include_task_seg_place_partially_within_time_slot
         (task_seg_place_is sched `Completed)
         sched
 
     let task_seg_place_discarded ?(start : int64 option)
         ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       Filter_internal.filter_task_seg_place_seq ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period
+        ~include_task_seg_place_partially_within_time_slot
         (task_seg_place_is sched `Discarded)
         sched
 
     let task_seg_place_all ?(start : int64 option) ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       To_seq_internal.task_seg_places ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
   end
 
   module Find = struct
@@ -2758,12 +2758,12 @@ module Sched_req = struct
       |> fun (l, sched) -> (List.rev l, sched)
 
     let allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
-        ~(include_sched_reqs_partially_within_time_period : bool)
+        ~(include_sched_reqs_partially_within_time_slot : bool)
         ~(up_to_sched_req_id_inc : Sched_req_ds.sched_req_id option)
         ((sid, sd) : sched) : Sched_req_ds.sched_req_record list * sched =
       let partition = Partition.Pending.partition_based_on_time_slot ~start ~end_exc (sid, sd) in
       let to_be_scheduled_candidates, leftover =
-        if include_sched_reqs_partially_within_time_period then
+        if include_sched_reqs_partially_within_time_slot then
           ( Sched_req_id_map.union
               (fun _ _ _ -> None)
               partition.fully_within partition.partially_within,
@@ -2942,7 +2942,7 @@ module Overdue = struct
   let get_overdue_task_seg_places ~(deadline : int64) (sched : sched) :
     Task_ds.task_seg_place Seq.t =
     Agenda.To_seq.task_seg_place_uncompleted ~end_exc:deadline
-      ~include_task_seg_place_partially_within_time_period:false sched
+      ~include_task_seg_place_partially_within_time_slot:false sched
 
   let get_overdue_task_segs ~(deadline : int64) (sched : sched) :
     Task_ds.task_seg Seq.t =
