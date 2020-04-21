@@ -2205,9 +2205,9 @@ module Sched_req = struct
     let partition ~start ~end_exc ((_sid, sd) : sched) : t =
       let fully_within, leftover =
         Sched_req_id_map.partition
-          (fun id req_record_data_list ->
+          (fun id req_record_data ->
              Sched_req_ds.sched_req_fully_within_time_period ~start ~end_exc
-               (id, req_record_data_list))
+               (id, req_record_data))
           sd.store.sched_req_pending_store
       in
       let partially_within, leftover =
