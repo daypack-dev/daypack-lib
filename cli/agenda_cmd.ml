@@ -63,11 +63,11 @@ let run (list_free_time_slots : bool) : unit =
       List.iter
         (fun (task_seg_id, place_start, place_end_exc) ->
            let start_str =
-             Daypack_lib.Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+             Daypack_lib.Time.To_string.yyyymmdd_hhmm_string_of_unix_time
                ~display_in_time_zone:`Local place_start
            in
            let end_exc_str =
-             Daypack_lib.Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+             Daypack_lib.Time.To_string.yyyymmdd_hhmm_string_of_unix_time
                ~display_in_time_zone:`Local place_end_exc
            in
            let task_id =
