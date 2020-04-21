@@ -102,12 +102,12 @@ let sched_req_bound_on_start_and_end_exc
 let sched_req_before_time (x : int64) (sched_req : sched_req) : bool =
   match sched_req_bound_on_start_and_end_exc sched_req with
   | None -> false
-  | Some (_, end_exc) -> end_exc <= x
+  | Some (_, end_exc) -> end_exc < x
 
 let sched_req_after_time (x : int64) (sched_req : sched_req) : bool =
   match sched_req_bound_on_start_and_end_exc sched_req with
   | None -> false
-  | Some (start, _) -> x <= start
+  | Some (start, _) -> x < start
 
 let sched_req_fully_within_time_slot ~start ~end_exc (sched_req : sched_req) :
   bool =
