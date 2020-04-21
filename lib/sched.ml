@@ -2193,14 +2193,13 @@ module Sched_req = struct
   end
 
   module Partition = struct
-    type t =
-      {
-        start : int64;
-        end_exc : int64;
-        fully_within : sched_req_store;
-        partially_within : sched_req_store;
-        outside : sched_req_store;
-      }
+    type t = {
+      start : int64;
+      end_exc : int64;
+      fully_within : sched_req_store;
+      partially_within : sched_req_store;
+      outside : sched_req_store;
+    }
 
     let partition ~start ~end_exc ((_sid, sd) : sched) : t =
       let fully_within, leftover =
@@ -2217,12 +2216,7 @@ module Sched_req = struct
                (id, req_record_data))
           leftover
       in
-      { start;
-        end_exc;
-        fully_within;
-        partially_within;
-        outside = leftover;
-      }
+      { start; end_exc; fully_within; partially_within; outside = leftover }
   end
 
   module To_seq = struct
@@ -2752,9 +2746,7 @@ module Sched_req = struct
         ~(include_sched_reqs_partially_within_time_period : bool)
         ~(up_to_sched_req_id_inc : Sched_req_ds.sched_req_id option)
         ((sid, sd) : sched) : Sched_req_ds.sched_req_record list * sched =
-      let partition =
-        Partition.partition ~start ~end_exc (sid, sd)
-      in
+      let partition = Partition.partition ~start ~end_exc (sid, sd) in
       let to_be_scheduled_candidates, leftover =
         if include_sched_reqs_partially_within_time_period then
           ( Sched_req_id_map.union
@@ -2763,8 +2755,9 @@ module Sched_req = struct
             partition.outside )
         else
           ( partition.fully_within,
-            Sched_req_id_map.union (fun _ _ _ -> None) partition.partially_within partition.outside
-          )
+            Sched_req_id_map.union
+              (fun _ _ _ -> None)
+              partition.partially_within partition.outside )
       in
       let to_be_scheduled, leftover =
         match up_to_sched_req_id_inc with
@@ -4442,10 +4435,10 @@ module To_string = struct
       (fun (id, start, end_exc) ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
            "%s - %s | %s\n"
-           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time ~display_in_time_zone:`Local
-              start)
-           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time ~display_in_time_zone:`Local
-              end_exc)
+           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+              ~display_in_time_zone:`Local start)
+           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+              ~display_in_time_zone:`Local end_exc)
            (Task_ds.Id.string_of_task_seg_id id))
       (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer

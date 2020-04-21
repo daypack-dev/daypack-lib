@@ -670,14 +670,13 @@ module Sched_req : sig
   end
 
   module Partition : sig
-    type t =
-      {
-        start : int64;
-        end_exc : int64;
-        fully_within : sched_req_store;
-        partially_within : sched_req_store;
-        outside : sched_req_store;
-      }
+    type t = {
+      start : int64;
+      end_exc : int64;
+      fully_within : sched_req_store;
+      partially_within : sched_req_store;
+      outside : sched_req_store;
+    }
 
     val partition : start:int64 -> end_exc:int64 -> sched -> t
   end

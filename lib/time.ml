@@ -378,11 +378,10 @@ module To_string = struct
     match month_of_tm_int tm.tm_mon with
     | Ok mon ->
       let mon = string_of_month mon in
-      Ok (
-        Printf.sprintf "%04d %s %02d %02d:%02d:%02d"
-          (tm.tm_year + tm_year_offset)
-          mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
-      )
+      Ok
+        (Printf.sprintf "%04d %s %02d %02d:%02d:%02d"
+           (tm.tm_year + tm_year_offset)
+           mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec)
     | Error () -> Error ()
 
   let yyyymondd_hhmmss_string_of_unix_time ~(display_in_time_zone : time_zone)
@@ -395,11 +394,10 @@ module To_string = struct
     match month_of_tm_int tm.tm_mon with
     | Ok mon ->
       let mon = human_int_of_month mon in
-      Ok (
-      Printf.sprintf "%04d-%02d-%02d %02d:%02d:%02d"
-        (tm.tm_year + tm_year_offset)
-        mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
-    )
+      Ok
+        (Printf.sprintf "%04d-%02d-%02d %02d:%02d:%02d"
+           (tm.tm_year + tm_year_offset)
+           mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec)
     | Error () -> Error ()
 
   let yyyymmdd_hhmmss_string_of_unix_time ~(display_in_time_zone : time_zone)
@@ -411,12 +409,11 @@ module To_string = struct
   let yyyymondd_hhmm_string_of_tm (tm : Unix.tm) : (string, unit) result =
     match month_of_tm_int tm.tm_mon with
     | Ok mon ->
-    let mon = string_of_month mon in
-    Ok (
-    Printf.sprintf "%04d %s %02d %02d:%02d"
-      (tm.tm_year + tm_year_offset)
-      mon tm.tm_mday tm.tm_hour tm.tm_min
-  )
+      let mon = string_of_month mon in
+      Ok
+        (Printf.sprintf "%04d %s %02d %02d:%02d"
+           (tm.tm_year + tm_year_offset)
+           mon tm.tm_mday tm.tm_hour tm.tm_min)
     | Error () -> Error ()
 
   let yyyymondd_hhmm_string_of_unix_time ~(display_in_time_zone : time_zone)
@@ -429,11 +426,10 @@ module To_string = struct
     match month_of_tm_int tm.tm_mon with
     | Ok mon ->
       let mon = human_int_of_month mon in
-      Ok (
-      Printf.sprintf "%04d-%02d-%02d %02d:%02d"
-        (tm.tm_year + tm_year_offset)
-        mon tm.tm_mday tm.tm_hour tm.tm_min
-    )
+      Ok
+        (Printf.sprintf "%04d-%02d-%02d %02d:%02d"
+           (tm.tm_year + tm_year_offset)
+           mon tm.tm_mday tm.tm_hour tm.tm_min)
     | Error () -> Error ()
 
   let yyyymmdd_hhmm_string_of_unix_time ~(display_in_time_zone : time_zone)
