@@ -2193,30 +2193,45 @@ module Sched_req = struct
   end
 
   module Partition = struct
-    type t = {
-      start : int64;
-      end_exc : int64;
-      fully_within : sched_req_store;
-      partially_within : sched_req_store;
-      outside : sched_req_store;
-    }
+    module Pending = struct
+      type partition_based_on_time_point = {
+        before : sched_req_store;
+        after : sched_req_store;
+      }
 
-    let partition ~start ~end_exc ((_sid, sd) : sched) : t =
-      let fully_within, leftover =
-        Sched_req_id_map.partition
-          (fun id req_record_data ->
-             Sched_req_ds.sched_req_fully_within_time_period ~start ~end_exc
-               (id, req_record_data))
-          sd.store.sched_req_pending_store
-      in
-      let partially_within, leftover =
-        Sched_req_id_map.partition
-          (fun id req_record_data ->
-             Sched_req_ds.sched_req_partially_within_time_period ~start ~end_exc
-               (id, req_record_data))
-          leftover
-      in
-      { start; end_exc; fully_within; partially_within; outside = leftover }
+      type partition_based_on_time_slot = {
+        fully_within : sched_req_store;
+        partially_within : sched_req_store;
+        outside : sched_req_store;
+      }
+
+      let partition_based_on_time_point (x : int64) ((_sid, sd) : sched) : partition_based_on_time_point =
+        let before, after =
+          Sched_req_id_map.partition
+            (fun id data ->
+               Sched_req_ds.sched_req_before_time x (id, data)
+            )
+            sd.store.sched_req_pending_store
+        in
+        { before; after }
+
+      let partition_based_on_time_slot ~start ~end_exc ((_sid, sd) : sched) : partition_based_on_time_slot =
+        let fully_within, leftover =
+          Sched_req_id_map.partition
+            (fun id data ->
+               Sched_req_ds.sched_req_fully_within_time_slot ~start ~end_exc
+                 (id, data))
+            sd.store.sched_req_pending_store
+        in
+        let partially_within, leftover =
+          Sched_req_id_map.partition
+            (fun id data ->
+               Sched_req_ds.sched_req_partially_within_time_slot ~start ~end_exc
+                 (id, data))
+            leftover
+        in
+        { fully_within; partially_within; outside = leftover }
+    end
   end
 
   module To_seq = struct
@@ -2746,7 +2761,7 @@ module Sched_req = struct
         ~(include_sched_reqs_partially_within_time_period : bool)
         ~(up_to_sched_req_id_inc : Sched_req_ds.sched_req_id option)
         ((sid, sd) : sched) : Sched_req_ds.sched_req_record list * sched =
-      let partition = Partition.partition ~start ~end_exc (sid, sd) in
+      let partition = Partition.Pending.partition_based_on_time_slot ~start ~end_exc (sid, sd) in
       let to_be_scheduled_candidates, leftover =
         if include_sched_reqs_partially_within_time_period then
           ( Sched_req_id_map.union

@@ -99,13 +99,23 @@ let sched_req_bound_on_start_and_end_exc
              Some (min start cur_start, max end_exc cur_end_exc) ))
     None req_record_data_unit_list
 
-let sched_req_fully_within_time_period ~start ~end_exc (sched_req : sched_req) :
+let sched_req_before_time (x : int64) (sched_req : sched_req) : bool =
+  match sched_req_bound_on_start_and_end_exc sched_req with
+  | None -> false
+  | Some (_, end_exc) -> end_exc <= x
+
+let sched_req_after_time (x : int64) (sched_req : sched_req) : bool =
+  match sched_req_bound_on_start_and_end_exc sched_req with
+  | None -> false
+  | Some (start, _) -> x <= start
+
+let sched_req_fully_within_time_slot ~start ~end_exc (sched_req : sched_req) :
   bool =
   match sched_req_bound_on_start_and_end_exc sched_req with
   | None -> false
   | Some (start', end_exc') -> start <= start' && end_exc' <= end_exc
 
-let sched_req_partially_within_time_period ~start ~end_exc
+let sched_req_partially_within_time_slot ~start ~end_exc
     (sched_req : sched_req) : bool =
   match sched_req_bound_on_start_and_end_exc sched_req with
   | None -> false
