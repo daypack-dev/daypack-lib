@@ -2197,6 +2197,7 @@ module Sched_req = struct
       type partition_based_on_time_point = {
         before : sched_req_store;
         after : sched_req_store;
+        crossing : sched_req_store;
       }
 
       type partition_based_on_time_slot = {
@@ -2206,14 +2207,21 @@ module Sched_req = struct
       }
 
       let partition_based_on_time_point (x : int64) ((_sid, sd) : sched) : partition_based_on_time_point =
-        let before, after =
+        let before, crossing_or_after =
           Sched_req_id_map.partition
             (fun id data ->
                Sched_req_ds.sched_req_before_time x (id, data)
             )
             sd.store.sched_req_pending_store
         in
-        { before; after }
+        let after, crossing =
+          Sched_req_id_map.partition
+            (fun id data ->
+               Sched_req_ds.sched_req_after_time x (id, data)
+            )
+            crossing_or_after
+        in
+        { before; after; crossing }
 
       let partition_based_on_time_slot ~start ~end_exc ((_sid, sd) : sched) : partition_based_on_time_slot =
         let fully_within, leftover =
@@ -2236,9 +2244,36 @@ module Sched_req = struct
 
   module To_seq = struct
     module Pending = struct
-      let pending_sched_req_seq ((_, sd) : sched) : Sched_req_ds.sched_req Seq.t
+      let pending_sched_req_seq ?(start : int64 option)
+          ?(end_exc : int64 option)
+          ?(include_task_seg_place_partially_within_time_slot : bool = false)
+          ((_sid, sd) as sched : sched) : Sched_req_ds.sched_req Seq.t
         =
-        Sched_req_id_map.to_seq sd.store.sched_req_pending_store
+        (match start, end_exc with
+         | None, None -> sd.store.sched_req_pending_store
+         | Some start, None ->
+           let part = Partition.Pending.partition_based_on_time_point start sched in
+           if include_task_seg_place_partially_within_time_slot then
+           Sched_req_id_map.union (fun _ _ _ -> None)
+             part.after part.crossing
+           else
+             part.after
+         | None, Some end_exc ->
+           let part = Partition.Pending.partition_based_on_time_point end_exc sched in
+           if include_task_seg_place_partially_within_time_slot then
+           Sched_req_id_map.union (fun _ _ _ -> None)
+             part.before part.crossing
+           else
+             part.before
+         | Some start, Some end_exc ->
+           let part = Partition.Pending.partition_based_on_time_slot ~start ~end_exc sched in
+           if include_task_seg_place_partially_within_time_slot then
+           Sched_req_id_map.union (fun _ _ _ -> None)
+             part.fully_within part.partially_within
+           else
+             part.fully_within
+        )
+        |> Sched_req_id_map.to_seq
     end
 
     module Record = struct

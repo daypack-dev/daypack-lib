@@ -674,6 +674,7 @@ module Sched_req : sig
       type partition_based_on_time_point = {
         before : sched_req_store;
         after : sched_req_store;
+        crossing : sched_req_store;
       }
 
       type partition_based_on_time_slot = {
@@ -690,7 +691,9 @@ module Sched_req : sig
 
   module To_seq : sig
     module Pending : sig
-      val pending_sched_req_seq : sched -> Sched_req_ds.sched_req Seq.t
+      val pending_sched_req_seq : ?start:int64 -> ?end_exc:int64 ->
+        ?include_task_seg_place_partially_within_time_slot:bool ->
+        sched -> Sched_req_ds.sched_req Seq.t
     end
 
     module Record : sig
