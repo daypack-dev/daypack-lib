@@ -1,7 +1,7 @@
 let display_current_time () : unit =
   let cur_time_str =
     Daypack_lib.Time.Current.cur_unix_time ()
-    |> Daypack_lib.Time.To_string.date_time_string_of_time
+    |> Daypack_lib.Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
       ~display_in_time_zone:`Local
   in
   print_endline "Time right now:";
@@ -44,11 +44,11 @@ let display_overdue_task_segs (context : Context.t) : unit =
            |> Option.get
          in
          let start_str =
-           Daypack_lib.Time.To_string.date_time_string_of_time
+           Daypack_lib.Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
              ~display_in_time_zone:`Local place_start
          in
          let end_exc_str =
-           Daypack_lib.Time.To_string.date_time_string_of_time
+           Daypack_lib.Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
              ~display_in_time_zone:`Local place_end_exc
          in
          Printf.printf "    - | %s - %s | %s | %s\n" start_str end_exc_str

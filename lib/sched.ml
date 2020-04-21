@@ -4429,9 +4429,9 @@ module To_string = struct
       (fun (id, start, end_exc) ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
            "%s - %s | %s\n"
-           (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
+           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time ~display_in_time_zone:`Local
               start)
-           (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
+           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time ~display_in_time_zone:`Local
               end_exc)
            (Task_ds.Id.string_of_task_seg_id id))
       (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
