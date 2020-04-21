@@ -17,7 +17,7 @@ let display_pending_sched_reqs (context : Context.t) : unit =
   in
   let count = List.length pending_sched_reqs in
   if count = 0 then print_endline "  - No pending scheduling requests"
-  else Printf.printf "  - Pending scheduling requests: %d\n" count
+  else Printf.printf "  - Processable pending scheduling requests: %d\n" count
 
 let display_overdue_task_segs (context : Context.t) : unit =
   let hd =
