@@ -669,6 +669,19 @@ module Sched_req : sig
       (Sched_req_ds.sched_req list * sched, unit) result
   end
 
+  module Partition : sig
+    type t =
+      {
+        start : int64;
+        end_exc : int64;
+        fully_within : sched_req_store;
+        partially_within : sched_req_store;
+        outside : sched_req_store;
+      }
+
+    val partition : start:int64 -> end_exc:int64 -> sched -> t
+  end
+
   module To_seq : sig
     module Pending : sig
       val pending_sched_req_seq : sched -> Sched_req_ds.sched_req Seq.t
