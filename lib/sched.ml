@@ -716,6 +716,7 @@ module Task_seg = struct
                 Task_seg_id_map.add id size sd.store.task_seg_uncompleted_store;
             };
         } )
+      |> Id.add_task_seg_id id
 
     let add_task_seg_completed (id : Task_ds.task_seg_id)
         (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
@@ -729,6 +730,7 @@ module Task_seg = struct
                 Task_seg_id_map.add id size sd.store.task_seg_completed_store;
             };
         } )
+      |> Id.add_task_seg_id id
 
     let add_task_seg_discarded (id : Task_ds.task_seg_id)
         (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
@@ -742,6 +744,7 @@ module Task_seg = struct
                 Task_seg_id_map.add id size sd.store.task_seg_discarded_store;
             };
         } )
+      |> Id.add_task_seg_id id
 
     (*$*)
 
@@ -1254,6 +1257,7 @@ module Task = struct
                 Task_id_map.add id data sd.store.task_uncompleted_store;
             };
         } )
+      |> Id.add_task_id id
 
     let add_task_completed (id : Task_ds.task_id) (data : Task_ds.task_data)
         ((sid, sd) : sched) : sched =
@@ -1267,6 +1271,7 @@ module Task = struct
                 Task_id_map.add id data sd.store.task_completed_store;
             };
         } )
+      |> Id.add_task_id id
 
     let add_task_discarded (id : Task_ds.task_id) (data : Task_ds.task_data)
         ((sid, sd) : sched) : sched =
@@ -1280,6 +1285,7 @@ module Task = struct
                 Task_id_map.add id data sd.store.task_discarded_store;
             };
         } )
+      |> Id.add_task_id id
 
     (*$*)
   end

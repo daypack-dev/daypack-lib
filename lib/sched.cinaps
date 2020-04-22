@@ -945,6 +945,7 @@ let print_task_seg_add () =
 (sid,
  { sd with store = { sd.store with task_seg_%s_store = Task_seg_id_map.add id size sd.store.task_seg_%s_store } }
 )
+|> Id.add_task_seg_id id
 |}
          s s)
     store_types
@@ -1299,6 +1300,7 @@ let print_task_add () =
 (sid,
  { sd with store = { sd.store with task_%s_store = Task_id_map.add id data sd.store.task_%s_store } }
 )
+|> Id.add_task_id id
 |}
          s s)
     store_types
