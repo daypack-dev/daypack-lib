@@ -65,7 +65,8 @@ let run (complete_task : bool) (complete_task_inst : bool)
             = `Yes
           then
             Daypack_lib.Sched_ver_history.In_place_head.Task_inst.Move
-            .move_task_inst_to_completed task_inst_id context.sched_ver_history
+            .move_task_inst_to_completed task_inst_id
+              context.sched_ver_history
             |> Dialog.report_action_record );
     ( if complete_task_seg then
         let task_seg_id =
