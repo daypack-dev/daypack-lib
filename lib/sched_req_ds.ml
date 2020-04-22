@@ -75,7 +75,10 @@ let sort_sched_req_record_list_by_flexibility_score
     reqs
 
 let start_and_end_exc_bound_of_sched_req_or_record
-    ((_id, req_record_data_unit_list) : sched_req_id * (('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t) list) : (int64 * int64) option =
+    ((_id, req_record_data_unit_list) :
+       sched_req_id
+       * ('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t list) :
+  (int64 * int64) option =
   List.fold_left
     (fun acc req_record_data_unit ->
        let cur =
@@ -100,30 +103,37 @@ let start_and_end_exc_bound_of_sched_req_or_record
     None req_record_data_unit_list
 
 let sched_req_or_record_before_time (x : int64)
-    (sched_req_or_record : sched_req_id * (('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t) list)
-  : bool =
+    (sched_req_or_record :
+       sched_req_id
+       * ('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t list) : bool
+  =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
   | Some (_, end_exc) -> end_exc < x
 
 let sched_req_or_record_after_time (x : int64)
-    (sched_req_or_record : sched_req_id * (('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t) list)
-  : bool =
+    (sched_req_or_record :
+       sched_req_id
+       * ('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t list) : bool
+  =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
   | Some (start, _) -> x < start
 
 let sched_req_or_record_fully_within_time_slot ~start ~end_exc
-    (sched_req_or_record : sched_req_id * (('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t) list)
-  :
-  bool =
+    (sched_req_or_record :
+       sched_req_id
+       * ('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t list) : bool
+  =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
   | Some (start', end_exc') -> start <= start' && end_exc' <= end_exc
 
 let sched_req_or_record_partially_within_time_slot ~start ~end_exc
-    (sched_req_or_record : sched_req_id * (('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t) list)
-  : bool =
+    (sched_req_or_record :
+       sched_req_id
+       * ('a, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t list) : bool
+  =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
   | Some (start', end_exc') ->

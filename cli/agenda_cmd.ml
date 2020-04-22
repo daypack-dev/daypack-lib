@@ -40,8 +40,7 @@ let run (list_free_time_slots : bool) : unit =
     else
       let places_within_period =
         Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start
-          ~end_exc ~include_task_seg_place_partially_within_time_slot:true
-          hd
+          ~end_exc ~include_task_seg_place_partially_within_time_slot:true hd
         |> OSeq.take Config.agenda_display_task_seg_place_max_count
         |> List.of_seq
       in

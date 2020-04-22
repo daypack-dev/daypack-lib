@@ -2205,155 +2205,166 @@ module Sched_req = struct
       outside : 'a Sched_req_id_map.t;
     }
 
-    let partition_based_on_time_point_internal (type a) ~(f_get : sched -> a Sched_req_id_map.t)
-        ~(f_before_time : int64 -> (Sched_req_ds.sched_req_id * a) -> bool)
-        ~(f_after_time : int64 -> (Sched_req_ds.sched_req_id * a) -> bool)
+    let partition_based_on_time_point_internal (type a)
+        ~(f_get : sched -> a Sched_req_id_map.t)
+        ~(f_before_time : int64 -> Sched_req_ds.sched_req_id * a -> bool)
+        ~(f_after_time : int64 -> Sched_req_ds.sched_req_id * a -> bool)
         (x : int64) (sched : sched) : a partition_based_on_time_point =
       let before, crossing_or_after =
         Sched_req_id_map.partition
-          (fun id data ->
-             f_before_time x (id, data)
-          )
+          (fun id data -> f_before_time x (id, data))
           (f_get sched)
       in
       let after, crossing =
         Sched_req_id_map.partition
-          (fun id data ->
-             f_after_time x (id, data)
-          )
+          (fun id data -> f_after_time x (id, data))
           crossing_or_after
       in
       { before; after; crossing }
 
-    let partition_based_on_time_slot_internal
-      (type a)
-      ~(f_get : sched -> a Sched_req_id_map.t)
-      ~(f_fully_within_time_slot : start:int64 -> end_exc:int64 -> Sched_req_ds.sched_req_id * a -> bool)
-      ~(f_partially_within_time_slot : start:int64 -> end_exc:int64 -> Sched_req_ds.sched_req_id * a -> bool)
+    let partition_based_on_time_slot_internal (type a)
+        ~(f_get : sched -> a Sched_req_id_map.t)
+        ~(f_fully_within_time_slot :
+            start:int64 -> end_exc:int64 -> Sched_req_ds.sched_req_id * a -> bool)
+        ~(f_partially_within_time_slot :
+            start:int64 -> end_exc:int64 -> Sched_req_ds.sched_req_id * a -> bool)
         ~start ~end_exc (sched : sched) : a partition_based_on_time_slot =
       let fully_within, leftover =
         Sched_req_id_map.partition
-          (fun id data ->
-             f_fully_within_time_slot ~start ~end_exc
-               (id, data))
+          (fun id data -> f_fully_within_time_slot ~start ~end_exc (id, data))
           (f_get sched)
       in
       let partially_within, outside =
         Sched_req_id_map.partition
           (fun id data ->
-             f_partially_within_time_slot ~start ~end_exc
-               (id, data))
+             f_partially_within_time_slot ~start ~end_exc (id, data))
           leftover
       in
       { fully_within; partially_within; outside }
 
     module Pending = struct
-      let partition_based_on_time_point (x : int64) (sched : sched) : Sched_req_ds.sched_req_data partition_based_on_time_point =
+      let partition_based_on_time_point (x : int64) (sched : sched) :
+        Sched_req_ds.sched_req_data partition_based_on_time_point =
         partition_based_on_time_point_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
           ~f_before_time:Sched_req_ds.sched_req_or_record_before_time
-          ~f_after_time:Sched_req_ds.sched_req_or_record_after_time
-          x sched
+          ~f_after_time:Sched_req_ds.sched_req_or_record_after_time x sched
 
-      let partition_based_on_time_slot ~start ~end_exc (sched : sched) : Sched_req_ds.sched_req_data partition_based_on_time_slot =
+      let partition_based_on_time_slot ~start ~end_exc (sched : sched) :
+        Sched_req_ds.sched_req_data partition_based_on_time_slot =
         partition_based_on_time_slot_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
-          ~f_fully_within_time_slot:Sched_req_ds.sched_req_or_record_fully_within_time_slot
-          ~f_partially_within_time_slot:Sched_req_ds.sched_req_or_record_partially_within_time_slot
-          ~start ~end_exc sched
+          ~f_fully_within_time_slot:
+            Sched_req_ds.sched_req_or_record_fully_within_time_slot
+          ~f_partially_within_time_slot:
+            Sched_req_ds.sched_req_or_record_partially_within_time_slot ~start
+          ~end_exc sched
     end
 
     module Record = struct
-      let partition_based_on_time_point (x : int64) (sched : sched) : Sched_req_ds.sched_req_record_data partition_based_on_time_point =
+      let partition_based_on_time_point (x : int64) (sched : sched) :
+        Sched_req_ds.sched_req_record_data partition_based_on_time_point =
         partition_based_on_time_point_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
           ~f_before_time:Sched_req_ds.sched_req_or_record_before_time
-          ~f_after_time:Sched_req_ds.sched_req_or_record_after_time
-          x sched
+          ~f_after_time:Sched_req_ds.sched_req_or_record_after_time x sched
 
-      let partition_based_on_time_slot ~start ~end_exc (sched : sched) : Sched_req_ds.sched_req_record_data partition_based_on_time_slot =
+      let partition_based_on_time_slot ~start ~end_exc (sched : sched) :
+        Sched_req_ds.sched_req_record_data partition_based_on_time_slot =
         partition_based_on_time_slot_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
-          ~f_fully_within_time_slot:Sched_req_ds.sched_req_or_record_fully_within_time_slot
-          ~f_partially_within_time_slot:Sched_req_ds.sched_req_or_record_partially_within_time_slot
-          ~start ~end_exc sched
+          ~f_fully_within_time_slot:
+            Sched_req_ds.sched_req_or_record_fully_within_time_slot
+          ~f_partially_within_time_slot:
+            Sched_req_ds.sched_req_or_record_partially_within_time_slot ~start
+          ~end_exc sched
     end
   end
 
   module To_seq_internal = struct
-    let seq_internal
-        (type a)
-        ~(f_get : sched -> a Sched_req_id_map.t)
-        ~(f_partition_based_on_time_point : int64 -> sched -> a Partition.partition_based_on_time_point)
-        ~(f_partition_based_on_time_slot : start:int64 -> end_exc:int64 -> sched -> a Partition.partition_based_on_time_slot)
-        ~(start : int64 option)
+    let seq_internal (type a) ~(f_get : sched -> a Sched_req_id_map.t)
+        ~(f_partition_based_on_time_point :
+            int64 -> sched -> a Partition.partition_based_on_time_point)
+        ~(f_partition_based_on_time_slot :
+            start:int64 ->
+          end_exc:int64 ->
+          sched ->
+          a Partition.partition_based_on_time_slot) ~(start : int64 option)
         ~(end_exc : int64 option)
-        ~(include_partially_within_time_slot : bool option)
-        (sched : sched) : (Sched_req_ds.sched_req_id * a) Seq.t
-      =
+        ~(include_partially_within_time_slot : bool option) (sched : sched) :
+      (Sched_req_ds.sched_req_id * a) Seq.t =
       let include_task_seg_place_partially_within_time_slot =
         Option.fold ~none:false
           ~some:(fun x -> x)
           include_partially_within_time_slot
       in
-      (match start, end_exc with
-       | None, None -> f_get sched
-       | Some start, None ->
-         let part = f_partition_based_on_time_point start sched in
-         if include_task_seg_place_partially_within_time_slot then
-           Sched_req_id_map.union (fun _ _ _ -> None)
-             part.after part.crossing
-         else
-           part.after
-       | None, Some end_exc ->
-         let part = f_partition_based_on_time_point end_exc sched in
-         if include_task_seg_place_partially_within_time_slot then
-           Sched_req_id_map.union (fun _ _ _ -> None)
-             part.before part.crossing
-         else
-           part.before
-       | Some start, Some end_exc ->
-         let part = f_partition_based_on_time_slot ~start ~end_exc sched in
-         if include_task_seg_place_partially_within_time_slot then
-           Sched_req_id_map.union (fun _ _ _ -> None)
-             part.fully_within part.partially_within
-         else
-           part.fully_within
-      )
+      ( match (start, end_exc) with
+        | None, None -> f_get sched
+        | Some start, None ->
+          let part = f_partition_based_on_time_point start sched in
+          if include_task_seg_place_partially_within_time_slot then
+            Sched_req_id_map.union (fun _ _ _ -> None) part.after part.crossing
+          else part.after
+        | None, Some end_exc ->
+          let part = f_partition_based_on_time_point end_exc sched in
+          if include_task_seg_place_partially_within_time_slot then
+            Sched_req_id_map.union (fun _ _ _ -> None) part.before part.crossing
+          else part.before
+        | Some start, Some end_exc ->
+          let part = f_partition_based_on_time_slot ~start ~end_exc sched in
+          if include_task_seg_place_partially_within_time_slot then
+            Sched_req_id_map.union
+              (fun _ _ _ -> None)
+              part.fully_within part.partially_within
+          else part.fully_within )
       |> Sched_req_id_map.to_seq
 
     module Pending = struct
-      let pending_sched_req_seq ~start ~end_exc ~include_sched_req_partially_within_time_slot =
-        seq_internal ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
-          ~f_partition_based_on_time_point:Partition.Pending.partition_based_on_time_point
-          ~f_partition_based_on_time_slot:Partition.Pending.partition_based_on_time_slot
-          ~start ~end_exc
-          ~include_partially_within_time_slot:include_sched_req_partially_within_time_slot
+      let pending_sched_req_seq ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot =
+        seq_internal
+          ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
+          ~f_partition_based_on_time_point:
+            Partition.Pending.partition_based_on_time_point
+          ~f_partition_based_on_time_slot:
+            Partition.Pending.partition_based_on_time_slot ~start ~end_exc
+          ~include_partially_within_time_slot:
+            include_sched_req_partially_within_time_slot
     end
 
     module Record = struct
-      let sched_req_record_seq ~start ~end_exc ~include_sched_req_record_partially_within_time_slot =
-        seq_internal ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
-          ~f_partition_based_on_time_point:Partition.Record.partition_based_on_time_point
-          ~f_partition_based_on_time_slot:Partition.Record.partition_based_on_time_slot
-          ~start ~end_exc
-          ~include_partially_within_time_slot:include_sched_req_record_partially_within_time_slot
+      let sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot =
+        seq_internal
+          ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
+          ~f_partition_based_on_time_point:
+            Partition.Record.partition_based_on_time_point
+          ~f_partition_based_on_time_slot:
+            Partition.Record.partition_based_on_time_slot ~start ~end_exc
+          ~include_partially_within_time_slot:
+            include_sched_req_record_partially_within_time_slot
     end
   end
 
   module Filter_internal = struct
     module Pending = struct
-      let filter_pending_sched_req_seq ~start ~end_exc ~include_sched_req_partially_within_time_slot
-          (f : Sched_req_ds.sched_req -> bool)
-          (sched : sched) : Sched_req_ds.sched_req Seq.t =
-        To_seq_internal.Pending.pending_sched_req_seq sched ~start ~end_exc ~include_sched_req_partially_within_time_slot |> Seq.filter f
+      let filter_pending_sched_req_seq ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot
+          (f : Sched_req_ds.sched_req -> bool) (sched : sched) :
+        Sched_req_ds.sched_req Seq.t =
+        To_seq_internal.Pending.pending_sched_req_seq sched ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot
+        |> Seq.filter f
     end
 
     module Record = struct
-      let filter_sched_req_record_seq ~start ~end_exc ~include_sched_req_record_partially_within_time_slot
+      let filter_sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot
           (f : Sched_req_ds.sched_req_record -> bool) (sched : sched) :
         Sched_req_ds.sched_req_record Seq.t =
-        To_seq_internal.Record.sched_req_record_seq ~start ~end_exc ~include_sched_req_record_partially_within_time_slot sched |> Seq.filter f
+        To_seq_internal.Record.sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot sched
+        |> Seq.filter f
     end
   end
 
@@ -2362,20 +2373,17 @@ module Sched_req = struct
       let pending_sched_req_seq ?(start : int64 option)
           ?(end_exc : int64 option)
           ?(include_sched_req_partially_within_time_slot : bool option)
-          (sched : sched) : Sched_req_ds.sched_req Seq.t
-        =
-        To_seq_internal.Pending.pending_sched_req_seq ~start ~end_exc ~include_sched_req_partially_within_time_slot
-          sched
+          (sched : sched) : Sched_req_ds.sched_req Seq.t =
+        To_seq_internal.Pending.pending_sched_req_seq ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot sched
     end
 
     module Record = struct
-      let sched_req_record_seq ?(start : int64 option)
-          ?(end_exc : int64 option)
+      let sched_req_record_seq ?(start : int64 option) ?(end_exc : int64 option)
           ?(include_sched_req_record_partially_within_time_slot : bool option)
-          (sched : sched) : Sched_req_ds.sched_req_record Seq.t
-        =
-        To_seq_internal.Record.sched_req_record_seq ~start ~end_exc ~include_sched_req_record_partially_within_time_slot
-          sched
+          (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
+        To_seq_internal.Record.sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot sched
     end
   end
 
@@ -2384,20 +2392,20 @@ module Sched_req = struct
       let filter_pending_sched_req_seq ?(start : int64 option)
           ?(end_exc : int64 option)
           ?(include_sched_req_partially_within_time_slot : bool option)
-          (f : Sched_req_ds.sched_req -> bool)
-          (sched : sched) : Sched_req_ds.sched_req Seq.t =
-        Filter_internal.Pending.filter_pending_sched_req_seq ~start ~end_exc ~include_sched_req_partially_within_time_slot
-          f
-         sched
+          (f : Sched_req_ds.sched_req -> bool) (sched : sched) :
+        Sched_req_ds.sched_req Seq.t =
+        Filter_internal.Pending.filter_pending_sched_req_seq ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot f sched
     end
 
     module Record = struct
-      let filter_sched_req_record_seq?(start : int64 option)
+      let filter_sched_req_record_seq ?(start : int64 option)
           ?(end_exc : int64 option)
           ?(include_sched_req_record_partially_within_time_slot : bool option)
           (f : Sched_req_ds.sched_req_record -> bool) (sched : sched) :
         Sched_req_ds.sched_req_record Seq.t =
-        Filter_internal.Record.filter_sched_req_record_seq ~start ~end_exc ~include_sched_req_record_partially_within_time_slot f sched
+        Filter_internal.Record.filter_sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot f sched
     end
   end
 
@@ -2899,7 +2907,9 @@ module Sched_req = struct
         ~(include_sched_reqs_partially_within_time_slot : bool)
         ~(up_to_sched_req_id_inc : Sched_req_ds.sched_req_id option)
         ((sid, sd) : sched) : Sched_req_ds.sched_req_record list * sched =
-      let partition = Partition.Pending.partition_based_on_time_slot ~start ~end_exc (sid, sd) in
+      let partition =
+        Partition.Pending.partition_based_on_time_slot ~start ~end_exc (sid, sd)
+      in
       let to_be_scheduled_candidates, leftover =
         if include_sched_reqs_partially_within_time_slot then
           ( Sched_req_id_map.union

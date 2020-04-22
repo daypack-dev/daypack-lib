@@ -683,35 +683,57 @@ module Sched_req : sig
     }
 
     module Pending : sig
-      val partition_based_on_time_point : int64 -> sched -> Sched_req_ds.sched_req_data partition_based_on_time_point
+      val partition_based_on_time_point :
+        int64 ->
+        sched ->
+        Sched_req_ds.sched_req_data partition_based_on_time_point
 
-      val partition_based_on_time_slot : start:int64 -> end_exc:int64 -> sched -> Sched_req_ds.sched_req_data partition_based_on_time_slot
+      val partition_based_on_time_slot :
+        start:int64 ->
+        end_exc:int64 ->
+        sched ->
+        Sched_req_ds.sched_req_data partition_based_on_time_slot
     end
 
     module Record : sig
-      val partition_based_on_time_point : int64 -> sched -> Sched_req_ds.sched_req_record_data partition_based_on_time_point
+      val partition_based_on_time_point :
+        int64 ->
+        sched ->
+        Sched_req_ds.sched_req_record_data partition_based_on_time_point
 
-      val partition_based_on_time_slot : start:int64 -> end_exc:int64 -> sched -> Sched_req_ds.sched_req_record_data partition_based_on_time_slot
+      val partition_based_on_time_slot :
+        start:int64 ->
+        end_exc:int64 ->
+        sched ->
+        Sched_req_ds.sched_req_record_data partition_based_on_time_slot
     end
   end
 
   module To_seq : sig
     module Pending : sig
-      val pending_sched_req_seq : ?start:int64 -> ?end_exc:int64 ->
+      val pending_sched_req_seq :
+        ?start:int64 ->
+        ?end_exc:int64 ->
         ?include_sched_req_partially_within_time_slot:bool ->
-        sched -> Sched_req_ds.sched_req Seq.t
+        sched ->
+        Sched_req_ds.sched_req Seq.t
     end
 
     module Record : sig
-      val sched_req_record_seq : ?start:int64 -> ?end_exc:int64 ->
+      val sched_req_record_seq :
+        ?start:int64 ->
+        ?end_exc:int64 ->
         ?include_sched_req_record_partially_within_time_slot:bool ->
-        sched -> Sched_req_ds.sched_req_record Seq.t
+        sched ->
+        Sched_req_ds.sched_req_record Seq.t
     end
   end
 
   module Filter : sig
     module Pending : sig
-      val filter_pending_sched_req_seq :?start:int64 -> ?end_exc:int64 ->
+      val filter_pending_sched_req_seq :
+        ?start:int64 ->
+        ?end_exc:int64 ->
         ?include_sched_req_partially_within_time_slot:bool ->
         (Sched_req_ds.sched_req -> bool) ->
         sched ->
@@ -719,7 +741,9 @@ module Sched_req : sig
     end
 
     module Record : sig
-      val filter_sched_req_record_seq :?start:int64 -> ?end_exc:int64 ->
+      val filter_sched_req_record_seq :
+        ?start:int64 ->
+        ?end_exc:int64 ->
         ?include_sched_req_record_partially_within_time_slot:bool ->
         (Sched_req_ds.sched_req_record -> bool) ->
         sched ->
