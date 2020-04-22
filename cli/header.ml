@@ -11,13 +11,30 @@ let display_pending_sched_reqs (context : Context.t) : unit =
   let hd =
     Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
   in
-  let pending_sched_reqs =
-    Daypack_lib.Sched.Sched_req.To_seq.Pending.pending_sched_req_seq hd
+  let cur_tm = Daypack_lib.Time.Current.cur_tm_local () in
+  let end_exc_tm = { cur_tm with tm_mon = cur_tm.tm_mday + Config.sched_day_count } in
+  let start = Daypack_lib.Time.unix_time_of_tm ~time_zone_of_tm:`Local cur_tm in
+  let end_exc = Daypack_lib.Time.unix_time_of_tm ~time_zone_of_tm:`Local end_exc_tm in
+  let pending_sched_reqs_fully_within_time_slot =
+    Daypack_lib.Sched.Sched_req.To_seq.Pending.pending_sched_req_seq ~start ~end_exc hd
     |> List.of_seq
   in
-  let count = List.length pending_sched_reqs in
-  if count = 0 then print_endline "  - No pending scheduling requests"
-  else Printf.printf "  - Processable pending scheduling requests: %d\n" count
+  let pending_sched_reqs_fully_or_partially_within_time_slot =
+    Daypack_lib.Sched.Sched_req.To_seq.Pending.pending_sched_req_seq ~start ~end_exc hd
+    |> List.of_seq
+  in
+  let count_fully_within = List.length pending_sched_reqs_fully_within_time_slot in
+  let count_all = List.length pending_sched_reqs_fully_or_partially_within_time_slot in
+  if count_all = 0 then print_endline "  - No pending scheduling requests"
+  else (
+    Printf.printf "  - Processable pending scheduling requests:\n";
+    Printf.printf "    - Fully              within next %d days: %d\n"
+      Config.sched_day_count
+      count_fully_within;
+    Printf.printf "    - Fully or partially within next %d days: %d\n"
+      Config.sched_day_count
+      count_fully_within
+  )
 
 let display_overdue_task_segs (context : Context.t) : unit =
   let hd =
@@ -80,6 +97,8 @@ let display (context : Context.t) : unit =
   print_newline ();
   print_endline "Notifications:";
   display_overdue_task_segs context;
+  print_newline ();
   display_pending_sched_reqs context;
+  print_newline ();
   display_todos context;
   print_newline ()
