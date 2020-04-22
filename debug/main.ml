@@ -627,7 +627,7 @@ let debug_sched_usage_simulation () =
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   (* Sched_ver_history.In_place_head.move_task_seg_to_completed
    *   (0L, 1L, 0L, 0L, None) sched_ver_history; *)
-  Sched_ver_history.In_place_head.Progress.Move.move_task_inst_to_completed
+  Sched_ver_history.In_place_head.Task_inst.Move.move_task_inst_to_completed
     (0L, 1L, 0L) sched_ver_history
   |> Sched_ver_history.Print.debug_print_action_record;
   Sched_ver_history.In_place_head.Progress.Add.add_task_seg_progress_chunk
