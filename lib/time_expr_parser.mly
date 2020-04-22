@@ -56,7 +56,7 @@ parse:
   ;
 
 time_point_expr:
-  | year = NAT; HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | year = NAT; HYPHEN; month = human_int_month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
     {
       Year_month_day_hour_minute
         {
@@ -145,7 +145,7 @@ time_slots_expr:
     }
 
   (* months + month days + hour minutes *)
-  | months = month_ranges_expr;
+  | months = direct_pick_month_ranges_expr;
     DOT; month_days = month_day_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
@@ -159,7 +159,7 @@ time_slots_expr:
     }
 
   (* months + weekdays + hour minutes *)
-  | months = month_ranges_expr;
+  | months = direct_pick_month_ranges_expr;
     DOT; weekdays = weekday_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
@@ -173,7 +173,7 @@ time_slots_expr:
     }
 
   (* months + weekday + hour minutes *)
-  | months = month_ranges_expr;
+  | months = direct_pick_month_ranges_expr;
     DOT; FIRST; n = NAT; weekday = weekday_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
@@ -187,7 +187,7 @@ time_slots_expr:
         }
     }
 
-  | months = month_ranges_expr;
+  | months = direct_pick_month_ranges_expr;
     DOT; LAST; n = NAT; weekday = weekday_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
@@ -323,12 +323,34 @@ month_expr:
   | x = direct_pick_month_expr { x }
   ;
 
-month_range_expr:
-  | x = month_expr
+human_int_month_range_expr:
+  | x = human_int_month_expr;
     { `Range_inc (x, x) }
-  | x = month_expr; TO; y = month_expr;
+  | x = human_int_month_expr; TO; y = human_int_month_expr;
     { `Range_exc (x, y) }
   ;
+
+direct_pick_month_range_expr:
+  | x = direct_pick_month_expr;
+    { `Range_inc (x, x) }
+  | x = direct_pick_month_expr; TO; y = direct_pick_month_expr;
+    { `Range_exc (x, y) }
+  ;
+
+month_range_expr:
+  | x = human_int_month_range_expr
+    { x }
+  | x = direct_pick_month_range_expr
+    { x }
+  ;
+
+human_int_month_ranges_expr:
+  | l = separated_nonempty_list(COMMA, human_int_month_range_expr);
+    { l }
+
+direct_pick_month_ranges_expr:
+  | l = separated_nonempty_list(COMMA, direct_pick_month_range_expr);
+    { l }
 
 month_ranges_expr:
   | l = separated_nonempty_list(COMMA, month_range_expr);
