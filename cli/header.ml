@@ -57,7 +57,7 @@ let display_overdue_task_segs (context : Context.t) : unit =
            Daypack_lib.Task_ds.Id.task_id_of_task_seg_id task_seg_id
          in
          let task_data =
-           Daypack_lib.Sched.Task.Find.find_task_uncompleted_opt task_id hd
+           Daypack_lib.Sched.Task.Find.find_task_any_opt task_id hd
            |> Option.get
          in
          let start_str =
