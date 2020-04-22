@@ -1369,10 +1369,8 @@ module Task = struct
       |> (fun sched ->
           if remove_children_task_insts then
             Task_inst.Remove.remove_task_inst_uncompleted_seq
-              children_task_inst_ids sched
+              ~remove_children_task_segs children_task_inst_ids sched
           else sched)
-      |> Task_inst.Remove.remove_task_inst_uncompleted_seq
-        ~remove_children_task_segs children_task_inst_ids
       |> (fun (sid, sd) ->
           ( sid,
             {
@@ -1396,10 +1394,8 @@ module Task = struct
       |> (fun sched ->
           if remove_children_task_insts then
             Task_inst.Remove.remove_task_inst_completed_seq
-              children_task_inst_ids sched
+              ~remove_children_task_segs children_task_inst_ids sched
           else sched)
-      |> Task_inst.Remove.remove_task_inst_completed_seq
-        ~remove_children_task_segs children_task_inst_ids
       |> (fun (sid, sd) ->
           ( sid,
             {
@@ -1423,10 +1419,8 @@ module Task = struct
       |> (fun sched ->
           if remove_children_task_insts then
             Task_inst.Remove.remove_task_inst_discarded_seq
-              children_task_inst_ids sched
+              ~remove_children_task_segs children_task_inst_ids sched
           else sched)
-      |> Task_inst.Remove.remove_task_inst_discarded_seq
-        ~remove_children_task_segs children_task_inst_ids
       |> (fun (sid, sd) ->
           ( sid,
             {
