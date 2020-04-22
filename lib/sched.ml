@@ -699,52 +699,6 @@ module Task_seg = struct
               };
           } ) )
 
-    let add_task_seg_via_task_seg_alloc_req
-        ((parent_task_inst_id, task_seg_size) : Task_ds.task_seg_alloc_req)
-        (sched : sched) : Task_ds.task_seg * sched =
-      let task_seg, sched =
-        add_task_seg ~parent_task_inst_id task_seg_size sched
-      in
-      (task_seg, sched)
-
-    let add_task_segs_via_task_seg_alloc_req_list
-        (reqs : Task_ds.task_seg_alloc_req list) (sched : sched) :
-      Task_ds.task_seg list * sched =
-      List.fold_left
-        (fun (acc, sched) req ->
-           let task_seg, sched = add_task_seg_via_task_seg_alloc_req req sched in
-           (task_seg :: acc, sched))
-        ([], sched) reqs
-      |> fun (l, t) -> (List.rev l, t)
-
-    let add_task_seg_via_task_seg_place
-        ((id, start, end_exc) : Task_ds.task_seg_place) (sched : sched) : sched
-      =
-      let id1, id2, id3, id4, sub_id = id in
-      let parent_task_inst_id = Task_ds.Id.task_inst_id_of_task_seg_id id in
-      let task_seg_size = end_exc -^ start in
-      sched
-      |> (fun sched ->
-          match sub_id with
-          | None -> sched
-          | Some _ ->
-            Remove.remove_task_seg_all (id1, id2, id3, id4, None) sched)
-      |> Id.add_task_seg_id id
-      |> add_task_seg ~parent_task_inst_id task_seg_size
-      |> fun (_, x) -> x
-
-    let add_task_segs_via_task_seg_place_list
-        (places : Task_ds.task_seg_place list) (sched : sched) : sched =
-      List.fold_left
-        (fun sched place -> add_task_seg_via_task_seg_place place sched)
-        sched places
-
-    let add_task_segs_via_task_seg_place_seq
-        (places : Task_ds.task_seg_place Seq.t) (sched : sched) : sched =
-      Seq.fold_left
-        (fun sched place -> add_task_seg_via_task_seg_place place sched)
-        sched places
-
     (*$ #use "lib/sched.cinaps";;
 
       print_task_seg_add ()
@@ -790,6 +744,50 @@ module Task_seg = struct
         } )
 
     (*$*)
+
+    let add_task_seg_via_task_seg_alloc_req
+        ((parent_task_inst_id, task_seg_size) : Task_ds.task_seg_alloc_req)
+        (sched : sched) : Task_ds.task_seg * sched =
+      let task_seg, sched =
+        add_task_seg ~parent_task_inst_id task_seg_size sched
+      in
+      (task_seg, sched)
+
+    let add_task_segs_via_task_seg_alloc_req_list
+        (reqs : Task_ds.task_seg_alloc_req list) (sched : sched) :
+      Task_ds.task_seg list * sched =
+      List.fold_left
+        (fun (acc, sched) req ->
+           let task_seg, sched = add_task_seg_via_task_seg_alloc_req req sched in
+           (task_seg :: acc, sched))
+        ([], sched) reqs
+      |> fun (l, t) -> (List.rev l, t)
+
+    let add_task_seg_via_task_seg_place
+        ((id, start, end_exc) : Task_ds.task_seg_place) (sched : sched) : sched
+      =
+      let id1, id2, id3, id4, sub_id = id in
+      let task_seg_size = end_exc -^ start in
+      sched
+      |> (fun sched ->
+          match sub_id with
+          | None -> sched
+          | Some _ ->
+            Remove.remove_task_seg_all (id1, id2, id3, id4, None) sched)
+      |> Id.add_task_seg_id id
+      |> add_task_seg_uncompleted id task_seg_size
+
+    let add_task_segs_via_task_seg_place_list
+        (places : Task_ds.task_seg_place list) (sched : sched) : sched =
+      List.fold_left
+        (fun sched place -> add_task_seg_via_task_seg_place place sched)
+        sched places
+
+    let add_task_segs_via_task_seg_place_seq
+        (places : Task_ds.task_seg_place Seq.t) (sched : sched) : sched =
+      Seq.fold_left
+        (fun sched place -> add_task_seg_via_task_seg_place place sched)
+        sched places
   end
 
   module Move = struct
