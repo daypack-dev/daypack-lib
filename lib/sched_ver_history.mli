@@ -23,6 +23,17 @@ module In_place_head : sig
         t ->
         Task_ds.task * Task_ds.task_inst list * action_record
     end
+
+    module Move : sig
+      val move_task_to_completed :
+        Task_ds.task_id -> t -> action_record
+
+      val move_task_to_uncompleted :
+        Task_ds.task_id -> t -> action_record
+
+      val move_task_to_discarded :
+        Task_ds.task_id -> t -> action_record
+    end
   end
 
   module Task_inst : sig
@@ -32,6 +43,28 @@ module In_place_head : sig
         Task_ds.task_inst_data ->
         t ->
         Task_ds.task_inst * action_record
+    end
+
+    module Move : sig
+      val move_task_inst_to_completed :
+        Task_ds.task_inst_id -> t -> action_record
+
+      val move_task_inst_to_uncompleted :
+        Task_ds.task_inst_id -> t -> action_record
+
+      val move_task_inst_to_discarded :
+        Task_ds.task_inst_id -> t -> action_record
+    end
+  end
+
+  module Task_seg : sig
+    module Move : sig
+      val move_task_seg_to_completed : Task_ds.task_seg_id -> t -> action_record
+
+      val move_task_seg_to_uncompleted :
+        Task_ds.task_seg_id -> t -> action_record
+
+      val move_task_seg_to_discarded : Task_ds.task_seg_id -> t -> action_record
     end
   end
 
@@ -49,24 +82,6 @@ module In_place_head : sig
   end
 
   module Progress : sig
-    module Move : sig
-      val move_task_seg_to_completed : Task_ds.task_seg_id -> t -> action_record
-
-      val move_task_seg_to_uncompleted :
-        Task_ds.task_seg_id -> t -> action_record
-
-      val move_task_seg_to_discarded : Task_ds.task_seg_id -> t -> action_record
-
-      val move_task_inst_to_completed :
-        Task_ds.task_inst_id -> t -> action_record
-
-      val move_task_inst_to_uncompleted :
-        Task_ds.task_inst_id -> t -> action_record
-
-      val move_task_inst_to_discarded :
-        Task_ds.task_inst_id -> t -> action_record
-    end
-
     module Add : sig
       val add_task_seg_progress_chunk :
         Task_ds.task_seg_id -> int64 * int64 -> t -> action_record
