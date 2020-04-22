@@ -39,8 +39,8 @@ let run (complete_task : bool) (complete_task_inst : bool) (complete_task_seg : 
             Dialog.ask_yn ~indent_level:0
               ~prompt:(Printf.sprintf "Really mark segment under task \"%s\" as completed?" task_data.name) = `Yes
           then (
-            Daypack_lib.Sched_ver_history.In_place_head.Task.Move.move_task_to_completed
-              task_id context.sched_ver_history
+            Daypack_lib.Sched_ver_history.In_place_head.Task_seg.Move.move_task_seg_to_completed
+              task_seg_id context.sched_ver_history
             |> Dialog.report_action_record
           )
     );
