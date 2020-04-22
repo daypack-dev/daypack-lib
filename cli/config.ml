@@ -28,4 +28,4 @@ let agenda_display_task_seg_place_max_count = 100
 
 let agenda_search_day_count = 30
 
-let sched_day_count = 7
+let sched_day_count = 30
