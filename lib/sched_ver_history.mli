@@ -25,14 +25,11 @@ module In_place_head : sig
     end
 
     module Move : sig
-      val move_task_to_completed :
-        Task_ds.task_id -> t -> action_record
+      val move_task_to_completed : Task_ds.task_id -> t -> action_record
 
-      val move_task_to_uncompleted :
-        Task_ds.task_id -> t -> action_record
+      val move_task_to_uncompleted : Task_ds.task_id -> t -> action_record
 
-      val move_task_to_discarded :
-        Task_ds.task_id -> t -> action_record
+      val move_task_to_discarded : Task_ds.task_id -> t -> action_record
     end
   end
 
