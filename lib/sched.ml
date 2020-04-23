@@ -585,7 +585,7 @@ module Task_seg = struct
     (*$ #use "lib/sched.cinaps";;
 
       print_task_seg_remove ();
-      print_task_seg_remove_strict ();
+      (* print_task_seg_remove_strict (); *)
       print_task_seg_remove_seq ()
     *)
 
@@ -639,24 +639,6 @@ module Task_seg = struct
       |> remove_task_seg_uncompleted id
       |> remove_task_seg_completed id
       |> remove_task_seg_discarded id
-
-    let remove_task_seg_uncompleted_strict (id : Task_ds.task_seg_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_seg_uncompleted_opt id sched with
-      | None -> Error ()
-      | Some _ -> Ok (remove_task_seg_uncompleted id sched)
-
-    let remove_task_seg_completed_strict (id : Task_ds.task_seg_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_seg_completed_opt id sched with
-      | None -> Error ()
-      | Some _ -> Ok (remove_task_seg_completed id sched)
-
-    let remove_task_seg_discarded_strict (id : Task_ds.task_seg_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_seg_discarded_opt id sched with
-      | None -> Error ()
-      | Some _ -> Ok (remove_task_seg_discarded id sched)
 
     let remove_task_seg_uncompleted_seq (ids : Task_ds.task_seg_id Seq.t)
         (sched : sched) : sched =
@@ -1027,7 +1009,7 @@ module Task_inst = struct
     (*$ #use "lib/sched.cinaps";;
 
       print_task_inst_remove ();
-      print_task_inst_remove_strict ();
+      (* print_task_inst_remove_strict (); *)
       print_task_inst_remove_seq ();
     *)
 
@@ -1115,30 +1097,6 @@ module Task_inst = struct
       |> remove_task_inst_uncompleted ~remove_children_task_segs id
       |> remove_task_inst_completed ~remove_children_task_segs id
       |> remove_task_inst_discarded ~remove_children_task_segs id
-
-    let remove_task_inst_uncompleted_strict
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_inst_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_inst_uncompleted_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok (remove_task_inst_uncompleted ~remove_children_task_segs id sched)
-
-    let remove_task_inst_completed_strict
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_inst_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_inst_completed_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok (remove_task_inst_completed ~remove_children_task_segs id sched)
-
-    let remove_task_inst_discarded_strict
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_inst_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_inst_discarded_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok (remove_task_inst_discarded ~remove_children_task_segs id sched)
 
     let remove_task_inst_uncompleted_seq
         ?(remove_children_task_segs : bool = true)
@@ -1364,7 +1322,7 @@ module Task = struct
     (*$ #use "lib/sched.cinaps";;
 
       print_task_remove ();
-      print_task_remove_strict ();
+      (* print_task_remove_strict (); *)
     *)
 
     let remove_task_uncompleted ?(remove_children_task_insts : bool = true)
@@ -1452,37 +1410,6 @@ module Task = struct
         ~remove_children_task_segs id
       |> remove_task_discarded ~remove_children_task_insts
         ~remove_children_task_segs id
-
-    let remove_task_uncompleted_strict
-        ?(remove_children_task_insts : bool = true)
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_uncompleted_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok
-          (remove_task_uncompleted ~remove_children_task_insts
-             ~remove_children_task_segs id sched)
-
-    let remove_task_completed_strict ?(remove_children_task_insts : bool = true)
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_completed_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok
-          (remove_task_completed ~remove_children_task_insts
-             ~remove_children_task_segs id sched)
-
-    let remove_task_discarded_strict ?(remove_children_task_insts : bool = true)
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_discarded_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok
-          (remove_task_discarded ~remove_children_task_insts
-             ~remove_children_task_segs id sched)
 
     (*$*)
   end
