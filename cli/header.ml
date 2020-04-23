@@ -19,23 +19,40 @@ let display_pending_sched_reqs (context : Context.t) : unit =
   let end_exc =
     Daypack_lib.Time.unix_time_of_tm ~time_zone_of_tm:`Local end_exc_tm
   in
+  let expired_sched_reqs =
+    Daypack_lib.Sched.Sched_req.To_seq.Pending.pending_sched_req_seq
+      ~end_exc:start hd
+    |> List.of_seq
+  in
   let pending_sched_reqs_fully_within_time_slot =
     Daypack_lib.Sched.Sched_req.To_seq.Pending.pending_sched_req_seq ~start
       ~end_exc hd
     |> List.of_seq
   in
   let pending_sched_reqs_fully_or_partially_within_time_slot =
-    Daypack_lib.Sched.Sched_req.To_seq.Pending.pending_sched_req_seq ~start
-      ~end_exc hd
+    Daypack_lib.Sched.Sched_req.To_seq.Pending.pending_sched_req_seq
+      ~start
+      ~end_exc
+      ~include_sched_req_partially_within_time_slot:true
+      hd
     |> List.of_seq
+  in
+  let count_expired =
+    List.length expired_sched_reqs
   in
   let count_fully_within =
     List.length pending_sched_reqs_fully_within_time_slot
   in
-  let count_all =
+  let count_fully_or_partially_within =
     List.length pending_sched_reqs_fully_or_partially_within_time_slot
   in
-  if count_all = 0 then print_endline "  - No pending scheduling requests"
+  if count_expired = 0 then
+    print_endline "  - No expired scheduling requests"
+  else (
+    Printf.printf "  - Expired scheduling requests: %d\n" count_expired
+  );
+  print_newline ();
+  if count_fully_or_partially_within = 0 then Printf.printf "  - No pending scheduling requests within next %d days\n" Config.sched_day_count
   else (
     Printf.printf "  - Processable pending scheduling requests:\n";
     Printf.printf "    - Fully              within next %d days: %d\n"
