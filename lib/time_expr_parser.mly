@@ -13,7 +13,7 @@
 %token EVERY
 %token FIRST
 %token LAST
-%token NEXT
+%token COMING
 %token AM
 %token PM
 
@@ -69,8 +69,8 @@ time_point_expr:
         }
     }
   | HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
-  | NEXT; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
-  | month = direct_pick_month_expr; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | COMING; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | COMING; month = direct_pick_month_expr; month_day = month_day_expr; hour_minute = hour_minute_expr;
     {
       Month_day_hour_minute
         {
@@ -81,7 +81,7 @@ time_point_expr:
         }
     }
   | HYPHEN; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
-  | NEXT; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | COMING; month_day = month_day_expr; hour_minute = hour_minute_expr;
     {
       Day_hour_minute
         {
@@ -91,7 +91,7 @@ time_point_expr:
         }
     }
   | HYPHEN; HYPHEN; hour_minute = hour_minute_expr;
-  | hour_minute = hour_minute_expr;
+  | COMING; hour_minute = hour_minute_expr;
     {
       Hour_minute
         {
@@ -99,7 +99,7 @@ time_point_expr:
           match_mode = `Next;
         }
     }
-  | weekday = weekday_expr; hour_minute = hour_minute_expr;
+  | COMING; weekday = weekday_expr; hour_minute = hour_minute_expr;
     {
       Day_hour_minute
         {
@@ -123,7 +123,7 @@ time_slots_expr:
     }
 
   (* month days + hour minutes *)
-  | NEXT; month_days = month_day_ranges_expr;
+  | COMING; month_days = month_day_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
       Month_days_and_hour_minutes
@@ -135,7 +135,7 @@ time_slots_expr:
     }
 
   (* weekdays + hour minutes *)
-  | NEXT; weekdays = weekday_ranges_expr;
+  | COMING; weekdays = weekday_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
       Weekdays_and_hour_minutes
@@ -147,7 +147,7 @@ time_slots_expr:
     }
 
   (* months + month days + hour minutes *)
-  | NEXT; months = direct_pick_month_ranges_expr;
+  | COMING; months = direct_pick_month_ranges_expr;
     DOT; month_days = month_day_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
@@ -161,7 +161,7 @@ time_slots_expr:
     }
 
   (* months + weekdays + hour minutes *)
-  | NEXT; months = direct_pick_month_ranges_expr;
+  | COMING; months = direct_pick_month_ranges_expr;
     DOT; weekdays = weekday_ranges_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
@@ -175,7 +175,7 @@ time_slots_expr:
     }
 
   (* months + weekday + hour minutes *)
-  | NEXT; months = direct_pick_month_ranges_expr;
+  | COMING; months = direct_pick_month_ranges_expr;
     DOT; FIRST; n = NAT; weekday = weekday_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {
@@ -189,7 +189,7 @@ time_slots_expr:
         }
     }
 
-  | NEXT; months = direct_pick_month_ranges_expr;
+  | COMING; months = direct_pick_month_ranges_expr;
     DOT; LAST; n = NAT; weekday = weekday_expr;
     DOT; hour_minutes = hour_minutes_expr;
     {

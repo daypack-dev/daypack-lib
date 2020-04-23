@@ -50,10 +50,14 @@ rule read =
   (* keywords *)
   | "to"    { TO }
   (* | "of"    { OF } *)
-  | "every" { EVERY }
   | "first" { FIRST }
   | "last"  { LAST }
-  | "next"  { NEXT }
+  | "coming"
+  | "com"
+  | "?"
+    { COMING }
+  | "every"
+    { EVERY }
   | "am"
   | "AM"
     { AM }
