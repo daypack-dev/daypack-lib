@@ -2,52 +2,52 @@ open Int64_utils
 
 module Interpret_string = struct
   open Angstrom
-
   open Parser_components
 
   let minutes_string =
-    alpha_string >>| fun x ->
-    Misc_utils.prefix_string_match [("minutes", ());
-                                    ("mins", ())
-                                   ]
-      x
+    alpha_string
+    >>| fun x ->
+    Misc_utils.prefix_string_match [ ("minutes", ()); ("mins", ()) ] x
 
   let hours_string =
-    alpha_string >>| fun x ->
-    Misc_utils.prefix_string_match [("hours", ());
-                                    ("hrs", ())
-                                   ]
-      x
+    alpha_string
+    >>| fun x -> Misc_utils.prefix_string_match [ ("hours", ()); ("hrs", ()) ] x
 
   let days_string =
-    alpha_string >>| fun x ->
-    Misc_utils.prefix_string_match [("days", ());
-                                   ]
-      x
+    alpha_string >>| fun x -> Misc_utils.prefix_string_match [ ("days", ()) ] x
 
   let duration_expr : Duration_expr_ast.t t =
     choice
       [
-        (integer >>= fun minutes ->
-         space *> minutes_string *> space *>
-         return Duration_expr_ast.{ days = 0; hours = 0; minutes; });
-        (integer >>= fun hours ->
-         space *> hours_string *> space *>
-         integer >>= fun minutes ->
-         space *> minutes_string *> space *>
-         return Duration_expr_ast.{ days = 0; hours; minutes; });
-        (integer >>= fun days ->
-         space *> days_string *> space *>
-         integer >>= fun hours ->
-         space *> hours_string *> space *>
-         integer >>= fun minutes ->
-         space *> minutes_string *> space *>
-         return Duration_expr_ast.{ days; hours; minutes; });
+        ( integer
+          >>= fun minutes ->
+          space
+          *> minutes_string
+          *> space
+          *> return Duration_expr_ast.{ days = 0; hours = 0; minutes } );
+        ( integer
+          >>= fun hours ->
+          space *> hours_string *> space *> integer
+          >>= fun minutes ->
+          space
+          *> minutes_string
+          *> space
+          *> return Duration_expr_ast.{ days = 0; hours; minutes } );
+        ( integer
+          >>= fun days ->
+          space *> days_string *> space *> integer
+          >>= fun hours ->
+          space *> hours_string *> space *> integer
+          >>= fun minutes ->
+          space
+          *> minutes_string
+          *> space
+          *> return Duration_expr_ast.{ days; hours; minutes } );
       ]
 
   let of_string (s : string) : (int64, string) result =
     match parse_string duration_expr s with
-    | Ok {days; hours; minutes} ->
+    | Ok { days; hours; minutes } ->
       if days < 0 then Error "Day count is negative"
       else if hours < 0 then Error "Hour count is negative"
       else if minutes < 0 then Error "Minute count is negative"

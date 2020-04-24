@@ -13,4 +13,3 @@ let comma = char ','
 let dot = char '.'
 
 let hyphen = char '-'
-

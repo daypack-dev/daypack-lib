@@ -226,7 +226,6 @@ end
 
 module Interpret_string = struct
   open Angstrom
-
   open Parser_components
 
   let to_string = string_ci "to"
