@@ -10,6 +10,11 @@ type hms_expr = {
   mode : hms_mode;
 }
 
+type bound =
+  [ `Every
+  | `Next
+  ]
+
 type hms_range_expr = hms_expr Range.t
 
 type day_expr =
@@ -38,72 +43,59 @@ type month_expr =
 
 type year_expr = int
 
-type match_mode =
-  [ `Every
-  | `Next
-  ]
-
-type time_point_expr =
+type unbounded_time_point_expr =
   | Year_month_day_hms of {
       year : year_expr;
       month : month_expr;
       month_day : int;
       hms : hms_expr;
-      match_mode : match_mode;
     }
   | Month_day_hms of {
       month : month_expr;
       month_day : int;
       hms : hms_expr;
-      match_mode : match_mode;
     }
   | Day_hms of {
       day : day_expr;
       hms : hms_expr;
-      match_mode : match_mode;
     }
   | Hms of {
       hms : hms_expr;
-      match_mode : match_mode;
     }
+
+type time_point_expr = bound * unbounded_time_point_expr
 
 type month_weekday_mode =
   | First_n of int
   | Last_n of int
 
-type time_slots_expr =
+type unbounded_time_slots_expr =
   | Single_time_slot of {
-      start : time_point_expr;
-      end_exc : time_point_expr;
-      match_mode : match_mode;
+      start : unbounded_time_point_expr;
+      end_exc : unbounded_time_point_expr;
     }
   | Month_days_and_hms_ranges of {
       month_days : int Range.t list;
       hms_ranges : hms_range_expr list;
-      match_mode : match_mode;
     }
   | Weekdays_and_hms_ranges of {
       weekdays : Time.weekday Range.t list;
       hms_ranges : hms_range_expr list;
-      match_mode : match_mode;
     }
   | Months_and_month_days_and_hms_ranges of {
       months : month_expr Range.t list;
       month_days : int Range.t list;
       hms_ranges : hms_range_expr list;
-      match_mode : match_mode;
     }
   | Months_and_weekdays_and_hms_ranges of {
       months : month_expr Range.t list;
       weekdays : Time.weekday Range.t list;
       hms_ranges : hms_range_expr list;
-      match_mode : match_mode;
     }
   | Months_and_weekday_and_hms_ranges of {
       months : month_expr Range.t list;
       weekday : Time.weekday;
       hms_ranges : hms_range_expr list;
-      match_mode : match_mode;
       month_weekday_mode : month_weekday_mode option;
     }
   | Years_and_months_and_month_days_and_hms_ranges of {
@@ -111,8 +103,9 @@ type time_slots_expr =
       months : month_expr Range.t list;
       month_days : int Range.t list;
       hms_ranges : hms_range_expr list;
-      match_mode : match_mode;
     }
+
+type time_slots_expr = bound * unbounded_time_slots_expr
 
 type t =
   | Time_point_expr of time_point_expr

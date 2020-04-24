@@ -9,6 +9,7 @@
 
 (* keywords *)
 (* %token OF *)
+%token FROM
 %token TO
 %token EVERY
 %token FIRST
@@ -55,7 +56,11 @@ parse:
   | e = time_slots_expr; EOF { Time_slots_expr e }
   ;
 
-time_point_expr:
+bound_expr:
+  | COMING { `Next }
+  | EVERY  { `Every }
+
+unbounded_time_point_expr:
   | year = NAT; HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hms = hms_expr;
   | year = NAT; month = direct_pick_month_expr; month_day = month_day_expr; hms = hms_expr;
     {
@@ -65,142 +70,202 @@ time_point_expr:
           month;
           month_day;
           hms;
-          match_mode = `Next;
         }
     }
   | HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hms = hms_expr;
-  | COMING; month = month_expr; HYPHEN; month_day = month_day_expr; hms = hms_expr;
-  | COMING; month = direct_pick_month_expr; month_day = month_day_expr; hms = hms_expr;
+  | month = direct_pick_month_expr; month_day = month_day_expr; hms = hms_expr;
     {
       Month_day_hms
         {
           month;
           month_day;
           hms;
-          match_mode = `Next;
         }
     }
   | HYPHEN; HYPHEN; month_day = month_day_expr; hms = hms_expr;
-  | COMING; month_day = month_day_expr; hms = hms_expr;
     {
       Day_hms
         {
           day = Month_day month_day;
           hms;
-          match_mode = `Next;
         }
     }
   | HYPHEN; HYPHEN; hms = hms_expr;
-  | COMING; hms = hms_expr;
+  | hms = hms_expr;
     {
       Hms
         {
           hms;
-          match_mode = `Next;
         }
     }
-  | COMING; weekday = weekday_expr; hms = hms_expr;
+  | weekday = weekday_expr; hms = hms_expr;
     {
       Day_hms
         {
           day = Weekday weekday;
           hms;
-          match_mode = `Next;
+        }
+    }
+  ;
+
+time_point_expr:
+  | year = NAT; HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hms = hms_expr;
+  | year = NAT; month = direct_pick_month_expr; month_day = month_day_expr; hms = hms_expr;
+    {
+      ( `Next,
+        Year_month_day_hms
+          {
+            year;
+            month;
+            month_day;
+            hms;
+          }
+      )
+    }
+  | bound = bound_expr; month = month_expr; HYPHEN; month_day = month_day_expr; hms = hms_expr;
+  | bound = bound_expr; month = direct_pick_month_expr; month_day = month_day_expr; hms = hms_expr;
+    {
+      ( bound,
+        Month_day_hms
+          {
+            month;
+            month_day;
+            hms;
+          }
+      )
+    }
+  | bound = bound_expr; month_day = month_day_expr; hms = hms_expr;
+    {
+      ( bound,
+        Day_hms
+          {
+            day = Month_day month_day;
+            hms;
+          }
+      )
+    }
+  | bound = bound_expr; hms = hms_expr;
+    {
+      Hms
+        {
+          hms;
+        }
+    }
+  | bound = bound_expr; weekday = weekday_expr; hms = hms_expr;
+    {
+      Day_hms
+        {
+          day = Weekday weekday;
+          hms;
         }
     }
   ;
 
 time_slots_expr:
   (* time point to time point *)
-  | start = time_point_expr; TO; end_exc = time_point_expr;
+  | bound = bound_expr;
+    FROM; start = unbounded_time_point_expr; TO; end_exc = unbounded_time_point_expr;
     {
-      Single_time_slot
-        {
-          start;
-          end_exc;
-          match_mode = `Next;
-        }
+      ( bound,
+        Single_time_slot
+          {
+            start;
+            end_exc;
+          }
+      )
     }
 
   (* month days + hour minutes *)
-  | COMING; month_days = month_day_ranges_expr;
-    DOT; hms_ranges = hms_ranges_expr;
-    {
-      Month_days_and_hms_ranges
-        {
-          month_days;
-          hms_ranges;
-          match_mode = `Next;
-        }
-    }
-
-  (* weekdays + hour minutes *)
-  | COMING; weekdays = weekday_ranges_expr;
-    DOT; hms_ranges = hms_ranges_expr;
-    {
-      Weekdays_and_hms_ranges
-        {
-          weekdays;
-          hms_ranges;
-          match_mode = `Next;
-        }
-    }
-
-  (* months + month days + hour minutes *)
-  | COMING; months = direct_pick_month_ranges_expr;
+  | COMING;
     DOT; month_days = month_day_ranges_expr;
     DOT; hms_ranges = hms_ranges_expr;
     {
-      Months_and_month_days_and_hms_ranges
-        {
-          hms_ranges;
-          month_days;
-          months;
-          match_mode = `Next;
-        }
+      ( `Next,
+        Month_days_and_hms_ranges
+          {
+            month_days;
+            hms_ranges;
+          }
+      )
     }
 
-  (* months + weekdays + hour minutes *)
-  | COMING; months = direct_pick_month_ranges_expr;
+  (* weekdays + hour minutes *)
+  | COMING;
     DOT; weekdays = weekday_ranges_expr;
     DOT; hms_ranges = hms_ranges_expr;
     {
-      Months_and_weekdays_and_hms_ranges
-        {
-          hms_ranges;
-          weekdays;
-          months;
-          match_mode = `Next;
-        }
+      ( `Next,
+        Weekdays_and_hms_ranges
+          {
+            weekdays;
+            hms_ranges;
+          }
+      )
+    }
+
+  (* months + month days + hour minutes *)
+  | COMING;
+    DOT; months = direct_pick_month_ranges_expr;
+    DOT; month_days = month_day_ranges_expr;
+    DOT; hms_ranges = hms_ranges_expr;
+    {
+      ( `Next,
+        Months_and_month_days_and_hms_ranges
+          {
+            hms_ranges;
+            month_days;
+            months;
+          }
+      )
+    }
+
+  (* months + weekdays + hour minutes *)
+  | COMING;
+    DOT; months = direct_pick_month_ranges_expr;
+    DOT; weekdays = weekday_ranges_expr;
+    DOT; hms_ranges = hms_ranges_expr;
+    {
+      ( `Next,
+        Months_and_weekdays_and_hms_ranges
+          {
+            hms_ranges;
+            weekdays;
+            months;
+          }
+      )
     }
 
   (* months + weekday + hour minutes *)
-  | COMING; months = direct_pick_month_ranges_expr;
+  | COMING;
+    DOT; months = direct_pick_month_ranges_expr;
     DOT; FIRST; n = NAT; weekday = weekday_expr;
     DOT; hms_ranges = hms_ranges_expr;
     {
-      Months_and_weekday_and_hms_ranges
-        {
-          months;
-          weekday;
-          hms_ranges;
-          match_mode = `Next;
-          month_weekday_mode = Some (First_n n);
-        }
+      ( `Next,
+        Months_and_weekday_and_hms_ranges
+          {
+            months;
+            weekday;
+            hms_ranges;
+            month_weekday_mode = Some (First_n n);
+          }
+      )
     }
 
-  | COMING; months = direct_pick_month_ranges_expr;
+  | COMING;
+    DOT; months = direct_pick_month_ranges_expr;
     DOT; LAST; n = NAT; weekday = weekday_expr;
     DOT; hms_ranges = hms_ranges_expr;
     {
-      Months_and_weekday_and_hms_ranges
-        {
-          months;
-          weekday;
-          hms_ranges;
-          month_weekday_mode = Some (Last_n n);
-          match_mode = `Next;
-        }
+      ( `Next,
+        Months_and_weekday_and_hms_ranges
+          {
+            months;
+            weekday;
+            hms_ranges;
+            month_weekday_mode = Some (Last_n n);
+          }
+      )
     }
 
   (* years + months + weekdays + hour minutes *)
@@ -209,14 +274,15 @@ time_slots_expr:
     DOT; month_days = month_day_ranges_expr;
     DOT; hms_ranges = hms_ranges_expr;
     {
-      Years_and_months_and_month_days_and_hms_ranges
-        {
-          years;
-          months;
-          month_days;
-          hms_ranges;
-          match_mode = `Next;
-        }
+      ( `Next,
+        Years_and_months_and_month_days_and_hms_ranges
+          {
+            years;
+            months;
+            month_days;
+            hms_ranges;
+          }
+      )
     }
   ;
 
