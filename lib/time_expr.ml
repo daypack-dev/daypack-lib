@@ -249,6 +249,16 @@ module Interpret_string = struct
 
   let comma = char ','
 
+  let dot = char '.'
+
+  let hyphen = char '-'
+
+  let to_string = string_ci "to"
+
+  let first_string = string_ci "first"
+
+  let last_string = string_ci "last"
+
   let sep_by_comma1 (p : 'a t) : 'a list t =
     sep_by1 (space *> comma *> space) p
 
@@ -313,6 +323,13 @@ module Interpret_string = struct
       ranges_expr ~to_int:Time.tm_int_of_weekday weekday_range_expr
   end
 
+  module Day = struct
+    let day_expr : Time_expr_ast.day_expr t =
+      (Month_day.month_day_expr >>| fun x -> Time_expr_ast.Month_day x)
+      <|>
+      (Weekday.weekday_expr >>| fun x -> Time_expr_ast.Weekday x)
+  end
+
   module Month = struct
     let human_int_month_expr : Time_expr_ast.month_expr t =
       integer >>| fun x -> Time_expr_ast.Human_int_month x
@@ -321,6 +338,7 @@ module Interpret_string = struct
       range_inc_expr human_int_month_expr
 
     let human_int_month_ranges_expr =
+      sep_by_comma1 human_int_month_range_expr
 
     let direct_pick_month_expr : Time_expr_ast.month_expr t =
       alpha_string >>= fun x -> match Time.Interpret_string.month_of_string x with
@@ -329,6 +347,103 @@ module Interpret_string = struct
 
     let direct_pick_month_range_expr =
       range_inc_expr direct_pick_month_expr
+
+    let direct_pick_month_ranges_expr =
+      sep_by_comma1 direct_pick_month_range_expr
+
+    let month_expr =
+      human_int_month_expr <|> direct_pick_month_expr
+
+    let month_range_expr =
+      range_inc_expr month_expr
+
+    let month_ranges_expr =
+      sep_by_comma1 month_range_expr
+  end
+
+  module Time_point_expr = struct
+    let tp_ymd_hms =
+      integer >>= fun year -> hyphen *> Month.month_expr >>= fun month ->
+      hyphen *> integer >>= fun month_day -> space *> Hms.hms_expr >>= fun hms ->
+      return (Time_expr_ast.Year_month_day_hms { year; month; month_day; hms})
+
+    let tp_md_hms =
+      Month.month_expr >>= fun month ->
+      hyphen *> integer >>= fun month_day -> space *> Hms.hms_expr >>= fun hms ->
+      return (Time_expr_ast.Month_day_hms { month; month_day; hms})
+
+    let tp_d_hms =
+      Day.day_expr >>= fun day -> space *> Hms.hms_expr >>= fun hms ->
+      return (Time_expr_ast.Day_hms { day; hms})
+
+    let tp_hms =
+      Hms.hms_expr >>= fun hms ->
+      return (Time_expr_ast.Hms { hms})
+
+    let unbounded_time_point_expr : Time_expr_ast.unbounded_time_point_expr t =
+      choice
+        [
+          tp_ymd_hms
+        ; tp_md_hms
+        ; tp_d_hms
+        ; tp_hms
+        ]
+  end
+
+  module Time_slots_expr = struct
+    let ts_single =
+      Time_point_expr.unbounded_time_point_expr >>= fun start ->
+      space *> to_string *> space *> Time_point_expr.unbounded_time_point_expr >>= fun end_exc ->
+      return (Time_expr_ast.Single_time_slot { start; end_exc })
+
+    let ts_days_hms_ranges =
+      (Month_day.month_day_ranges_expr >>=
+       fun month_days ->
+       space *> dot *> space *>
+       Hms.hms_ranges_expr >>= fun hms_ranges ->
+       return (Time_expr_ast.Month_days_and_hms_ranges { month_days; hms_ranges })
+      )
+      <|>
+      (Weekday.weekday_ranges_expr >>=
+       fun weekdays ->
+       space *> dot *> space *>
+       Hms.hms_ranges_expr >>= fun hms_ranges ->
+       return (Time_expr_ast.Weekdays_and_hms_ranges { weekdays; hms_ranges })
+      )
+
+    let ts_months_mdays_hms =
+      Month.month_ranges_expr >>=
+      fun months -> space *> dot *> space *> Month_day.month_day_ranges_expr
+      >>= fun month_days -> space *> dot *> space *> Hms.hms_ranges_expr >>=
+      fun hms_ranges -> return (Time_expr_ast.Months_and_month_days_and_hms_ranges { months; month_days; hms_ranges})
+
+    let ts_months_wdays_hms =
+      Month.month_ranges_expr >>=
+      fun months -> space *> dot *> space *> Weekday.weekday_ranges_expr
+      >>= fun weekdays -> space *> dot *> space *> Hms.hms_ranges_expr >>=
+      fun hms_ranges -> return (Time_expr_ast.Months_and_weekdays_and_hms_ranges { months; weekdays; hms_ranges})
+
+    let ts_months_wday_hms =
+      (Month.month_ranges_expr >>=
+      fun months -> space *> dot *> space *>
+                    first_string *> integer >>= fun n ->
+                    space *> dot *> space *> Weekday.weekday_expr
+      >>= fun weekday -> space *> dot *> space *> Hms.hms_ranges_expr >>=
+      fun hms_ranges -> return (Time_expr_ast.Months_and_weekday_and_hms_ranges { months; weekday; hms_ranges; month_weekday_mode = Some (First_n n)}))
+      <|>
+      (Month.month_ranges_expr >>=
+      fun months -> space *> dot *> space *>
+                    last_string *> integer >>= fun n ->
+                    space *> dot *> space *> Weekday.weekday_expr
+      >>= fun weekday -> space *> dot *> space *> Hms.hms_ranges_expr >>=
+      fun hms_ranges -> return (Time_expr_ast.Months_and_weekday_and_hms_ranges { months; weekday; hms_ranges; month_weekday_mode = Some (Last_n n)}))
+
+    let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
+      choice
+        [
+          ts_single; ts_days_hms_ranges; ts_months_mdays_hms;
+          ts_months_wdays_hms; ts_months_wday_hms
+        ]
   end
 
   let of_string (s : string) : (Time_expr_normalized_ast.t, string) result =
