@@ -32,9 +32,7 @@ type unbounded_time_point_expr =
       day : day_expr;
       hms : hms_expr;
     }
-  | Hms of {
-      hms : hms_expr;
-    }
+  | Hms of { hms : hms_expr }
 
 type time_point_expr = bound * unbounded_time_point_expr
 
