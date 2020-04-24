@@ -56,55 +56,55 @@ parse:
   ;
 
 time_point_expr:
-  | year = NAT; HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
-  | year = NAT; month = direct_pick_month_expr; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | year = NAT; HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hms = hms_expr;
+  | year = NAT; month = direct_pick_month_expr; month_day = month_day_expr; hms = hms_expr;
     {
-      Year_month_day_hour_minute
+      Year_month_day_hms
         {
           year;
           month;
           month_day;
-          hour_minute;
+          hms;
           match_mode = `Next;
         }
     }
-  | HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
-  | COMING; month = month_expr; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
-  | COMING; month = direct_pick_month_expr; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | HYPHEN; month = month_expr; HYPHEN; month_day = month_day_expr; hms = hms_expr;
+  | COMING; month = month_expr; HYPHEN; month_day = month_day_expr; hms = hms_expr;
+  | COMING; month = direct_pick_month_expr; month_day = month_day_expr; hms = hms_expr;
     {
-      Month_day_hour_minute
+      Month_day_hms
         {
           month;
           month_day;
-          hour_minute;
+          hms;
           match_mode = `Next;
         }
     }
-  | HYPHEN; HYPHEN; month_day = month_day_expr; hour_minute = hour_minute_expr;
-  | COMING; month_day = month_day_expr; hour_minute = hour_minute_expr;
+  | HYPHEN; HYPHEN; month_day = month_day_expr; hms = hms_expr;
+  | COMING; month_day = month_day_expr; hms = hms_expr;
     {
-      Day_hour_minute
+      Day_hms
         {
           day = Month_day month_day;
-          hour_minute;
+          hms;
           match_mode = `Next;
         }
     }
-  | HYPHEN; HYPHEN; hour_minute = hour_minute_expr;
-  | COMING; hour_minute = hour_minute_expr;
+  | HYPHEN; HYPHEN; hms = hms_expr;
+  | COMING; hms = hms_expr;
     {
-      Hour_minute
+      Hms
         {
-          hour_minute;
+          hms;
           match_mode = `Next;
         }
     }
-  | COMING; weekday = weekday_expr; hour_minute = hour_minute_expr;
+  | COMING; weekday = weekday_expr; hms = hms_expr;
     {
-      Day_hour_minute
+      Day_hms
         {
           day = Weekday weekday;
-          hour_minute;
+          hms;
           match_mode = `Next;
         }
     }
@@ -124,24 +124,24 @@ time_slots_expr:
 
   (* month days + hour minutes *)
   | COMING; month_days = month_day_ranges_expr;
-    DOT; hour_minutes = hour_minutes_expr;
+    DOT; hms_ranges = hms_ranges_expr;
     {
-      Month_days_and_hour_minutes
+      Month_days_and_hms_ranges
         {
           month_days;
-          hour_minutes;
+          hms_ranges;
           match_mode = `Next;
         }
     }
 
   (* weekdays + hour minutes *)
   | COMING; weekdays = weekday_ranges_expr;
-    DOT; hour_minutes = hour_minutes_expr;
+    DOT; hms_ranges = hms_ranges_expr;
     {
-      Weekdays_and_hour_minutes
+      Weekdays_and_hms_ranges
         {
           weekdays;
-          hour_minutes;
+          hms_ranges;
           match_mode = `Next;
         }
     }
@@ -149,11 +149,11 @@ time_slots_expr:
   (* months + month days + hour minutes *)
   | COMING; months = direct_pick_month_ranges_expr;
     DOT; month_days = month_day_ranges_expr;
-    DOT; hour_minutes = hour_minutes_expr;
+    DOT; hms_ranges = hms_ranges_expr;
     {
-      Months_and_month_days_and_hour_minutes
+      Months_and_month_days_and_hms_ranges
         {
-          hour_minutes;
+          hms_ranges;
           month_days;
           months;
           match_mode = `Next;
@@ -163,11 +163,11 @@ time_slots_expr:
   (* months + weekdays + hour minutes *)
   | COMING; months = direct_pick_month_ranges_expr;
     DOT; weekdays = weekday_ranges_expr;
-    DOT; hour_minutes = hour_minutes_expr;
+    DOT; hms_ranges = hms_ranges_expr;
     {
-      Months_and_weekdays_and_hour_minutes
+      Months_and_weekdays_and_hms_ranges
         {
-          hour_minutes;
+          hms_ranges;
           weekdays;
           months;
           match_mode = `Next;
@@ -177,13 +177,13 @@ time_slots_expr:
   (* months + weekday + hour minutes *)
   | COMING; months = direct_pick_month_ranges_expr;
     DOT; FIRST; n = NAT; weekday = weekday_expr;
-    DOT; hour_minutes = hour_minutes_expr;
+    DOT; hms_ranges = hms_ranges_expr;
     {
-      Months_and_weekday_and_hour_minutes
+      Months_and_weekday_and_hms_ranges
         {
           months;
           weekday;
-          hour_minutes;
+          hms_ranges;
           match_mode = `Next;
           month_weekday_mode = Some (First_n n);
         }
@@ -191,13 +191,13 @@ time_slots_expr:
 
   | COMING; months = direct_pick_month_ranges_expr;
     DOT; LAST; n = NAT; weekday = weekday_expr;
-    DOT; hour_minutes = hour_minutes_expr;
+    DOT; hms_ranges = hms_ranges_expr;
     {
-      Months_and_weekday_and_hour_minutes
+      Months_and_weekday_and_hms_ranges
         {
           months;
           weekday;
-          hour_minutes;
+          hms_ranges;
           month_weekday_mode = Some (Last_n n);
           match_mode = `Next;
         }
@@ -207,57 +207,69 @@ time_slots_expr:
   | years = year_ranges_expr;
     DOT; months = month_ranges_expr;
     DOT; month_days = month_day_ranges_expr;
-    DOT; hour_minutes = hour_minutes_expr;
+    DOT; hms_ranges = hms_ranges_expr;
     {
-      Years_and_months_and_month_days_and_hour_minutes
+      Years_and_months_and_month_days_and_hms_ranges
         {
           years;
           months;
           month_days;
-          hour_minutes;
+          hms_ranges;
           match_mode = `Next;
         }
     }
   ;
 
-(* hour minutes expressions *)
-hour_minutes_expr:
-  | l = separated_nonempty_list(COMMA, hour_minute_range_expr);
+(* hms expressions *)
+hms_ranges_expr:
+  | l = separated_nonempty_list(COMMA, hms_range_expr);
     {
       l
     }
 
-hour_minute_range_expr:
-  | start = hour_minute_expr;
+hms_range_expr:
+  | start = hms_expr;
     {
       `Range_inc (start, start)
     }
-  | start = hour_minute_expr; TO; end_exc = hour_minute_expr;
+  | start = hms_expr; TO; end_exc = hms_expr;
     {
       `Range_exc (start, end_exc)
     }
   ;
 
-hour_minute_expr:
+hms_expr:
+  | hour = NAT; COLON; minute = NAT; COLON; second = NAT;
+    {
+      { hour; minute; second; mode = Hour_in_24_hours }
+    }
+  | hour = NAT; COLON; minute = NAT; COLON; second = NAT; AM
+    {
+      { hour; minute; second; mode = Hour_in_AM }
+    }
+  | hour = NAT; COLON; minute = NAT; COLON; second = NAT; PM
+    {
+      { hour; minute; second; mode = Hour_in_PM }
+    }
   | hour = NAT; COLON; minute = NAT
     {
-      { hour; minute; mode = Hour_in_24_hours }
+      { hour; minute; second = 0; mode = Hour_in_24_hours }
     }
   | hour = NAT; COLON; minute = NAT; AM
     {
-      { hour; minute; mode = Hour_in_AM }
+      { hour; minute; second = 0; mode = Hour_in_AM }
     }
   | hour = NAT; COLON; minute = NAT; PM
     {
-      { hour; minute; mode = Hour_in_PM }
+      { hour; minute; second = 0; mode = Hour_in_PM }
     }
   | hour = NAT; AM
     {
-      { hour; minute = 0; mode = Hour_in_AM }
+      { hour; minute = 0; second = 0; mode = Hour_in_AM }
     }
   | hour = NAT; PM
     {
-      { hour; minute = 0; mode = Hour_in_PM }
+      { hour; minute = 0; second = 0; mode = Hour_in_PM }
     }
   ;
 

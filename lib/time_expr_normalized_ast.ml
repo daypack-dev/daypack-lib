@@ -1,9 +1,10 @@
-type hour_minute_expr = {
+type hms_expr = {
   hour : int;
   minute : int;
+  second : int;
 }
 
-type hour_minute_range_expr = hour_minute_expr Range.t
+type hms_range_expr = hms_expr Range.t
 
 type day_expr = Time_expr_ast.day_expr
 
@@ -16,26 +17,26 @@ type year_expr = int
 type match_mode = Time_expr_ast.match_mode
 
 type time_point_expr =
-  | Year_month_day_hour_minute of {
+  | Year_month_day_hms of {
       year : year_expr;
       month : month_expr;
       month_day : int;
-      hour_minute : hour_minute_expr;
+      hms : hms_expr;
       match_mode : match_mode;
     }
-  | Month_day_hour_minute of {
+  | Month_day_hms of {
       month : month_expr;
       month_day : int;
-      hour_minute : hour_minute_expr;
+      hms : hms_expr;
       match_mode : match_mode;
     }
-  | Day_hour_minute of {
+  | Day_hms of {
       day : day_expr;
-      hour_minute : hour_minute_expr;
+      hms : hms_expr;
       match_mode : match_mode;
     }
-  | Hour_minute of {
-      hour_minute : hour_minute_expr;
+  | Hms of {
+      hms : hms_expr;
       match_mode : match_mode;
     }
 
@@ -47,40 +48,40 @@ type time_slots_expr =
       end_exc : time_point_expr;
       match_mode : match_mode;
     }
-  | Month_days_and_hour_minutes of {
+  | Month_days_and_hms_ranges of {
       month_days : int Range.t list;
-      hour_minutes : hour_minute_range_expr list;
+      hms_ranges : hms_range_expr list;
       match_mode : match_mode;
     }
-  | Weekdays_and_hour_minutes of {
+  | Weekdays_and_hms_ranges of {
       weekdays : Time.weekday Range.t list;
-      hour_minutes : hour_minute_range_expr list;
+      hms_ranges : hms_range_expr list;
       match_mode : match_mode;
     }
-  | Months_and_month_days_and_hour_minutes of {
+  | Months_and_month_days_and_hms_ranges of {
       months : month_expr Range.t list;
       month_days : int Range.t list;
-      hour_minutes : hour_minute_range_expr list;
+      hms_ranges : hms_range_expr list;
       match_mode : match_mode;
     }
-  | Months_and_weekdays_and_hour_minutes of {
+  | Months_and_weekdays_and_hms_ranges of {
       months : month_expr Range.t list;
       weekdays : Time.weekday Range.t list;
-      hour_minutes : hour_minute_range_expr list;
+      hms_ranges : hms_range_expr list;
       match_mode : match_mode;
     }
-  | Months_and_weekday_and_hour_minutes of {
+  | Months_and_weekday_and_hms_ranges of {
       months : month_expr Range.t list;
       weekday : Time.weekday;
-      hour_minutes : hour_minute_range_expr list;
+      hms_ranges : hms_range_expr list;
       match_mode : match_mode;
       month_weekday_mode : month_weekday_mode option;
     }
-  | Years_and_months_and_month_days_and_hour_minutes of {
+  | Years_and_months_and_month_days_and_hms_ranges of {
       years : int Range.t list;
       months : month_expr Range.t list;
       month_days : int Range.t list;
-      hour_minutes : hour_minute_range_expr list;
+      hms_ranges : hms_range_expr list;
       match_mode : match_mode;
     }
 
