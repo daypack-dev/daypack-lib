@@ -356,6 +356,14 @@ module Interpret_string = struct
     let month_ranges_expr = sep_by_comma1 month_range_expr
   end
 
+  module Year = struct
+    let year_expr : int t = integer
+
+    let year_range_expr = range_inc_expr year_expr
+
+    let year_ranges_expr = sep_by_comma1 year_range_expr
+  end
+
   module Time_point_expr = struct
     let tp_ymd_hms =
       integer
@@ -439,6 +447,19 @@ module Interpret_string = struct
         (Time_expr_ast.Months_and_weekdays_and_hms_ranges
            { months; weekdays; hms_ranges })
 
+    let ts_years_months_mdays_hms =
+      Year.year_ranges_expr
+      >>= fun years ->
+      space *> dot *> space *> Month.month_ranges_expr
+      >>= fun months ->
+      space *> dot *> space *> Month_day.month_day_ranges_expr
+      >>= fun month_days ->
+      space *> dot *> space *> Hms.hms_ranges_expr
+      >>= fun hms_ranges ->
+      return
+        (Time_expr_ast.Years_and_months_and_month_days_and_hms_ranges
+           { years; months; month_days; hms_ranges })
+
     let month_weekday_mode_expr =
       choice
         [
@@ -469,6 +490,7 @@ module Interpret_string = struct
           ts_months_mdays_hms;
           ts_months_wdays_hms;
           ts_months_wday_hms;
+          ts_years_months_mdays_hms;
         ]
 
     let time_slots_expr : Time_expr_ast.time_slots_expr t =
