@@ -26,11 +26,11 @@ let run (list_free_time_slots : bool) : unit =
       List.iter
         (fun (start, end_exc) ->
            let start_str =
-             Daypack_lib.Time.To_string.date_time_string_of_time
+             Daypack_lib.Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
                ~display_in_time_zone:`Local start
            in
            let end_exc_str =
-             Daypack_lib.Time.To_string.date_time_string_of_time
+             Daypack_lib.Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
                ~display_in_time_zone:`Local end_exc
            in
            Printf.printf "| %s - %s | %s\n" start_str end_exc_str
@@ -40,8 +40,7 @@ let run (list_free_time_slots : bool) : unit =
     else
       let places_within_period =
         Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start
-          ~end_exc ~include_task_seg_place_partially_within_time_period:true
-          hd
+          ~end_exc ~include_task_seg_place_partially_within_time_slot:true hd
         |> OSeq.take Config.agenda_display_task_seg_place_max_count
         |> List.of_seq
       in
@@ -51,7 +50,7 @@ let run (list_free_time_slots : bool) : unit =
           < Config.agenda_display_task_seg_place_max_count
         then
           Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start
-            ~include_task_seg_place_partially_within_time_period:true hd
+            ~include_task_seg_place_partially_within_time_slot:true hd
           |> OSeq.take Config.agenda_display_task_seg_place_max_count
           |> List.of_seq
         else places_within_period
@@ -63,11 +62,11 @@ let run (list_free_time_slots : bool) : unit =
       List.iter
         (fun (task_seg_id, place_start, place_end_exc) ->
            let start_str =
-             Daypack_lib.Time.To_string.date_time_string_of_time
+             Daypack_lib.Time.To_string.yyyymmdd_hhmm_string_of_unix_time
                ~display_in_time_zone:`Local place_start
            in
            let end_exc_str =
-             Daypack_lib.Time.To_string.date_time_string_of_time
+             Daypack_lib.Time.To_string.yyyymmdd_hhmm_string_of_unix_time
                ~display_in_time_zone:`Local place_end_exc
            in
            let task_id =

@@ -72,6 +72,32 @@ module In_place_head = struct
         in
         (task, task_inst_list, ar)
     end
+
+    module Move = struct
+      let move_task_internal
+          ~(move_task_by_id : Task_ds.task_id -> Sched.sched -> Sched.sched)
+          (task_inst_id : Task_ds.task_id) (t : t) : action_record =
+        map_head_no_ret
+          (fun sched ->
+             let sched = move_task_by_id task_inst_id sched in
+             Replace_head sched)
+          t
+
+      let move_task_to_completed (task_id : Task_ds.task_id) (t : t) :
+        action_record =
+        move_task_internal
+          ~move_task_by_id:Sched.Task.Move.move_task_to_completed task_id t
+
+      let move_task_to_uncompleted (task_id : Task_ds.task_id) (t : t) :
+        action_record =
+        move_task_internal
+          ~move_task_by_id:Sched.Task.Move.move_task_to_uncompleted task_id t
+
+      let move_task_to_discarded (task_id : Task_ds.task_id) (t : t) :
+        action_record =
+        move_task_internal
+          ~move_task_by_id:Sched.Task.Move.move_task_to_discarded task_id t
+    end
   end
 
   module Task_inst = struct
@@ -86,60 +112,8 @@ module In_place_head = struct
              (task_inst, Replace_head sched))
           t
     end
-  end
 
-  module Sched_req = struct
-    module Add = struct
-      let add_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
-        (Sched_req_ds.sched_req, unit) result * action_record =
-        map_head
-          (fun sched ->
-             match Sched.Sched_req.Add.add_sched_req_data data sched with
-             | Ok (sched_req, sched) -> (Ok sched_req, Replace_head sched)
-             | Error () -> (Error (), Do_nothing))
-          t
-    end
-  end
-
-  module Recur = struct
-    let instantiate ~start ~end_exc (t : t) : action_record =
-      map_head_no_ret
-        (fun sched ->
-           let sched = Sched.Recur.instantiate ~start ~end_exc sched in
-           Replace_head sched)
-        t
-  end
-
-  module Progress = struct
     module Move = struct
-      let move_task_seg_internal
-          ~(move_task_seg_by_id :
-              Task_ds.task_seg_id -> Sched.sched -> Sched.sched)
-          (task_seg_id : Task_ds.task_seg_id) (t : t) : action_record =
-        map_head_no_ret
-          (fun sched ->
-             let sched = move_task_seg_by_id task_seg_id sched in
-             Replace_head sched)
-          t
-
-      let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t)
-        : action_record =
-        move_task_seg_internal
-          ~move_task_seg_by_id:Sched.Task_seg.Move.move_task_seg_to_completed
-          task_seg_id t
-
-      let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
-          (t : t) : action_record =
-        move_task_seg_internal
-          ~move_task_seg_by_id:Sched.Task_seg.Move.move_task_seg_to_uncompleted
-          task_seg_id t
-
-      let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id) (t : t)
-        : action_record =
-        move_task_seg_internal
-          ~move_task_seg_by_id:Sched.Task_seg.Move.move_task_seg_to_discarded
-          task_seg_id t
-
       let move_task_inst_internal
           ~(move_task_inst_by_id :
               Task_ds.task_inst_id -> Sched.sched -> Sched.sched)
@@ -168,7 +142,63 @@ module In_place_head = struct
           ~move_task_inst_by_id:Sched.Task_inst.Move.move_task_inst_to_discarded
           task_inst_id t
     end
+  end
 
+  module Task_seg = struct
+    module Move = struct
+      let move_task_seg_internal
+          ~(move_task_seg_by_id :
+              Task_ds.task_seg_id -> Sched.sched -> Sched.sched)
+          (task_seg_id : Task_ds.task_seg_id) (t : t) : action_record =
+        map_head_no_ret
+          (fun sched ->
+             let sched = move_task_seg_by_id task_seg_id sched in
+             Replace_head sched)
+          t
+
+      let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t)
+        : action_record =
+        move_task_seg_internal
+          ~move_task_seg_by_id:Sched.Task_seg.Move.move_task_seg_to_completed
+          task_seg_id t
+
+      let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
+          (t : t) : action_record =
+        move_task_seg_internal
+          ~move_task_seg_by_id:Sched.Task_seg.Move.move_task_seg_to_uncompleted
+          task_seg_id t
+
+      let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id) (t : t)
+        : action_record =
+        move_task_seg_internal
+          ~move_task_seg_by_id:Sched.Task_seg.Move.move_task_seg_to_discarded
+          task_seg_id t
+    end
+  end
+
+  module Sched_req = struct
+    module Add = struct
+      let add_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
+        (Sched_req_ds.sched_req, unit) result * action_record =
+        map_head
+          (fun sched ->
+             match Sched.Sched_req.Add.add_sched_req_data data sched with
+             | Ok (sched_req, sched) -> (Ok sched_req, Replace_head sched)
+             | Error () -> (Error (), Do_nothing))
+          t
+    end
+  end
+
+  module Recur = struct
+    let instantiate ~start ~end_exc (t : t) : action_record =
+      map_head_no_ret
+        (fun sched ->
+           let sched = Sched.Recur.instantiate ~start ~end_exc sched in
+           Replace_head sched)
+        t
+  end
+
+  module Progress = struct
     module Add = struct
       let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
           (chunk : int64 * int64) (t : t) : action_record =
@@ -327,7 +357,7 @@ module Maybe_append_to_head = struct
                 sched_req_id sched))
       t
 
-  let sched ~start ~end_exc ~include_sched_reqs_partially_within_time_period
+  let sched ~start ~end_exc ~include_sched_reqs_partially_within_time_slot
       ~up_to_sched_req_id_inc (t : t) : (unit, unit) result * action_record =
     map_head
       (fun hd ->
@@ -335,7 +365,7 @@ module Maybe_append_to_head = struct
            hd
            |> Sched.Sched_req.Allocate_task_segs
               .allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
-             ~include_sched_reqs_partially_within_time_period
+             ~include_sched_reqs_partially_within_time_slot
              ~up_to_sched_req_id_inc
          in
          match sched_req_records with

@@ -7,14 +7,17 @@ let make_time_pattern_weekday ~hour ?(min = 0) weekday :
   {
     years = [];
     months = [];
-    days = `Weekdays [ weekday ];
+    weekdays = [ weekday ];
+    month_days = [];
     hours = [ hour ];
     minutes = [ min ];
+    seconds = [];
   }
 
 let make_time_profile_single_weekday ~start_hour ?(start_min = 0) ~end_exc_hour
     ?(end_exc_min = 0) weekday : Daypack_lib.Time_profile.t =
-  ( Daypack_lib.Time.Print.string_of_weekday weekday |> String.lowercase_ascii,
+  ( Daypack_lib.Time.To_string.string_of_weekday weekday
+    |> String.lowercase_ascii,
     {
       periods =
         [

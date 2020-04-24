@@ -585,7 +585,7 @@ module Task_seg = struct
     (*$ #use "lib/sched.cinaps";;
 
       print_task_seg_remove ();
-      print_task_seg_remove_strict ();
+      (* print_task_seg_remove_strict (); *)
       print_task_seg_remove_seq ()
     *)
 
@@ -640,24 +640,6 @@ module Task_seg = struct
       |> remove_task_seg_completed id
       |> remove_task_seg_discarded id
 
-    let remove_task_seg_uncompleted_strict (id : Task_ds.task_seg_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_seg_uncompleted_opt id sched with
-      | None -> Error ()
-      | Some _ -> Ok (remove_task_seg_uncompleted id sched)
-
-    let remove_task_seg_completed_strict (id : Task_ds.task_seg_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_seg_completed_opt id sched with
-      | None -> Error ()
-      | Some _ -> Ok (remove_task_seg_completed id sched)
-
-    let remove_task_seg_discarded_strict (id : Task_ds.task_seg_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_seg_discarded_opt id sched with
-      | None -> Error ()
-      | Some _ -> Ok (remove_task_seg_discarded id sched)
-
     let remove_task_seg_uncompleted_seq (ids : Task_ds.task_seg_id Seq.t)
         (sched : sched) : sched =
       Seq.fold_left
@@ -699,6 +681,55 @@ module Task_seg = struct
               };
           } ) )
 
+    (*$ #use "lib/sched.cinaps";;
+
+      print_task_seg_add ()
+    *)
+
+    let add_task_seg_uncompleted (id : Task_ds.task_seg_id)
+        (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              task_seg_uncompleted_store =
+                Task_seg_id_map.add id size sd.store.task_seg_uncompleted_store;
+            };
+        } )
+      |> Id.add_task_seg_id id
+
+    let add_task_seg_completed (id : Task_ds.task_seg_id)
+        (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              task_seg_completed_store =
+                Task_seg_id_map.add id size sd.store.task_seg_completed_store;
+            };
+        } )
+      |> Id.add_task_seg_id id
+
+    let add_task_seg_discarded (id : Task_ds.task_seg_id)
+        (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
+      ( sid,
+        {
+          sd with
+          store =
+            {
+              sd.store with
+              task_seg_discarded_store =
+                Task_seg_id_map.add id size sd.store.task_seg_discarded_store;
+            };
+        } )
+      |> Id.add_task_seg_id id
+
+    (*$*)
+
     let add_task_seg_via_task_seg_alloc_req
         ((parent_task_inst_id, task_seg_size) : Task_ds.task_seg_alloc_req)
         (sched : sched) : Task_ds.task_seg * sched =
@@ -721,7 +752,6 @@ module Task_seg = struct
         ((id, start, end_exc) : Task_ds.task_seg_place) (sched : sched) : sched
       =
       let id1, id2, id3, id4, sub_id = id in
-      let parent_task_inst_id = Task_ds.Id.task_inst_id_of_task_seg_id id in
       let task_seg_size = end_exc -^ start in
       sched
       |> (fun sched ->
@@ -730,8 +760,7 @@ module Task_seg = struct
           | Some _ ->
             Remove.remove_task_seg_all (id1, id2, id3, id4, None) sched)
       |> Id.add_task_seg_id id
-      |> add_task_seg ~parent_task_inst_id task_seg_size
-      |> fun (_, x) -> x
+      |> add_task_seg_uncompleted id task_seg_size
 
     let add_task_segs_via_task_seg_place_list
         (places : Task_ds.task_seg_place list) (sched : sched) : sched =
@@ -744,52 +773,6 @@ module Task_seg = struct
       Seq.fold_left
         (fun sched place -> add_task_seg_via_task_seg_place place sched)
         sched places
-
-    (*$ #use "lib/sched.cinaps";;
-
-      print_task_seg_add ()
-    *)
-
-    let add_task_seg_uncompleted (id : Task_ds.task_seg_id)
-        (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
-      ( sid,
-        {
-          sd with
-          store =
-            {
-              sd.store with
-              task_seg_uncompleted_store =
-                Task_seg_id_map.add id size sd.store.task_seg_uncompleted_store;
-            };
-        } )
-
-    let add_task_seg_completed (id : Task_ds.task_seg_id)
-        (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
-      ( sid,
-        {
-          sd with
-          store =
-            {
-              sd.store with
-              task_seg_completed_store =
-                Task_seg_id_map.add id size sd.store.task_seg_completed_store;
-            };
-        } )
-
-    let add_task_seg_discarded (id : Task_ds.task_seg_id)
-        (size : Task_ds.task_seg_size) ((sid, sd) : sched) : sched =
-      ( sid,
-        {
-          sd with
-          store =
-            {
-              sd.store with
-              task_seg_discarded_store =
-                Task_seg_id_map.add id size sd.store.task_seg_discarded_store;
-            };
-        } )
-
-    (*$*)
   end
 
   module Move = struct
@@ -1026,7 +1009,7 @@ module Task_inst = struct
     (*$ #use "lib/sched.cinaps";;
 
       print_task_inst_remove ();
-      print_task_inst_remove_strict ();
+      (* print_task_inst_remove_strict (); *)
       print_task_inst_remove_seq ();
     *)
 
@@ -1114,30 +1097,6 @@ module Task_inst = struct
       |> remove_task_inst_uncompleted ~remove_children_task_segs id
       |> remove_task_inst_completed ~remove_children_task_segs id
       |> remove_task_inst_discarded ~remove_children_task_segs id
-
-    let remove_task_inst_uncompleted_strict
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_inst_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_inst_uncompleted_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok (remove_task_inst_uncompleted ~remove_children_task_segs id sched)
-
-    let remove_task_inst_completed_strict
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_inst_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_inst_completed_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok (remove_task_inst_completed ~remove_children_task_segs id sched)
-
-    let remove_task_inst_discarded_strict
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_inst_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_inst_discarded_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok (remove_task_inst_discarded ~remove_children_task_segs id sched)
 
     let remove_task_inst_uncompleted_seq
         ?(remove_children_task_segs : bool = true)
@@ -1256,6 +1215,7 @@ module Task = struct
                 Task_id_map.add id data sd.store.task_uncompleted_store;
             };
         } )
+      |> Id.add_task_id id
 
     let add_task_completed (id : Task_ds.task_id) (data : Task_ds.task_data)
         ((sid, sd) : sched) : sched =
@@ -1269,6 +1229,7 @@ module Task = struct
                 Task_id_map.add id data sd.store.task_completed_store;
             };
         } )
+      |> Id.add_task_id id
 
     let add_task_discarded (id : Task_ds.task_id) (data : Task_ds.task_data)
         ((sid, sd) : sched) : sched =
@@ -1282,6 +1243,7 @@ module Task = struct
                 Task_id_map.add id data sd.store.task_discarded_store;
             };
         } )
+      |> Id.add_task_id id
 
     (*$*)
   end
@@ -1360,7 +1322,7 @@ module Task = struct
     (*$ #use "lib/sched.cinaps";;
 
       print_task_remove ();
-      print_task_remove_strict ();
+      (* print_task_remove_strict (); *)
     *)
 
     let remove_task_uncompleted ?(remove_children_task_insts : bool = true)
@@ -1371,10 +1333,8 @@ module Task = struct
       |> (fun sched ->
           if remove_children_task_insts then
             Task_inst.Remove.remove_task_inst_uncompleted_seq
-              children_task_inst_ids sched
+              ~remove_children_task_segs children_task_inst_ids sched
           else sched)
-      |> Task_inst.Remove.remove_task_inst_uncompleted_seq
-        ~remove_children_task_segs children_task_inst_ids
       |> (fun (sid, sd) ->
           ( sid,
             {
@@ -1398,10 +1358,8 @@ module Task = struct
       |> (fun sched ->
           if remove_children_task_insts then
             Task_inst.Remove.remove_task_inst_completed_seq
-              children_task_inst_ids sched
+              ~remove_children_task_segs children_task_inst_ids sched
           else sched)
-      |> Task_inst.Remove.remove_task_inst_completed_seq
-        ~remove_children_task_segs children_task_inst_ids
       |> (fun (sid, sd) ->
           ( sid,
             {
@@ -1425,10 +1383,8 @@ module Task = struct
       |> (fun sched ->
           if remove_children_task_insts then
             Task_inst.Remove.remove_task_inst_discarded_seq
-              children_task_inst_ids sched
+              ~remove_children_task_segs children_task_inst_ids sched
           else sched)
-      |> Task_inst.Remove.remove_task_inst_discarded_seq
-        ~remove_children_task_segs children_task_inst_ids
       |> (fun (sid, sd) ->
           ( sid,
             {
@@ -1454,37 +1410,6 @@ module Task = struct
         ~remove_children_task_segs id
       |> remove_task_discarded ~remove_children_task_insts
         ~remove_children_task_segs id
-
-    let remove_task_uncompleted_strict
-        ?(remove_children_task_insts : bool = true)
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_uncompleted_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok
-          (remove_task_uncompleted ~remove_children_task_insts
-             ~remove_children_task_segs id sched)
-
-    let remove_task_completed_strict ?(remove_children_task_insts : bool = true)
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_completed_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok
-          (remove_task_completed ~remove_children_task_insts
-             ~remove_children_task_segs id sched)
-
-    let remove_task_discarded_strict ?(remove_children_task_insts : bool = true)
-        ?(remove_children_task_segs : bool = true) (id : Task_ds.task_id)
-        (sched : sched) : (sched, unit) result =
-      match Find.find_task_discarded_opt id sched with
-      | None -> Error ()
-      | Some _ ->
-        Ok
-          (remove_task_discarded ~remove_children_task_insts
-             ~remove_children_task_segs id sched)
 
     (*$*)
   end
@@ -1877,7 +1802,7 @@ module Agenda = struct
 
   module Range = struct
     let task_seg_id_set ~(start : int64 option) ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool)
+        ~(include_task_seg_place_partially_within_time_slot : bool)
         ((_, sd) : sched) : Task_seg_id_set.t =
       let start_fully_within_range =
         let m =
@@ -1899,7 +1824,7 @@ module Agenda = struct
         Task_seg_id_set.inter start_fully_within_range
           end_exc_fully_within_range
       in
-      if include_task_seg_place_partially_within_time_period then
+      if include_task_seg_place_partially_within_time_slot then
         let crossing_start =
           match start with
           | None -> None
@@ -1950,10 +1875,10 @@ module Agenda = struct
       else task_seg_place_fully_within_range
 
     let task_seg_place_set ~(start : int64 option) ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool)
+        ~(include_task_seg_place_partially_within_time_slot : bool)
         ((_, sd) as sched : sched) : Task_seg_place_set.t =
       task_seg_id_set ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
       |> Task_seg_id_set.to_seq
       |> Seq.map (fun task_seg_id ->
           let place_start, place_end_exc =
@@ -1965,49 +1890,49 @@ module Agenda = struct
 
   module To_seq_internal = struct
     let task_seg_ids ~(start : int64 option) ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool option)
+        ~(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_id Seq.t =
-      let include_task_seg_place_partially_within_time_period =
+      let include_task_seg_place_partially_within_time_slot =
         Option.fold ~none:false
           ~some:(fun x -> x)
-          include_task_seg_place_partially_within_time_period
+          include_task_seg_place_partially_within_time_slot
       in
       Range.task_seg_id_set ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
       |> Task_seg_id_set.to_seq
 
     let task_seg_places ~(start : int64 option) ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool option)
+        ~(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
-      let include_task_seg_place_partially_within_time_period =
+      let include_task_seg_place_partially_within_time_slot =
         Option.fold ~none:false
           ~some:(fun x -> x)
-          include_task_seg_place_partially_within_time_period
+          include_task_seg_place_partially_within_time_slot
       in
       Range.task_seg_place_set ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
       |> Task_seg_place_set.to_seq
   end
 
   module Filter_internal = struct
     let filter_task_seg_place_seq ~(start : int64 option)
         ~(end_exc : int64 option)
-        ~(include_task_seg_place_partially_within_time_period : bool option)
+        ~(include_task_seg_place_partially_within_time_slot : bool option)
         (f : Task_ds.task_seg_place -> bool) (sched : sched) :
       Task_ds.task_seg_place Seq.t =
       To_seq_internal.task_seg_places ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
       |> Seq.filter f
   end
 
   module Filter = struct
     let filter_task_seg_place_seq ?(start : int64 option)
         ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (f : Task_ds.task_seg_place -> bool) (sched : sched) :
       Task_ds.task_seg_place Seq.t =
       Filter_internal.filter_task_seg_place_seq ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period f sched
+        ~include_task_seg_place_partially_within_time_slot f sched
   end
 
   module To_seq = struct
@@ -2017,36 +1942,36 @@ module Agenda = struct
 
     let task_seg_place_uncompleted ?(start : int64 option)
         ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       Filter_internal.filter_task_seg_place_seq ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period
+        ~include_task_seg_place_partially_within_time_slot
         (task_seg_place_is sched `Uncompleted)
         sched
 
     let task_seg_place_completed ?(start : int64 option)
         ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       Filter_internal.filter_task_seg_place_seq ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period
+        ~include_task_seg_place_partially_within_time_slot
         (task_seg_place_is sched `Completed)
         sched
 
     let task_seg_place_discarded ?(start : int64 option)
         ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       Filter_internal.filter_task_seg_place_seq ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period
+        ~include_task_seg_place_partially_within_time_slot
         (task_seg_place_is sched `Discarded)
         sched
 
     let task_seg_place_all ?(start : int64 option) ?(end_exc : int64 option)
-        ?(include_task_seg_place_partially_within_time_period : bool option)
+        ?(include_task_seg_place_partially_within_time_slot : bool option)
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       To_seq_internal.task_seg_places ~start ~end_exc
-        ~include_task_seg_place_partially_within_time_period sched
+        ~include_task_seg_place_partially_within_time_slot sched
   end
 
   module Find = struct
@@ -2192,32 +2117,220 @@ module Sched_req = struct
       else Error ()
   end
 
-  module To_seq = struct
+  module Partition = struct
+    type 'a partition_based_on_time_point = {
+      before : 'a Sched_req_id_map.t;
+      after : 'a Sched_req_id_map.t;
+      crossing : 'a Sched_req_id_map.t;
+    }
+
+    type 'a partition_based_on_time_slot = {
+      fully_within : 'a Sched_req_id_map.t;
+      partially_within : 'a Sched_req_id_map.t;
+      outside : 'a Sched_req_id_map.t;
+    }
+
+    let partition_based_on_time_point_internal (type a)
+        ~(f_get : sched -> a Sched_req_id_map.t)
+        ~(f_before_time : int64 -> Sched_req_ds.sched_req_id * a -> bool)
+        ~(f_after_time : int64 -> Sched_req_ds.sched_req_id * a -> bool)
+        (x : int64) (sched : sched) : a partition_based_on_time_point =
+      let before, crossing_or_after =
+        Sched_req_id_map.partition
+          (fun id data -> f_before_time x (id, data))
+          (f_get sched)
+      in
+      let after, crossing =
+        Sched_req_id_map.partition
+          (fun id data -> f_after_time x (id, data))
+          crossing_or_after
+      in
+      { before; after; crossing }
+
+    let partition_based_on_time_slot_internal (type a)
+        ~(f_get : sched -> a Sched_req_id_map.t)
+        ~(f_fully_within_time_slot :
+            start:int64 -> end_exc:int64 -> Sched_req_ds.sched_req_id * a -> bool)
+        ~(f_partially_within_time_slot :
+            start:int64 -> end_exc:int64 -> Sched_req_ds.sched_req_id * a -> bool)
+        ~start ~end_exc (sched : sched) : a partition_based_on_time_slot =
+      let fully_within, leftover =
+        Sched_req_id_map.partition
+          (fun id data -> f_fully_within_time_slot ~start ~end_exc (id, data))
+          (f_get sched)
+      in
+      let partially_within, outside =
+        Sched_req_id_map.partition
+          (fun id data ->
+             f_partially_within_time_slot ~start ~end_exc (id, data))
+          leftover
+      in
+      { fully_within; partially_within; outside }
+
     module Pending = struct
-      let pending_sched_req_seq ((_, sd) : sched) : Sched_req_ds.sched_req Seq.t
-        =
-        Sched_req_id_map.to_seq sd.store.sched_req_pending_store
+      let partition_based_on_time_point (x : int64) (sched : sched) :
+        Sched_req_ds.sched_req_data partition_based_on_time_point =
+        partition_based_on_time_point_internal
+          ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
+          ~f_before_time:Sched_req_ds.sched_req_or_record_before_time
+          ~f_after_time:Sched_req_ds.sched_req_or_record_after_time x sched
+
+      let partition_based_on_time_slot ~start ~end_exc (sched : sched) :
+        Sched_req_ds.sched_req_data partition_based_on_time_slot =
+        partition_based_on_time_slot_internal
+          ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
+          ~f_fully_within_time_slot:
+            Sched_req_ds.sched_req_or_record_fully_within_time_slot
+          ~f_partially_within_time_slot:
+            Sched_req_ds.sched_req_or_record_partially_within_time_slot ~start
+          ~end_exc sched
     end
 
     module Record = struct
-      let sched_req_record_seq ((_, sd) : sched) :
+      let partition_based_on_time_point (x : int64) (sched : sched) :
+        Sched_req_ds.sched_req_record_data partition_based_on_time_point =
+        partition_based_on_time_point_internal
+          ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
+          ~f_before_time:Sched_req_ds.sched_req_or_record_before_time
+          ~f_after_time:Sched_req_ds.sched_req_or_record_after_time x sched
+
+      let partition_based_on_time_slot ~start ~end_exc (sched : sched) :
+        Sched_req_ds.sched_req_record_data partition_based_on_time_slot =
+        partition_based_on_time_slot_internal
+          ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
+          ~f_fully_within_time_slot:
+            Sched_req_ds.sched_req_or_record_fully_within_time_slot
+          ~f_partially_within_time_slot:
+            Sched_req_ds.sched_req_or_record_partially_within_time_slot ~start
+          ~end_exc sched
+    end
+  end
+
+  module To_seq_internal = struct
+    let seq_internal (type a) ~(f_get : sched -> a Sched_req_id_map.t)
+        ~(f_partition_based_on_time_point :
+            int64 -> sched -> a Partition.partition_based_on_time_point)
+        ~(f_partition_based_on_time_slot :
+            start:int64 ->
+          end_exc:int64 ->
+          sched ->
+          a Partition.partition_based_on_time_slot) ~(start : int64 option)
+        ~(end_exc : int64 option)
+        ~(include_partially_within_time_slot : bool option) (sched : sched) :
+      (Sched_req_ds.sched_req_id * a) Seq.t =
+      let include_task_seg_place_partially_within_time_slot =
+        Option.fold ~none:false
+          ~some:(fun x -> x)
+          include_partially_within_time_slot
+      in
+      ( match (start, end_exc) with
+        | None, None -> f_get sched
+        | Some start, None ->
+          let part = f_partition_based_on_time_point start sched in
+          if include_task_seg_place_partially_within_time_slot then
+            Sched_req_id_map.union (fun _ _ _ -> None) part.after part.crossing
+          else part.after
+        | None, Some end_exc ->
+          let part = f_partition_based_on_time_point end_exc sched in
+          if include_task_seg_place_partially_within_time_slot then
+            Sched_req_id_map.union (fun _ _ _ -> None) part.before part.crossing
+          else part.before
+        | Some start, Some end_exc ->
+          let part = f_partition_based_on_time_slot ~start ~end_exc sched in
+          if include_task_seg_place_partially_within_time_slot then
+            Sched_req_id_map.union
+              (fun _ _ _ -> None)
+              part.fully_within part.partially_within
+          else part.fully_within )
+      |> Sched_req_id_map.to_seq
+
+    module Pending = struct
+      let pending_sched_req_seq ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot =
+        seq_internal
+          ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
+          ~f_partition_based_on_time_point:
+            Partition.Pending.partition_based_on_time_point
+          ~f_partition_based_on_time_slot:
+            Partition.Pending.partition_based_on_time_slot ~start ~end_exc
+          ~include_partially_within_time_slot:
+            include_sched_req_partially_within_time_slot
+    end
+
+    module Record = struct
+      let sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot =
+        seq_internal
+          ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
+          ~f_partition_based_on_time_point:
+            Partition.Record.partition_based_on_time_point
+          ~f_partition_based_on_time_slot:
+            Partition.Record.partition_based_on_time_slot ~start ~end_exc
+          ~include_partially_within_time_slot:
+            include_sched_req_record_partially_within_time_slot
+    end
+  end
+
+  module Filter_internal = struct
+    module Pending = struct
+      let filter_pending_sched_req_seq ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot
+          (f : Sched_req_ds.sched_req -> bool) (sched : sched) :
+        Sched_req_ds.sched_req Seq.t =
+        To_seq_internal.Pending.pending_sched_req_seq sched ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot
+        |> Seq.filter f
+    end
+
+    module Record = struct
+      let filter_sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot
+          (f : Sched_req_ds.sched_req_record -> bool) (sched : sched) :
         Sched_req_ds.sched_req_record Seq.t =
-        Sched_req_id_map.to_seq sd.store.sched_req_record_store
+        To_seq_internal.Record.sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot sched
+        |> Seq.filter f
+    end
+  end
+
+  module To_seq = struct
+    module Pending = struct
+      let pending_sched_req_seq ?(start : int64 option)
+          ?(end_exc : int64 option)
+          ?(include_sched_req_partially_within_time_slot : bool option)
+          (sched : sched) : Sched_req_ds.sched_req Seq.t =
+        To_seq_internal.Pending.pending_sched_req_seq ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot sched
+    end
+
+    module Record = struct
+      let sched_req_record_seq ?(start : int64 option) ?(end_exc : int64 option)
+          ?(include_sched_req_record_partially_within_time_slot : bool option)
+          (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
+        To_seq_internal.Record.sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot sched
     end
   end
 
   module Filter = struct
     module Pending = struct
-      let filter_pending_sched_req_seq (f : Sched_req_ds.sched_req -> bool)
-          (sched : sched) : Sched_req_ds.sched_req Seq.t =
-        To_seq.Pending.pending_sched_req_seq sched |> Seq.filter f
+      let filter_pending_sched_req_seq ?(start : int64 option)
+          ?(end_exc : int64 option)
+          ?(include_sched_req_partially_within_time_slot : bool option)
+          (f : Sched_req_ds.sched_req -> bool) (sched : sched) :
+        Sched_req_ds.sched_req Seq.t =
+        Filter_internal.Pending.filter_pending_sched_req_seq ~start ~end_exc
+          ~include_sched_req_partially_within_time_slot f sched
     end
 
     module Record = struct
-      let filter_sched_req_record_seq
+      let filter_sched_req_record_seq ?(start : int64 option)
+          ?(end_exc : int64 option)
+          ?(include_sched_req_record_partially_within_time_slot : bool option)
           (f : Sched_req_ds.sched_req_record -> bool) (sched : sched) :
         Sched_req_ds.sched_req_record Seq.t =
-        To_seq.Record.sched_req_record_seq sched |> Seq.filter f
+        Filter_internal.Record.filter_sched_req_record_seq ~start ~end_exc
+          ~include_sched_req_record_partially_within_time_slot f sched
     end
   end
 
@@ -2642,25 +2755,6 @@ module Sched_req = struct
   end
 
   module Allocate_task_segs = struct
-    let partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
-        ((_sid, sd) : sched) :
-      sched_req_store * sched_req_store * sched_req_store =
-      let fully_within, leftover =
-        Sched_req_id_map.partition
-          (fun id req_record_data_list ->
-             Sched_req_ds.sched_req_fully_within_time_period ~start ~end_exc
-               (id, req_record_data_list))
-          sd.store.sched_req_pending_store
-      in
-      let partially_within, leftover =
-        Sched_req_id_map.partition
-          (fun id req_record_data ->
-             Sched_req_ds.sched_req_partially_within_time_period ~start ~end_exc
-               (id, req_record_data))
-          leftover
-      in
-      (fully_within, partially_within, leftover)
-
     let allocate_task_segs_for_sched_req_data
         (sched_req_data : Sched_req_ds.sched_req_data) (sched : sched) :
       Sched_req_ds.sched_req_record_data * sched =
@@ -2735,23 +2829,23 @@ module Sched_req = struct
       |> fun (l, sched) -> (List.rev l, sched)
 
     let allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
-        ~(include_sched_reqs_partially_within_time_period : bool)
+        ~(include_sched_reqs_partially_within_time_slot : bool)
         ~(up_to_sched_req_id_inc : Sched_req_ds.sched_req_id option)
         ((sid, sd) : sched) : Sched_req_ds.sched_req_record list * sched =
-      let fully_within, partially_within, leftover =
-        partition_pending_sched_reqs_based_on_time_period ~start ~end_exc
-          (sid, sd)
+      let partition =
+        Partition.Pending.partition_based_on_time_slot ~start ~end_exc (sid, sd)
       in
       let to_be_scheduled_candidates, leftover =
-        if include_sched_reqs_partially_within_time_period then
+        if include_sched_reqs_partially_within_time_slot then
           ( Sched_req_id_map.union
               (fun _ _ _ -> None)
-              fully_within partially_within,
-            leftover )
+              partition.fully_within partition.partially_within,
+            partition.outside )
         else
-          ( fully_within,
-            Sched_req_id_map.union (fun _ _ _ -> None) partially_within leftover
-          )
+          ( partition.fully_within,
+            Sched_req_id_map.union
+              (fun _ _ _ -> None)
+              partition.partially_within partition.outside )
       in
       let to_be_scheduled, leftover =
         match up_to_sched_req_id_inc with
@@ -2921,7 +3015,7 @@ module Overdue = struct
   let get_overdue_task_seg_places ~(deadline : int64) (sched : sched) :
     Task_ds.task_seg_place Seq.t =
     Agenda.To_seq.task_seg_place_uncompleted ~end_exc:deadline
-      ~include_task_seg_place_partially_within_time_period:false sched
+      ~include_task_seg_place_partially_within_time_slot:false sched
 
   let get_overdue_task_segs ~(deadline : int64) (sched : sched) :
     Task_ds.task_seg Seq.t =
@@ -4429,10 +4523,10 @@ module To_string = struct
       (fun (id, start, end_exc) ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
            "%s - %s | %s\n"
-           (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
-              start)
-           (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
-              end_exc)
+           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+              ~display_in_time_zone:`Local start)
+           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+              ~display_in_time_zone:`Local end_exc)
            (Task_ds.Id.string_of_task_seg_id id))
       (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer

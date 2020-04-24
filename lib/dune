@@ -1,3 +1,12 @@
+(* -*- tuareg -*- *)
+
+let preprocess =
+  match Sys.getenv "BISECT_ENABLE" with
+  | "yes" -> "(preprocess (pps bisect_ppx))"
+  | _ -> ""
+  | exception Not_found -> ""
+
+let () = Jbuild_plugin.V1.send @@ {|
 (library
  (flags     (-w "+a-4-9-29-37-40-42-44-48-50-32"))
  (name daypack_lib)
@@ -8,8 +17,11 @@
             biniou
             yojson
             atdgen-runtime)
- )
-
+|}
+^ preprocess ^
+{| ) |}
+^
+{|
 (rule
  (targets sched_j.ml
           sched_j.mli)
@@ -159,3 +171,4 @@
 
 (menhir (modules time_expr_parser
                  duration_expr_parser))
+|}

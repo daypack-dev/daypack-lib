@@ -20,6 +20,11 @@ all :
 test :
 	OCAMLRUNPARAM=b dune exec ./tests/main.exe
 
+.PHONY: covtest
+covtest :
+	BISECT_ENABLE=yes OCAMLRUNPARAM=b dune exec ./tests/main.exe
+	bisect-ppx-report -html _coverage -I _build/default/ bisect*.out
+
 .PHONY: debug
 debug :
 	dune exec ./debug/main.exe

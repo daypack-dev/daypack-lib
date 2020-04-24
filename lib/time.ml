@@ -374,20 +374,74 @@ module To_string = struct
     | `Nov -> "Nov"
     | `Dec -> "Dec"
 
-  let date_time_string_of_tm (tm : Unix.tm) : string =
-    Printf.sprintf "%d-%02d-%02d %02d:%02d"
-      (tm.tm_year + tm_year_offset)
-      (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min
+  let yyyymondd_hhmmss_string_of_tm (tm : Unix.tm) : (string, unit) result =
+    match month_of_tm_int tm.tm_mon with
+    | Ok mon ->
+      let mon = string_of_month mon in
+      Ok
+        (Printf.sprintf "%04d %s %02d %02d:%02d:%02d"
+           (tm.tm_year + tm_year_offset)
+           mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec)
+    | Error () -> Error ()
 
-  let date_time_string_of_time ~(display_in_time_zone : time_zone)
+  let yyyymondd_hhmmss_string_of_unix_time ~(display_in_time_zone : time_zone)
       (time : int64) : string =
-    let tm = tm_of_unix_time ~time_zone_of_tm:display_in_time_zone time in
-    date_time_string_of_tm tm
+    tm_of_unix_time ~time_zone_of_tm:display_in_time_zone time
+    |> yyyymondd_hhmmss_string_of_tm
+    |> Result.get_ok
+
+  let yyyymmdd_hhmmss_string_of_tm (tm : Unix.tm) : (string, unit) result =
+    match month_of_tm_int tm.tm_mon with
+    | Ok mon ->
+      let mon = human_int_of_month mon in
+      Ok
+        (Printf.sprintf "%04d-%02d-%02d %02d:%02d:%02d"
+           (tm.tm_year + tm_year_offset)
+           mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec)
+    | Error () -> Error ()
+
+  let yyyymmdd_hhmmss_string_of_unix_time ~(display_in_time_zone : time_zone)
+      (time : int64) : string =
+    tm_of_unix_time ~time_zone_of_tm:display_in_time_zone time
+    |> yyyymmdd_hhmmss_string_of_tm
+    |> Result.get_ok
+
+  let yyyymondd_hhmm_string_of_tm (tm : Unix.tm) : (string, unit) result =
+    match month_of_tm_int tm.tm_mon with
+    | Ok mon ->
+      let mon = string_of_month mon in
+      Ok
+        (Printf.sprintf "%04d %s %02d %02d:%02d"
+           (tm.tm_year + tm_year_offset)
+           mon tm.tm_mday tm.tm_hour tm.tm_min)
+    | Error () -> Error ()
+
+  let yyyymondd_hhmm_string_of_unix_time ~(display_in_time_zone : time_zone)
+      (time : int64) : string =
+    tm_of_unix_time ~time_zone_of_tm:display_in_time_zone time
+    |> yyyymondd_hhmm_string_of_tm
+    |> Result.get_ok
+
+  let yyyymmdd_hhmm_string_of_tm (tm : Unix.tm) : (string, unit) result =
+    match month_of_tm_int tm.tm_mon with
+    | Ok mon ->
+      let mon = human_int_of_month mon in
+      Ok
+        (Printf.sprintf "%04d-%02d-%02d %02d:%02d"
+           (tm.tm_year + tm_year_offset)
+           mon tm.tm_mday tm.tm_hour tm.tm_min)
+    | Error () -> Error ()
+
+  let yyyymmdd_hhmm_string_of_unix_time ~(display_in_time_zone : time_zone)
+      (time : int64) : string =
+    tm_of_unix_time ~time_zone_of_tm:display_in_time_zone time
+    |> yyyymmdd_hhmm_string_of_tm
+    |> Result.get_ok
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_in_time_zone : time_zone) (time : int64) : string =
     Debug_print.bprintf ~indent_level buffer "%s\n"
-      (date_time_string_of_time ~display_in_time_zone time);
+      (yyyymondd_hhmmss_string_of_unix_time ~display_in_time_zone time);
     Buffer.contents buffer
 end
 

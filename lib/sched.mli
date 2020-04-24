@@ -174,6 +174,11 @@ module Task_seg : sig
     val find_task_seg_any_opt :
       Task_ds.task_seg_id -> sched -> Task_ds.task_seg_size option
 
+    val find_task_seg_any_with_status_opt :
+      Task_ds.task_seg_id ->
+      sched ->
+      (Task_ds.task_seg_size * task_related_status) option
+
     val find_task_seg_ids_by_task_inst_id :
       Task_ds.task_inst_id -> sched -> Task_ds.task_seg_id Seq.t
 
@@ -222,14 +227,14 @@ module Task_seg : sig
 
     val remove_task_seg_all : Task_ds.task_seg_id -> sched -> sched
 
-    val remove_task_seg_uncompleted_strict :
-      Task_ds.task_seg_id -> sched -> (sched, unit) result
-
-    val remove_task_seg_completed_strict :
-      Task_ds.task_seg_id -> sched -> (sched, unit) result
-
-    val remove_task_seg_discarded_strict :
-      Task_ds.task_seg_id -> sched -> (sched, unit) result
+    (* val remove_task_seg_uncompleted_strict :
+     *   Task_ds.task_seg_id -> sched -> (sched, unit) result
+     * 
+     * val remove_task_seg_completed_strict :
+     *   Task_ds.task_seg_id -> sched -> (sched, unit) result
+     * 
+     * val remove_task_seg_discarded_strict :
+     *   Task_ds.task_seg_id -> sched -> (sched, unit) result *)
 
     val remove_task_seg_uncompleted_seq :
       Task_ds.task_seg_id Seq.t -> sched -> sched
@@ -332,23 +337,23 @@ module Task_inst : sig
     val remove_task_inst_all :
       ?remove_children_task_segs:bool -> Task_ds.task_inst_id -> sched -> sched
 
-    val remove_task_inst_uncompleted_strict :
-      ?remove_children_task_segs:bool ->
-      Task_ds.task_inst_id ->
-      sched ->
-      (sched, unit) result
-
-    val remove_task_inst_completed_strict :
-      ?remove_children_task_segs:bool ->
-      Task_ds.task_inst_id ->
-      sched ->
-      (sched, unit) result
-
-    val remove_task_inst_discarded_strict :
-      ?remove_children_task_segs:bool ->
-      Task_ds.task_inst_id ->
-      sched ->
-      (sched, unit) result
+    (* val remove_task_inst_uncompleted_strict :
+     *   ?remove_children_task_segs:bool ->
+     *   Task_ds.task_inst_id ->
+     *   sched ->
+     *   (sched, unit) result
+     * 
+     * val remove_task_inst_completed_strict :
+     *   ?remove_children_task_segs:bool ->
+     *   Task_ds.task_inst_id ->
+     *   sched ->
+     *   (sched, unit) result
+     * 
+     * val remove_task_inst_discarded_strict :
+     *   ?remove_children_task_segs:bool ->
+     *   Task_ds.task_inst_id ->
+     *   sched ->
+     *   (sched, unit) result *)
 
     val remove_task_inst_uncompleted_seq :
       ?remove_children_task_segs:bool ->
@@ -449,26 +454,26 @@ module Task : sig
       sched ->
       sched
 
-    val remove_task_uncompleted_strict :
-      ?remove_children_task_insts:bool ->
-      ?remove_children_task_segs:bool ->
-      Task_ds.task_id ->
-      sched ->
-      (sched, unit) result
-
-    val remove_task_completed_strict :
-      ?remove_children_task_insts:bool ->
-      ?remove_children_task_segs:bool ->
-      Task_ds.task_id ->
-      sched ->
-      (sched, unit) result
-
-    val remove_task_discarded_strict :
-      ?remove_children_task_insts:bool ->
-      ?remove_children_task_segs:bool ->
-      Task_ds.task_id ->
-      sched ->
-      (sched, unit) result
+    (* val remove_task_uncompleted_strict :
+     *   ?remove_children_task_insts:bool ->
+     *   ?remove_children_task_segs:bool ->
+     *   Task_ds.task_id ->
+     *   sched ->
+     *   (sched, unit) result
+     * 
+     * val remove_task_completed_strict :
+     *   ?remove_children_task_insts:bool ->
+     *   ?remove_children_task_segs:bool ->
+     *   Task_ds.task_id ->
+     *   sched ->
+     *   (sched, unit) result
+     * 
+     * val remove_task_discarded_strict :
+     *   ?remove_children_task_insts:bool ->
+     *   ?remove_children_task_segs:bool ->
+     *   Task_ds.task_id ->
+     *   sched ->
+     *   (sched, unit) result *)
   end
 
   module Move : sig
@@ -564,14 +569,14 @@ module Agenda : sig
     val task_seg_id_set :
       start:int64 option ->
       end_exc:int64 option ->
-      include_task_seg_place_partially_within_time_period:bool ->
+      include_task_seg_place_partially_within_time_slot:bool ->
       sched ->
       Task_seg_id_set.t
 
     val task_seg_place_set :
       start:int64 option ->
       end_exc:int64 option ->
-      include_task_seg_place_partially_within_time_period:bool ->
+      include_task_seg_place_partially_within_time_slot:bool ->
       sched ->
       Task_seg_place_set.t
   end
@@ -580,7 +585,7 @@ module Agenda : sig
     val filter_task_seg_place_seq :
       ?start:int64 ->
       ?end_exc:int64 ->
-      ?include_task_seg_place_partially_within_time_period:bool ->
+      ?include_task_seg_place_partially_within_time_slot:bool ->
       (Task_ds.task_seg_place -> bool) ->
       sched ->
       Task_ds.task_seg_place Seq.t
@@ -590,28 +595,28 @@ module Agenda : sig
     val task_seg_place_uncompleted :
       ?start:int64 ->
       ?end_exc:int64 ->
-      ?include_task_seg_place_partially_within_time_period:bool ->
+      ?include_task_seg_place_partially_within_time_slot:bool ->
       sched ->
       Task_ds.task_seg_place Seq.t
 
     val task_seg_place_completed :
       ?start:int64 ->
       ?end_exc:int64 ->
-      ?include_task_seg_place_partially_within_time_period:bool ->
+      ?include_task_seg_place_partially_within_time_slot:bool ->
       sched ->
       Task_ds.task_seg_place Seq.t
 
     val task_seg_place_discarded :
       ?start:int64 ->
       ?end_exc:int64 ->
-      ?include_task_seg_place_partially_within_time_period:bool ->
+      ?include_task_seg_place_partially_within_time_slot:bool ->
       sched ->
       Task_ds.task_seg_place Seq.t
 
     val task_seg_place_all :
       ?start:int64 ->
       ?end_exc:int64 ->
-      ?include_task_seg_place_partially_within_time_period:bool ->
+      ?include_task_seg_place_partially_within_time_slot:bool ->
       sched ->
       Task_ds.task_seg_place Seq.t
   end
@@ -669,19 +674,72 @@ module Sched_req : sig
       (Sched_req_ds.sched_req list * sched, unit) result
   end
 
-  module To_seq : sig
+  module Partition : sig
+    type 'a partition_based_on_time_point = {
+      before : 'a Sched_req_id_map.t;
+      after : 'a Sched_req_id_map.t;
+      crossing : 'a Sched_req_id_map.t;
+    }
+
+    type 'a partition_based_on_time_slot = {
+      fully_within : 'a Sched_req_id_map.t;
+      partially_within : 'a Sched_req_id_map.t;
+      outside : 'a Sched_req_id_map.t;
+    }
+
     module Pending : sig
-      val pending_sched_req_seq : sched -> Sched_req_ds.sched_req Seq.t
+      val partition_based_on_time_point :
+        int64 ->
+        sched ->
+        Sched_req_ds.sched_req_data partition_based_on_time_point
+
+      val partition_based_on_time_slot :
+        start:int64 ->
+        end_exc:int64 ->
+        sched ->
+        Sched_req_ds.sched_req_data partition_based_on_time_slot
     end
 
     module Record : sig
-      val sched_req_record_seq : sched -> Sched_req_ds.sched_req_record Seq.t
+      val partition_based_on_time_point :
+        int64 ->
+        sched ->
+        Sched_req_ds.sched_req_record_data partition_based_on_time_point
+
+      val partition_based_on_time_slot :
+        start:int64 ->
+        end_exc:int64 ->
+        sched ->
+        Sched_req_ds.sched_req_record_data partition_based_on_time_slot
+    end
+  end
+
+  module To_seq : sig
+    module Pending : sig
+      val pending_sched_req_seq :
+        ?start:int64 ->
+        ?end_exc:int64 ->
+        ?include_sched_req_partially_within_time_slot:bool ->
+        sched ->
+        Sched_req_ds.sched_req Seq.t
+    end
+
+    module Record : sig
+      val sched_req_record_seq :
+        ?start:int64 ->
+        ?end_exc:int64 ->
+        ?include_sched_req_record_partially_within_time_slot:bool ->
+        sched ->
+        Sched_req_ds.sched_req_record Seq.t
     end
   end
 
   module Filter : sig
     module Pending : sig
       val filter_pending_sched_req_seq :
+        ?start:int64 ->
+        ?end_exc:int64 ->
+        ?include_sched_req_partially_within_time_slot:bool ->
         (Sched_req_ds.sched_req -> bool) ->
         sched ->
         Sched_req_ds.sched_req Seq.t
@@ -689,6 +747,9 @@ module Sched_req : sig
 
     module Record : sig
       val filter_sched_req_record_seq :
+        ?start:int64 ->
+        ?end_exc:int64 ->
+        ?include_sched_req_record_partially_within_time_slot:bool ->
         (Sched_req_ds.sched_req_record -> bool) ->
         sched ->
         Sched_req_ds.sched_req_record Seq.t
@@ -789,7 +850,7 @@ module Sched_req : sig
     val allocate_task_segs_for_pending_sched_reqs :
       start:int64 ->
       end_exc:int64 ->
-      include_sched_reqs_partially_within_time_period:bool ->
+      include_sched_reqs_partially_within_time_slot:bool ->
       up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
       sched ->
       Sched_req_ds.sched_req_record list * sched

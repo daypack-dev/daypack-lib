@@ -39,7 +39,7 @@ let run (list_task_uncompleted : bool) (list_task_inst_uncompleted : bool)
              task_inst)
         (Daypack_lib.Sched.Task_inst.To_seq.task_inst_seq_all hd) );
     if list_task_seg_uncompleted then (
-      Printf.printf "Task instances :\n";
+      Printf.printf "Task segments :\n";
       Seq.iter
         (fun task_seg ->
            Daypack_lib.Task_ds.Print.debug_print_task_seg ~indent_level:1

@@ -442,7 +442,7 @@ let debug_sched_backtracking_search_pending () =
     |> Result.get_ok
   in
   Sched_search.backtracking_search_pending ~start:0L ~end_exc:50L
-    ~include_sched_reqs_partially_within_time_period:true
+    ~include_sched_reqs_partially_within_time_slot:true
     ~up_to_sched_req_id_inc:None ~base
   |> OSeq.take 1
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
@@ -461,7 +461,7 @@ let debug_sched_agenda_range () =
   in
   sched
   |> Sched.Agenda.To_seq.task_seg_place_all ~start:9L ~end_exc:40L
-    ~include_task_seg_place_partially_within_time_period:true
+    ~include_task_seg_place_partially_within_time_slot:true
   |> Seq.iter (fun task_seg_place ->
       Task_ds.Print.debug_print_task_seg_place task_seg_place)
 
@@ -605,7 +605,7 @@ let debug_sched_usage_simulation () =
   print_endline "=====";
   ( match
       Sched_ver_history.Maybe_append_to_head.sched ~start:0L ~end_exc:100L
-        ~include_sched_reqs_partially_within_time_period:true
+        ~include_sched_reqs_partially_within_time_slot:true
         ~up_to_sched_req_id_inc:None sched_ver_history
     with
     | Ok (), ar ->
@@ -627,7 +627,7 @@ let debug_sched_usage_simulation () =
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   (* Sched_ver_history.In_place_head.move_task_seg_to_completed
    *   (0L, 1L, 0L, 0L, None) sched_ver_history; *)
-  Sched_ver_history.In_place_head.Progress.Move.move_task_inst_to_completed
+  Sched_ver_history.In_place_head.Task_inst.Move.move_task_inst_to_completed
     (0L, 1L, 0L) sched_ver_history
   |> Sched_ver_history.Print.debug_print_action_record;
   Sched_ver_history.In_place_head.Progress.Add.add_task_seg_progress_chunk
@@ -692,7 +692,7 @@ let debug_sched_usage_simulation () =
   (* Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history; *)
   (* ( match
    *     Sched_ver_history.Maybe_append_to_head.sched ~start:100L ~end_exc:200L
-   *       ~include_sched_reqs_partially_within_time_period:true
+   *       ~include_sched_reqs_partially_within_time_slot:true
    *       ~up_to_sched_req_id_inc:None sched_ver_history
    *   with
    *   | Ok () ->
@@ -806,10 +806,10 @@ let debug_time_pattern_matching_time_slots () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
-           start)
-        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
-           end_exc))
+        (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+           ~display_in_time_zone:`Local start)
+        (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+           ~display_in_time_zone:`Local end_exc))
 
 let debug_time_range_pattern_matching_time_slots () =
   print_endline
@@ -869,10 +869,10 @@ let debug_time_range_pattern_matching_time_slots () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
-           start)
-        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
-           end_exc))
+        (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+           ~display_in_time_zone:`Local start)
+        (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+           ~display_in_time_zone:`Local end_exc))
 
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
@@ -907,10 +907,10 @@ let debug_time_profile_matching_time_slots_of_periods () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
-           start)
-        (Time.To_string.date_time_string_of_time ~display_in_time_zone:`Local
-           end_exc))
+        (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+           ~display_in_time_zone:`Local start)
+        (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+           ~display_in_time_zone:`Local end_exc))
 
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";
