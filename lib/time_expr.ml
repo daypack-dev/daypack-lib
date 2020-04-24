@@ -491,7 +491,7 @@ module Interpret_string = struct
               >>| fun e -> Time_expr_ast.Time_slots_expr e )
 
   let of_string (s : string) : (Time_expr_normalized_ast.t, string) result =
-    match parse_string time_expr s with
+    match parse_string (time_expr <* end_of_input) s with
     | Ok x -> Validate_and_normalize.time_expr x
     | Error msg -> Error msg
 
