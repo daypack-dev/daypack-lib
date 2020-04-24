@@ -146,18 +146,22 @@ time_point_expr:
     }
   | bound = bound_expr; hms = hms_expr;
     {
-      Hms
-        {
-          hms;
-        }
+      ( bound,
+        Hms
+          {
+            hms;
+          }
+      )
     }
   | bound = bound_expr; weekday = weekday_expr; hms = hms_expr;
     {
-      Day_hms
-        {
-          day = Weekday weekday;
-          hms;
-        }
+      ( bound,
+        Day_hms
+          {
+            day = Weekday weekday;
+            hms;
+          }
+      )
     }
   ;
 
