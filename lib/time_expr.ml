@@ -260,17 +260,15 @@ module Interpret_string = struct
 
   let range_inc_expr (p : 'a t) : 'a Range.t t =
     p
-    >>| (fun x -> `Range_inc (x, x))
-        <|> ( p
-              >>= fun x ->
-              space *> string_ci "to" *> space *> p >>| fun y -> `Range_inc (x, y) )
+    >>= (fun x ->
+        space *> to_string *> space *> p >>| fun y -> `Range_inc (x, y))
+        <|> (p >>| fun x -> `Range_inc (x, x))
 
   let range_exc_expr (p : 'a t) : 'a Range.t t =
     p
-    >>| (fun x -> `Range_inc (x, x))
-        <|> ( p
-              >>= fun x ->
-              space *> string_ci "to" *> space *> p >>| fun y -> `Range_exc (x, y) )
+    >>= (fun x ->
+        space *> to_string *> space *> p >>| fun y -> `Range_exc (x, y))
+        <|> (p >>| fun x -> `Range_inc (x, x))
 
   let ranges_expr ~to_int (p : 'a Range.t t) : 'a Range.t list t =
     sep_by_comma1 p >>| Range.compress_list ~to_int
