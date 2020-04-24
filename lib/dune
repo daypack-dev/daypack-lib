@@ -167,8 +167,4 @@ let () = Jbuild_plugin.V1.send @@ {|
           time_profile_store_j.mli)
  (deps    time_profile_store.atd)
  (action  (run atdgen -j -j-std %{deps})))
-
-(ocamllex duration_expr_lexer)
-
-(menhir (modules duration_expr_parser))
 |}
