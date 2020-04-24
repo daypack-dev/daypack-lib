@@ -238,25 +238,19 @@ end
 module Interpret_string = struct
   open Angstrom
 
+  let alpha_string : string t =
+    take_while1 (function 'a' .. 'z' | 'A' .. 'Z' -> true | _ -> false)
+
   let integer : int t =
     take_while1 (function '0' .. '9' -> true | _ -> false) >>| int_of_string
 
   let space : unit t =
     skip_while (function ' ' | '\t' -> true |  _ -> false)
 
-  let hms_expr : Time_expr_ast.hms_expr t =
-    let hms_mode_expr : Time_expr_ast.hms_mode t =
-      option Time_expr_ast.Hour_in_24_hours
-        ((string_ci "am" *> return Time_expr_ast.Hour_in_AM)
-         <|>
-         (string_ci "pm" *> return Time_expr_ast.Hour_in_PM)
-        )
-    in
-    integer >>= fun hour ->
-    char ':' *> integer >>= fun minute ->
-    option 0 (char ':' *> integer) >>= fun second ->
-    hms_mode_expr >>= fun mode ->
-    return Time_expr_ast.{ hour; minute; second; mode }
+  let comma = char ','
+
+  let sep_by_comma1 (p : 'a t) : 'a list t =
+    sep_by1 (space *> comma *> space) p
 
   let range_inc_expr (p : 'a t) : 'a Range.t t =
     ((p >>| fun x -> `Range_inc (x, x))
@@ -269,6 +263,73 @@ module Interpret_string = struct
      <|>
      (p >>= fun x -> space *> string_ci "to" *> space *> p >>| fun y -> `Range_exc (x, y))
     )
+
+  let ranges_expr ~to_int (p : 'a Range.t t) : 'a Range.t list t =
+    sep_by_comma1 p >>| Range.compress_list ~to_int
+
+  module Hms = struct
+    let hms_mode_expr : Time_expr_ast.hms_mode t =
+      option Time_expr_ast.Hour_in_24_hours
+        ((string_ci "am" *> return Time_expr_ast.Hour_in_AM)
+         <|>
+         (string_ci "pm" *> return Time_expr_ast.Hour_in_PM)
+        )
+
+    let hms_expr : Time_expr_ast.hms_expr t =
+      integer >>= fun hour ->
+      char ':' *> integer >>= fun minute ->
+      option 0 (char ':' *> integer) >>= fun second ->
+      space *> hms_mode_expr >>= fun mode ->
+      return Time_expr_ast.{ hour; minute; second; mode }
+
+    let hms_range_expr : Time_expr_ast.hms_range_expr t =
+      range_exc_expr hms_expr
+
+    let hms_ranges_expr : Time_expr_ast.hms_range_expr list t =
+      sep_by_comma1 hms_range_expr
+  end
+
+  module Month_day = struct
+    let month_day_expr : int t =
+      integer
+
+    let month_day_range_expr : int Range.t t =
+      range_inc_expr month_day_expr
+
+    let month_day_ranges_expr : int Range.t list t =
+      ranges_expr ~to_int:(fun x -> x) month_day_range_expr
+  end
+
+  module Weekday = struct
+    let weekday_expr : Time.weekday t =
+      alpha_string >>= fun x -> match Time.Interpret_string.weekday_of_string x with
+      | Ok x -> return x
+      | Error _ -> fail "Failed to interpret weekday string"
+
+    let weekday_range_expr : Time.weekday Range.t t =
+      range_inc_expr weekday_expr
+
+    let weekday_ranges_expr : Time.weekday Range.t list t =
+      ranges_expr ~to_int:Time.tm_int_of_weekday weekday_range_expr
+  end
+
+  module Month = struct
+    let human_int_month_expr : Time_expr_ast.month_expr t =
+      integer >>| fun x -> Time_expr_ast.Human_int_month x
+
+    let human_int_month_range_expr =
+      range_inc_expr human_int_month_expr
+
+    let human_int_month_ranges_expr =
+
+    let direct_pick_month_expr : Time_expr_ast.month_expr t =
+      alpha_string >>= fun x -> match Time.Interpret_string.month_of_string x with
+      | Ok x -> return (Time_expr_ast.Direct_pick_month x)
+      | Error _ -> fail "Failed to interpret weekday string"
+
+    let direct_pick_month_range_expr =
+      range_inc_expr direct_pick_month_expr
+  end
 
   let of_string (s : string) : (Time_expr_normalized_ast.t, string) result =
     let lexbuf = Lexing.from_string s in
