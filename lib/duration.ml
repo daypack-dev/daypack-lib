@@ -1,18 +1,53 @@
 open Int64_utils
 
 module Interpret_string = struct
-  let parse lexbuf : Duration_expr_ast.t =
-    Duration_expr_parser.parse Duration_expr_lexer.read lexbuf
+  open Angstrom
 
-  let lexbuf_to_pos_str lexbuf =
-    let open Lexing in
-    let pos = lexbuf.lex_curr_p in
-    Printf.sprintf "%d:%d" pos.pos_lnum (pos.pos_cnum - pos.pos_bol - 1)
+  open Parser_components
+
+  let minutes_string =
+    alpha_string >>| fun x ->
+    Misc_utils.prefix_string_match [("minutes", ());
+                                    ("mins", ())
+                                   ]
+      x
+
+  let hours_string =
+    alpha_string >>| fun x ->
+    Misc_utils.prefix_string_match [("hours", ());
+                                    ("hrs", ())
+                                   ]
+      x
+
+  let days_string =
+    alpha_string >>| fun x ->
+    Misc_utils.prefix_string_match [("days", ());
+                                   ]
+      x
+
+  let duration_expr : Duration_expr_ast.t t =
+    choice
+      [
+        (integer >>= fun minutes ->
+         space *> minutes_string *> space *>
+         return Duration_expr_ast.{ days = 0; hours = 0; minutes; });
+        (integer >>= fun hours ->
+         space *> hours_string *> space *>
+         integer >>= fun minutes ->
+         space *> minutes_string *> space *>
+         return Duration_expr_ast.{ days = 0; hours; minutes; });
+        (integer >>= fun days ->
+         space *> days_string *> space *>
+         integer >>= fun hours ->
+         space *> hours_string *> space *>
+         integer >>= fun minutes ->
+         space *> minutes_string *> space *>
+         return Duration_expr_ast.{ days; hours; minutes; });
+      ]
 
   let of_string (s : string) : (int64, string) result =
-    let lexbuf = Lexing.from_string s in
-    try
-      let Duration_expr_ast.{ days; hours; minutes } = parse lexbuf in
+    match parse_string duration_expr s with
+    | Ok {days; hours; minutes} ->
       if days < 0 then Error "Day count is negative"
       else if hours < 0 then Error "Hour count is negative"
       else if minutes < 0 then Error "Minute count is negative"
@@ -24,11 +59,7 @@ module Interpret_string = struct
           ( (days *^ Time.day_to_second_multiplier)
             +^ (hours *^ Time.hour_to_second_multiplier)
             +^ (minutes *^ Time.minute_to_second_multiplier) )
-    with
-    | Duration_expr_lexer.Syntax_error msg ->
-      Error (Printf.sprintf "%s: %s" (lexbuf_to_pos_str lexbuf) msg)
-    | Duration_expr_parser.Error ->
-      Error (Printf.sprintf "%s: syntax error" (lexbuf_to_pos_str lexbuf))
+    | Error msg -> Error msg
 end
 
 module To_string = struct
