@@ -8,7 +8,7 @@ let preprocess =
 
 let () = Jbuild_plugin.V1.send @@ {|
 (library
- (flags     (-w "+a-4-9-29-37-40-42-44-48-50-32"))
+ (flags     (-w "+a-4-9-29-37-40-42-44-48-50-32-30"))
  (name daypack_lib)
  (public_name daypack-lib)
  (libraries unix
@@ -16,7 +16,9 @@ let () = Jbuild_plugin.V1.send @@ {|
             oseq
             biniou
             yojson
-            atdgen-runtime)
+            atdgen-runtime
+            angstrom
+ )
 |}
 ^ preprocess ^
 {| ) |}
@@ -165,10 +167,4 @@ let () = Jbuild_plugin.V1.send @@ {|
           time_profile_store_j.mli)
  (deps    time_profile_store.atd)
  (action  (run atdgen -j -j-std %{deps})))
-
-(ocamllex time_expr_lexer)
-(ocamllex duration_expr_lexer)
-
-(menhir (modules time_expr_parser
-                 duration_expr_parser))
 |}

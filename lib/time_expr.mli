@@ -7,7 +7,7 @@ module Time_point_expr : sig
     (int64 option, string) result
 
   val matching_unix_times :
-    ?force_match_mode:Time_expr_ast.match_mode ->
+    ?force_bound:Time_expr_ast.bound ->
     search_param ->
     Time_expr_normalized_ast.time_point_expr ->
     (int64 Seq.t, string) result
@@ -20,7 +20,7 @@ module Time_slots_expr : sig
     ((int64 * int64) option, string) result
 
   val matching_time_slots :
-    ?force_match_mode:Time_expr_ast.match_mode ->
+    ?force_bound:Time_expr_ast.bound ->
     search_param ->
     Time_expr_normalized_ast.time_slots_expr ->
     ((int64 * int64) Seq.t, string) result
