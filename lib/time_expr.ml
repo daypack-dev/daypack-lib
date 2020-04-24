@@ -447,19 +447,6 @@ module Interpret_string = struct
         (Time_expr_ast.Months_and_weekdays_and_hms_ranges
            { months; weekdays; hms_ranges })
 
-    let ts_years_months_mdays_hms =
-      Year.year_ranges_expr
-      >>= fun years ->
-      space *> dot *> space *> Month.month_ranges_expr
-      >>= fun months ->
-      space *> dot *> space *> Month_day.month_day_ranges_expr
-      >>= fun month_days ->
-      space *> dot *> space *> Hms.hms_ranges_expr
-      >>= fun hms_ranges ->
-      return
-        (Time_expr_ast.Years_and_months_and_month_days_and_hms_ranges
-           { years; months; month_days; hms_ranges })
-
     let month_weekday_mode_expr =
       choice
         [
@@ -481,6 +468,19 @@ module Interpret_string = struct
       return
         (Time_expr_ast.Months_and_weekday_and_hms_ranges
            { months; weekday; hms_ranges; month_weekday_mode })
+
+    let ts_years_months_mdays_hms =
+      Year.year_ranges_expr
+      >>= fun years ->
+      space *> dot *> space *> Month.month_ranges_expr
+      >>= fun months ->
+      space *> dot *> space *> Month_day.month_day_ranges_expr
+      >>= fun month_days ->
+      space *> dot *> space *> Hms.hms_ranges_expr
+      >>= fun hms_ranges ->
+      return
+        (Time_expr_ast.Years_and_months_and_month_days_and_hms_ranges
+           { years; months; month_days; hms_ranges })
 
     let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
       choice
