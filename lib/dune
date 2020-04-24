@@ -16,7 +16,9 @@ let () = Jbuild_plugin.V1.send @@ {|
             oseq
             biniou
             yojson
-            atdgen-runtime)
+            atdgen-runtime
+            angstrom
+ )
 |}
 ^ preprocess ^
 {| ) |}
@@ -166,9 +168,7 @@ let () = Jbuild_plugin.V1.send @@ {|
  (deps    time_profile_store.atd)
  (action  (run atdgen -j -j-std %{deps})))
 
-(ocamllex time_expr_lexer)
 (ocamllex duration_expr_lexer)
 
-(menhir (modules time_expr_parser
-                 duration_expr_parser))
+(menhir (modules duration_expr_parser))
 |}
