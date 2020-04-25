@@ -20,13 +20,13 @@ module Interpret_string = struct
 
   let bound =
     option `Next
-    (choice
-      [
-        string_ci "coming" *> return `Next;
-        char '?' *> return `Next;
-        string_ci "every" *> return `Every;
-        char '!' *> return `Every;
-      ])
+      (choice
+         [
+           string_ci "coming" *> return `Next;
+           char '?' *> return `Next;
+           string_ci "every" *> return `Every;
+           char '!' *> return `Every;
+         ])
 
   let sep_by_comma1 (p : 'a t) : 'a list t = sep_by1 (space *> comma *> space) p
 
@@ -56,34 +56,28 @@ module Interpret_string = struct
       >>= fun hour ->
       char ':' *> nat_zero
       >>= fun minute ->
-      if minute >= 60 then
-        fail (Printf.sprintf "Invalid minute: %d" minute)
+      if minute >= 60 then fail (Printf.sprintf "Invalid minute: %d" minute)
       else
         option 0 (char ':' *> nat_zero)
         >>= fun second ->
-        if second >= 60 then
-          fail (Printf.sprintf "Invalid second: %d" second)
+        if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
         else
           space *> hms_mode_expr
           >>= fun mode ->
           match mode with
           | `Hour_in_24_hours ->
-            if hour >= 24 then
-              fail (Printf.sprintf "Invalid hour: %d" hour)
-            else
-              return Time_expr_ast.{ hour; minute; second; }
+            if hour >= 24 then fail (Printf.sprintf "Invalid hour: %d" hour)
+            else return Time_expr_ast.{ hour; minute; second }
           | `Hour_in_AM ->
             if 1 <= hour && hour <= 12 then
               let hour = if hour = 12 then 0 else hour in
-              return Time_expr_ast.{ hour; minute; second; }
-            else
-              fail (Printf.sprintf "Invalid hour: %d" hour)
+              return Time_expr_ast.{ hour; minute; second }
+            else fail (Printf.sprintf "Invalid hour: %d" hour)
           | `Hour_in_PM ->
             if 1 <= hour && hour <= 12 then
               let hour = if hour = 12 then 0 else hour in
-              return Time_expr_ast.{ hour = hour + 12; minute; second; }
-            else
-              fail (Printf.sprintf "Invalid hour: %d" hour)
+              return Time_expr_ast.{ hour = hour + 12; minute; second }
+            else fail (Printf.sprintf "Invalid hour: %d" hour)
 
     let hms_range_expr : Time_expr_ast.hms_range_expr t =
       range_exc_expr hms_expr
@@ -94,10 +88,10 @@ module Interpret_string = struct
 
   module Month_day = struct
     let month_day_expr : int t =
-      nat_zero >>= fun x ->
+      nat_zero
+      >>= fun x ->
       if 1 <= x && x <= 31 then return x
-      else
-        fail (Printf.sprintf "Invalid month day: %d" x)
+      else fail (Printf.sprintf "Invalid month day: %d" x)
 
     let month_day_range_expr : int Range.t t = range_inc_expr month_day_expr
 
@@ -129,11 +123,11 @@ module Interpret_string = struct
 
   module Month = struct
     let human_int_month_expr : Time_expr_ast.month_expr t =
-      nat_zero >>= fun x ->
+      nat_zero
+      >>= fun x ->
       match Time.month_of_human_int x with
       | Ok m -> return m
-      | Error () ->
-          fail (Printf.sprintf "Invalid month: %d" x)
+      | Error () -> fail (Printf.sprintf "Invalid month: %d" x)
 
     let human_int_month_range_expr = range_inc_expr human_int_month_expr
 
@@ -144,7 +138,8 @@ module Interpret_string = struct
       >>= fun x ->
       match Time.Interpret_string.month_of_string x with
       | Ok x -> return x
-      | Error _ -> fail (Printf.sprintf "Failed to interpret month string: %s" x)
+      | Error _ ->
+        fail (Printf.sprintf "Failed to interpret month string: %s" x)
 
     let direct_pick_month_range_expr = range_inc_expr direct_pick_month_expr
 
@@ -193,7 +188,7 @@ module Interpret_string = struct
       space *> Hms.hms_expr
       >>= fun hms -> return (Time_expr_ast.Day_hms { day; hms })
 
-    let tp_hms = Hms.hms_expr >>= fun hms -> return (Time_expr_ast.Hms hms )
+    let tp_hms = Hms.hms_expr >>= fun hms -> return (Time_expr_ast.Hms hms)
 
     let unbounded_time_point_expr : Time_expr_ast.unbounded_time_point_expr t =
       choice [ tp_ymd_hms; tp_md_hms; tp_d_hms; tp_hms ]
@@ -350,9 +345,8 @@ module To_time_pattern_lossy = struct
    *   List.iter check_hms_range_expr hms_ranges *)
 
   module Hour_minute = struct
-    let update_time_pattern_using_hms_expr
-        (e : Time_expr_ast.hms_expr) (base : Time_pattern.t) :
-      Time_pattern.t =
+    let update_time_pattern_using_hms_expr (e : Time_expr_ast.hms_expr)
+        (base : Time_pattern.t) : Time_pattern.t =
       if Time.check_hms ~hour:e.hour ~minute:e.minute ~second:e.second then
         { base with hours = [ e.hour ]; minutes = [ e.minute ] }
       else
@@ -374,8 +368,8 @@ module To_time_pattern_lossy = struct
             update_time_pattern_using_hms_expr y base )
 
     let time_range_patterns_of_hms_ranges_and_base_time_pattern
-        (l : Time_expr_ast.hms_range_expr list)
-        (base : Time_pattern.t) : Time_pattern.time_range_pattern Seq.t =
+        (l : Time_expr_ast.hms_range_expr list) (base : Time_pattern.t) :
+      Time_pattern.time_range_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e ->
           time_range_pattern_of_hms_range_expr_and_base_time_pattern e base)
@@ -442,18 +436,16 @@ module To_time_pattern_lossy = struct
      *     |> Seq.map (fun x -> Time_expr_ast.Month_day x)
      *     |> List.of_seq *)
 
-    let update_time_pattern_using_day_expr
-        (e : Time_expr_ast.day_expr) (base : Time_pattern.t) :
-      Time_pattern.t =
+    let update_time_pattern_using_day_expr (e : Time_expr_ast.day_expr)
+        (base : Time_pattern.t) : Time_pattern.t =
       match e with
       | Month_day e -> Month_day.update_time_pattern_using_month_day_expr e base
       | Weekday e -> Weekday.update_time_pattern_using_weekday_expr e base
   end
 
   module Month = struct
-    let update_time_pattern_using_month_expr
-        (e : Time_expr_ast.month_expr) (base : Time_pattern.t) :
-      Time_pattern.t =
+    let update_time_pattern_using_month_expr (e : Time_expr_ast.month_expr)
+        (base : Time_pattern.t) : Time_pattern.t =
       { base with months = [ e ] }
 
     let time_pattern_of_month_expr x =
@@ -473,9 +465,8 @@ module To_time_pattern_lossy = struct
   end
 
   module Year = struct
-    let update_time_pattern_using_year_expr
-        (e : Time_expr_ast.year_expr) (base : Time_pattern.t) :
-      Time_pattern.t =
+    let update_time_pattern_using_year_expr (e : Time_expr_ast.year_expr)
+        (base : Time_pattern.t) : Time_pattern.t =
       { base with years = [ e ] }
 
     let time_pattern_of_year_expr x =
@@ -513,8 +504,7 @@ module To_time_pattern_lossy = struct
               Time_pattern.empty )
     with Invalid_time_expr msg -> Error msg
 
-  let time_pattern_of_time_point_expr
-      ((_, e) : Time_expr_ast.time_point_expr) :
+  let time_pattern_of_time_point_expr ((_, e) : Time_expr_ast.time_point_expr) :
     (Time_pattern.t, string) result =
     time_pattern_of_unbounded_time_point_expr e
 
@@ -658,17 +648,15 @@ end
 
 module Time_point_expr = struct
   let next_match_unix_time (search_param : search_param)
-      (e : Time_expr_ast.time_point_expr) :
-    (int64 option, string) result =
+      (e : Time_expr_ast.time_point_expr) : (int64 option, string) result =
     match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
     | Error msg -> Error msg
     | Ok pat ->
       Ok (Time_pattern.Single_pattern.next_match_unix_time search_param pat)
 
   let matching_unix_times ?(force_bound : Time_expr_ast.bound option)
-      (search_param : search_param)
-      ((bound, e) : Time_expr_ast.time_point_expr) :
-    (int64 Seq.t, string) result =
+      (search_param : search_param) ((bound, e) : Time_expr_ast.time_point_expr)
+    : (int64 Seq.t, string) result =
     match To_time_pattern_lossy.time_pattern_of_unbounded_time_point_expr e with
     | Error msg -> Error msg
     | Ok pat ->
@@ -747,9 +735,8 @@ module Time_slots_expr = struct
           Time.unix_time_of_tm ~time_zone_of_tm y ))
 
   let matching_time_slots ?(force_bound : Time_expr_ast.bound option)
-      (search_param : search_param)
-      ((bound, e) : Time_expr_ast.time_slots_expr) :
-    (Time_slot_ds.t Seq.t, string) result =
+      (search_param : search_param) ((bound, e) : Time_expr_ast.time_slots_expr)
+    : (Time_slot_ds.t Seq.t, string) result =
     let list_selector =
       match e with
       | Single_time_slot _ | Month_days_and_hms_ranges _
