@@ -247,9 +247,9 @@ module Interpret_string = struct
     let month_weekday_mode_expr =
       choice
         [
-          ( string_ci "first" *> space *> nat_zero
+          ( first_string *> space *> nat_zero
             >>| fun n -> Some (Time_expr_ast.First_n n) );
-          ( string_ci "last" *> space *> nat_zero
+          ( last_string *> space *> nat_zero
             >>| fun n -> Some (Time_expr_ast.Last_n n) );
         ]
 
@@ -697,9 +697,10 @@ module Time_slots_expr = struct
       (s : (Unix.tm * Unix.tm) Seq.t) : (Unix.tm * Unix.tm) Seq.t =
     let flush_acc first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list) :
       (Unix.tm * Unix.tm) Seq.t =
-      (match first_or_last with `First -> List.rev acc | `Last -> acc)
+      ( match first_or_last with
+        | `First -> acc |> List.rev |> Misc_utils.take_first_n_list n
+        | `Last -> acc |> List.rev |> Misc_utils.take_last_n_list n )
       |> List.to_seq
-      |> OSeq.take n
     in
     let rec aux first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list)
         (s : (Unix.tm * Unix.tm) Seq.t) : (Unix.tm * Unix.tm) Seq.t =
@@ -742,10 +743,13 @@ module Time_slots_expr = struct
       | Single_time_slot _ | Month_days_and_hms_ranges _
       | Weekdays_and_hms_ranges _ | Months_and_month_days_and_hms_ranges _
       | Months_and_weekdays_and_hms_ranges _
-      | Months_and_weekday_and_hms_ranges _
       | Years_and_months_and_month_days_and_hms_ranges _ -> (
           match Option.value ~default:bound force_bound with
           | `Next -> OSeq.take 1
+          | `Every -> fun x -> x )
+      | Months_and_weekday_and_hms_ranges _ -> (
+          match Option.value ~default:bound force_bound with
+          | `Next -> OSeq.take 4
           | `Every -> fun x -> x )
     in
     let flat_selector =

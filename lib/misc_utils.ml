@@ -12,3 +12,15 @@ let int64_of_int32_int32 ((x, y) : int32 * int32) : int64 =
   let left = Int64.shift_left (Int64.of_int32 x) 32 in
   let right = Int64.logand 0x00000000FFFFFFFFL (Int64.of_int32 y) in
   Int64.logor left right
+
+let take_first_n_list (n : int) (l : 'a list) : 'a list =
+  let rec aux n acc l =
+    if n = 0 then List.rev acc
+    else
+      match l with [] -> aux 0 acc [] | x :: xs -> aux (pred n) (x :: acc) xs
+  in
+  assert (n >= 0);
+  aux n [] l
+
+let take_last_n_list (n : int) (l : 'a list) : 'a list =
+  l |> List.rev |> take_first_n_list n |> List.rev
