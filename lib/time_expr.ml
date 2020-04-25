@@ -697,8 +697,9 @@ module Time_slots_expr = struct
       (s : (Unix.tm * Unix.tm) Seq.t) : (Unix.tm * Unix.tm) Seq.t =
     let flush_acc first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list) :
       (Unix.tm * Unix.tm) Seq.t =
-      (match first_or_last with `First -> acc |> List.rev |> Misc_utils.take_first_n_list n
-                              | `Last -> acc |> List.rev |> Misc_utils.take_last_n_list n)
+      ( match first_or_last with
+        | `First -> acc |> List.rev |> Misc_utils.take_first_n_list n
+        | `Last -> acc |> List.rev |> Misc_utils.take_last_n_list n )
       |> List.to_seq
     in
     let rec aux first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list)

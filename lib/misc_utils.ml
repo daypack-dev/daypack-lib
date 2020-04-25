@@ -15,18 +15,12 @@ let int64_of_int32_int32 ((x, y) : int32 * int32) : int64 =
 
 let take_first_n_list (n : int) (l : 'a list) : 'a list =
   let rec aux n acc l =
-    if n = 0 then
-      List.rev acc
+    if n = 0 then List.rev acc
     else
-      match l with
-      | [] -> aux 0 acc []
-      | x :: xs -> aux (pred n) (x :: acc) xs
+      match l with [] -> aux 0 acc [] | x :: xs -> aux (pred n) (x :: acc) xs
   in
   assert (n >= 0);
   aux n [] l
 
 let take_last_n_list (n : int) (l : 'a list) : 'a list =
-  l
-  |> List.rev
-  |> take_first_n_list n
-  |> List.rev
+  l |> List.rev |> take_first_n_list n |> List.rev
