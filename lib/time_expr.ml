@@ -258,7 +258,7 @@ module Interpret_string = struct
       >>= fun months ->
       space *> dot *> space *> month_weekday_mode_expr
       >>= fun month_weekday_mode ->
-      space *> dot *> space *> Weekday.weekday_expr
+      space *> Weekday.weekday_expr
       >>= fun weekday ->
       space *> dot *> space *> Hms.hms_ranges_expr
       >>= fun hms_ranges ->
