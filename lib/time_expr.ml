@@ -235,13 +235,14 @@ module Interpret_string = struct
   let last_string = string_ci "last"
 
   let bound =
-    choice
+    option `Next
+    (choice
       [
         string_ci "coming" *> return `Next;
         char '?' *> return `Next;
         string_ci "every" *> return `Every;
         char '!' *> return `Every;
-      ]
+      ])
 
   let sep_by_comma1 (p : 'a t) : 'a list t = sep_by1 (space *> comma *> space) p
 
