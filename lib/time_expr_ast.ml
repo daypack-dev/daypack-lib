@@ -19,9 +19,7 @@ type day_range_expr =
   | Weekday_range of Time.weekday_range
   | Month_day_range of Time.month_day_range
 
-type month_expr =
-  | Direct_pick_month of Time.month
-  | Human_int_month of int
+type month_expr = Time.month
 
 type year_expr = int
 
@@ -45,7 +43,9 @@ type unbounded_time_point_expr =
 
 type time_point_expr = bound * unbounded_time_point_expr
 
-type month_weekday_mode = Time_expr_ast.month_weekday_mode
+type month_weekday_mode =
+  | First_n of int
+  | Last_n of int
 
 type unbounded_time_slots_expr =
   | Single_time_slot of {
