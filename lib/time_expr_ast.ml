@@ -1,19 +1,13 @@
-type hms_mode =
-  | Hour_in_AM
-  | Hour_in_PM
-  | Hour_in_24_hours
+type bound =
+  [ `Every
+  | `Next
+  ]
 
 type hms_expr = {
   hour : int;
   minute : int;
   second : int;
-  mode : hms_mode;
 }
-
-type bound =
-  [ `Every
-  | `Next
-  ]
 
 type hms_range_expr = hms_expr Range.t
 
@@ -25,21 +19,7 @@ type day_range_expr =
   | Weekday_range of Time.weekday_range
   | Month_day_range of Time.month_day_range
 
-(* type days_expr =
- *   | Next_n_days of int
- *   | Every_x_day of day_expr
- *   | Day_list of day_expr list
- *   | Day_range of day_expr range_expr *)
-
-type month_expr =
-  | Direct_pick_month of Time.month
-  | Human_int_month of int
-
-(* type months_expr =
- *   | Next_n_months of int
- *   | Every_x_month of month_expr
- *   | Month_list of month_expr list
- *   | Month_range of month_expr range_expr *)
+type month_expr = Time.month
 
 type year_expr = int
 
@@ -59,7 +39,7 @@ type unbounded_time_point_expr =
       day : day_expr;
       hms : hms_expr;
     }
-  | Hms of { hms : hms_expr }
+  | Hms of hms_expr
 
 type time_point_expr = bound * unbounded_time_point_expr
 

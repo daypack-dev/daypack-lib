@@ -37,13 +37,13 @@ module Interpret_string = struct
     | _ -> return ()
 
   let duration_expr : Duration_expr_ast.t t =
-    option 0 (integer <* space <* days_string)
+    option 0 (nat_zero <* space <* days_string)
     >>= fun days ->
-    space *> option 0 (integer <* space <* hours_string)
+    space *> option 0 (nat_zero <* space <* hours_string)
     >>= fun hours ->
-    space *> option 0 (integer <* space <* minutes_string)
+    space *> option 0 (nat_zero <* space <* minutes_string)
     >>= fun minutes ->
-    space *> option 0 (integer <* space <* seconds_string)
+    space *> option 0 (nat_zero <* space <* seconds_string)
     >>= fun seconds ->
     return Duration_expr_ast.{ days; hours; minutes; seconds }
 
