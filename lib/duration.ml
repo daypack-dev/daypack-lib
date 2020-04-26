@@ -1,6 +1,42 @@
 open Int64_utils
 
+type t = {
+  days : int;
+  hours : int;
+  minutes : int;
+  seconds : int;
+}
+
+let of_seconds (x : int64) : t =
+  assert (x >= 0L);
+  let seconds = Int64.rem x 60L in
+  let minutes = Int64.div x 60L in
+  let hours = Int64.div minutes 60L in
+  let days = Int64.div hours 24L in
+  let hours = Int64.rem hours 24L in
+  let minutes = Int64.rem minutes 60L in
+  {
+    days = Int64.to_int days;
+    hours = Int64.to_int hours;
+    minutes = Int64.to_int minutes;
+    seconds = Int64.to_int seconds;
+  }
+
+let to_seconds (t : t) : int64 =
+  let days = Int64.of_int t.days in
+  let hours = Int64.of_int t.hours in
+  let minutes = Int64.of_int t.minutes in
+  let seconds = Int64.of_int t.seconds in
+  (days *^ Time.day_to_second_multiplier)
+  +^ (hours *^ Time.hour_to_second_multiplier)
+  +^ (minutes *^ Time.minute_to_second_multiplier)
+  +^ seconds
+
+let normalize (t : t) : t = t |> to_seconds |> of_seconds
+
 module Interpret_string = struct
+  type duration = t
+
   open Angstrom
   open Parser_components
 
@@ -36,7 +72,7 @@ module Interpret_string = struct
     | [] -> fail "String doesn't match keyword representing days"
     | _ -> return ()
 
-  let duration_expr : Duration_expr_ast.t t =
+  let duration_expr : duration t =
     option 0 (nat_zero <* space <* days_string)
     >>= fun days ->
     space *> option 0 (nat_zero <* space <* hours_string)
@@ -44,41 +80,20 @@ module Interpret_string = struct
     space *> option 0 (nat_zero <* space <* minutes_string)
     >>= fun minutes ->
     space *> option 0 (nat_zero <* space <* seconds_string)
-    >>= fun seconds ->
-    return Duration_expr_ast.{ days; hours; minutes; seconds }
+    >>= fun seconds -> return (normalize { days; hours; minutes; seconds })
 
-  let of_string (s : string) : (int64, string) result =
-    match parse_string (duration_expr <* end_of_input) s with
-    | Ok { days; hours; minutes; seconds } ->
-      if days < 0 then Error "Day count is negative"
-      else if hours < 0 then Error "Hour count is negative"
-      else if minutes < 0 then Error "Minute count is negative"
-      else if seconds < 0 then Error "Second count is negative"
-      else
-        let days = Int64.of_int days in
-        let hours = Int64.of_int hours in
-        let minutes = Int64.of_int minutes in
-        let seconds = Int64.of_int seconds in
-        Ok
-          ( (days *^ Time.day_to_second_multiplier)
-            +^ (hours *^ Time.hour_to_second_multiplier)
-            +^ (minutes *^ Time.minute_to_second_multiplier)
-            +^ seconds )
-    | Error msg -> Error msg
+  let of_string (s : string) : (duration, string) result =
+    parse_string (duration_expr <* end_of_input) s
 end
 
 module To_string = struct
-  let human_readable_string_of_duration (duration : int64) : string =
-    let seconds = Int64.rem duration 60L in
-    let minutes = Int64.div duration 60L in
-    let hours = Int64.div minutes 60L in
-    let days = Int64.div hours 24L in
-    if days > 0L then
-      Printf.sprintf "%Ld days %Ld hours %Ld mins %Ld secs" days
-        (Int64.rem hours 24L) (Int64.rem minutes 60L) seconds
-    else if hours > 0L then
-      Printf.sprintf "%Ld hours %Ld mins %Ld secs" hours (Int64.rem minutes 60L)
+  let human_readable_string_of_duration ({ days; hours; minutes; seconds } : t)
+    : string =
+    if days > 0 then
+      Printf.sprintf "%d days %d hours %d mins %d secs" days hours minutes
         seconds
-    else if minutes > 0L then Printf.sprintf "%Ld mins %Ld secs" minutes seconds
-    else Printf.sprintf "%Ld secs" seconds
+    else if hours > 0 then
+      Printf.sprintf "%d hours %d mins %d secs" hours minutes seconds
+    else if minutes > 0 then Printf.sprintf "%d mins %d secs" minutes seconds
+    else Printf.sprintf "%d secs" seconds
 end

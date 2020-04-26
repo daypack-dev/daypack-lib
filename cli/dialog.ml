@@ -357,6 +357,7 @@ let ask_sched_req_data_unit ~indent_level
     let duration =
       ask ~indent_level ~prompt:"Enter duration" ~f_until:None
         Daypack_lib.Duration.Interpret_string.of_string
+      |> Daypack_lib.Duration.to_seconds
     in
     Ok
       (Daypack_lib.Sched_req_data_unit_skeleton.Fixed

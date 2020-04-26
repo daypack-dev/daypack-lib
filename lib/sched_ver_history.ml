@@ -357,15 +357,17 @@ module Maybe_append_to_head = struct
                 sched_req_id sched))
       t
 
-  let sched ~start ~end_exc ~include_sched_reqs_partially_within_time_slot
-      ~up_to_sched_req_id_inc (t : t) : (unit, unit) result * action_record =
+  let sched ~start ~end_exc ~include_sched_reqs_starting_within_time_slot
+      ~include_sched_reqs_ending_within_time_slot ~up_to_sched_req_id_inc
+      (t : t) : (unit, unit) result * action_record =
     map_head
       (fun hd ->
          let sched_req_records, hd' =
            hd
            |> Sched.Sched_req.Allocate_task_segs
               .allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
-             ~include_sched_reqs_partially_within_time_slot
+             ~include_sched_reqs_starting_within_time_slot
+             ~include_sched_reqs_ending_within_time_slot
              ~up_to_sched_req_id_inc
          in
          match sched_req_records with
