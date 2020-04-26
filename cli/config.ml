@@ -26,7 +26,7 @@ let time_pattern_search_years_ahead = 5
 
 let agenda_search_minute_count_soon = 60
 
-let agenda_search_day_count_close = 30
+let agenda_search_day_count_close = 7
 
 let agenda_search_day_count_far = 30
 
