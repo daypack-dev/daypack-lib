@@ -690,7 +690,8 @@ module Sched_req : sig
 
     type 'a partition_based_on_time_slot = {
       fully_within : 'a Sched_req_id_map.t;
-      partially_within : 'a Sched_req_id_map.t;
+      starting_within : 'a Sched_req_id_map.t;
+      ending_within : 'a Sched_req_id_map.t;
       outside : 'a Sched_req_id_map.t;
     }
 
@@ -726,7 +727,8 @@ module Sched_req : sig
       val pending_sched_req_seq :
         ?start:int64 ->
         ?end_exc:int64 ->
-        ?include_sched_req_partially_within_time_slot:bool ->
+        ?include_sched_req_starting_within_time_slot:bool ->
+        ?include_sched_req_ending_within_time_slot:bool ->
         sched ->
         Sched_req_ds.sched_req Seq.t
     end
@@ -735,7 +737,8 @@ module Sched_req : sig
       val sched_req_record_seq :
         ?start:int64 ->
         ?end_exc:int64 ->
-        ?include_sched_req_record_partially_within_time_slot:bool ->
+        ?include_sched_req_record_starting_within_time_slot:bool ->
+        ?include_sched_req_record_ending_within_time_slot:bool ->
         sched ->
         Sched_req_ds.sched_req_record Seq.t
     end
@@ -746,7 +749,8 @@ module Sched_req : sig
       val filter_pending_sched_req_seq :
         ?start:int64 ->
         ?end_exc:int64 ->
-        ?include_sched_req_partially_within_time_slot:bool ->
+        ?include_sched_req_starting_within_time_slot:bool ->
+        ?include_sched_req_ending_within_time_slot:bool ->
         (Sched_req_ds.sched_req -> bool) ->
         sched ->
         Sched_req_ds.sched_req Seq.t
@@ -756,7 +760,8 @@ module Sched_req : sig
       val filter_sched_req_record_seq :
         ?start:int64 ->
         ?end_exc:int64 ->
-        ?include_sched_req_record_partially_within_time_slot:bool ->
+        ?include_sched_req_record_starting_within_time_slot:bool ->
+        ?include_sched_req_record_ending_within_time_slot:bool ->
         (Sched_req_ds.sched_req_record -> bool) ->
         sched ->
         Sched_req_ds.sched_req_record Seq.t
@@ -857,7 +862,8 @@ module Sched_req : sig
     val allocate_task_segs_for_pending_sched_reqs :
       start:int64 ->
       end_exc:int64 ->
-      include_sched_reqs_partially_within_time_slot:bool ->
+      include_sched_reqs_starting_within_time_slot:bool ->
+      include_sched_reqs_ending_within_time_slot:bool ->
       up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
       sched ->
       Sched_req_ds.sched_req_record list * sched

@@ -105,7 +105,8 @@ module Maybe_append_to_head : sig
   val sched :
     start:int64 ->
     end_exc:int64 ->
-    include_sched_reqs_partially_within_time_slot:bool ->
+    include_sched_reqs_starting_within_time_slot:bool ->
+    include_sched_reqs_ending_within_time_slot:bool ->
     up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
     t ->
     (unit, unit) result * action_record
