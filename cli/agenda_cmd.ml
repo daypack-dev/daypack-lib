@@ -10,14 +10,14 @@ let run (list_free_time_slots : bool) : unit =
     let hd =
       Daypack_lib.Sched_ver_history.Read.get_head context.sched_ver_history
     in
-    let start = Daypack_lib.Time.Current.cur_unix_time () in
+    let cur_time = Daypack_lib.Time.Current.cur_unix_time () in
     let end_exc =
       Daypack_lib.Time.Add.add_days_unix_time
-        ~days:Config.agenda_search_day_count start
+        ~days:Config.agenda_search_day_count cur_time
     in
     if list_free_time_slots then (
       let l =
-        Daypack_lib.Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc
+        Daypack_lib.Sched.Agenda.Time_slot.get_free_time_slots ~start:cur_time ~end_exc
           hd
         |> List.of_seq
       in
@@ -33,13 +33,18 @@ let run (list_free_time_slots : bool) : unit =
              Daypack_lib.Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
                ~display_in_time_zone:`Local end_exc
            in
+           let duration_str =
+             Int64.sub end_exc start
+             |> Daypack_lib.Duration.of_seconds
+             |> Daypack_lib.Duration.To_string.human_readable_string_of_duration
+           in
            Printf.printf "| %s - %s | %s\n" start_str end_exc_str
-             (Daypack_lib.Duration.To_string.human_readable_string_of_duration
-                (Int64.sub end_exc start)))
+             duration_str
+        )
         l )
     else
       let places_within_period =
-        Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start
+        Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start:cur_time
           ~end_exc ~include_task_seg_place_partially_within_time_slot:true hd
         |> OSeq.take Config.agenda_display_task_seg_place_max_count
         |> List.of_seq
@@ -49,7 +54,7 @@ let run (list_free_time_slots : bool) : unit =
           List.length places_within_period
           < Config.agenda_display_task_seg_place_max_count
         then
-          Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start
+          Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start:cur_time
             ~include_task_seg_place_partially_within_time_slot:true hd
           |> OSeq.take Config.agenda_display_task_seg_place_max_count
           |> List.of_seq
@@ -69,6 +74,11 @@ let run (list_free_time_slots : bool) : unit =
              Daypack_lib.Time.To_string.yyyymmdd_hhmm_string_of_unix_time
                ~display_in_time_zone:`Local place_end_exc
            in
+           let time_from_start_str =
+             Int64.sub place_start cur_time
+             |> Daypack_lib.Duration.of_seconds
+             |> Daypack_lib.Duration.To_string.human_readable_string_of_duration
+           in
            let task_id =
              Daypack_lib.Task_ds.Id.task_id_of_task_seg_id task_seg_id
            in
@@ -76,9 +86,11 @@ let run (list_free_time_slots : bool) : unit =
              Daypack_lib.Sched.Task.Find.find_task_any_opt task_id hd
              |> Option.get
            in
-           Printf.printf "| %s - %s | %s | %s\n" start_str end_exc_str
+           Printf.printf "| %s - %s | %s | %s \n" start_str end_exc_str
              (Daypack_lib.Task_ds.Id.string_of_task_seg_id task_seg_id)
-             task.name)
+             task.name;
+           Printf.printf "  - Time from start: %s\n" time_from_start_str
+        )
         places
 
 let cmd = (Term.(const run $ free_time_slots_arg), Term.info "agenda")
