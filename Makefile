@@ -16,6 +16,10 @@ OCPINDENT = ocp-indent \
 all :
 	dune build @all
 
+.PHONY: lib
+lib :
+	dune build lib
+
 .PHONY: test
 test :
 	OCAMLRUNPARAM=b dune exec ./tests/main.exe

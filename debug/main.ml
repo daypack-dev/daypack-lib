@@ -442,7 +442,8 @@ let debug_sched_backtracking_search_pending () =
     |> Result.get_ok
   in
   Sched_search.backtracking_search_pending ~start:0L ~end_exc:50L
-    ~include_sched_reqs_partially_within_time_slot:true
+    ~include_sched_reqs_starting_within_time_slot:true
+    ~include_sched_reqs_ending_within_time_slot:true
     ~up_to_sched_req_id_inc:None ~base
   |> OSeq.take 1
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
@@ -461,7 +462,8 @@ let debug_sched_agenda_range () =
   in
   sched
   |> Sched.Agenda.To_seq.task_seg_place_all ~start:9L ~end_exc:40L
-    ~include_task_seg_place_partially_within_time_slot:true
+    ~include_task_seg_place_starting_within_time_slot:true
+    ~include_task_seg_place_ending_within_time_slot:true
   |> Seq.iter (fun task_seg_place ->
       Task_ds.Print.debug_print_task_seg_place task_seg_place)
 
@@ -605,7 +607,8 @@ let debug_sched_usage_simulation () =
   print_endline "=====";
   ( match
       Sched_ver_history.Maybe_append_to_head.sched ~start:0L ~end_exc:100L
-        ~include_sched_reqs_partially_within_time_slot:true
+        ~include_sched_reqs_starting_within_time_slot:true
+        ~include_sched_reqs_ending_within_time_slot:true
         ~up_to_sched_req_id_inc:None sched_ver_history
     with
     | Ok (), ar ->

@@ -71,7 +71,8 @@ let run (add_task : bool) : unit =
                   ~end_exc:
                     (Daypack_lib.Time.Add.add_days_unix_time
                        ~days:Config.sched_day_count cur_time)
-                  ~include_sched_reqs_partially_within_time_slot:true
+                  ~include_sched_reqs_starting_within_time_slot:true
+                  ~include_sched_reqs_ending_within_time_slot:true
                   ~up_to_sched_req_id_inc:None context.sched_ver_history
               with
               | Ok (), ar ->

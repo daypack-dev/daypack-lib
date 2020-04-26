@@ -24,8 +24,16 @@ let time_profile_store_dir =
 
 let time_pattern_search_years_ahead = 5
 
-let agenda_display_task_seg_place_max_count = 100
+let agenda_search_minute_count_soon = 60
 
-let agenda_search_day_count = 30
+let agenda_search_day_count_close = 30
+
+let agenda_search_day_count_far = 30
+
+let agenda_display_task_seg_place_soon_max_count = 100
+
+let agenda_display_task_seg_place_close_max_count = 100
+
+let agenda_display_task_seg_place_far_max_count = 100
 
 let sched_day_count = 30

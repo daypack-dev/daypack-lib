@@ -2,7 +2,74 @@ open Cmdliner
 
 let free_time_slots_arg = Arg.(value & flag & info [ "free" ])
 
-let run (list_free_time_slots : bool) : unit =
+let show_all_arg = Arg.(value & flag & info [ "all"])
+
+let display_place ~cur_time sched ((task_seg_id, place_start, place_end_exc) : Daypack_lib.Task_ds.task_seg_place) : unit =
+  let start_str =
+    Daypack_lib.Time.To_string.yyyymmdd_hhmm_string_of_unix_time
+      ~display_in_time_zone:`Local place_start
+  in
+  let end_exc_str =
+    Daypack_lib.Time.To_string.yyyymmdd_hhmm_string_of_unix_time
+      ~display_in_time_zone:`Local place_end_exc
+  in
+  let time_from_start_str =
+    Int64.sub place_start cur_time
+    |> Daypack_lib.Duration.of_seconds
+    |> Daypack_lib.Duration.To_string.human_readable_string_of_duration
+  in
+  let task_id =
+    Daypack_lib.Task_ds.Id.task_id_of_task_seg_id task_seg_id
+  in
+  let task =
+    Daypack_lib.Sched.Task.Find.find_task_any_opt task_id sched
+    |> Option.get
+  in
+  Printf.printf "| %s - %s | %s | %s \n" start_str end_exc_str
+    (Daypack_lib.Task_ds.Id.string_of_task_seg_id task_seg_id)
+    task.name;
+  Printf.printf "  - Time from start: %s\n" time_from_start_str
+
+let display_places ~title ~show_all ~cur_time ~end_exc ~max_count (sched : Daypack_lib.Sched.sched) : unit =
+  let places =
+    Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start:cur_time
+      ~end_exc ~include_task_seg_place_starting_within_time_slot:true
+      sched
+    |> (fun s ->
+        if show_all then s else
+          OSeq.take max_count s)
+    |> List.of_seq
+  in
+  print_endline title;
+  List.iter (display_place ~cur_time sched) places
+
+let display_places_active_or_soon ~show_all ~cur_time sched : unit =
+  let end_exc =
+    Int64.mul (Int64.of_int Config.agenda_search_minute_count_soon) Daypack_lib.Time.minute_to_second_multiplier
+    |> Int64.add cur_time
+  in
+  let title =
+    Printf.sprintf
+      "Active or starting within next %d minutes%s:" Config.agenda_search_minute_count_soon
+      (if show_all then "" else Printf.sprintf "(displaying up to %d task segments)" Config.agenda_display_task_seg_place_soon_max_count);
+  in
+  display_places ~title ~show_all ~cur_time ~end_exc ~max_count:Config.agenda_display_task_seg_place_soon_max_count
+    sched
+
+let display_places_close ~show_all ~cur_time sched : unit =
+  let end_exc =
+    Int64.mul (Int64.of_int Config.agenda_search_minute_count_soon) Daypack_lib.Time.minute_to_second_multiplier
+    |> Int64.add cur_time
+  in
+  let title =
+    Printf.sprintf
+      "Starting within next %d minutes%s:" Config.agenda_search_minute_count_soon
+      (if show_all then "" else Printf.sprintf "(displaying up to %d task segments)" Config.agenda_display_task_seg_place_soon_max_count);
+  in
+  display_places ~title ~show_all ~cur_time ~end_exc ~max_count:Config.agenda_display_task_seg_place_soon_max_count
+    sched
+
+let run (list_free_time_slots : bool) (show_all : bool) : unit =
   match Context.load () with
   | Error msg -> print_endline msg
   | Ok context ->
@@ -42,8 +109,10 @@ let run (list_free_time_slots : bool) : unit =
              duration_str
         )
         l )
-    else
-      let places_within_period =
+    else (
+      display_places_active_or_soon ~show_all ~cur_time hd;
+    )
+    let places_within_period =
         Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start:cur_time
           ~end_exc ~include_task_seg_place_partially_within_time_slot:true hd
         |> OSeq.take Config.agenda_display_task_seg_place_max_count
@@ -61,7 +130,7 @@ let run (list_free_time_slots : bool) : unit =
         else places_within_period
       in
       Printf.printf
-        "Agenda of next %d days (displaying up to %d task segment placements):\n"
+        "Agenda of next %d days (displaying up to %d task segments):\n"
         Config.agenda_search_day_count
         Config.agenda_display_task_seg_place_max_count;
       List.iter
@@ -93,4 +162,4 @@ let run (list_free_time_slots : bool) : unit =
         )
         places
 
-let cmd = (Term.(const run $ free_time_slots_arg), Term.info "agenda")
+let cmd = (Term.(const run $ free_time_slots_arg $ show_all_arg), Term.info "agenda")
