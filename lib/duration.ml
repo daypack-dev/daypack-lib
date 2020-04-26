@@ -8,6 +8,7 @@ type t = {
 }
 
 let of_seconds (x : int64) : t =
+  assert (x >= 0L);
   let seconds = Int64.rem x 60L in
   let minutes = Int64.div x 60L in
   let hours = Int64.div minutes 60L in
