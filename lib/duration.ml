@@ -15,7 +15,8 @@ let of_seconds (x : int64) : t =
   let days = Int64.div hours 24L in
   let hours = Int64.rem hours 24L in
   let minutes = Int64.rem minutes 60L in
-  { days = Int64.to_int days;
+  {
+    days = Int64.to_int days;
     hours = Int64.to_int hours;
     minutes = Int64.to_int minutes;
     seconds = Int64.to_int seconds;
@@ -31,10 +32,7 @@ let to_seconds (t : t) : int64 =
   +^ (minutes *^ Time.minute_to_second_multiplier)
   +^ seconds
 
-let normalize (t : t) : t =
-  t
-  |> to_seconds
-  |> of_seconds
+let normalize (t : t) : t = t |> to_seconds |> of_seconds
 
 module Interpret_string = struct
   type duration = t
@@ -82,17 +80,18 @@ module Interpret_string = struct
     space *> option 0 (nat_zero <* space <* minutes_string)
     >>= fun minutes ->
     space *> option 0 (nat_zero <* space <* seconds_string)
-    >>= fun seconds ->
-    return (normalize { days; hours; minutes; seconds })
+    >>= fun seconds -> return (normalize { days; hours; minutes; seconds })
 
   let of_string (s : string) : (duration, string) result =
     parse_string (duration_expr <* end_of_input) s
 end
 
 module To_string = struct
-  let human_readable_string_of_duration ({ days; hours; minutes; seconds } : t) : string =
+  let human_readable_string_of_duration ({ days; hours; minutes; seconds } : t)
+    : string =
     if days > 0 then
-      Printf.sprintf "%d days %d hours %d mins %d secs" days hours minutes seconds
+      Printf.sprintf "%d days %d hours %d mins %d secs" days hours minutes
+        seconds
     else if hours > 0 then
       Printf.sprintf "%d hours %d mins %d secs" hours minutes seconds
     else if minutes > 0 then Printf.sprintf "%d mins %d secs" minutes seconds

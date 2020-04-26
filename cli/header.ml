@@ -31,7 +31,8 @@ let display_pending_sched_reqs (context : Context.t) : unit =
   in
   let pending_sched_reqs_fully_or_partially_within_time_slot =
     Daypack_lib.Sched.Sched_req.To_seq.Pending.pending_sched_req_seq ~start
-      ~end_exc ~include_sched_req_starting_within_time_slot:true ~include_sched_req_ending_within_time_slot:true hd
+      ~end_exc ~include_sched_req_starting_within_time_slot:true
+      ~include_sched_req_ending_within_time_slot:true hd
     |> List.of_seq
   in
   let count_expired = List.length expired_sched_reqs in

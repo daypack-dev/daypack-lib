@@ -1815,25 +1815,23 @@ module Agenda = struct
       in
       let end_exc_within_range =
         let m =
-          let start =
-            Option.map Int64.succ start
-          in
+          let start = Option.map Int64.succ start in
           Int64_map_utils.range ~start ~end_exc sd.agenda.indexed_by_end_exc
         in
         Int64_map.fold
           (fun _k acc s -> Task_seg_id_set.union acc s)
           m Task_seg_id_set.empty
       in
-      match include_task_seg_place_starting_within_time_slot, include_task_seg_place_ending_within_time_slot with
+      match
+        ( include_task_seg_place_starting_within_time_slot,
+          include_task_seg_place_ending_within_time_slot )
+      with
       | true, true ->
         Task_seg_id_set.union start_within_range end_exc_within_range
-      | true, false ->
-        start_within_range
-      | false, true ->
-        end_exc_within_range
+      | true, false -> start_within_range
+      | false, true -> end_exc_within_range
       | false, false ->
-        Task_seg_id_set.inter start_within_range
-          end_exc_within_range
+        Task_seg_id_set.inter start_within_range end_exc_within_range
 
     let task_seg_place_set ~(start : int64 option) ~(end_exc : int64 option)
         ~(include_task_seg_place_starting_within_time_slot : bool)
@@ -1841,8 +1839,7 @@ module Agenda = struct
         ((_, sd) as sched : sched) : Task_seg_place_set.t =
       task_seg_id_set ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
-        ~include_task_seg_place_ending_within_time_slot
-        sched
+        ~include_task_seg_place_ending_within_time_slot sched
       |> Task_seg_id_set.to_seq
       |> Seq.map (fun task_seg_id ->
           let place_start, place_end_exc =
@@ -1869,8 +1866,7 @@ module Agenda = struct
       in
       Range.task_seg_id_set ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
-        ~include_task_seg_place_ending_within_time_slot
-        sched
+        ~include_task_seg_place_ending_within_time_slot sched
       |> Task_seg_id_set.to_seq
 
     let task_seg_places ~(start : int64 option) ~(end_exc : int64 option)
@@ -1889,8 +1885,7 @@ module Agenda = struct
       in
       Range.task_seg_place_set ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
-        ~include_task_seg_place_ending_within_time_slot
-        sched
+        ~include_task_seg_place_ending_within_time_slot sched
       |> Task_seg_place_set.to_seq
   end
 
@@ -1903,8 +1898,7 @@ module Agenda = struct
       Task_ds.task_seg_place Seq.t =
       To_seq_internal.task_seg_places ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
-        ~include_task_seg_place_ending_within_time_slot
-        sched
+        ~include_task_seg_place_ending_within_time_slot sched
       |> Seq.filter f
   end
 
@@ -1917,8 +1911,7 @@ module Agenda = struct
       Task_ds.task_seg_place Seq.t =
       Filter_internal.filter_task_seg_place_seq ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
-        ~include_task_seg_place_ending_within_time_slot
-        f sched
+        ~include_task_seg_place_ending_within_time_slot f sched
   end
 
   module To_seq = struct
@@ -1965,8 +1958,7 @@ module Agenda = struct
         (sched : sched) : Task_ds.task_seg_place Seq.t =
       To_seq_internal.task_seg_places ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
-        ~include_task_seg_place_ending_within_time_slot
-        sched
+        ~include_task_seg_place_ending_within_time_slot sched
   end
 
   module Find = struct
@@ -2165,8 +2157,7 @@ module Sched_req = struct
       in
       let ending_within, outside =
         Sched_req_id_map.partition
-          (fun id data ->
-             f_ending_within_time_slot ~start ~end_exc (id, data))
+          (fun id data -> f_ending_within_time_slot ~start ~end_exc (id, data))
           leftover
       in
       { fully_within; starting_within; ending_within; outside }
@@ -2188,8 +2179,7 @@ module Sched_req = struct
           ~f_starting_within_time_slot:
             Sched_req_ds.sched_req_or_record_starting_within_time_slot
           ~f_ending_within_time_slot:
-            Sched_req_ds.sched_req_or_record_ending_within_time_slot
-          ~start
+            Sched_req_ds.sched_req_or_record_ending_within_time_slot ~start
           ~end_exc sched
     end
 
@@ -2210,8 +2200,7 @@ module Sched_req = struct
           ~f_starting_within_time_slot:
             Sched_req_ds.sched_req_or_record_starting_within_time_slot
           ~f_ending_within_time_slot:
-            Sched_req_ds.sched_req_or_record_ending_within_time_slot
-          ~start
+            Sched_req_ds.sched_req_or_record_ending_within_time_slot ~start
           ~end_exc sched
     end
   end
@@ -2227,8 +2216,7 @@ module Sched_req = struct
           a Partition.partition_based_on_time_slot) ~(start : int64 option)
         ~(end_exc : int64 option)
         ~(include_starting_within_time_slot : bool option)
-        ~(include_ending_within_time_slot : bool option)
-        (sched : sched) :
+        ~(include_ending_within_time_slot : bool option) (sched : sched) :
       (Sched_req_ds.sched_req_id * a) Seq.t =
       let include_task_seg_place_starting_within_time_slot =
         Option.fold ~none:false
@@ -2260,23 +2248,17 @@ module Sched_req = struct
                 Sched_req_id_map.union
                   (fun _ _ _ -> None)
                   m part.starting_within
-              else m
-            )
-          |> (fun m ->
-              if include_task_seg_place_ending_within_time_slot then
-                Sched_req_id_map.union
-                  (fun _ _ _ -> None)
-                  m part.ending_within
-              else m
-            )
-      )
+              else m)
+          |> fun m ->
+          if include_task_seg_place_ending_within_time_slot then
+            Sched_req_id_map.union (fun _ _ _ -> None) m part.ending_within
+          else m )
       |> Sched_req_id_map.to_seq
 
     module Pending = struct
       let pending_sched_req_seq ~start ~end_exc
           ~include_sched_req_starting_within_time_slot
-          ~include_sched_req_ending_within_time_slot
-        =
+          ~include_sched_req_ending_within_time_slot =
         seq_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
           ~f_partition_based_on_time_point:
@@ -2292,8 +2274,7 @@ module Sched_req = struct
     module Record = struct
       let sched_req_record_seq ~start ~end_exc
           ~include_sched_req_record_starting_within_time_slot
-          ~include_sched_req_record_ending_within_time_slot
-        =
+          ~include_sched_req_record_ending_within_time_slot =
         seq_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
           ~f_partition_based_on_time_point:
@@ -2328,8 +2309,7 @@ module Sched_req = struct
         Sched_req_ds.sched_req_record Seq.t =
         To_seq_internal.Record.sched_req_record_seq ~start ~end_exc
           ~include_sched_req_record_starting_within_time_slot
-          ~include_sched_req_record_ending_within_time_slot
-          sched
+          ~include_sched_req_record_ending_within_time_slot sched
         |> Seq.filter f
     end
   end
@@ -2343,8 +2323,7 @@ module Sched_req = struct
           (sched : sched) : Sched_req_ds.sched_req Seq.t =
         To_seq_internal.Pending.pending_sched_req_seq ~start ~end_exc
           ~include_sched_req_starting_within_time_slot
-          ~include_sched_req_ending_within_time_slot
-          sched
+          ~include_sched_req_ending_within_time_slot sched
     end
 
     module Record = struct
@@ -2354,8 +2333,7 @@ module Sched_req = struct
           (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
         To_seq_internal.Record.sched_req_record_seq ~start ~end_exc
           ~include_sched_req_record_starting_within_time_slot
-          ~include_sched_req_record_ending_within_time_slot
-          sched
+          ~include_sched_req_record_ending_within_time_slot sched
     end
   end
 
@@ -2369,8 +2347,7 @@ module Sched_req = struct
         Sched_req_ds.sched_req Seq.t =
         Filter_internal.Pending.filter_pending_sched_req_seq ~start ~end_exc
           ~include_sched_req_starting_within_time_slot
-          ~include_sched_req_ending_within_time_slot
-          f sched
+          ~include_sched_req_ending_within_time_slot f sched
     end
 
     module Record = struct
@@ -2382,8 +2359,7 @@ module Sched_req = struct
         Sched_req_ds.sched_req_record Seq.t =
         Filter_internal.Record.filter_sched_req_record_seq ~start ~end_exc
           ~include_sched_req_record_starting_within_time_slot
-          ~include_sched_req_record_ending_within_time_slot
-          f sched
+          ~include_sched_req_record_ending_within_time_slot f sched
     end
   end
 
@@ -2886,42 +2862,31 @@ module Sched_req = struct
         ~(include_sched_reqs_ending_within_time_slot : bool)
         ~(up_to_sched_req_id_inc : Sched_req_ds.sched_req_id option)
         ((sid, sd) : sched) : Sched_req_ds.sched_req_record list * sched =
-      let union m1 m2 =
-        Sched_req_id_map.union
-          (fun _ _ _ -> None)
-          m1
-          m2
-      in
+      let union m1 m2 = Sched_req_id_map.union (fun _ _ _ -> None) m1 m2 in
       let partition =
         Partition.Pending.partition_based_on_time_slot ~start ~end_exc (sid, sd)
       in
       let to_be_scheduled_candidates, leftover =
-        match include_sched_reqs_starting_within_time_slot,
-              include_sched_reqs_ending_within_time_slot with
+        match
+          ( include_sched_reqs_starting_within_time_slot,
+            include_sched_reqs_ending_within_time_slot )
+        with
         | true, true ->
-          (partition.fully_within
-           |> union partition.starting_within
-           |> union partition.ending_within,
-           partition.outside)
+          ( partition.fully_within
+            |> union partition.starting_within
+            |> union partition.ending_within,
+            partition.outside )
         | false, true ->
-          (partition.fully_within
-           |> union partition.ending_within,
-           partition.outside
-           |> union partition.starting_within
-          )
+          ( partition.fully_within |> union partition.ending_within,
+            partition.outside |> union partition.starting_within )
         | true, false ->
-          (partition.fully_within
-           |> union partition.starting_within,
-           partition.outside
-           |> union partition.ending_within
-          )
+          ( partition.fully_within |> union partition.starting_within,
+            partition.outside |> union partition.ending_within )
         | false, false ->
-          (partition.fully_within
-           ,
-           partition.outside
-           |> union partition.starting_within
-           |> union partition.ending_within
-          )
+          ( partition.fully_within,
+            partition.outside
+            |> union partition.starting_within
+            |> union partition.ending_within )
       in
       let to_be_scheduled, leftover =
         match up_to_sched_req_id_inc with
@@ -3090,8 +3055,7 @@ end
 module Overdue = struct
   let get_overdue_task_seg_places ~(deadline : int64) (sched : sched) :
     Task_ds.task_seg_place Seq.t =
-    Agenda.To_seq.task_seg_place_uncompleted ~end_exc:deadline
-      sched
+    Agenda.To_seq.task_seg_place_uncompleted ~end_exc:deadline sched
 
   let get_overdue_task_segs ~(deadline : int64) (sched : sched) :
     Task_ds.task_seg Seq.t =

@@ -136,8 +136,7 @@ let sched_req_or_record_starting_within_time_slot ~start ~end_exc
   =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
-  | Some (start', _) ->
-    start <= start' && start' < end_exc
+  | Some (start', _) -> start <= start' && start' < end_exc
 
 let sched_req_or_record_ending_within_time_slot ~start ~end_exc
     (sched_req_or_record :
@@ -146,8 +145,7 @@ let sched_req_or_record_ending_within_time_slot ~start ~end_exc
   =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
-  | Some (_, end_exc') ->
-    start <= end_exc' && end_exc' < end_exc
+  | Some (_, end_exc') -> start <= end_exc' && end_exc' < end_exc
 
 module Check = struct
   let check_sched_req_data (data : sched_req_data) : bool =
