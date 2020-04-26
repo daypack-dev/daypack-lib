@@ -14,5 +14,5 @@ module Interpret_string : sig
 end
 
 module To_string : sig
-  val human_readable_string_of_duration : int64 -> string
+  val human_readable_string_of_duration : t -> string
 end

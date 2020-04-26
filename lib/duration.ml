@@ -83,8 +83,7 @@ module Interpret_string = struct
 end
 
 module To_string = struct
-  let human_readable_string_of_duration (duration : int64) : string =
-    let { days; hours; minutes; seconds } = of_seconds duration in
+  let human_readable_string_of_duration ({ days; hours; minutes; seconds } : t) : string =
     if days > 0 then
       Printf.sprintf "%d days %d hours %d mins %d secs" days hours minutes seconds
     else if hours > 0 then
