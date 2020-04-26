@@ -9,6 +9,8 @@ val of_seconds : int64 -> t
 
 val to_seconds : t -> int64
 
+val normalize : t -> t
+
 module Interpret_string : sig
   val of_string : string -> (t, string) result
 end

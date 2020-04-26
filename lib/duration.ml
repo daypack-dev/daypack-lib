@@ -13,6 +13,8 @@ let of_seconds (x : int64) : t =
   let minutes = Int64.div x 60L in
   let hours = Int64.div minutes 60L in
   let days = Int64.div hours 24L in
+  let hours = Int64.rem hours 24L in
+  let minutes = Int64.rem minutes 60L in
   { days = Int64.to_int days;
     hours = Int64.to_int hours;
     minutes = Int64.to_int minutes;
@@ -28,6 +30,11 @@ let to_seconds (t : t) : int64 =
   +^ (hours *^ Time.hour_to_second_multiplier)
   +^ (minutes *^ Time.minute_to_second_multiplier)
   +^ seconds
+
+let normalize (t : t) : t =
+  t
+  |> to_seconds
+  |> of_seconds
 
 module Interpret_string = struct
   type duration = t
@@ -76,7 +83,7 @@ module Interpret_string = struct
     >>= fun minutes ->
     space *> option 0 (nat_zero <* space <* seconds_string)
     >>= fun seconds ->
-    return { days; hours; minutes; seconds }
+    return (normalize { days; hours; minutes; seconds })
 
   let of_string (s : string) : (duration, string) result =
     parse_string (duration_expr <* end_of_input) s
