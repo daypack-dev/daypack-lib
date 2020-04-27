@@ -223,11 +223,11 @@ let ask_uint64_multi ~indent_level ~(prompt : string) : int64 list =
       with Failure msg -> Error msg)
 
 let process_time_string (s : string) : (int64, string) result =
-  match Daypack_lib.Time_expr.Interpret_string.time_point_expr_of_string s with
+  match Daypack_lib.Time_expr.Interpret_string.time_points_expr_of_string s with
   | Error msg -> Error msg
   | Ok expr -> (
       match
-        Daypack_lib.Time_expr.Time_point_expr.next_match_unix_time
+        Daypack_lib.Time_expr.Time_points_expr.next_match_unix_time
           (Years_ahead_start_unix_time
              {
                search_in_time_zone = `Local;

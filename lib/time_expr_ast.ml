@@ -34,7 +34,7 @@ type month_expr = Time.month
 
 type year_expr = int
 
-type unbounded_time_point_expr =
+type unbounded_time_points_expr =
   | Year_month_day_hour_minute_second of {
       year : year_expr;
       month : month_expr;
@@ -54,7 +54,7 @@ type unbounded_time_point_expr =
   | Minute_second of minute_second_expr
   | Second of second_expr
 
-type time_point_expr = bound * unbounded_time_point_expr
+type time_points_expr = bound * unbounded_time_points_expr
 
 type month_weekday_mode =
   | First_n of int
@@ -62,8 +62,8 @@ type month_weekday_mode =
 
 type unbounded_time_slots_expr =
   | Single_time_slot of {
-      start : unbounded_time_point_expr;
-      end_exc : unbounded_time_point_expr;
+      start : unbounded_time_points_expr;
+      end_exc : unbounded_time_points_expr;
     }
   | Month_days_and_hour_minute_second_ranges of {
       month_days : int Range.t list;
@@ -99,5 +99,5 @@ type unbounded_time_slots_expr =
 type time_slots_expr = bound * unbounded_time_slots_expr
 
 type t =
-  | Time_point_expr of time_point_expr
+  | Time_points_expr of time_points_expr
   | Time_slots_expr of time_slots_expr

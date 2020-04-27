@@ -184,7 +184,7 @@ module Interpret_string = struct
     let year_ranges_expr = sep_by_comma1 year_range_expr
   end
 
-  module Time_point_expr = struct
+  module Time_points_expr = struct
     let tp_ymd_hour_minute_second =
       nat_zero
       >>= fun year ->
@@ -229,7 +229,8 @@ module Interpret_string = struct
     let tp_second =
       Second.second_expr >>= fun second -> return (Time_expr_ast.Second second)
 
-    let unbounded_time_point_expr : Time_expr_ast.unbounded_time_point_expr t =
+    let unbounded_time_points_expr : Time_expr_ast.unbounded_time_points_expr t
+      =
       choice
         [
           tp_ymd_hour_minute_second;
@@ -240,17 +241,17 @@ module Interpret_string = struct
           tp_second;
         ]
 
-    let time_point_expr : Time_expr_ast.time_point_expr t =
+    let time_points_expr : Time_expr_ast.time_points_expr t =
       bound
       >>= fun bound ->
-      space *> unbounded_time_point_expr >>= fun e -> return (bound, e)
+      space *> unbounded_time_points_expr >>= fun e -> return (bound, e)
   end
 
   module Time_slots_expr = struct
     let ts_single =
-      Time_point_expr.unbounded_time_point_expr
+      Time_points_expr.unbounded_time_points_expr
       >>= fun start ->
-      space *> to_string *> space *> Time_point_expr.unbounded_time_point_expr
+      space *> to_string *> space *> Time_points_expr.unbounded_time_points_expr
       >>= fun end_exc ->
       return (Time_expr_ast.Single_time_slot { start; end_exc })
 
@@ -352,18 +353,18 @@ module Interpret_string = struct
   end
 
   let time_expr =
-    Time_point_expr.time_point_expr
-    >>| (fun e -> Time_expr_ast.Time_point_expr e)
+    Time_points_expr.time_points_expr
+    >>| (fun e -> Time_expr_ast.Time_points_expr e)
         <|> ( Time_slots_expr.time_slots_expr
               >>| fun e -> Time_expr_ast.Time_slots_expr e )
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string (time_expr <* end_of_input) s
 
-  let time_point_expr_of_string (s : string) :
-    (Time_expr_ast.time_point_expr, string) result =
+  let time_points_expr_of_string (s : string) :
+    (Time_expr_ast.time_points_expr, string) result =
     match of_string s with
-    | Ok (Time_point_expr e) -> Ok e
+    | Ok (Time_points_expr e) -> Ok e
     | Ok (Time_slots_expr _) ->
       Error "String translates to time slots expression"
     | Error msg -> Error msg
@@ -371,7 +372,7 @@ module Interpret_string = struct
   let time_slots_expr_of_string (s : string) :
     (Time_expr_ast.time_slots_expr, string) result =
     match of_string s with
-    | Ok (Time_point_expr _) ->
+    | Ok (Time_points_expr _) ->
       Error "String translates to time point expression"
     | Ok (Time_slots_expr e) -> Ok e
     | Error msg -> Error msg
@@ -537,8 +538,8 @@ module To_time_pattern_lossy = struct
       update_time_pattern_using_year_expr x Time_pattern.empty
   end
 
-  let time_pattern_of_unbounded_time_point_expr
-      (e : Time_expr_ast.unbounded_time_point_expr) :
+  let time_pattern_of_unbounded_time_points_expr
+      (e : Time_expr_ast.unbounded_time_points_expr) :
     (Time_pattern.t, string) result =
     try
       Ok
@@ -577,9 +578,9 @@ module To_time_pattern_lossy = struct
               Time_pattern.empty )
     with Invalid_time_expr msg -> Error msg
 
-  let time_pattern_of_time_point_expr ((_, e) : Time_expr_ast.time_point_expr) :
-    (Time_pattern.t, string) result =
-    time_pattern_of_unbounded_time_point_expr e
+  let time_pattern_of_time_points_expr ((_, e) : Time_expr_ast.time_points_expr)
+    : (Time_pattern.t, string) result =
+    time_pattern_of_unbounded_time_points_expr e
 
   let time_range_patterns_of_unbounded_time_slots_expr
       (e : Time_expr_ast.unbounded_time_slots_expr) :
@@ -588,10 +589,10 @@ module To_time_pattern_lossy = struct
       Ok
         ( match e with
           | Single_time_slot { start; end_exc } -> (
-              match time_pattern_of_unbounded_time_point_expr start with
+              match time_pattern_of_unbounded_time_points_expr start with
               | Error msg -> raise (Invalid_time_expr msg)
               | Ok start -> (
-                  match time_pattern_of_unbounded_time_point_expr end_exc with
+                  match time_pattern_of_unbounded_time_points_expr end_exc with
                   | Error msg -> raise (Invalid_time_expr msg)
                   | Ok end_exc -> [ `Range_exc (start, end_exc) ] ) )
           | Month_days_and_hour_minute_second_ranges
@@ -686,8 +687,8 @@ module To_time_pattern_lossy = struct
   let single_or_ranges_of_time_expr (e : Time_expr_ast.t) :
     (Time_pattern.single_or_ranges, string) result =
     match e with
-    | Time_expr_ast.Time_point_expr e -> (
-        match time_pattern_of_time_point_expr e with
+    | Time_expr_ast.Time_points_expr e -> (
+        match time_pattern_of_time_points_expr e with
         | Ok x -> Ok (Single_time_pattern x)
         | Error msg -> Error msg )
     | Time_expr_ast.Time_slots_expr e -> (
@@ -727,18 +728,21 @@ module To_time_pattern_lossy = struct
     | Error msg -> Error msg
 end
 
-module Time_point_expr = struct
+module Time_points_expr = struct
   let next_match_unix_time (search_param : search_param)
-      (e : Time_expr_ast.time_point_expr) : (int64 option, string) result =
-    match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
+      (e : Time_expr_ast.time_points_expr) : (int64 option, string) result =
+    match To_time_pattern_lossy.time_pattern_of_time_points_expr e with
     | Error msg -> Error msg
     | Ok pat ->
       Ok (Time_pattern.Single_pattern.next_match_unix_time search_param pat)
 
   let matching_unix_times ?(force_bound : Time_expr_ast.bound option)
-      (search_param : search_param) ((bound, e) : Time_expr_ast.time_point_expr)
-    : (int64 Seq.t, string) result =
-    match To_time_pattern_lossy.time_pattern_of_unbounded_time_point_expr e with
+      (search_param : search_param)
+      ((bound, e) : Time_expr_ast.time_points_expr) :
+    (int64 Seq.t, string) result =
+    match
+      To_time_pattern_lossy.time_pattern_of_unbounded_time_points_expr e
+    with
     | Error msg -> Error msg
     | Ok pat ->
       let selector =

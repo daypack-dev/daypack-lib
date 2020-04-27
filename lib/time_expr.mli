@@ -1,15 +1,15 @@
 type search_param = Time_pattern.search_param
 
-module Time_point_expr : sig
+module Time_points_expr : sig
   val next_match_unix_time :
     search_param ->
-    Time_expr_ast.time_point_expr ->
+    Time_expr_ast.time_points_expr ->
     (int64 option, string) result
 
   val matching_unix_times :
     ?force_bound:Time_expr_ast.bound ->
     search_param ->
-    Time_expr_ast.time_point_expr ->
+    Time_expr_ast.time_points_expr ->
     (int64 Seq.t, string) result
 end
 
@@ -34,16 +34,16 @@ end
 module Interpret_string : sig
   val of_string : string -> (Time_expr_ast.t, string) result
 
-  val time_point_expr_of_string :
-    string -> (Time_expr_ast.time_point_expr, string) result
+  val time_points_expr_of_string :
+    string -> (Time_expr_ast.time_points_expr, string) result
 
   val time_slots_expr_of_string :
     string -> (Time_expr_ast.time_slots_expr, string) result
 end
 
 module To_time_pattern_lossy : sig
-  val time_pattern_of_time_point_expr :
-    Time_expr_ast.time_point_expr -> (Time_pattern.t, string) result
+  val time_pattern_of_time_points_expr :
+    Time_expr_ast.time_points_expr -> (Time_pattern.t, string) result
 
   val time_range_patterns_of_time_slots_expr :
     Time_expr_ast.time_slots_expr ->
