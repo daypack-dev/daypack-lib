@@ -384,27 +384,6 @@ module Interpret_string = struct
 end
 
 module To_time_pattern_lossy = struct
-  (* let check_hour_minute_second_expr
-   *     ({ hour; minute } : Time_expr_ast.hour_minute_second_expr) : unit =
-   *   if Time.check_hour_minute_second ~hour ~minute then ()
-   *   else
-   *     raise
-   *       (Invalid_time_expr
-   *          (Printf.sprintf "Invalid hour minute: %d:%d" hour minute)) *)
-
-  (* let check_hour_minute_second_range_expr
-   *     (hour_minute_range : Time_expr_ast.hour_minute_second_range_expr) :
-   *   unit =
-   *   match hour_minute_range with
-   *   | `Range_inc (x, y) | `Range_exc (x, y) ->
-   *     check_hour_minute_second_expr x;
-   *     check_hour_minute_second_expr y *)
-
-  (* let check_hour_minute_second_ranges
-   *     (hour_minute_second_ranges : Time_expr_ast.hour_minute_second_range_expr list) :
-   *   unit =
-   *   List.iter check_hour_minute_second_range_expr hour_minute_second_ranges *)
-
   module Second = struct
     let update_time_pattern_using_second_expr (e : Time_expr_ast.second_expr)
         (base : Time_pattern.t) : Time_pattern.t =
@@ -534,17 +513,6 @@ module To_time_pattern_lossy = struct
   end
 
   module Day = struct
-    (* let days_of_day_range_expr (e : Time_expr_ast.day_range_expr) :
-     *   Time_expr_ast.day_expr list =
-     *   match e with
-     *   | Weekday_range (start, end_inc) ->
-     *     Time.weekday_list_of_weekday_range ~start ~end_inc
-     *     |> List.map (fun x -> Time_expr_ast.Weekday x)
-     *   | Month_day_range (start, end_inc) ->
-     *     OSeq.(start -- end_inc)
-     *     |> Seq.map (fun x -> Time_expr_ast.Month_day x)
-     *     |> List.of_seq *)
-
     let update_time_pattern_using_day_expr (e : Time_expr_ast.day_expr)
         (base : Time_pattern.t) : Time_pattern.t =
       match e with
@@ -792,24 +760,6 @@ module Time_point_expr = struct
       |> Seq.map (fun (x, _) -> x)
       |> selector
       |> Result.ok
-
-  (* let matching_time_slots (search_param : search_param)
-   *     (e : Time_expr_ast.time_point_expr) :
-   *   (Time_slot_ds.t Seq.t, string) result =
-   *   match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
-   *   | Error msg -> Error msg
-   *   | Ok pat ->
-   *     Time_pattern.Single_pattern.matching_time_slots search_param pat
-   *     |> OSeq.take 1
-   *     |> Result.ok *)
-
-  (* let next_match_time_slot (search_param : search_param)
-   *     (e : Time_expr_ast.time_point_expr) :
-   *   ((int64 * int64) option, string) result =
-   *   match matching_time_slots search_param e with
-   *   | Error msg -> Error msg
-   *   | Ok seq -> (
-   *       match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) ) *)
 end
 
 module Time_slots_expr = struct
@@ -913,19 +863,3 @@ module Time_slots_expr = struct
     | Ok seq -> (
         match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
 end
-
-(* let matching_time_slots ?(force_match_mode : Time_expr_ast.match_mode option)
- *     (search_param : search_param) (e : Time_expr_ast.t) :
- *   (Time_slot_ds.t Seq.t option, string) result =
- *   match e with
- *   | Time_point_expr _ -> Ok None
- *   | Time_slots_expr e ->
- *     Time_slots_expr.matching_time_slots_internal ~force_match_mode
- *       search_param e
- *     |> Result.map Option.some
- * 
- * let next_match_time_slot (search_param : search_param)
- *     (e : Time_expr_ast.t) : ((int64 * int64) option, string) result =
- *   match e with
- *   | Time_point_expr _ -> Ok None
- *   | Time_slots_expr e -> Time_slots_expr.next_match_time_slot search_param e *)
