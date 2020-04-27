@@ -282,6 +282,30 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
   Unix.gmtime timestamp
 
+let flatten_month_day_ranges (l : int Range.t list) : int Seq.t =
+  List.to_seq l
+  |> Seq.flat_map
+    (Range.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x))
+
+let flatten_weekday_ranges (l : weekday Range.t list) :
+  weekday Seq.t =
+  List.to_seq l
+  |> Seq.flat_map
+    (Range.flatten_into_seq ~modulo:7 ~of_int:weekday_of_tm_int
+       ~to_int:tm_int_of_weekday)
+
+let flatten_month_ranges (l : month Range.t list) : month Seq.t =
+  List.to_seq l
+  |> Seq.flat_map
+    (Range.flatten_into_seq
+       ~of_int:(fun x -> month_of_tm_int x |> Result.get_ok)
+       ~to_int:tm_int_of_month)
+
+let flatten_year_ranges (l : int Range.t list) : int Seq.t =
+  List.to_seq l
+  |> Seq.flat_map
+    (Range.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x))
+
 module Current = struct
   let cur_unix_time () : int64 = Unix.time () |> Int64.of_float
 

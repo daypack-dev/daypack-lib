@@ -396,11 +396,6 @@ module To_time_pattern_lossy = struct
         (base : Time_pattern.t) : Time_pattern.t Seq.t =
       List.to_seq l
       |> Seq.map (fun e -> update_time_pattern_using_month_day_expr e base)
-
-    let flatten_month_day_ranges (l : int Range.t list) : int Seq.t =
-      List.to_seq l
-      |> Seq.flat_map
-        (Range.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x))
   end
 
   module Weekday = struct
@@ -415,13 +410,6 @@ module To_time_pattern_lossy = struct
         (base : Time_pattern.t) : Time_pattern.t Seq.t =
       List.to_seq l
       |> Seq.map (fun e -> update_time_pattern_using_weekday_expr e base)
-
-    let flatten_weekday_ranges (l : Time.weekday Range.t list) :
-      Time.weekday Seq.t =
-      List.to_seq l
-      |> Seq.flat_map
-        (Range.flatten_into_seq ~modulo:7 ~of_int:Time.weekday_of_tm_int
-           ~to_int:Time.tm_int_of_weekday)
   end
 
   module Day = struct
@@ -455,13 +443,6 @@ module To_time_pattern_lossy = struct
         (base : Time_pattern.t) : Time_pattern.t Seq.t =
       List.to_seq l
       |> Seq.map (fun e -> update_time_pattern_using_month_expr e base)
-
-    let flatten_month_ranges (l : Time.month Range.t list) : Time.month Seq.t =
-      List.to_seq l
-      |> Seq.flat_map
-        (Range.flatten_into_seq
-           ~of_int:(fun x -> Time.month_of_tm_int x |> Result.get_ok)
-           ~to_int:Time.tm_int_of_month)
   end
 
   module Year = struct
@@ -471,11 +452,6 @@ module To_time_pattern_lossy = struct
 
     let time_pattern_of_year_expr x =
       update_time_pattern_using_year_expr x Time_pattern.empty
-
-    let flatten_year_ranges (l : int Range.t list) : int Seq.t =
-      List.to_seq l
-      |> Seq.flat_map
-        (Range.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x))
   end
 
   let time_pattern_of_unbounded_time_point_expr
@@ -523,7 +499,7 @@ module To_time_pattern_lossy = struct
                   | Ok end_exc -> [ `Range_exc (start, end_exc) ] ) )
           | Month_days_and_hour_minute_second_ranges { month_days; hour_minute_second_ranges } ->
             (* check_hour_minute_second_ranges hour_minute_second_ranges; *)
-            Month_day.flatten_month_day_ranges month_days
+            Time.flatten_month_day_ranges month_days
             |> Seq.map Month_day.time_pattern_of_month_day_expr
             |> Seq.flat_map
               (Hour_minute
@@ -531,7 +507,7 @@ module To_time_pattern_lossy = struct
                  hour_minute_second_ranges)
             |> List.of_seq
           | Weekdays_and_hour_minute_second_ranges { weekdays; hour_minute_second_ranges } ->
-            Weekday.flatten_weekday_ranges weekdays
+            Time.flatten_weekday_ranges weekdays
             |> Seq.map Weekday.time_pattern_of_weekday_expr
             |> Seq.flat_map
               (Hour_minute
@@ -541,9 +517,9 @@ module To_time_pattern_lossy = struct
           | Months_and_month_days_and_hour_minute_second_ranges
               { months; month_days; hour_minute_second_ranges } ->
             let month_days =
-              Month_day.flatten_month_day_ranges month_days |> List.of_seq
+              Time.flatten_month_day_ranges month_days |> List.of_seq
             in
-            Month.flatten_month_ranges months
+            Time.flatten_month_ranges months
             |> Seq.map Month.time_pattern_of_month_expr
             |> Seq.flat_map
               (Month_day.time_patterns_of_month_days_and_base_time_pattern
@@ -555,9 +531,9 @@ module To_time_pattern_lossy = struct
             |> List.of_seq
           | Months_and_weekdays_and_hour_minute_second_ranges { months; weekdays; hour_minute_second_ranges } ->
             let weekdays =
-              Weekday.flatten_weekday_ranges weekdays |> List.of_seq
+              Time.flatten_weekday_ranges weekdays |> List.of_seq
             in
-            Month.flatten_month_ranges months
+            Time.flatten_month_ranges months
             |> Seq.map Month.time_pattern_of_month_expr
             |> Seq.flat_map
               (Weekday.time_patterns_of_weekdays_and_base_time_pattern
@@ -569,7 +545,7 @@ module To_time_pattern_lossy = struct
             |> List.of_seq
           | Months_and_weekday_and_hour_minute_second_ranges
               { months; weekday; hour_minute_second_ranges; month_weekday_mode = _ } ->
-            Month.flatten_month_ranges months
+            Time.flatten_month_ranges months
             |> Seq.map Month.time_pattern_of_month_expr
             |> Seq.map (Weekday.update_time_pattern_using_weekday_expr weekday)
             |> Seq.flat_map
@@ -579,11 +555,11 @@ module To_time_pattern_lossy = struct
             |> List.of_seq
           | Years_and_months_and_month_days_and_hour_minute_second_ranges
               { years; months; month_days; hour_minute_second_ranges } ->
-            let months = Month.flatten_month_ranges months |> List.of_seq in
+            let months = Time.flatten_month_ranges months |> List.of_seq in
             let month_days =
-              Month_day.flatten_month_day_ranges month_days |> List.of_seq
+              Time.flatten_month_day_ranges month_days |> List.of_seq
             in
-            Year.flatten_year_ranges years
+            Time.flatten_year_ranges years
             |> Seq.map Year.time_pattern_of_year_expr
             |> Seq.flat_map
               (Month.time_patterns_of_months_and_base_time_pattern months)
