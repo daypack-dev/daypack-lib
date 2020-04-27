@@ -41,12 +41,18 @@ let hour_to_second_multiplier = Int64.mul 60L minute_to_second_multiplier
 
 let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
 
+let check_second ~(second : int) : bool =
+  0 <= second
+  && second < 60
+
+let check_minute_second ~(minute : int) ~(second : int) : bool =
+  0 <= minute
+  && minute < 60
+  && check_second ~second
+
 let check_hour_minute_second ~(hour : int) ~(minute : int) ~(second : int) : bool =
   (0 <= hour && hour < 24)
-  && 0 <= minute
-  && minute < 60
-  && 0 <= second
-  && second < 60
+  && check_minute_second ~minute ~second
 
 let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
   if check_hour_minute_second ~hour ~minute ~second:0 then

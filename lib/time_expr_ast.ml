@@ -3,6 +3,8 @@ type bound =
   | `Next
   ]
 
+type second_expr = int
+
 type minute_second_expr = {
   minute : int;
   second : int;
@@ -13,6 +15,10 @@ type hour_minute_second_expr = {
   minute : int;
   second : int;
 }
+
+type second_range_expr = second_expr Range.t
+
+type minute_second_range_expr = minute_second_expr Range.t
 
 type hour_minute_second_range_expr = hour_minute_second_expr Range.t
 
@@ -44,7 +50,9 @@ type unbounded_time_point_expr =
       day : day_expr;
       hour_minute_second : hour_minute_second_expr;
     }
-  | Hour_minute_Second of hour_minute_second_expr
+  | Hour_minute_second of hour_minute_second_expr
+  | Minute_second of minute_second_expr
+  | Second of second_expr
 
 type time_point_expr = bound * unbounded_time_point_expr
 
