@@ -3,13 +3,13 @@ type bound =
   | `Next
   ]
 
-type hms_expr = {
+type hour_minute_second_expr = {
   hour : int;
   minute : int;
   second : int;
 }
 
-type hms_range_expr = hms_expr Range.t
+type hour_minute_second_range_expr = hour_minute_second_expr Range.t
 
 type day_expr =
   | Weekday of Time.weekday
@@ -24,22 +24,22 @@ type month_expr = Time.month
 type year_expr = int
 
 type unbounded_time_point_expr =
-  | Year_month_day_hms of {
+  | Year_month_day_hour_minute_second of {
       year : year_expr;
       month : month_expr;
       month_day : int;
-      hms : hms_expr;
+      hour_minute_second : hour_minute_second_expr;
     }
-  | Month_day_hms of {
+  | Month_day_hour_minute_second of {
       month : month_expr;
       month_day : int;
-      hms : hms_expr;
+      hour_minute_second : hour_minute_second_expr;
     }
-  | Day_hms of {
+  | Day_hour_minute_second of {
       day : day_expr;
-      hms : hms_expr;
+      hour_minute_second : hour_minute_second_expr;
     }
-  | Hms of hms_expr
+  | Hour_Minute_Second of hour_minute_second_expr
 
 type time_point_expr = bound * unbounded_time_point_expr
 
@@ -52,35 +52,35 @@ type unbounded_time_slots_expr =
       start : unbounded_time_point_expr;
       end_exc : unbounded_time_point_expr;
     }
-  | Month_days_and_hms_ranges of {
+  | Month_days_and_hour_minute_second_ranges of {
       month_days : int Range.t list;
-      hms_ranges : hms_range_expr list;
+      hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
-  | Weekdays_and_hms_ranges of {
+  | Weekdays_and_hour_minute_second_ranges of {
       weekdays : Time.weekday Range.t list;
-      hms_ranges : hms_range_expr list;
+      hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
-  | Months_and_month_days_and_hms_ranges of {
+  | Months_and_month_days_and_hour_minute_second_ranges of {
       months : month_expr Range.t list;
       month_days : int Range.t list;
-      hms_ranges : hms_range_expr list;
+      hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
-  | Months_and_weekdays_and_hms_ranges of {
+  | Months_and_weekdays_and_hour_minute_second_ranges of {
       months : month_expr Range.t list;
       weekdays : Time.weekday Range.t list;
-      hms_ranges : hms_range_expr list;
+      hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
-  | Months_and_weekday_and_hms_ranges of {
+  | Months_and_weekday_and_hour_minute_second_ranges of {
       months : month_expr Range.t list;
       weekday : Time.weekday;
-      hms_ranges : hms_range_expr list;
+      hour_minute_second_ranges : hour_minute_second_range_expr list;
       month_weekday_mode : month_weekday_mode option;
     }
-  | Years_and_months_and_month_days_and_hms_ranges of {
+  | Years_and_months_and_month_days_and_hour_minute_second_ranges of {
       years : int Range.t list;
       months : month_expr Range.t list;
       month_days : int Range.t list;
-      hms_ranges : hms_range_expr list;
+      hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
 
 type time_slots_expr = bound * unbounded_time_slots_expr
