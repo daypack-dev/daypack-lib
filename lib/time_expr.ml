@@ -48,26 +48,26 @@ module Interpret_string = struct
 
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =
-      skip_non_num_string *> char ':' *> skip_non_num_string *> char ':' *>
-      nat_zero
+      skip_non_num_string
+      *> char ':'
+      *> skip_non_num_string
+      *> char ':'
+      *> nat_zero
       >>= fun second ->
       if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
-      else
-        return second
+      else return second
   end
 
   module Minute_second = struct
     let minute_second_expr : Time_expr_ast.minute_second_expr t =
-      skip_non_num_string *> char ':' *>
-      nat_zero
+      skip_non_num_string *> char ':' *> nat_zero
       >>= fun minute ->
       if minute >= 60 then fail (Printf.sprintf "Invalid minute: %d" minute)
       else
-      option 0 (char ':' *> nat_zero)
+        option 0 (char ':' *> nat_zero)
         >>= fun second ->
         if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
-        else
-          return Time_expr_ast.{ minute; second }
+        else return Time_expr_ast.{ minute; second }
   end
 
   module Hour_minute_second = struct
@@ -231,9 +231,7 @@ module Interpret_string = struct
       return (Time_expr_ast.Minute_second minute_second)
 
     let tp_second =
-      Second.second_expr
-      >>= fun second ->
-      return (Time_expr_ast.Second second)
+      Second.second_expr >>= fun second -> return (Time_expr_ast.Second second)
 
     let unbounded_time_point_expr : Time_expr_ast.unbounded_time_point_expr t =
       choice
