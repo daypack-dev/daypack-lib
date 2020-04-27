@@ -46,15 +46,9 @@ module Interpret_string = struct
   let ranges_expr ~to_int (p : 'a Range.t t) : 'a Range.t list t =
     sep_by_comma1 p >>| Range.compress_list ~to_int
 
-  let skip_non_num_string_until_colon = skip_non_num_string ~delim:(Some ':')
-
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =
-      skip_non_num_string_until_colon
-      *> char ':'
-      *> skip_non_num_string_until_colon
-      *> char ':'
-      *> nat_zero
+      string "::" *> nat_zero
       >>= fun second ->
       if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
       else return second
@@ -62,7 +56,7 @@ module Interpret_string = struct
 
   module Minute_second = struct
     let minute_second_expr : Time_expr_ast.minute_second_expr t =
-      skip_non_num_string_until_colon *> char ':' *> nat_zero
+      char ':' *> nat_zero
       >>= fun minute ->
       if minute >= 60 then fail (Printf.sprintf "Invalid minute: %d" minute)
       else
