@@ -3,8 +3,10 @@ open Angstrom
 let alpha_string : string t =
   take_while1 (function 'a' .. 'z' | 'A' .. 'Z' -> true | _ -> false)
 
-let skip_non_num_string : unit t =
-  skip_while (function '0' .. '9' -> true | _ -> false)
+let skip_non_num_string ~delim : unit t =
+  skip_while (function
+      | '0' .. '9' -> false
+      | c -> ( match delim with None -> true | Some x -> c <> x ))
 
 let nat_zero : int t =
   take_while1 (function '0' .. '9' -> true | _ -> false)
