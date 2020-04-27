@@ -35,10 +35,11 @@ type month_expr = Time.month
 type year_expr = int
 
 type unbounded_time_points_expr =
-  | Year_month_day_hour_minute_second of {
-      year : year_expr;
-      month : month_expr;
-      month_day : int;
+  | Second of second_expr
+  | Minute_second of minute_second_expr
+  | Hour_minute_second of hour_minute_second_expr
+  | Day_hour_minute_second of {
+      day : day_expr;
       hour_minute_second : hour_minute_second_expr;
     }
   | Month_day_hour_minute_second of {
@@ -46,13 +47,12 @@ type unbounded_time_points_expr =
       month_day : int;
       hour_minute_second : hour_minute_second_expr;
     }
-  | Day_hour_minute_second of {
-      day : day_expr;
+  | Year_month_day_hour_minute_second of {
+      year : year_expr;
+      month : month_expr;
+      month_day : int;
       hour_minute_second : hour_minute_second_expr;
     }
-  | Hour_minute_second of hour_minute_second_expr
-  | Minute_second of minute_second_expr
-  | Second of second_expr
 
 type time_points_expr = bound * unbounded_time_points_expr
 
