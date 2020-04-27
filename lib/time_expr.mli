@@ -27,7 +27,8 @@ module Time_slots_expr : sig
 end
 
 module To_string : sig
-  val debug_string_of_hour_minute_second_ranges : Time_expr_ast.hour_minute_second_expr -> string
+  val debug_string_of_hour_minute_second_ranges :
+    Time_expr_ast.hour_minute_second_expr -> string
 end
 
 module Interpret_string : sig
