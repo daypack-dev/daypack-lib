@@ -3,6 +3,11 @@ type bound =
   | `Next
   ]
 
+type minute_second_expr = {
+  minute : int;
+  second : int;
+}
+
 type hour_minute_second_expr = {
   hour : int;
   minute : int;
@@ -39,7 +44,7 @@ type unbounded_time_point_expr =
       day : day_expr;
       hour_minute_second : hour_minute_second_expr;
     }
-  | Hour_Minute_Second of hour_minute_second_expr
+  | Hour_minute_Second of hour_minute_second_expr
 
 type time_point_expr = bound * unbounded_time_point_expr
 

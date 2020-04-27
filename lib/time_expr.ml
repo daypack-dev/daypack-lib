@@ -45,7 +45,7 @@ module Interpret_string = struct
   let ranges_expr ~to_int (p : 'a Range.t t) : 'a Range.t list t =
     sep_by_comma1 p >>| Range.compress_list ~to_int
 
-  module Hour_Minute_Second = struct
+  module Hour_minute_Second = struct
     let hour_minute_second_mode_expr =
       option `Hour_in_24_hours
         ( string_ci "am" *> return `Hour_in_AM
@@ -169,7 +169,7 @@ module Interpret_string = struct
       >>= fun month ->
       hyphen *> nat_zero
       >>= fun month_day ->
-      space *> Hour_Minute_Second.hour_minute_second_expr
+      space *> Hour_minute_Second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return (Time_expr_ast.Year_month_day_hour_minute_second { year; month; month_day; hour_minute_second })
 
@@ -178,17 +178,17 @@ module Interpret_string = struct
       >>= fun month ->
       hyphen *> nat_zero
       >>= fun month_day ->
-      space *> Hour_Minute_Second.hour_minute_second_expr
+      space *> Hour_minute_Second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return (Time_expr_ast.Month_day_hour_minute_second { month; month_day; hour_minute_second })
 
     let tp_d_hour_minute_second =
       Day.day_expr
       >>= fun day ->
-      space *> Hour_Minute_Second.hour_minute_second_expr
+      space *> Hour_minute_Second.hour_minute_second_expr
       >>= fun hour_minute_second -> return (Time_expr_ast.Day_hour_minute_second { day; hour_minute_second })
 
-    let tp_hour_minute_second = Hour_Minute_Second.hour_minute_second_expr >>= fun hour_minute_second -> return (Time_expr_ast.Hour_Minute_Second hour_minute_second)
+    let tp_hour_minute_second = Hour_minute_Second.hour_minute_second_expr >>= fun hour_minute_second -> return (Time_expr_ast.Hour_minute_Second hour_minute_second)
 
     let unbounded_time_point_expr : Time_expr_ast.unbounded_time_point_expr t =
       choice [ tp_ymd_hour_minute_second; tp_md_hour_minute_second; tp_d_hour_minute_second; tp_hour_minute_second ]
@@ -210,14 +210,14 @@ module Interpret_string = struct
     let ts_days_hour_minute_second_ranges =
       Month_day.month_day_ranges_expr
       >>= (fun month_days ->
-          space *> dot *> space *> Hour_Minute_Second.hour_minute_second_ranges_expr
+          space *> dot *> space *> Hour_minute_Second.hour_minute_second_ranges_expr
           >>= fun hour_minute_second_ranges ->
           return
             (Time_expr_ast.Month_days_and_hour_minute_second_ranges
                { month_days; hour_minute_second_ranges }))
           <|> ( Weekday.weekday_ranges_expr
                 >>= fun weekdays ->
-                space *> dot *> space *> Hour_Minute_Second.hour_minute_second_ranges_expr
+                space *> dot *> space *> Hour_minute_Second.hour_minute_second_ranges_expr
                 >>= fun hour_minute_second_ranges ->
                 return
                   (Time_expr_ast.Weekdays_and_hour_minute_second_ranges { weekdays; hour_minute_second_ranges }) )
@@ -227,7 +227,7 @@ module Interpret_string = struct
       >>= fun months ->
       space *> dot *> space *> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      space *> dot *> space *> Hour_Minute_Second.hour_minute_second_ranges_expr
+      space *> dot *> space *> Hour_minute_Second.hour_minute_second_ranges_expr
       >>= fun hour_minute_second_ranges ->
       return
         (Time_expr_ast.Months_and_month_days_and_hour_minute_second_ranges
@@ -238,7 +238,7 @@ module Interpret_string = struct
       >>= fun months ->
       space *> dot *> space *> Weekday.weekday_ranges_expr
       >>= fun weekdays ->
-      space *> dot *> space *> Hour_Minute_Second.hour_minute_second_ranges_expr
+      space *> dot *> space *> Hour_minute_Second.hour_minute_second_ranges_expr
       >>= fun hour_minute_second_ranges ->
       return
         (Time_expr_ast.Months_and_weekdays_and_hour_minute_second_ranges
@@ -260,7 +260,7 @@ module Interpret_string = struct
       >>= fun month_weekday_mode ->
       space *> Weekday.weekday_expr
       >>= fun weekday ->
-      space *> dot *> space *> Hour_Minute_Second.hour_minute_second_ranges_expr
+      space *> dot *> space *> Hour_minute_Second.hour_minute_second_ranges_expr
       >>= fun hour_minute_second_ranges ->
       return
         (Time_expr_ast.Months_and_weekday_and_hour_minute_second_ranges
@@ -273,7 +273,7 @@ module Interpret_string = struct
       >>= fun months ->
       space *> dot *> space *> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      space *> dot *> space *> Hour_Minute_Second.hour_minute_second_ranges_expr
+      space *> dot *> space *> Hour_minute_Second.hour_minute_second_ranges_expr
       >>= fun hour_minute_second_ranges ->
       return
         (Time_expr_ast.Years_and_months_and_month_days_and_hour_minute_second_ranges
@@ -499,7 +499,7 @@ module To_time_pattern_lossy = struct
             Time_pattern.empty
             |> Day.update_time_pattern_using_day_expr day
             |> Hour_minute.update_time_pattern_using_hour_minute_second_expr hour_minute_second
-          | Hour_Minute_Second hour_minute_second ->
+          | Hour_minute_Second hour_minute_second ->
             Hour_minute.update_time_pattern_using_hour_minute_second_expr hour_minute_second
               Time_pattern.empty )
     with Invalid_time_expr msg -> Error msg
@@ -662,7 +662,7 @@ module Time_point_expr = struct
     | Ok pat ->
       let selector =
         match e with
-        | Year_month_day_hour_minute_second _ | Month_day_hour_minute_second _ | Day_hour_minute_second _ | Hour_Minute_Second _ -> (
+        | Year_month_day_hour_minute_second _ | Month_day_hour_minute_second _ | Day_hour_minute_second _ | Hour_minute_Second _ -> (
             match Option.value ~default:bound force_bound with
             | `Next -> OSeq.take 1
             | `Every -> fun x -> x )
