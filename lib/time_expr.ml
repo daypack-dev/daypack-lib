@@ -662,6 +662,30 @@ module To_time_pattern_lossy = struct
     : (Time_pattern.t, string) result =
     time_pattern_of_unbounded_time_points_expr e
 
+  let time_pattern_of_unbounded_time_points_expr_with_name ~(f_resolve_tp_name : string -> (Time_expr_ast.unbounded_time_points_expr, unit) result)
+      (e : Time_expr_ast.unbounded_time_points_expr_with_name)
+    : (Time_pattern.t, string) result =
+    match e with
+    | Name s -> (
+        match f_resolve_tp_name s with
+        | Ok e -> time_pattern_of_unbounded_time_points_expr e
+        | Error () -> Error (Printf.sprintf "Name cannot be resolved: %s" s)
+    )
+    | Concrete e ->
+      time_pattern_of_unbounded_time_points_expr e
+
+  let time_pattern_of_time_points_expr_with_name ~(f_resolve_tpe_name : string -> (Time_expr_ast.time_points_expr, unit) result)
+      (e : Time_expr_ast.time_points_expr_with_name)
+    : (Time_pattern.t, string) result =
+    match e with
+    | Name s -> (
+        match f_resolve_tp_name s with
+        | Ok e -> time_pattern_of_time_points_expr e
+        | Error () -> Error (Printf.sprintf "Name cannot be resolved: %s" s)
+    )
+    | Concrete e ->
+      time_pattern_of_time_points_expr e
+
   let time_range_patterns_of_unbounded_time_slots_expr
       (e : Time_expr_ast.unbounded_time_slots_expr) :
     (Time_pattern.time_range_pattern list, string) result =
@@ -764,6 +788,21 @@ module To_time_pattern_lossy = struct
     (Time_pattern.time_range_pattern list, string) result =
     time_range_patterns_of_unbounded_time_slots_expr e
 
+  let time_range_patterns_of_unbounded_time_slots_expr_with_name
+    ~(f_resolve_tpe_name : string -> (Time_expr_ast.unbounded_time_points_expr, unit) result)
+    ~(f_resolve_tse_name : string -> (Time_expr_ast.unbounded_time_slots_expr, unit) result)
+      (e : Time_expr_ast.unbounded_time_slots_expr_with_name) :
+    (Time_pattern.time_range_pattern list, string) result =
+    match e with
+    | Name s -> (
+        match f_resolve_tse_name s with
+        | Ok e ->
+          time_range_patterns_of_unbounded_time_slots_expr e
+        | Error () ->
+          Error (Printf.sprintf "Name cannot be resolved: %s" s)
+      )
+    time_range_patterns_of_unbounded_time_slots_expr e
+
   let single_or_ranges_of_time_expr (e : Time_expr_ast.t) :
     (Time_pattern.single_or_ranges, string) result =
     match e with
@@ -772,11 +811,15 @@ module To_time_pattern_lossy = struct
         | Ok x -> Ok (Single_time_pattern x)
         | Error msg -> Error msg )
     | Time_expr_ast.Time_points_expr_with_name e -> (
-        match time_pattern_of_time_points_expr e with
+        match time_pattern_of_time_points_expr_with_name e with
         | Ok x -> Ok (Single_time_pattern x)
         | Error msg -> Error msg )
     | Time_expr_ast.Time_slots_expr e -> (
         match time_range_patterns_of_time_slots_expr e with
+        | Ok x -> Ok (Time_range_patterns x)
+        | Error msg -> Error msg )
+    | Time_expr_ast.Time_slots_expr_with_name e -> (
+        match time_range_patterns_of_time_slots_expr_with_name e with
         | Ok x -> Ok (Time_range_patterns x)
         | Error msg -> Error msg )
 
