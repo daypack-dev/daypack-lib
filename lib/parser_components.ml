@@ -3,6 +3,9 @@ open Angstrom
 let alpha_string : string t =
   take_while1 (function 'a' .. 'z' | 'A' .. 'Z' -> true | _ -> false)
 
+let identifier_string : string t =
+  take_while1 (function 'a' .. 'z' | 'A' .. 'Z' | '_' -> true | _ -> false)
+
 let skip_non_num_string ~delim : unit t =
   skip_while (function
       | '0' .. '9' -> false

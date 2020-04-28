@@ -29,6 +29,10 @@ module Interpret_string = struct
            char '!' *> return `Every;
          ])
 
+  let with_name (p : 'a t) : 'a Time_expr_ast.with_name t =
+    (p >>= fun x -> return (Time_expr_ast.Concrete x ))
+    <|> (identifier_string >>= fun s -> return (Time_expr_ast.Name s))
+
   let sep_by_comma1 (p : 'a t) : 'a list t = sep_by1 (space *> comma *> space) p
 
   let range_inc_expr (p : 'a t) : 'a Range.t t =
@@ -247,6 +251,15 @@ module Interpret_string = struct
       space *> unbounded_time_points_expr >>= fun e -> return (bound, e)
   end
 
+  module Time_points_expr_with_name = struct
+    let unbounded_time_points_expr_with_name : Time_expr_ast.unbounded_time_points_expr_with_name t
+      =
+      with_name Time_points_expr.unbounded_time_points_expr
+
+    let time_points_expr_with_name : Time_expr_ast.time_points_expr_with_name t =
+      with_name Time_points_expr.time_points_expr
+  end
+
   module Time_slots_expr = struct
     let ts_single =
       Time_points_expr.unbounded_time_points_expr
@@ -352,11 +365,44 @@ module Interpret_string = struct
       space *> unbounded_time_slots_expr >>= fun e -> return (bound, e)
   end
 
+  module Time_slots_expr_with_name = struct
+    let ts_single_with_name =
+      Time_points_expr_with_name.unbounded_time_points_expr_with_name
+      >>= fun start ->
+      space *> to_string *> space *> Time_points_expr_with_name.unbounded_time_points_expr_with_name
+      >>= fun end_exc ->
+      return (Time_expr_ast.Single_time_slot { start; end_exc })
+
+    let unbounded_time_slots_expr_with_name : Time_expr_ast.unbounded_time_slots_expr_with_name t =
+      choice
+        [
+          ts_single_with_name;
+          Time_slots_expr.ts_days_hour_minute_second_ranges;
+          Time_slots_expr.ts_months_mdays_hour_minute_second;
+          Time_slots_expr.ts_months_wdays_hour_minute_second;
+          Time_slots_expr.ts_months_wday_hour_minute_second;
+          Time_slots_expr.ts_years_months_mdays_hour_minute_second;
+        ]
+
+    let time_slots_expr_with_name : Time_expr_ast.time_slots_expr_with_name t =
+      with_name (
+        bound
+        >>= fun bound ->
+        space *> unbounded_time_slots_expr_with_name >>= fun e -> return (bound, e)
+      )
+  end
+
   let time_expr =
-    Time_points_expr.time_points_expr
-    >>| (fun e -> Time_expr_ast.Time_points_expr e)
-        <|> ( Time_slots_expr.time_slots_expr
-              >>| fun e -> Time_expr_ast.Time_slots_expr e )
+    choice [
+      (Time_points_expr.time_points_expr
+      >>| fun e -> Time_expr_ast.Time_points_expr e);
+      (Time_slots_expr.time_slots_expr
+      >>| fun e -> Time_expr_ast.Time_slots_expr e);
+      (Time_slots_expr_with_name.time_slots_expr_with_name
+      >>| fun e -> Time_expr_ast.Time_slots_expr_with_name e);
+      (Time_slots_expr_with_name.time_slots_expr_with_name
+      >>| fun e -> Time_expr_ast.Time_slots_expr_with_name e);
+    ]
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string (time_expr <* end_of_input) s
@@ -365,16 +411,50 @@ module Interpret_string = struct
     (Time_expr_ast.time_points_expr, string) result =
     match of_string s with
     | Ok (Time_points_expr e) -> Ok e
+    | Ok (Time_points_expr_with_name _) ->
+      Error "String translates to time points expression with alias"
     | Ok (Time_slots_expr _) ->
       Error "String translates to time slots expression"
+    | Ok (Time_slots_expr_with_name _) ->
+      Error "String translates to time slots expression with alias"
     | Error msg -> Error msg
 
   let time_slots_expr_of_string (s : string) :
     (Time_expr_ast.time_slots_expr, string) result =
     match of_string s with
     | Ok (Time_points_expr _) ->
-      Error "String translates to time point expression"
+      Error "String translates to time points expression"
+    | Ok (Time_points_expr_with_name _) ->
+      Error "String translates to time points expression with alias"
     | Ok (Time_slots_expr e) -> Ok e
+    | Ok (Time_slots_expr_with_name _) ->
+      Error "String translates to time slots expression with alias"
+    | Error msg -> Error msg
+
+  let time_points_expr_with_name_of_string (s : string) :
+    (Time_expr_ast.time_points_expr_with_name, string) result =
+    match of_string s with
+    | Ok (Time_points_expr _) ->
+      Error "String translates to time points expression"
+    | Ok (Time_points_expr_with_name e) ->
+      Ok e
+    | Ok (Time_slots_expr _) ->
+      Error "String translates to time slots expression"
+    | Ok (Time_slots_expr_with_name _) ->
+      Error "String translates to time slots expression with alias"
+    | Error msg -> Error msg
+
+  let time_slots_expr_with_name_of_string (s : string) :
+    (Time_expr_ast.time_slots_expr_with_name, string) result =
+    match of_string s with
+    | Ok (Time_points_expr _) ->
+      Error "String translates to time points expression"
+    | Ok (Time_points_expr_with_name _) ->
+      Error "String translates to time points expression with alias"
+    | Ok (Time_slots_expr _) ->
+      Error "String translates to time slots expression"
+    | Ok (Time_slots_expr_with_name e) ->
+      Ok e
     | Error msg -> Error msg
 end
 
@@ -688,6 +768,10 @@ module To_time_pattern_lossy = struct
     (Time_pattern.single_or_ranges, string) result =
     match e with
     | Time_expr_ast.Time_points_expr e -> (
+        match time_pattern_of_time_points_expr e with
+        | Ok x -> Ok (Single_time_pattern x)
+        | Error msg -> Error msg )
+    | Time_expr_ast.Time_points_expr_with_name e -> (
         match time_pattern_of_time_points_expr e with
         | Ok x -> Ok (Single_time_pattern x)
         | Error msg -> Error msg )

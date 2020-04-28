@@ -3,6 +3,10 @@ type bound =
   | `Next
   ]
 
+type 'a with_name =
+  | Name of string
+  | Concrete of 'a
+
 type second_expr = int
 
 type minute_second_expr = {
@@ -54,16 +58,20 @@ type unbounded_time_points_expr =
       hour_minute_second : hour_minute_second_expr;
     }
 
+type unbounded_time_points_expr_with_name = unbounded_time_points_expr with_name
+
 type time_points_expr = bound * unbounded_time_points_expr
+
+type time_points_expr_with_name = time_points_expr with_name
 
 type month_weekday_mode =
   | First_n of int
   | Last_n of int
 
-type unbounded_time_slots_expr =
+type 'a unbounded_time_slots_expr_base =
   | Single_time_slot of {
-      start : unbounded_time_points_expr;
-      end_exc : unbounded_time_points_expr;
+      start : 'a;
+      end_exc : 'a;
     }
   | Month_days_and_hour_minute_second_ranges of {
       month_days : int Range.t list;
@@ -96,8 +104,16 @@ type unbounded_time_slots_expr =
       hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
 
+type unbounded_time_slots_expr = unbounded_time_points_expr unbounded_time_slots_expr_base
+
+type unbounded_time_slots_expr_with_name = unbounded_time_points_expr_with_name unbounded_time_slots_expr_base
+
 type time_slots_expr = bound * unbounded_time_slots_expr
+
+type time_slots_expr_with_name = (bound * unbounded_time_slots_expr_with_name) with_name
 
 type t =
   | Time_points_expr of time_points_expr
+  | Time_points_expr_with_name of time_points_expr_with_name
   | Time_slots_expr of time_slots_expr
+  | Time_slots_expr_with_name of time_slots_expr_with_name
