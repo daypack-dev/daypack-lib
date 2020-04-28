@@ -9,6 +9,72 @@ end
 
 exception Invalid_time_expr of string
 
+let max_resolve_depth = 1000
+
+let resolve_unbounded_time_points_expr
+    ~(f_resolve_tpe_name : string -> Time_expr_ast.unbounded_time_points_expr option)
+    (e : Time_expr_ast.unbounded_time_points_expr) : (Time_expr_ast.unbounded_time_points_expr, string) result =
+  let rec aux f_resolve_tpe_name remaining_resolve_depth name e =
+    if remaining_resolve_depth <= 0 then
+      Error "Maximum resolve depth reached"
+    else
+      match e with
+      | Time_expr_ast.Tpe_name s -> (
+          if name = Some s then
+            Error (Printf.sprintf "Name resolution loop detected for name: %s" s)
+          else
+            let name =
+              match name with
+              | None -> Some s
+              | Some x -> Some x
+            in
+            match f_resolve_tpe_name s with
+            | None ->
+              Error (Printf.sprintf "Name resolution failed for name: %s" s)
+            | Some e ->
+              aux f_resolve_tpe_name (pred remaining_resolve_depth) name e
+        )
+      | e -> Ok e
+  in
+  aux f_resolve_tpe_name max_resolve_depth None e
+
+let resolve_unbounded_time_slots_expr
+    ~(f_resolve_tse_name : string -> Time_expr_ast.unbounded_time_slots_expr option)
+    ~(f_resolve_tpe_name : string -> Time_expr_ast.unbounded_time_points_expr option)
+    (e : Time_expr_ast.unbounded_time_slots_expr) : (Time_expr_ast.unbounded_time_slots_expr, string) result =
+  let rec aux f_resolve_tse_name f_resolve_tpe_name remaining_resolve_depth name e =
+    if remaining_resolve_depth <= 0 then
+      Error "Maximum resolve depth reached"
+    else
+      match e with
+      | Time_expr_ast.Tse_name s -> (
+          if name = Some s then
+            Error (Printf.sprintf "Name resolution loop detected for name: %s" s)
+          else
+            let name =
+              match name with
+              | None -> Some s
+              | Some x -> Some x
+            in
+            match f_resolve_tse_name s with
+            | None ->
+              Error (Printf.sprintf "Name resolution failed for name: %s" s)
+            | Some e ->
+              aux f_resolve_tse_name f_resolve_tpe_name (pred remaining_resolve_depth) name e
+        )
+      | Single_time_slot { start; end_exc } -> (
+          match resolve_unbounded_time_points_expr ~f_resolve_tpe_name start with
+          | Error msg -> Error msg
+          | Ok start ->
+            match resolve_unbounded_time_points_expr ~f_resolve_tpe_name end_exc with
+            | Error msg -> Error msg
+            | Ok end_exc ->
+              Ok (Time_expr_ast.Single_time_slot { start; end_exc })
+        )
+      | e -> Ok e
+  in
+  aux f_resolve_tse_name f_resolve_tpe_name max_resolve_depth None e
+
 module Interpret_string = struct
   open Angstrom
   open Parser_components
@@ -539,11 +605,16 @@ module To_time_pattern_lossy = struct
   end
 
   let time_pattern_of_unbounded_time_points_expr
+    ~(f_resolve_tpe_name : string -> Time_expr_ast.unbounded_time_points_expr option)
       (e : Time_expr_ast.unbounded_time_points_expr) :
     (Time_pattern.t, string) result =
     try
+      match resolve_unbounded_time_points_expr ~f_resolve_tpe_name e with
+      | Error msg -> Error msg
+      | Ok e ->
       Ok
         ( match e with
+          | Tpe_name _ -> failwith "Unexpected case"
           | Year_month_day_hour_minute_second
               { year; month; month_day; hour_minute_second } ->
             Time_pattern.empty
@@ -578,9 +649,11 @@ module To_time_pattern_lossy = struct
               Time_pattern.empty )
     with Invalid_time_expr msg -> Error msg
 
-  let time_pattern_of_time_points_expr ((_, e) : Time_expr_ast.time_points_expr)
+  let time_pattern_of_time_points_expr
+    ~(f_resolve_tpe_name : string -> Time_expr_ast.unbounded_time_points_expr option)
+      ((_, e) : Time_expr_ast.time_points_expr)
     : (Time_pattern.t, string) result =
-    time_pattern_of_unbounded_time_points_expr e
+    time_pattern_of_unbounded_time_points_expr ~f_resolve_tpe_name e
 
   let time_range_patterns_of_unbounded_time_slots_expr
       (e : Time_expr_ast.unbounded_time_slots_expr) :

@@ -35,6 +35,7 @@ type month_expr = Time.month
 type year_expr = int
 
 type unbounded_time_points_expr =
+  | Tpe_name of string
   | Second of second_expr
   | Minute_second of minute_second_expr
   | Hour_minute_second of hour_minute_second_expr
@@ -61,6 +62,7 @@ type month_weekday_mode =
   | Last_n of int
 
 type unbounded_time_slots_expr =
+  | Tse_name of string
   | Single_time_slot of {
       start : unbounded_time_points_expr;
       end_exc : unbounded_time_points_expr;
