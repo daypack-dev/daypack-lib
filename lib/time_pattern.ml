@@ -42,6 +42,18 @@ let empty =
     seconds = [];
   }
 
+let of_unix_time ~(time_zone_of_time_pattern : Time.time_zone) (x : int64) : t =
+  let tm = Time.tm_of_unix_time ~time_zone_of_tm:time_zone_of_time_pattern x in
+  {
+    years = [tm.tm_year];
+    months = [ Time.month_of_tm_int tm.tm_mon |> Result.get_ok ];
+    weekdays = [];
+    month_days = [ tm.tm_mday];
+    hours = [ tm.tm_hour];
+    minutes = [ tm.tm_min];
+    seconds = [ tm.tm_sec ];
+  }
+
 let search_in_time_zone_of_search_param (param : search_param) : Time.time_zone
   =
   match param with
