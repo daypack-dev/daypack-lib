@@ -234,7 +234,7 @@ let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
   map
     (fun (years, months, month_days, (weekdays, hours, minutes, seconds)) ->
        let open Daypack_lib.Time_pattern in
-       { years; months; month_days; weekdays; hours; minutes; seconds })
+       { years; months; month_days; weekdays; hours; minutes; seconds; unix_times = [] })
     (quad
        (list_size (int_bound 5) (int_range 1980 2100))
        (list_size (int_bound 5) month_gen)

@@ -732,6 +732,7 @@ let debug_time_pattern_matching_tm_seq () =
       hours = [ 11 ];
       minutes = [ 0 ];
       seconds = [];
+      unix_times = [];
     }
   in
   let search_years_ahead = 100 in
@@ -796,6 +797,7 @@ let debug_time_pattern_matching_time_slots () =
       hours = [ 13 ];
       minutes = [];
       seconds = [];
+      unix_times = [];
     }
   in
   Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
@@ -850,6 +852,7 @@ let debug_time_range_pattern_matching_time_slots () =
         hours = [ 13 ];
         minutes = [];
         seconds = [];
+        unix_times = [];
       },
         {
           years = [];
@@ -859,6 +862,7 @@ let debug_time_range_pattern_matching_time_slots () =
           hours = [ 13 ];
           minutes = [];
           seconds = [];
+          unix_times = [];
         } )
   in
   Daypack_lib.Time_pattern.Print.debug_print_time_range_pattern pattern;
@@ -892,6 +896,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
         hours = [];
         minutes = [];
         seconds = [];
+        unix_times = [];
       },
         {
           years = [];
@@ -901,6 +906,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
           hours = [];
           minutes = [];
           seconds = [];
+          unix_times = [];
         } );
     ]
   in
