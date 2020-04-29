@@ -272,7 +272,7 @@ module Interpret_string = struct
 
   module Time_points_expr = struct
     let tp_name =
-      string_ci "tp:" *> ident_string >>| fun s -> Time_expr_ast.Tpe_name s
+      string_ci "at:" *> ident_string >>| fun s -> Time_expr_ast.Tpe_name s
 
     let tp_ymd_hour_minute_second =
       nat_zero
@@ -339,7 +339,7 @@ module Interpret_string = struct
 
   module Time_slots_expr = struct
     let ts_name =
-      string_ci "ts:" *> ident_string >>| fun s -> Time_expr_ast.Tse_name s
+      string_ci "during:" *> ident_string >>| fun s -> Time_expr_ast.Tse_name s
 
     let ts_explicit_time_slots =
       sep_by_comma1
