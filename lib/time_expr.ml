@@ -132,7 +132,7 @@ module Interpret_string = struct
         <|> (p >>| fun x -> `Range_inc (x, x))
 
   let ranges_expr ~to_int (p : 'a Range.t t) : 'a Range.t list t =
-    sep_by_comma1 p >>| Range.compress_list ~to_int
+    sep_by_comma1 p >>| Range.Compress.compress_list ~to_int
 
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =

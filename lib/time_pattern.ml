@@ -133,7 +133,7 @@ module Matching_seconds = struct
            ({ acc with tm_sec = start_sec }, { acc with tm_sec = 60 }))
     | l ->
       List.sort_uniq compare l
-      |> Range.range_seq_of_list ~to_int:(fun x -> x)
+      |> Range.Of_list.range_seq_of_list ~to_int:(fun x -> x)
       |> Seq.map
         (Range.map
            ~f_inc:(fun (x, y) ->
@@ -191,7 +191,7 @@ module Matching_minutes = struct
       in
       List.filter (fun pat_min -> start_min <= pat_min) l
       |> List.sort_uniq compare
-      |> Range.range_seq_of_list ~to_int:(fun x -> x)
+      |> Range.Of_list.range_seq_of_list ~to_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
@@ -246,7 +246,7 @@ module Matching_hours = struct
       in
       List.filter (fun hour -> start_hour <= hour) l
       |> List.sort_uniq compare
-      |> Range.range_seq_of_list ~to_int:(fun x -> x)
+      |> Range.Of_list.range_seq_of_list ~to_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
@@ -345,15 +345,15 @@ module Matching_days = struct
              } ))
     | [], _weekdays ->
       matching_weekdays t start acc
-      |> Range.range_seq_of_seq ~to_int:(fun x -> x)
+      |> Range.Of_seq.range_seq_of_seq ~to_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
     | _month_days, [] ->
       matching_month_days t start acc
-      |> Range.range_seq_of_seq ~to_int:(fun x -> x)
+      |> Range.Of_seq.range_seq_of_seq ~to_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
     | _, _ ->
       matching_int_days t start acc
-      |> Range.range_seq_of_seq ~to_int:(fun x -> x)
+      |> Range.Of_seq.range_seq_of_seq ~to_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
@@ -458,7 +458,7 @@ module Matching_months = struct
       in
       List.map Time.tm_int_of_month l
       |> List.sort_uniq compare
-      |> Range.range_seq_of_list ~to_int:(fun x -> x)
+      |> Range.Of_list.range_seq_of_list ~to_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
@@ -537,7 +537,7 @@ module Matching_years = struct
             end_tm )
       in
       List.sort_uniq compare l
-      |> Range.range_seq_of_list ~to_int:(fun x -> x)
+      |> Range.Of_list.range_seq_of_list ~to_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
