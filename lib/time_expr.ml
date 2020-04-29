@@ -114,8 +114,6 @@ module Interpret_string = struct
            char '!' *> return `Every;
          ])
 
-  let sep_by_comma1 (p : 'a t) : 'a list t = sep_by1 (space *> comma *> space) p
-
   let range_inc_expr (p : 'a t) : 'a Range.t t =
     p
     >>= (fun x ->

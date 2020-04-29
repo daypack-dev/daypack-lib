@@ -21,3 +21,5 @@ let comma = char ','
 let dot = char '.'
 
 let hyphen = char '-'
+
+let sep_by_comma1 (p : 'a t) : 'a list t = sep_by1 (space *> comma *> space) p
