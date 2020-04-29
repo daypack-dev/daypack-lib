@@ -443,7 +443,7 @@ module Interpret_string = struct
   end
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
-    parse_string
+    parse_string ~consume:Consume.All
       ( Time_points_expr.time_points_expr
         <* end_of_input
         >>| (fun e -> Time_expr_ast.Time_points_expr e)
@@ -454,11 +454,11 @@ module Interpret_string = struct
 
   let time_points_expr_of_string (s : string) :
     (Time_expr_ast.time_points_expr, string) result =
-    parse_string (Time_points_expr.time_points_expr <* end_of_input) s
+    parse_string ~consume:Consume.All Time_points_expr.time_points_expr s
 
   let time_slots_expr_of_string (s : string) :
     (Time_expr_ast.time_slots_expr, string) result =
-    parse_string (Time_slots_expr.time_slots_expr <* end_of_input) s
+    parse_string ~consume:Consume.All Time_slots_expr.time_slots_expr s
 end
 
 module To_time_pattern_lossy = struct
