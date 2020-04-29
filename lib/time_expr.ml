@@ -271,6 +271,9 @@ module Interpret_string = struct
   end
 
   module Time_points_expr = struct
+    let tp_name =
+      string_ci "tp:" *> ident_string >>| fun s -> Time_expr_ast.Tpe_name s
+
     let tp_ymd_hour_minute_second =
       nat_zero
       >>= fun year ->
@@ -319,6 +322,7 @@ module Interpret_string = struct
       =
       choice
         [
+          tp_name;
           tp_ymd_hour_minute_second;
           tp_md_hour_minute_second;
           tp_d_hour_minute_second;
@@ -334,6 +338,9 @@ module Interpret_string = struct
   end
 
   module Time_slots_expr = struct
+    let ts_name =
+      string_ci "ts:" *> ident_string >>| fun s -> Time_expr_ast.Tse_name s
+
     let ts_explicit_time_slots =
       sep_by_comma1
         ( Time_points_expr.unbounded_time_points_expr
@@ -428,6 +435,7 @@ module Interpret_string = struct
     let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
       choice
         [
+          ts_name;
           ts_explicit_time_slots;
           ts_days_hour_minute_second_ranges;
           ts_months_mdays_hour_minute_second;
