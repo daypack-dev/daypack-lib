@@ -6,12 +6,10 @@ let alpha_string : string t =
 let ident_string ~(reserved_words : string list) : string t =
   let reserved_words = List.map String.lowercase_ascii reserved_words in
   take_while1 (function 'a' .. 'z' | 'A' .. 'Z' | '_' -> true | _ -> false)
-  >>= (fun s ->
-      if List.mem (String.lowercase_ascii s) reserved_words then
-        fail (Printf.sprintf "\"%s\" is a reserved word" s)
-      else
-        return s
-    )
+  >>= fun s ->
+  if List.mem (String.lowercase_ascii s) reserved_words then
+    fail (Printf.sprintf "\"%s\" is a reserved word" s)
+  else return s
 
 let skip_non_num_string ~delim : unit t =
   skip_while (function

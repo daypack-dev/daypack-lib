@@ -115,7 +115,7 @@ module Interpret_string = struct
          ])
 
   let ident_string =
-    ident_string ~reserved_words:["to"; "first"; "lasst"; "coming"; "every"]
+    ident_string ~reserved_words:[ "to"; "first"; "lasst"; "coming"; "every" ]
 
   let range_inc_expr (p : 'a t) : 'a Range.t t =
     p
