@@ -114,6 +114,9 @@ module Interpret_string = struct
            char '!' *> return `Every;
          ])
 
+  let ident_string =
+    ident_string ~reserved_words:["to"; "first"; "lasst"; "coming"; "every"]
+
   let range_inc_expr (p : 'a t) : 'a Range.t t =
     p
     >>= (fun x ->
