@@ -450,19 +450,11 @@ module Interpret_string = struct
 
   let time_points_expr_of_string (s : string) :
     (Time_expr_ast.time_points_expr, string) result =
-    match of_string s with
-    | Ok (Time_points_expr e) -> Ok e
-    | Ok (Time_slots_expr _) ->
-      Error "String translates to time slots expression"
-    | Error msg -> Error msg
+    parse_string (Time_points_expr.time_points_expr <* end_of_input) s
 
   let time_slots_expr_of_string (s : string) :
     (Time_expr_ast.time_slots_expr, string) result =
-    match of_string s with
-    | Ok (Time_points_expr _) ->
-      Error "String translates to time point expression"
-    | Ok (Time_slots_expr e) -> Ok e
-    | Error msg -> Error msg
+    parse_string (Time_slots_expr.time_slots_expr <* end_of_input) s
 end
 
 module To_time_pattern_lossy = struct
