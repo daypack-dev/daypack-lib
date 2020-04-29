@@ -463,7 +463,7 @@ module To_time_pattern_lossy = struct
         (base : Time_pattern.t) : Time_pattern.t =
       if Time.check_second ~second:e then { base with seconds = [ e ] }
       else
-        raise (Invalid_time_expr (Printf.sprintf "Invalid second: XX:XX:%d" e))
+        raise (Invalid_time_expr (Printf.sprintf "Invalid second: ::%d" e))
 
     let time_range_pattern_of_second_range_expr_and_base_time_pattern
         (e : Time_expr_ast.second_range_expr) (base : Time_pattern.t) :
@@ -496,7 +496,7 @@ module To_time_pattern_lossy = struct
       else
         raise
           (Invalid_time_expr
-             (Printf.sprintf "Invalid minute second: XX:%d:%d" e.minute
+             (Printf.sprintf "Invalid minute second: :%d:%d" e.minute
                 e.second))
 
     let time_range_pattern_of_minute_second_range_expr_and_base_time_pattern
