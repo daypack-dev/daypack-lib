@@ -615,6 +615,15 @@ module To_time_pattern_lossy = struct
       update_time_pattern_using_year_expr x Time_pattern.empty
   end
 
+  module Unix_times = struct
+    let update_time_pattern_using_unix_times (unix_times : int64 list)
+        (base : Time_pattern.t) : Time_pattern.t =
+      { base with unix_times }
+
+    let time_pattern_of_unix_times l =
+      update_time_pattern_using_unix_times l Time_pattern.empty
+  end
+
   let time_pattern_of_unbounded_time_points_expr
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (e : Time_expr_ast.unbounded_time_points_expr) :
@@ -626,6 +635,8 @@ module To_time_pattern_lossy = struct
         Ok
           ( match e with
             | Tpe_name _ -> failwith "Unexpected case"
+            | Tpe_unix_times l ->
+              Unix_times.time_pattern_of_unix_times l
             | Year_month_day_hour_minute_second
                 { year; month; month_day; hour_minute_second } ->
               Time_pattern.empty
@@ -881,6 +892,7 @@ module Time_points_expr = struct
           let selector =
             match e with
             | Tpe_name _ -> failwith "Unexpected case"
+            | Tpe_unix_times l -> OSeq.take (List.length l)
             | Year_month_day_hour_minute_second _
             | Month_day_hour_minute_second _ | Day_hour_minute_second _
             | Hour_minute_second _ | Minute_second _ | Second _ -> (
