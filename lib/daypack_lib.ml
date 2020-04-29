@@ -2,7 +2,6 @@ module Task_seg_place_gens = Task_seg_place_gens
 module Task_ds = Task_ds
 module Time_slot_ds = Time_slot_ds
 module Sched = Sched
-module Sched_db = Sched_db
 module Sched_ver_history = Sched_ver_history
 module Sched_req_data_unit_skeleton = Sched_req_data_unit_skeleton
 module Sched_req_ds = Sched_req_ds
