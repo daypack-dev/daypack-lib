@@ -24,3 +24,15 @@ let take_first_n_list (n : int) (l : 'a list) : 'a list =
 
 let take_last_n_list (n : int) (l : 'a list) : 'a list =
   l |> List.rev |> take_first_n_list n |> List.rev
+
+let convert_of_int_to_int64 (f : int -> 'a) : (int64 -> 'a) =
+  fun x ->
+  x
+  |> Int64.to_int
+  |> f
+
+let convert_to_int_to_int64 (f : 'a -> int) : ('a -> int64) =
+  fun x ->
+  x
+  |> f
+  |> Int64.of_int
