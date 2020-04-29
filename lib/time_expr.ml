@@ -49,12 +49,13 @@ module Resolve = struct
     in
     aux f_resolve_tpe_name max_resolve_depth None e
 
-  let resolve_unbounded_time_slots_expr ~(f_resolve_tse_name : f_resolve_tse_name)
+  let resolve_unbounded_time_slots_expr
+      ~(f_resolve_tse_name : f_resolve_tse_name)
       ~(f_resolve_tpe_name : f_resolve_tpe_name)
       (e : Time_expr_ast.unbounded_time_slots_expr) :
     (Time_expr_ast.unbounded_time_slots_expr, string) result =
-    let rec aux f_resolve_tse_name f_resolve_tpe_name remaining_resolve_depth name
-        e =
+    let rec aux f_resolve_tse_name f_resolve_tpe_name remaining_resolve_depth
+        name e =
       if remaining_resolve_depth <= 0 then Error "Maximum resolve depth reached"
       else
         match e with
@@ -643,7 +644,9 @@ module To_time_pattern_lossy = struct
       (e : Time_expr_ast.unbounded_time_points_expr) :
     (Time_pattern.t, string) result =
     try
-      match Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e with
+      match
+        Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e
+      with
       | Error msg -> Error msg
       | Ok e ->
         Ok
@@ -902,7 +905,9 @@ module Time_points_expr = struct
     with
     | Error msg -> Error msg
     | Ok pat -> (
-        match Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e with
+        match
+          Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e
+        with
         | Error msg -> Error msg
         | Ok e ->
           let selector =
@@ -972,8 +977,8 @@ module Time_slots_expr = struct
       (search_param : search_param) ((bound, e) : Time_expr_ast.time_slots_expr)
     : (Time_slot_ds.t Seq.t, string) result =
     match
-      Resolve.resolve_unbounded_time_slots_expr ~f_resolve_tse_name ~f_resolve_tpe_name
-        e
+      Resolve.resolve_unbounded_time_slots_expr ~f_resolve_tse_name
+        ~f_resolve_tpe_name e
     with
     | Error msg -> Error msg
     | Ok e -> (

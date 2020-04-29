@@ -24,11 +24,9 @@ let a_to_b_exc_int64 ~a ~b : int64 Seq.t =
   in
   aux a b
 
-let a_to_b_inc_int64 ~a ~b : int64 Seq.t =
-  a_to_b_exc_int64 ~a ~b:(b +^ 1L)
+let a_to_b_inc_int64 ~a ~b : int64 Seq.t = a_to_b_exc_int64 ~a ~b:(b +^ 1L)
 
-let zero_to_n_exc_int64 n : int64 Seq.t =
-  a_to_b_exc_int64 ~a:0L ~b:n
+let zero_to_n_exc_int64 n : int64 Seq.t = a_to_b_exc_int64 ~a:0L ~b:n
 
 let zero_to_n_inc_int64 n = zero_to_n_exc_int64 (n +^ 1L)
 

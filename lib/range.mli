@@ -8,10 +8,18 @@ val map :
 
 module Flatten : sig
   val big_flatten_into_seq :
-    ?modulo:int64 -> of_int64:(int64 -> 'a) -> to_int64:('a -> int64) -> 'a t -> 'a Seq.t
+    ?modulo:int64 ->
+    of_int64:(int64 -> 'a) ->
+    to_int64:('a -> int64) ->
+    'a t ->
+    'a Seq.t
 
   val big_flatten_into_list :
-    ?modulo:int64 -> of_int64:(int64 -> 'a) -> to_int64:('a -> int64) -> 'a t -> 'a list
+    ?modulo:int64 ->
+    of_int64:(int64 -> 'a) ->
+    to_int64:('a -> int64) ->
+    'a t ->
+    'a list
 
   val flatten_into_seq :
     ?modulo:int -> of_int:(int -> 'a) -> to_int:('a -> int) -> 'a t -> 'a Seq.t
