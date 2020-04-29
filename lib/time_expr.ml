@@ -70,18 +70,26 @@ let resolve_unbounded_time_slots_expr ~(f_resolve_tse_name : f_resolve_tse_name)
               aux f_resolve_tse_name f_resolve_tpe_name
                 (pred remaining_resolve_depth)
                 name e )
-      | Single_time_slot { start; end_exc } -> (
-          match
-            resolve_unbounded_time_points_expr ~f_resolve_tpe_name start
+      | Explicit_time_slots l -> (
+          try
+            Ok (Time_expr_ast.Explicit_time_slots
+            (List.map (fun (start, end_exc) ->
+                match
+                  resolve_unbounded_time_points_expr ~f_resolve_tpe_name start
+                with
+                | Error msg -> raise (Invalid_time_expr msg)
+                | Ok start -> (
+                    match
+                      resolve_unbounded_time_points_expr ~f_resolve_tpe_name end_exc
+                    with
+                    | Error msg -> raise (Invalid_time_expr msg)
+                    | Ok end_exc ->
+                      ( start, end_exc ))
+              ) l)
+               )
           with
-          | Error msg -> Error msg
-          | Ok start -> (
-              match
-                resolve_unbounded_time_points_expr ~f_resolve_tpe_name end_exc
-              with
-              | Error msg -> Error msg
-              | Ok end_exc ->
-                Ok (Time_expr_ast.Single_time_slot { start; end_exc }) ) )
+          | Invalid_time_expr msg -> Error msg
+        )
       | e -> Ok e
   in
   aux f_resolve_tse_name f_resolve_tpe_name max_resolve_depth None e
@@ -325,12 +333,14 @@ module Interpret_string = struct
   end
 
   module Time_slots_expr = struct
-    let ts_single =
-      Time_points_expr.unbounded_time_points_expr
-      >>= fun start ->
-      space *> to_string *> space *> Time_points_expr.unbounded_time_points_expr
-      >>= fun end_exc ->
-      return (Time_expr_ast.Single_time_slot { start; end_exc })
+    let ts_explicit_time_slots =
+      sep_by_comma1 (
+        Time_points_expr.unbounded_time_points_expr
+        >>= fun start ->
+        space *> to_string *> space *> Time_points_expr.unbounded_time_points_expr
+        >>= fun end_exc ->
+        return (start, end_exc)
+      ) >>| (fun l -> Time_expr_ast.Explicit_time_slots l)
 
     let ts_days_hour_minute_second_ranges =
       Month_day.month_day_ranges_expr
@@ -415,7 +425,7 @@ module Interpret_string = struct
     let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
       choice
         [
-          ts_single;
+          ts_explicit_time_slots;
           ts_days_hour_minute_second_ranges;
           ts_months_mdays_hour_minute_second;
           ts_months_wdays_hour_minute_second;
@@ -693,19 +703,22 @@ module To_time_pattern_lossy = struct
         Ok
           ( match e with
             | Tse_name _ -> failwith "Unexpected case"
-            | Single_time_slot { start; end_exc } -> (
-                match
-                  time_pattern_of_unbounded_time_points_expr ~f_resolve_tpe_name
-                    start
-                with
-                | Error msg -> raise (Invalid_time_expr msg)
-                | Ok start -> (
+            | Explicit_time_slots l -> (
+                List.map (fun (start, end_exc) ->
                     match
-                      time_pattern_of_unbounded_time_points_expr
-                        ~f_resolve_tpe_name end_exc
+                      time_pattern_of_unbounded_time_points_expr ~f_resolve_tpe_name
+                        start
                     with
                     | Error msg -> raise (Invalid_time_expr msg)
-                    | Ok end_exc -> [ `Range_exc (start, end_exc) ] ) )
+                    | Ok start -> (
+                        match
+                          time_pattern_of_unbounded_time_points_expr
+                            ~f_resolve_tpe_name end_exc
+                        with
+                        | Error msg -> raise (Invalid_time_expr msg)
+                        | Ok end_exc -> `Range_exc (start, end_exc) )
+                  ) l
+              )
             | Month_days_and_hour_minute_second_ranges
                 { month_days; hour_minute_second_ranges } ->
               (* check_hour_minute_second_ranges hour_minute_second_ranges; *)
@@ -964,7 +977,8 @@ module Time_slots_expr = struct
         let list_selector =
           match e with
           | Tse_name _ -> failwith "Unexpected case"
-          | Single_time_slot _ | Month_days_and_hour_minute_second_ranges _
+          | Explicit_time_slots _ -> OSeq.take 1
+          | Month_days_and_hour_minute_second_ranges _
           | Weekdays_and_hour_minute_second_ranges _
           | Months_and_month_days_and_hour_minute_second_ranges _
           | Months_and_weekdays_and_hour_minute_second_ranges _
@@ -980,7 +994,8 @@ module Time_slots_expr = struct
         let flat_selector =
           match e with
           | Tse_name _ -> failwith "Unexpected case"
-          | Single_time_slot _ | Month_days_and_hour_minute_second_ranges _
+          | Explicit_time_slots _
+          | Month_days_and_hour_minute_second_ranges _
           | Weekdays_and_hour_minute_second_ranges _
           | Months_and_month_days_and_hour_minute_second_ranges _
           | Months_and_weekdays_and_hour_minute_second_ranges _

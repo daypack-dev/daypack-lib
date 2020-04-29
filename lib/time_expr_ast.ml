@@ -64,10 +64,7 @@ type month_weekday_mode =
 
 type unbounded_time_slots_expr =
   | Tse_name of string
-  | Single_time_slot of {
-      start : unbounded_time_points_expr;
-      end_exc : unbounded_time_points_expr;
-    }
+  | Explicit_time_slots of (unbounded_time_points_expr * unbounded_time_points_expr) list
   | Month_days_and_hour_minute_second_ranges of {
       month_days : int Range.t list;
       hour_minute_second_ranges : hour_minute_second_range_expr list;
