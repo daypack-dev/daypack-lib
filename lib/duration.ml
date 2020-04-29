@@ -83,7 +83,7 @@ module Interpret_string = struct
     >>= fun seconds -> return (normalize { days; hours; minutes; seconds })
 
   let of_string (s : string) : (duration, string) result =
-    parse_string (duration_expr <* end_of_input) s
+    parse_string ~consume:Consume.All duration_expr s
 end
 
 module To_string = struct

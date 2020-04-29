@@ -12,6 +12,7 @@ let make_time_pattern_weekday ~hour ?(min = 0) weekday :
     hours = [ hour ];
     minutes = [ min ];
     seconds = [];
+    unix_times = [];
   }
 
 let make_time_profile_single_weekday ~start_hour ?(start_min = 0) ~end_exc_hour

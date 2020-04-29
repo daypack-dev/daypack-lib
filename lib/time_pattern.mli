@@ -23,6 +23,7 @@ type t = {
   hours : int list;
   minutes : int list;
   seconds : int list;
+  unix_times : int64 list;
 }
 
 type time_range_pattern = t Range.t

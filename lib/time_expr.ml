@@ -1,12 +1,98 @@
 type search_param = Time_pattern.search_param
 
+type f_resolve_tse_name =
+  string -> Time_expr_ast.unbounded_time_slots_expr option
+
+type f_resolve_tpe_name =
+  string -> Time_expr_ast.unbounded_time_points_expr option
+
+let default_f_resolve_tse_name (_ : string) :
+  Time_expr_ast.unbounded_time_slots_expr option =
+  None
+
+let default_f_resolve_tpe_name (_ : string) :
+  Time_expr_ast.unbounded_time_points_expr option =
+  None
+
 module To_string = struct
-  let debug_string_of_hms_ranges
-      ({ hour; minute; second } : Time_expr_ast.hms_expr) : string =
+  let debug_string_of_hour_minute_second_ranges
+      ({ hour; minute; second } : Time_expr_ast.hour_minute_second_expr) :
+    string =
     Printf.sprintf "%02d:%02d:%02d" hour minute second
 end
 
 exception Invalid_time_expr of string
+
+let max_resolve_depth = 1000
+
+let resolve_unbounded_time_points_expr
+    ~(f_resolve_tpe_name : f_resolve_tpe_name)
+    (e : Time_expr_ast.unbounded_time_points_expr) :
+  (Time_expr_ast.unbounded_time_points_expr, string) result =
+  let rec aux f_resolve_tpe_name remaining_resolve_depth name e =
+    if remaining_resolve_depth <= 0 then Error "Maximum resolve depth reached"
+    else
+      match e with
+      | Time_expr_ast.Tpe_name s -> (
+          if name = Some s then
+            Error
+              (Printf.sprintf "Name resolution loop detected for name: %s" s)
+          else
+            let name = match name with None -> Some s | Some x -> Some x in
+            match f_resolve_tpe_name s with
+            | None ->
+              Error (Printf.sprintf "Name resolution failed for name: %s" s)
+            | Some e ->
+              aux f_resolve_tpe_name (pred remaining_resolve_depth) name e )
+      | e -> Ok e
+  in
+  aux f_resolve_tpe_name max_resolve_depth None e
+
+let resolve_unbounded_time_slots_expr ~(f_resolve_tse_name : f_resolve_tse_name)
+    ~(f_resolve_tpe_name : f_resolve_tpe_name)
+    (e : Time_expr_ast.unbounded_time_slots_expr) :
+  (Time_expr_ast.unbounded_time_slots_expr, string) result =
+  let rec aux f_resolve_tse_name f_resolve_tpe_name remaining_resolve_depth name
+      e =
+    if remaining_resolve_depth <= 0 then Error "Maximum resolve depth reached"
+    else
+      match e with
+      | Time_expr_ast.Tse_name s -> (
+          if name = Some s then
+            Error
+              (Printf.sprintf "Name resolution loop detected for name: %s" s)
+          else
+            let name = match name with None -> Some s | Some x -> Some x in
+            match f_resolve_tse_name s with
+            | None ->
+              Error (Printf.sprintf "Name resolution failed for name: %s" s)
+            | Some e ->
+              aux f_resolve_tse_name f_resolve_tpe_name
+                (pred remaining_resolve_depth)
+                name e )
+      | Explicit_time_slots l -> (
+          try
+            Ok
+              (Time_expr_ast.Explicit_time_slots
+                 (List.map
+                    (fun (start, end_exc) ->
+                       match
+                         resolve_unbounded_time_points_expr ~f_resolve_tpe_name
+                           start
+                       with
+                       | Error msg -> raise (Invalid_time_expr msg)
+                       | Ok start -> (
+                           match
+                             resolve_unbounded_time_points_expr
+                               ~f_resolve_tpe_name end_exc
+                           with
+                           | Error msg -> raise (Invalid_time_expr msg)
+                           | Ok end_exc -> (start, end_exc) ))
+                    l))
+          with Invalid_time_expr msg -> Error msg )
+      | e -> Ok e
+  in
+  aux f_resolve_tse_name f_resolve_tpe_name max_resolve_depth None e
 
 module Interpret_string = struct
   open Angstrom
@@ -28,7 +114,8 @@ module Interpret_string = struct
            char '!' *> return `Every;
          ])
 
-  let sep_by_comma1 (p : 'a t) : 'a list t = sep_by1 (space *> comma *> space) p
+  let ident_string =
+    ident_string ~reserved_words:[ "to"; "first"; "lasst"; "coming"; "every" ]
 
   let range_inc_expr (p : 'a t) : 'a Range.t t =
     p
@@ -45,13 +132,33 @@ module Interpret_string = struct
   let ranges_expr ~to_int (p : 'a Range.t t) : 'a Range.t list t =
     sep_by_comma1 p >>| Range.compress_list ~to_int
 
-  module Hms = struct
-    let hms_mode_expr =
+  module Second = struct
+    let second_expr : Time_expr_ast.second_expr t =
+      string "::" *> nat_zero
+      >>= fun second ->
+      if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
+      else return second
+  end
+
+  module Minute_second = struct
+    let minute_second_expr : Time_expr_ast.minute_second_expr t =
+      char ':' *> nat_zero
+      >>= fun minute ->
+      if minute >= 60 then fail (Printf.sprintf "Invalid minute: %d" minute)
+      else
+        option 0 (char ':' *> nat_zero)
+        >>= fun second ->
+        if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
+        else return Time_expr_ast.{ minute; second }
+  end
+
+  module Hour_minute_second = struct
+    let hour_minute_second_mode_expr =
       option `Hour_in_24_hours
         ( string_ci "am" *> return `Hour_in_AM
           <|> string_ci "pm" *> return `Hour_in_PM )
 
-    let hms_expr : Time_expr_ast.hms_expr t =
+    let hour_minute_second_expr : Time_expr_ast.hour_minute_second_expr t =
       nat_zero
       >>= fun hour ->
       char ':' *> nat_zero
@@ -62,7 +169,7 @@ module Interpret_string = struct
         >>= fun second ->
         if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
         else
-          space *> hms_mode_expr
+          space *> hour_minute_second_mode_expr
           >>= fun mode ->
           match mode with
           | `Hour_in_24_hours ->
@@ -79,11 +186,13 @@ module Interpret_string = struct
               return Time_expr_ast.{ hour = hour + 12; minute; second }
             else fail (Printf.sprintf "Invalid hour: %d" hour)
 
-    let hms_range_expr : Time_expr_ast.hms_range_expr t =
-      range_exc_expr hms_expr
+    let hour_minute_second_range_expr :
+      Time_expr_ast.hour_minute_second_range_expr t =
+      range_exc_expr hour_minute_second_expr
 
-    let hms_ranges_expr : Time_expr_ast.hms_range_expr list t =
-      sep_by_comma1 hms_range_expr
+    let hour_minute_second_ranges_expr :
+      Time_expr_ast.hour_minute_second_range_expr list t =
+      sep_by_comma1 hour_minute_second_range_expr
   end
 
   module Month_day = struct
@@ -161,88 +270,131 @@ module Interpret_string = struct
     let year_ranges_expr = sep_by_comma1 year_range_expr
   end
 
-  module Time_point_expr = struct
-    let tp_ymd_hms =
+  module Time_points_expr = struct
+    let tp_name =
+      string_ci "tp:" *> ident_string >>| fun s -> Time_expr_ast.Tpe_name s
+
+    let tp_ymd_hour_minute_second =
       nat_zero
       >>= fun year ->
       hyphen *> Month.month_expr
       >>= fun month ->
       hyphen *> nat_zero
       >>= fun month_day ->
-      space *> Hms.hms_expr
-      >>= fun hms ->
-      return (Time_expr_ast.Year_month_day_hms { year; month; month_day; hms })
+      space *> Hour_minute_second.hour_minute_second_expr
+      >>= fun hour_minute_second ->
+      return
+        (Time_expr_ast.Year_month_day_hour_minute_second
+           { year; month; month_day; hour_minute_second })
 
-    let tp_md_hms =
+    let tp_md_hour_minute_second =
       Month.month_expr
       >>= fun month ->
       hyphen *> nat_zero
       >>= fun month_day ->
-      space *> Hms.hms_expr
-      >>= fun hms ->
-      return (Time_expr_ast.Month_day_hms { month; month_day; hms })
+      space *> Hour_minute_second.hour_minute_second_expr
+      >>= fun hour_minute_second ->
+      return
+        (Time_expr_ast.Month_day_hour_minute_second
+           { month; month_day; hour_minute_second })
 
-    let tp_d_hms =
+    let tp_d_hour_minute_second =
       Day.day_expr
       >>= fun day ->
-      space *> Hms.hms_expr
-      >>= fun hms -> return (Time_expr_ast.Day_hms { day; hms })
+      space *> Hour_minute_second.hour_minute_second_expr
+      >>= fun hour_minute_second ->
+      return (Time_expr_ast.Day_hour_minute_second { day; hour_minute_second })
 
-    let tp_hms = Hms.hms_expr >>= fun hms -> return (Time_expr_ast.Hms hms)
+    let tp_hour_minute_second =
+      Hour_minute_second.hour_minute_second_expr
+      >>= fun hour_minute_second ->
+      return (Time_expr_ast.Hour_minute_second hour_minute_second)
 
-    let unbounded_time_point_expr : Time_expr_ast.unbounded_time_point_expr t =
-      choice [ tp_ymd_hms; tp_md_hms; tp_d_hms; tp_hms ]
+    let tp_minute_second =
+      Minute_second.minute_second_expr
+      >>= fun minute_second ->
+      return (Time_expr_ast.Minute_second minute_second)
 
-    let time_point_expr : Time_expr_ast.time_point_expr t =
+    let tp_second =
+      Second.second_expr >>= fun second -> return (Time_expr_ast.Second second)
+
+    let unbounded_time_points_expr : Time_expr_ast.unbounded_time_points_expr t
+      =
+      choice
+        [
+          tp_name;
+          tp_ymd_hour_minute_second;
+          tp_md_hour_minute_second;
+          tp_d_hour_minute_second;
+          tp_hour_minute_second;
+          tp_minute_second;
+          tp_second;
+        ]
+
+    let time_points_expr : Time_expr_ast.time_points_expr t =
       bound
       >>= fun bound ->
-      space *> unbounded_time_point_expr >>= fun e -> return (bound, e)
+      space *> unbounded_time_points_expr >>= fun e -> return (bound, e)
   end
 
   module Time_slots_expr = struct
-    let ts_single =
-      Time_point_expr.unbounded_time_point_expr
-      >>= fun start ->
-      space *> to_string *> space *> Time_point_expr.unbounded_time_point_expr
-      >>= fun end_exc ->
-      return (Time_expr_ast.Single_time_slot { start; end_exc })
+    let ts_name =
+      string_ci "ts:" *> ident_string >>| fun s -> Time_expr_ast.Tse_name s
 
-    let ts_days_hms_ranges =
+    let ts_explicit_time_slots =
+      sep_by_comma1
+        ( Time_points_expr.unbounded_time_points_expr
+          >>= fun start ->
+          space
+          *> to_string
+          *> space
+          *> Time_points_expr.unbounded_time_points_expr
+          >>= fun end_exc -> return (start, end_exc) )
+      >>| fun l -> Time_expr_ast.Explicit_time_slots l
+
+    let ts_days_hour_minute_second_ranges =
       Month_day.month_day_ranges_expr
       >>= (fun month_days ->
-          space *> dot *> space *> Hms.hms_ranges_expr
-          >>= fun hms_ranges ->
+          space
+          *> dot
+          *> space
+          *> Hour_minute_second.hour_minute_second_ranges_expr
+          >>= fun hour_minute_second_ranges ->
           return
-            (Time_expr_ast.Month_days_and_hms_ranges
-               { month_days; hms_ranges }))
+            (Time_expr_ast.Month_days_and_hour_minute_second_ranges
+               { month_days; hour_minute_second_ranges }))
           <|> ( Weekday.weekday_ranges_expr
                 >>= fun weekdays ->
-                space *> dot *> space *> Hms.hms_ranges_expr
-                >>= fun hms_ranges ->
+                space
+                *> dot
+                *> space
+                *> Hour_minute_second.hour_minute_second_ranges_expr
+                >>= fun hour_minute_second_ranges ->
                 return
-                  (Time_expr_ast.Weekdays_and_hms_ranges { weekdays; hms_ranges }) )
+                  (Time_expr_ast.Weekdays_and_hour_minute_second_ranges
+                     { weekdays; hour_minute_second_ranges }) )
 
-    let ts_months_mdays_hms =
+    let ts_months_mdays_hour_minute_second =
       Month.month_ranges_expr
       >>= fun months ->
       space *> dot *> space *> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      space *> dot *> space *> Hms.hms_ranges_expr
-      >>= fun hms_ranges ->
+      space *> dot *> space *> Hour_minute_second.hour_minute_second_ranges_expr
+      >>= fun hour_minute_second_ranges ->
       return
-        (Time_expr_ast.Months_and_month_days_and_hms_ranges
-           { months; month_days; hms_ranges })
+        (Time_expr_ast.Months_and_month_days_and_hour_minute_second_ranges
+           { months; month_days; hour_minute_second_ranges })
 
-    let ts_months_wdays_hms =
+    let ts_months_wdays_hour_minute_second =
       Month.month_ranges_expr
       >>= fun months ->
       space *> dot *> space *> Weekday.weekday_ranges_expr
       >>= fun weekdays ->
-      space *> dot *> space *> Hms.hms_ranges_expr
-      >>= fun hms_ranges ->
+      space *> dot *> space *> Hour_minute_second.hour_minute_second_ranges_expr
+      >>= fun hour_minute_second_ranges ->
       return
-        (Time_expr_ast.Months_and_weekdays_and_hms_ranges
-           { months; weekdays; hms_ranges })
+        (Time_expr_ast.Months_and_weekdays_and_hour_minute_second_ranges
+           { months; weekdays; hour_minute_second_ranges })
 
     let month_weekday_mode_expr =
       choice
@@ -253,41 +405,43 @@ module Interpret_string = struct
             >>| fun n -> Some (Time_expr_ast.Last_n n) );
         ]
 
-    let ts_months_wday_hms =
+    let ts_months_wday_hour_minute_second =
       Month.month_ranges_expr
       >>= fun months ->
       space *> dot *> space *> month_weekday_mode_expr
       >>= fun month_weekday_mode ->
       space *> Weekday.weekday_expr
       >>= fun weekday ->
-      space *> dot *> space *> Hms.hms_ranges_expr
-      >>= fun hms_ranges ->
+      space *> dot *> space *> Hour_minute_second.hour_minute_second_ranges_expr
+      >>= fun hour_minute_second_ranges ->
       return
-        (Time_expr_ast.Months_and_weekday_and_hms_ranges
-           { months; weekday; hms_ranges; month_weekday_mode })
+        (Time_expr_ast.Months_and_weekday_and_hour_minute_second_ranges
+           { months; weekday; hour_minute_second_ranges; month_weekday_mode })
 
-    let ts_years_months_mdays_hms =
+    let ts_years_months_mdays_hour_minute_second =
       Year.year_ranges_expr
       >>= fun years ->
       space *> dot *> space *> Month.month_ranges_expr
       >>= fun months ->
       space *> dot *> space *> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      space *> dot *> space *> Hms.hms_ranges_expr
-      >>= fun hms_ranges ->
+      space *> dot *> space *> Hour_minute_second.hour_minute_second_ranges_expr
+      >>= fun hour_minute_second_ranges ->
       return
-        (Time_expr_ast.Years_and_months_and_month_days_and_hms_ranges
-           { years; months; month_days; hms_ranges })
+        (Time_expr_ast
+         .Years_and_months_and_month_days_and_hour_minute_second_ranges
+           { years; months; month_days; hour_minute_second_ranges })
 
     let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
       choice
         [
-          ts_single;
-          ts_days_hms_ranges;
-          ts_months_mdays_hms;
-          ts_months_wdays_hms;
-          ts_months_wday_hms;
-          ts_years_months_mdays_hms;
+          ts_name;
+          ts_explicit_time_slots;
+          ts_days_hour_minute_second_ranges;
+          ts_months_mdays_hour_minute_second;
+          ts_months_wdays_hour_minute_second;
+          ts_months_wday_hour_minute_second;
+          ts_years_months_mdays_hour_minute_second;
         ]
 
     let time_slots_expr : Time_expr_ast.time_slots_expr t =
@@ -296,90 +450,120 @@ module Interpret_string = struct
       space *> unbounded_time_slots_expr >>= fun e -> return (bound, e)
   end
 
-  let time_expr =
-    Time_point_expr.time_point_expr
-    >>| (fun e -> Time_expr_ast.Time_point_expr e)
-        <|> ( Time_slots_expr.time_slots_expr
-              >>| fun e -> Time_expr_ast.Time_slots_expr e )
-
   let of_string (s : string) : (Time_expr_ast.t, string) result =
-    parse_string (time_expr <* end_of_input) s
+    parse_string ~consume:Consume.All
+      ( Time_points_expr.time_points_expr
+        <* end_of_input
+        >>| (fun e -> Time_expr_ast.Time_points_expr e)
+            <|> ( Time_slots_expr.time_slots_expr
+                  <* end_of_input
+                  >>| fun e -> Time_expr_ast.Time_slots_expr e ) )
+      s
 
-  let time_point_expr_of_string (s : string) :
-    (Time_expr_ast.time_point_expr, string) result =
-    match of_string s with
-    | Ok (Time_point_expr e) -> Ok e
-    | Ok (Time_slots_expr _) ->
-      Error "String translates to time slots expression"
-    | Error msg -> Error msg
+  let time_points_expr_of_string (s : string) :
+    (Time_expr_ast.time_points_expr, string) result =
+    parse_string ~consume:Consume.All Time_points_expr.time_points_expr s
 
   let time_slots_expr_of_string (s : string) :
     (Time_expr_ast.time_slots_expr, string) result =
-    match of_string s with
-    | Ok (Time_point_expr _) ->
-      Error "String translates to time point expression"
-    | Ok (Time_slots_expr e) -> Ok e
-    | Error msg -> Error msg
+    parse_string ~consume:Consume.All Time_slots_expr.time_slots_expr s
 end
 
 module To_time_pattern_lossy = struct
-  (* let check_hms_expr
-   *     ({ hour; minute } : Time_expr_ast.hms_expr) : unit =
-   *   if Time.check_hms ~hour ~minute then ()
-   *   else
-   *     raise
-   *       (Invalid_time_expr
-   *          (Printf.sprintf "Invalid hour minute: %d:%d" hour minute)) *)
-
-  (* let check_hms_range_expr
-   *     (hour_minute_range : Time_expr_ast.hms_range_expr) :
-   *   unit =
-   *   match hour_minute_range with
-   *   | `Range_inc (x, y) | `Range_exc (x, y) ->
-   *     check_hms_expr x;
-   *     check_hms_expr y *)
-
-  (* let check_hms_ranges
-   *     (hms_ranges : Time_expr_ast.hms_range_expr list) :
-   *   unit =
-   *   List.iter check_hms_range_expr hms_ranges *)
-
-  module Hour_minute = struct
-    let update_time_pattern_using_hms_expr (e : Time_expr_ast.hms_expr)
+  module Second = struct
+    let update_time_pattern_using_second_expr (e : Time_expr_ast.second_expr)
         (base : Time_pattern.t) : Time_pattern.t =
-      if Time.check_hms ~hour:e.hour ~minute:e.minute ~second:e.second then
-        { base with hours = [ e.hour ]; minutes = [ e.minute ] }
+      if Time.check_second ~second:e then { base with seconds = [ e ] }
+      else raise (Invalid_time_expr (Printf.sprintf "Invalid second: ::%d" e))
+
+    let time_range_pattern_of_second_range_expr_and_base_time_pattern
+        (e : Time_expr_ast.second_range_expr) (base : Time_pattern.t) :
+      Time_pattern.time_range_pattern =
+      match e with
+      | `Range_inc (x, y) ->
+        `Range_inc
+          ( update_time_pattern_using_second_expr x base,
+            update_time_pattern_using_second_expr y base )
+      | `Range_exc (x, y) ->
+        `Range_exc
+          ( update_time_pattern_using_second_expr x base,
+            update_time_pattern_using_second_expr y base )
+
+    let time_range_patterns_of_second_ranges_and_base_time_pattern
+        (l : Time_expr_ast.second_range_expr list) (base : Time_pattern.t) :
+      Time_pattern.time_range_pattern Seq.t =
+      List.to_seq l
+      |> Seq.map (fun e ->
+          time_range_pattern_of_second_range_expr_and_base_time_pattern e
+            base)
+  end
+
+  module Minute_second = struct
+    let update_time_pattern_using_minute_second_expr
+        (e : Time_expr_ast.minute_second_expr) (base : Time_pattern.t) :
+      Time_pattern.t =
+      if Time.check_minute_second ~minute:e.minute ~second:e.second then
+        { base with minutes = [ e.minute ] }
+      else
+        raise
+          (Invalid_time_expr
+             (Printf.sprintf "Invalid minute second: :%d:%d" e.minute e.second))
+
+    let time_range_pattern_of_minute_second_range_expr_and_base_time_pattern
+        (e : Time_expr_ast.minute_second_range_expr) (base : Time_pattern.t) :
+      Time_pattern.time_range_pattern =
+      match e with
+      | `Range_inc (x, y) ->
+        `Range_inc
+          ( update_time_pattern_using_minute_second_expr x base,
+            update_time_pattern_using_minute_second_expr y base )
+      | `Range_exc (x, y) ->
+        `Range_exc
+          ( update_time_pattern_using_minute_second_expr x base,
+            update_time_pattern_using_minute_second_expr y base )
+
+    let time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
+        (l : Time_expr_ast.minute_second_range_expr list)
+        (base : Time_pattern.t) : Time_pattern.time_range_pattern Seq.t =
+      List.to_seq l
+      |> Seq.map (fun e ->
+          time_range_pattern_of_minute_second_range_expr_and_base_time_pattern
+            e base)
+  end
+
+  module Hour_minute_second = struct
+    let update_time_pattern_using_hour_minute_second_expr
+        (e : Time_expr_ast.hour_minute_second_expr) (base : Time_pattern.t) :
+      Time_pattern.t =
+      if
+        Time.check_hour_minute_second ~hour:e.hour ~minute:e.minute
+          ~second:e.second
+      then { base with hours = [ e.hour ]; minutes = [ e.minute ] }
       else
         raise
           (Invalid_time_expr
              (Printf.sprintf "Invalid hour minute: %d:%d" e.hour e.minute))
 
-    let time_range_pattern_of_hms_range_expr_and_base_time_pattern
-        (e : Time_expr_ast.hms_range_expr) (base : Time_pattern.t) :
-      Time_pattern.time_range_pattern =
+    let time_range_pattern_of_hour_minute_second_range_expr_and_base_time_pattern
+        (e : Time_expr_ast.hour_minute_second_range_expr)
+        (base : Time_pattern.t) : Time_pattern.time_range_pattern =
       match e with
       | `Range_inc (x, y) ->
         `Range_inc
-          ( update_time_pattern_using_hms_expr x base,
-            update_time_pattern_using_hms_expr y base )
+          ( update_time_pattern_using_hour_minute_second_expr x base,
+            update_time_pattern_using_hour_minute_second_expr y base )
       | `Range_exc (x, y) ->
         `Range_exc
-          ( update_time_pattern_using_hms_expr x base,
-            update_time_pattern_using_hms_expr y base )
+          ( update_time_pattern_using_hour_minute_second_expr x base,
+            update_time_pattern_using_hour_minute_second_expr y base )
 
-    let time_range_patterns_of_hms_ranges_and_base_time_pattern
-        (l : Time_expr_ast.hms_range_expr list) (base : Time_pattern.t) :
-      Time_pattern.time_range_pattern Seq.t =
+    let time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
+        (l : Time_expr_ast.hour_minute_second_range_expr list)
+        (base : Time_pattern.t) : Time_pattern.time_range_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e ->
-          time_range_pattern_of_hms_range_expr_and_base_time_pattern e base)
-
-    (* let update_time_range_pattern_seq_of_hms_ranges
-     *     ?(base : Time_pattern.t = Time_pattern.empty)
-     *     (l : Time_expr_ast.hms_range_expr list) :
-     *   Time_pattern.time_range_pattern Seq.t =
-     *   List.to_seq l
-     *   |> Seq.map (time_range_pattern_of_hms_range_expr ~base) *)
+          time_range_pattern_of_hour_minute_second_range_expr_and_base_time_pattern
+            e base)
   end
 
   module Month_day = struct
@@ -396,11 +580,6 @@ module To_time_pattern_lossy = struct
         (base : Time_pattern.t) : Time_pattern.t Seq.t =
       List.to_seq l
       |> Seq.map (fun e -> update_time_pattern_using_month_day_expr e base)
-
-    let flatten_month_day_ranges (l : int Range.t list) : int Seq.t =
-      List.to_seq l
-      |> Seq.flat_map
-        (Range.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x))
   end
 
   module Weekday = struct
@@ -415,27 +594,9 @@ module To_time_pattern_lossy = struct
         (base : Time_pattern.t) : Time_pattern.t Seq.t =
       List.to_seq l
       |> Seq.map (fun e -> update_time_pattern_using_weekday_expr e base)
-
-    let flatten_weekday_ranges (l : Time.weekday Range.t list) :
-      Time.weekday Seq.t =
-      List.to_seq l
-      |> Seq.flat_map
-        (Range.flatten_into_seq ~modulo:7 ~of_int:Time.weekday_of_tm_int
-           ~to_int:Time.tm_int_of_weekday)
   end
 
   module Day = struct
-    (* let days_of_day_range_expr (e : Time_expr_ast.day_range_expr) :
-     *   Time_expr_ast.day_expr list =
-     *   match e with
-     *   | Weekday_range (start, end_inc) ->
-     *     Time.weekday_list_of_weekday_range ~start ~end_inc
-     *     |> List.map (fun x -> Time_expr_ast.Weekday x)
-     *   | Month_day_range (start, end_inc) ->
-     *     OSeq.(start -- end_inc)
-     *     |> Seq.map (fun x -> Time_expr_ast.Month_day x)
-     *     |> List.of_seq *)
-
     let update_time_pattern_using_day_expr (e : Time_expr_ast.day_expr)
         (base : Time_pattern.t) : Time_pattern.t =
       match e with
@@ -455,13 +616,6 @@ module To_time_pattern_lossy = struct
         (base : Time_pattern.t) : Time_pattern.t Seq.t =
       List.to_seq l
       |> Seq.map (fun e -> update_time_pattern_using_month_expr e base)
-
-    let flatten_month_ranges (l : Time.month Range.t list) : Time.month Seq.t =
-      List.to_seq l
-      |> Seq.flat_map
-        (Range.flatten_into_seq
-           ~of_int:(fun x -> Time.month_of_tm_int x |> Result.get_ok)
-           ~to_int:Time.tm_int_of_month)
   end
 
   module Year = struct
@@ -471,168 +625,245 @@ module To_time_pattern_lossy = struct
 
     let time_pattern_of_year_expr x =
       update_time_pattern_using_year_expr x Time_pattern.empty
-
-    let flatten_year_ranges (l : int Range.t list) : int Seq.t =
-      List.to_seq l
-      |> Seq.flat_map
-        (Range.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x))
   end
 
-  let time_pattern_of_unbounded_time_point_expr
-      (e : Time_expr_ast.unbounded_time_point_expr) :
+  module Unix_times = struct
+    let update_time_pattern_using_unix_times (unix_times : int64 list)
+        (base : Time_pattern.t) : Time_pattern.t =
+      { base with unix_times }
+
+    let time_pattern_of_unix_times l =
+      update_time_pattern_using_unix_times l Time_pattern.empty
+  end
+
+  let time_pattern_of_unbounded_time_points_expr
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+      (e : Time_expr_ast.unbounded_time_points_expr) :
     (Time_pattern.t, string) result =
     try
-      Ok
-        ( match e with
-          | Year_month_day_hms { year; month; month_day; hms } ->
-            Time_pattern.empty
-            |> Year.update_time_pattern_using_year_expr year
-            |> Month.update_time_pattern_using_month_expr month
-            |> Month_day.update_time_pattern_using_month_day_expr month_day
-            |> Hour_minute.update_time_pattern_using_hms_expr hms
-          | Month_day_hms { month; month_day; hms } ->
-            Time_pattern.empty
-            |> Month.update_time_pattern_using_month_expr month
-            |> Month_day.update_time_pattern_using_month_day_expr month_day
-            |> Hour_minute.update_time_pattern_using_hms_expr hms
-          | Day_hms { day; hms } ->
-            Time_pattern.empty
-            |> Day.update_time_pattern_using_day_expr day
-            |> Hour_minute.update_time_pattern_using_hms_expr hms
-          | Hms hms ->
-            Hour_minute.update_time_pattern_using_hms_expr hms
-              Time_pattern.empty )
+      match resolve_unbounded_time_points_expr ~f_resolve_tpe_name e with
+      | Error msg -> Error msg
+      | Ok e ->
+        Ok
+          ( match e with
+            | Tpe_name _ -> failwith "Unexpected case"
+            | Tpe_unix_times l -> Unix_times.time_pattern_of_unix_times l
+            | Year_month_day_hour_minute_second
+                { year; month; month_day; hour_minute_second } ->
+              Time_pattern.empty
+              |> Year.update_time_pattern_using_year_expr year
+              |> Month.update_time_pattern_using_month_expr month
+              |> Month_day.update_time_pattern_using_month_day_expr month_day
+              |> Hour_minute_second
+                 .update_time_pattern_using_hour_minute_second_expr
+                hour_minute_second
+            | Month_day_hour_minute_second
+                { month; month_day; hour_minute_second } ->
+              Time_pattern.empty
+              |> Month.update_time_pattern_using_month_expr month
+              |> Month_day.update_time_pattern_using_month_day_expr month_day
+              |> Hour_minute_second
+                 .update_time_pattern_using_hour_minute_second_expr
+                hour_minute_second
+            | Day_hour_minute_second { day; hour_minute_second } ->
+              Time_pattern.empty
+              |> Day.update_time_pattern_using_day_expr day
+              |> Hour_minute_second
+                 .update_time_pattern_using_hour_minute_second_expr
+                hour_minute_second
+            | Hour_minute_second hour_minute_second ->
+              Hour_minute_second
+              .update_time_pattern_using_hour_minute_second_expr
+                hour_minute_second Time_pattern.empty
+            | Minute_second second ->
+              Minute_second.update_time_pattern_using_minute_second_expr
+                second Time_pattern.empty
+            | Second second ->
+              Second.update_time_pattern_using_second_expr second
+                Time_pattern.empty )
     with Invalid_time_expr msg -> Error msg
 
-  let time_pattern_of_time_point_expr ((_, e) : Time_expr_ast.time_point_expr) :
+  let time_pattern_of_time_points_expr
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+      ((_, e) : Time_expr_ast.time_points_expr) :
     (Time_pattern.t, string) result =
-    time_pattern_of_unbounded_time_point_expr e
+    time_pattern_of_unbounded_time_points_expr ~f_resolve_tpe_name e
 
   let time_range_patterns_of_unbounded_time_slots_expr
+      ?(f_resolve_tse_name = default_f_resolve_tse_name)
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (e : Time_expr_ast.unbounded_time_slots_expr) :
     (Time_pattern.time_range_pattern list, string) result =
     try
-      Ok
-        ( match e with
-          | Single_time_slot { start; end_exc } -> (
-              match time_pattern_of_unbounded_time_point_expr start with
-              | Error msg -> raise (Invalid_time_expr msg)
-              | Ok start -> (
-                  match time_pattern_of_unbounded_time_point_expr end_exc with
-                  | Error msg -> raise (Invalid_time_expr msg)
-                  | Ok end_exc -> [ `Range_exc (start, end_exc) ] ) )
-          | Month_days_and_hms_ranges { month_days; hms_ranges } ->
-            (* check_hms_ranges hms_ranges; *)
-            Month_day.flatten_month_day_ranges month_days
-            |> Seq.map Month_day.time_pattern_of_month_day_expr
-            |> Seq.flat_map
-              (Hour_minute
-               .time_range_patterns_of_hms_ranges_and_base_time_pattern
-                 hms_ranges)
-            |> List.of_seq
-          | Weekdays_and_hms_ranges { weekdays; hms_ranges } ->
-            Weekday.flatten_weekday_ranges weekdays
-            |> Seq.map Weekday.time_pattern_of_weekday_expr
-            |> Seq.flat_map
-              (Hour_minute
-               .time_range_patterns_of_hms_ranges_and_base_time_pattern
-                 hms_ranges)
-            |> List.of_seq
-          | Months_and_month_days_and_hms_ranges
-              { months; month_days; hms_ranges } ->
-            let month_days =
-              Month_day.flatten_month_day_ranges month_days |> List.of_seq
-            in
-            Month.flatten_month_ranges months
-            |> Seq.map Month.time_pattern_of_month_expr
-            |> Seq.flat_map
-              (Month_day.time_patterns_of_month_days_and_base_time_pattern
-                 month_days)
-            |> Seq.flat_map
-              (Hour_minute
-               .time_range_patterns_of_hms_ranges_and_base_time_pattern
-                 hms_ranges)
-            |> List.of_seq
-          | Months_and_weekdays_and_hms_ranges { months; weekdays; hms_ranges } ->
-            let weekdays =
-              Weekday.flatten_weekday_ranges weekdays |> List.of_seq
-            in
-            Month.flatten_month_ranges months
-            |> Seq.map Month.time_pattern_of_month_expr
-            |> Seq.flat_map
-              (Weekday.time_patterns_of_weekdays_and_base_time_pattern
-                 weekdays)
-            |> Seq.flat_map
-              (Hour_minute
-               .time_range_patterns_of_hms_ranges_and_base_time_pattern
-                 hms_ranges)
-            |> List.of_seq
-          | Months_and_weekday_and_hms_ranges
-              { months; weekday; hms_ranges; month_weekday_mode = _ } ->
-            Month.flatten_month_ranges months
-            |> Seq.map Month.time_pattern_of_month_expr
-            |> Seq.map (Weekday.update_time_pattern_using_weekday_expr weekday)
-            |> Seq.flat_map
-              (Hour_minute
-               .time_range_patterns_of_hms_ranges_and_base_time_pattern
-                 hms_ranges)
-            |> List.of_seq
-          | Years_and_months_and_month_days_and_hms_ranges
-              { years; months; month_days; hms_ranges } ->
-            let months = Month.flatten_month_ranges months |> List.of_seq in
-            let month_days =
-              Month_day.flatten_month_day_ranges month_days |> List.of_seq
-            in
-            Year.flatten_year_ranges years
-            |> Seq.map Year.time_pattern_of_year_expr
-            |> Seq.flat_map
-              (Month.time_patterns_of_months_and_base_time_pattern months)
-            |> Seq.flat_map
-              (Month_day.time_patterns_of_month_days_and_base_time_pattern
-                 month_days)
-            |> Seq.flat_map
-              (Hour_minute
-               .time_range_patterns_of_hms_ranges_and_base_time_pattern
-                 hms_ranges)
-            |> List.of_seq )
+      match
+        resolve_unbounded_time_slots_expr ~f_resolve_tse_name
+          ~f_resolve_tpe_name e
+      with
+      | Error msg -> Error msg
+      | Ok e ->
+        Ok
+          ( match e with
+            | Tse_name _ -> failwith "Unexpected case"
+            | Explicit_time_slots l ->
+              List.map
+                (fun (start, end_exc) ->
+                   match
+                     time_pattern_of_unbounded_time_points_expr
+                       ~f_resolve_tpe_name start
+                   with
+                   | Error msg -> raise (Invalid_time_expr msg)
+                   | Ok start -> (
+                       match
+                         time_pattern_of_unbounded_time_points_expr
+                           ~f_resolve_tpe_name end_exc
+                       with
+                       | Error msg -> raise (Invalid_time_expr msg)
+                       | Ok end_exc -> `Range_exc (start, end_exc) ))
+                l
+            | Month_days_and_hour_minute_second_ranges
+                { month_days; hour_minute_second_ranges } ->
+              (* check_hour_minute_second_ranges hour_minute_second_ranges; *)
+              Time.flatten_month_day_ranges month_days
+              |> Seq.map Month_day.time_pattern_of_month_day_expr
+              |> Seq.flat_map
+                (Hour_minute_second
+                 .time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
+                   hour_minute_second_ranges)
+              |> List.of_seq
+            | Weekdays_and_hour_minute_second_ranges
+                { weekdays; hour_minute_second_ranges } ->
+              Time.flatten_weekday_ranges weekdays
+              |> Seq.map Weekday.time_pattern_of_weekday_expr
+              |> Seq.flat_map
+                (Hour_minute_second
+                 .time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
+                   hour_minute_second_ranges)
+              |> List.of_seq
+            | Months_and_month_days_and_hour_minute_second_ranges
+                { months; month_days; hour_minute_second_ranges } ->
+              let month_days =
+                Time.flatten_month_day_ranges month_days |> List.of_seq
+              in
+              Time.flatten_month_ranges months
+              |> Seq.map Month.time_pattern_of_month_expr
+              |> Seq.flat_map
+                (Month_day
+                 .time_patterns_of_month_days_and_base_time_pattern
+                   month_days)
+              |> Seq.flat_map
+                (Hour_minute_second
+                 .time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
+                   hour_minute_second_ranges)
+              |> List.of_seq
+            | Months_and_weekdays_and_hour_minute_second_ranges
+                { months; weekdays; hour_minute_second_ranges } ->
+              let weekdays =
+                Time.flatten_weekday_ranges weekdays |> List.of_seq
+              in
+              Time.flatten_month_ranges months
+              |> Seq.map Month.time_pattern_of_month_expr
+              |> Seq.flat_map
+                (Weekday.time_patterns_of_weekdays_and_base_time_pattern
+                   weekdays)
+              |> Seq.flat_map
+                (Hour_minute_second
+                 .time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
+                   hour_minute_second_ranges)
+              |> List.of_seq
+            | Months_and_weekday_and_hour_minute_second_ranges
+                {
+                  months;
+                  weekday;
+                  hour_minute_second_ranges;
+                  month_weekday_mode = _;
+                } ->
+              Time.flatten_month_ranges months
+              |> Seq.map Month.time_pattern_of_month_expr
+              |> Seq.map
+                (Weekday.update_time_pattern_using_weekday_expr weekday)
+              |> Seq.flat_map
+                (Hour_minute_second
+                 .time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
+                   hour_minute_second_ranges)
+              |> List.of_seq
+            | Years_and_months_and_month_days_and_hour_minute_second_ranges
+                { years; months; month_days; hour_minute_second_ranges } ->
+              let months = Time.flatten_month_ranges months |> List.of_seq in
+              let month_days =
+                Time.flatten_month_day_ranges month_days |> List.of_seq
+              in
+              Time.flatten_year_ranges years
+              |> Seq.map Year.time_pattern_of_year_expr
+              |> Seq.flat_map
+                (Month.time_patterns_of_months_and_base_time_pattern
+                   months)
+              |> Seq.flat_map
+                (Month_day
+                 .time_patterns_of_month_days_and_base_time_pattern
+                   month_days)
+              |> Seq.flat_map
+                (Hour_minute_second
+                 .time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
+                   hour_minute_second_ranges)
+              |> List.of_seq )
     with Invalid_time_expr msg -> Error msg
 
   let time_range_patterns_of_time_slots_expr
+      ?(f_resolve_tse_name = default_f_resolve_tse_name)
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       ((_, e) : Time_expr_ast.time_slots_expr) :
     (Time_pattern.time_range_pattern list, string) result =
-    time_range_patterns_of_unbounded_time_slots_expr e
+    time_range_patterns_of_unbounded_time_slots_expr ~f_resolve_tse_name
+      ~f_resolve_tpe_name e
 
-  let single_or_ranges_of_time_expr (e : Time_expr_ast.t) :
+  let single_or_ranges_of_time_expr
+      ?(f_resolve_tse_name = default_f_resolve_tse_name)
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name) (e : Time_expr_ast.t) :
     (Time_pattern.single_or_ranges, string) result =
     match e with
-    | Time_expr_ast.Time_point_expr e -> (
-        match time_pattern_of_time_point_expr e with
+    | Time_expr_ast.Time_points_expr e -> (
+        match time_pattern_of_time_points_expr ~f_resolve_tpe_name e with
         | Ok x -> Ok (Single_time_pattern x)
         | Error msg -> Error msg )
     | Time_expr_ast.Time_slots_expr e -> (
-        match time_range_patterns_of_time_slots_expr e with
+        match
+          time_range_patterns_of_time_slots_expr ~f_resolve_tse_name
+            ~f_resolve_tpe_name e
+        with
         | Ok x -> Ok (Time_range_patterns x)
         | Error msg -> Error msg )
 
-  let time_pattern_of_time_expr (e : Time_expr_ast.t) :
+  let time_pattern_of_time_expr
+      ?(f_resolve_tse_name = default_f_resolve_tse_name)
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name) (e : Time_expr_ast.t) :
     (Time_pattern.t, string) result =
-    match single_or_ranges_of_time_expr e with
+    match
+      single_or_ranges_of_time_expr ~f_resolve_tse_name ~f_resolve_tpe_name e
+    with
     | Ok (Time_pattern.Single_time_pattern x) -> Ok x
     | Ok (Time_pattern.Time_range_patterns _) ->
       Error "Time expression translates to time pattern pairs"
     | Error msg -> Error msg
 
-  let time_range_patterns_of_time_expr (e : Time_expr_ast.t) :
+  let time_range_patterns_of_time_expr
+      ?(f_resolve_tse_name = default_f_resolve_tse_name)
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name) (e : Time_expr_ast.t) :
     (Time_pattern.time_range_pattern list, string) result =
-    match single_or_ranges_of_time_expr e with
+    match
+      single_or_ranges_of_time_expr ~f_resolve_tse_name ~f_resolve_tpe_name e
+    with
     | Ok (Time_pattern.Single_time_pattern _) ->
       Error "Time expression translates to single time pattern"
     | Ok (Time_pattern.Time_range_patterns l) -> Ok l
     | Error msg -> Error msg
 
-  let time_range_pattern_of_time_expr (e : Time_expr_ast.t) :
+  let time_range_pattern_of_time_expr
+      ?(f_resolve_tse_name = default_f_resolve_tse_name)
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name) (e : Time_expr_ast.t) :
     (Time_pattern.time_range_pattern, string) result =
-    match time_range_patterns_of_time_expr e with
+    match
+      time_range_patterns_of_time_expr ~f_resolve_tse_name ~f_resolve_tpe_name e
+    with
     | Ok l -> (
         match l with
         | [] ->
@@ -646,49 +877,47 @@ module To_time_pattern_lossy = struct
     | Error msg -> Error msg
 end
 
-module Time_point_expr = struct
-  let next_match_unix_time (search_param : search_param)
-      (e : Time_expr_ast.time_point_expr) : (int64 option, string) result =
-    match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
+module Time_points_expr = struct
+  let next_match_unix_time ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+      (search_param : search_param) (e : Time_expr_ast.time_points_expr) :
+    (int64 option, string) result =
+    match
+      To_time_pattern_lossy.time_pattern_of_time_points_expr ~f_resolve_tpe_name
+        e
+    with
     | Error msg -> Error msg
     | Ok pat ->
       Ok (Time_pattern.Single_pattern.next_match_unix_time search_param pat)
 
   let matching_unix_times ?(force_bound : Time_expr_ast.bound option)
-      (search_param : search_param) ((bound, e) : Time_expr_ast.time_point_expr)
-    : (int64 Seq.t, string) result =
-    match To_time_pattern_lossy.time_pattern_of_unbounded_time_point_expr e with
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+      (search_param : search_param)
+      ((bound, e) : Time_expr_ast.time_points_expr) :
+    (int64 Seq.t, string) result =
+    match
+      To_time_pattern_lossy.time_pattern_of_unbounded_time_points_expr
+        ~f_resolve_tpe_name e
+    with
     | Error msg -> Error msg
-    | Ok pat ->
-      let selector =
-        match e with
-        | Year_month_day_hms _ | Month_day_hms _ | Day_hms _ | Hms _ -> (
-            match Option.value ~default:bound force_bound with
-            | `Next -> OSeq.take 1
-            | `Every -> fun x -> x )
-      in
-      Time_pattern.Single_pattern.matching_time_slots search_param pat
-      |> Seq.map (fun (x, _) -> x)
-      |> selector
-      |> Result.ok
-
-  (* let matching_time_slots (search_param : search_param)
-   *     (e : Time_expr_ast.time_point_expr) :
-   *   (Time_slot_ds.t Seq.t, string) result =
-   *   match To_time_pattern_lossy.time_pattern_of_time_point_expr e with
-   *   | Error msg -> Error msg
-   *   | Ok pat ->
-   *     Time_pattern.Single_pattern.matching_time_slots search_param pat
-   *     |> OSeq.take 1
-   *     |> Result.ok *)
-
-  (* let next_match_time_slot (search_param : search_param)
-   *     (e : Time_expr_ast.time_point_expr) :
-   *   ((int64 * int64) option, string) result =
-   *   match matching_time_slots search_param e with
-   *   | Error msg -> Error msg
-   *   | Ok seq -> (
-   *       match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) ) *)
+    | Ok pat -> (
+        match resolve_unbounded_time_points_expr ~f_resolve_tpe_name e with
+        | Error msg -> Error msg
+        | Ok e ->
+          let selector =
+            match e with
+            | Tpe_name _ -> failwith "Unexpected case"
+            | Tpe_unix_times l -> OSeq.take (List.length l)
+            | Year_month_day_hour_minute_second _
+            | Month_day_hour_minute_second _ | Day_hour_minute_second _
+            | Hour_minute_second _ | Minute_second _ | Second _ -> (
+                match Option.value ~default:bound force_bound with
+                | `Next -> OSeq.take 1
+                | `Every -> fun x -> x )
+          in
+          Time_pattern.Single_pattern.matching_time_slots search_param pat
+          |> Seq.map (fun (x, _) -> x)
+          |> selector
+          |> Result.ok )
 end
 
 module Time_slots_expr = struct
@@ -736,72 +965,75 @@ module Time_slots_expr = struct
           Time.unix_time_of_tm ~time_zone_of_tm y ))
 
   let matching_time_slots ?(force_bound : Time_expr_ast.bound option)
+      ?(f_resolve_tse_name = default_f_resolve_tse_name)
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (search_param : search_param) ((bound, e) : Time_expr_ast.time_slots_expr)
     : (Time_slot_ds.t Seq.t, string) result =
-    let list_selector =
-      match e with
-      | Single_time_slot _ | Month_days_and_hms_ranges _
-      | Weekdays_and_hms_ranges _ | Months_and_month_days_and_hms_ranges _
-      | Months_and_weekdays_and_hms_ranges _
-      | Years_and_months_and_month_days_and_hms_ranges _ -> (
-          match Option.value ~default:bound force_bound with
-          | `Next -> OSeq.take 1
-          | `Every -> fun x -> x )
-      | Months_and_weekday_and_hms_ranges _ -> (
-          match Option.value ~default:bound force_bound with
-          | `Next -> OSeq.take 4
-          | `Every -> fun x -> x )
-    in
-    let flat_selector =
-      match e with
-      | Single_time_slot _ | Month_days_and_hms_ranges _
-      | Weekdays_and_hms_ranges _ | Months_and_month_days_and_hms_ranges _
-      | Months_and_weekdays_and_hms_ranges _
-      | Years_and_months_and_month_days_and_hms_ranges _ ->
-        fun x -> x
-      | Months_and_weekday_and_hms_ranges { month_weekday_mode; _ } -> (
-          match month_weekday_mode with
-          | None -> fun x -> x
-          | Some (First_n n) ->
-            get_first_or_last_n_matches_of_same_month ~first_or_last:`First ~n
-              search_param
-          | Some (Last_n n) ->
-            get_first_or_last_n_matches_of_same_month ~first_or_last:`Last ~n
-              search_param )
-    in
     match
-      To_time_pattern_lossy.time_range_patterns_of_unbounded_time_slots_expr e
+      resolve_unbounded_time_slots_expr ~f_resolve_tse_name ~f_resolve_tpe_name
+        e
     with
     | Error msg -> Error msg
-    | Ok l ->
-      Time_pattern.Range_pattern
-      .matching_time_slots_round_robin_non_decreasing search_param l
-      |> list_selector
-      |> Seq.flat_map List.to_seq
-      |> flat_selector
-      |> Result.ok
+    | Ok e -> (
+        let list_selector =
+          match e with
+          | Tse_name _ -> failwith "Unexpected case"
+          | Explicit_time_slots l -> (
+              match l with [] -> OSeq.take 0 | _ -> OSeq.take 1 )
+          | Month_days_and_hour_minute_second_ranges _
+          | Weekdays_and_hour_minute_second_ranges _
+          | Months_and_month_days_and_hour_minute_second_ranges _
+          | Months_and_weekdays_and_hour_minute_second_ranges _
+          | Years_and_months_and_month_days_and_hour_minute_second_ranges _ -> (
+              match Option.value ~default:bound force_bound with
+              | `Next -> OSeq.take 1
+              | `Every -> fun x -> x )
+          | Months_and_weekday_and_hour_minute_second_ranges _ -> (
+              match Option.value ~default:bound force_bound with
+              | `Next -> OSeq.take 4
+              | `Every -> fun x -> x )
+        in
+        let flat_selector =
+          match e with
+          | Tse_name _ -> failwith "Unexpected case"
+          | Explicit_time_slots _ | Month_days_and_hour_minute_second_ranges _
+          | Weekdays_and_hour_minute_second_ranges _
+          | Months_and_month_days_and_hour_minute_second_ranges _
+          | Months_and_weekdays_and_hour_minute_second_ranges _
+          | Years_and_months_and_month_days_and_hour_minute_second_ranges _ ->
+            fun x -> x
+          | Months_and_weekday_and_hour_minute_second_ranges
+              { month_weekday_mode; _ } -> (
+              match month_weekday_mode with
+              | None -> fun x -> x
+              | Some (First_n n) ->
+                get_first_or_last_n_matches_of_same_month
+                  ~first_or_last:`First ~n search_param
+              | Some (Last_n n) ->
+                get_first_or_last_n_matches_of_same_month ~first_or_last:`Last
+                  ~n search_param )
+        in
+        match
+          To_time_pattern_lossy.time_range_patterns_of_unbounded_time_slots_expr
+            ~f_resolve_tse_name ~f_resolve_tpe_name e
+        with
+        | Error msg -> Error msg
+        | Ok l ->
+          Time_pattern.Range_pattern
+          .matching_time_slots_round_robin_non_decreasing search_param l
+          |> list_selector
+          |> Seq.flat_map List.to_seq
+          |> flat_selector
+          |> Result.ok )
 
-  let next_match_time_slot (search_param : search_param)
-      (e : Time_expr_ast.time_slots_expr) :
+  let next_match_time_slot ?(f_resolve_tse_name = default_f_resolve_tse_name)
+      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+      (search_param : search_param) (e : Time_expr_ast.time_slots_expr) :
     ((int64 * int64) option, string) result =
-    match matching_time_slots search_param e with
+    match
+      matching_time_slots ~f_resolve_tse_name ~f_resolve_tpe_name search_param e
+    with
     | Error msg -> Error msg
     | Ok seq -> (
         match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
 end
-
-(* let matching_time_slots ?(force_match_mode : Time_expr_ast.match_mode option)
- *     (search_param : search_param) (e : Time_expr_ast.t) :
- *   (Time_slot_ds.t Seq.t option, string) result =
- *   match e with
- *   | Time_point_expr _ -> Ok None
- *   | Time_slots_expr e ->
- *     Time_slots_expr.matching_time_slots_internal ~force_match_mode
- *       search_param e
- *     |> Result.map Option.some
- * 
- * let next_match_time_slot (search_param : search_param)
- *     (e : Time_expr_ast.t) : ((int64 * int64) option, string) result =
- *   match e with
- *   | Time_point_expr _ -> Ok None
- *   | Time_slots_expr e -> Time_slots_expr.next_match_time_slot search_param e *)

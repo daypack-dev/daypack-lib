@@ -20,6 +20,7 @@ depends: [
   "atdgen"
   "atdgen-runtime"
   "bisect_ppx" {dev & >= "2.0.0"}
+  "angstrom" { >= "0.14.0" }
 ]
 build: [
   ["dune" "build" "-p" name "-j" jobs ]

@@ -41,15 +41,17 @@ let hour_to_second_multiplier = Int64.mul 60L minute_to_second_multiplier
 
 let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
 
-let check_hms ~(hour : int) ~(minute : int) ~(second : int) : bool =
-  (0 <= hour && hour < 24)
-  && 0 <= minute
-  && minute < 60
-  && 0 <= second
-  && second < 60
+let check_second ~(second : int) : bool = 0 <= second && second < 60
+
+let check_minute_second ~(minute : int) ~(second : int) : bool =
+  0 <= minute && minute < 60 && check_second ~second
+
+let check_hour_minute_second ~(hour : int) ~(minute : int) ~(second : int) :
+  bool =
+  (0 <= hour && hour < 24) && check_minute_second ~minute ~second
 
 let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
-  if check_hms ~hour ~minute ~second:0 then
+  if check_hour_minute_second ~hour ~minute ~second:0 then
     if minute < 59 then Ok (hour, succ minute) else Ok (succ hour mod 24, 0)
   else Error ()
 
@@ -281,6 +283,29 @@ let weekday_of_month_day ~(year : int) ~(month : month) ~(mday : int) : weekday
 let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
   Unix.gmtime timestamp
+
+let flatten_month_day_ranges (l : int Range.t list) : int Seq.t =
+  List.to_seq l
+  |> Seq.flat_map
+    (Range.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x))
+
+let flatten_weekday_ranges (l : weekday Range.t list) : weekday Seq.t =
+  List.to_seq l
+  |> Seq.flat_map
+    (Range.flatten_into_seq ~modulo:7 ~of_int:weekday_of_tm_int
+       ~to_int:tm_int_of_weekday)
+
+let flatten_month_ranges (l : month Range.t list) : month Seq.t =
+  List.to_seq l
+  |> Seq.flat_map
+    (Range.flatten_into_seq
+       ~of_int:(fun x -> month_of_tm_int x |> Result.get_ok)
+       ~to_int:tm_int_of_month)
+
+let flatten_year_ranges (l : int Range.t list) : int Seq.t =
+  List.to_seq l
+  |> Seq.flat_map
+    (Range.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x))
 
 module Current = struct
   let cur_unix_time () : int64 = Unix.time () |> Int64.of_float
