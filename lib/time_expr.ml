@@ -878,6 +878,8 @@ module To_time_pattern_lossy = struct
 end
 
 module Time_points_expr = struct
+  let resolve_unbounded_time_points_expr = resolve_unbounded_time_points_expr
+
   let next_match_unix_time ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (search_param : search_param) (e : Time_expr_ast.time_points_expr) :
     (int64 option, string) result =
@@ -921,6 +923,8 @@ module Time_points_expr = struct
 end
 
 module Time_slots_expr = struct
+  let resolve_unbounded_time_slots_expr = resolve_unbounded_time_slots_expr
+
   let get_first_or_last_n_matches_of_same_month_tm_pair_seq
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
       (s : (Unix.tm * Unix.tm) Seq.t) : (Unix.tm * Unix.tm) Seq.t =
