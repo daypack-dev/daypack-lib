@@ -19,11 +19,6 @@ module Time_points_expr : sig
     search_param ->
     Time_expr_ast.time_points_expr ->
     (int64 Seq.t, string) result
-
-  val resolve_unbounded_time_points_expr :
-    f_resolve_tpe_name:f_resolve_tpe_name ->
-    Time_expr_ast.unbounded_time_points_expr ->
-    (Time_expr_ast.unbounded_time_points_expr, string) result
 end
 
 module Time_slots_expr : sig
@@ -41,6 +36,13 @@ module Time_slots_expr : sig
     search_param ->
     Time_expr_ast.time_slots_expr ->
     ((int64 * int64) Seq.t, string) result
+end
+
+module Resolve : sig
+  val resolve_unbounded_time_points_expr :
+    f_resolve_tpe_name:f_resolve_tpe_name ->
+    Time_expr_ast.unbounded_time_points_expr ->
+    (Time_expr_ast.unbounded_time_points_expr, string) result
 
   val resolve_unbounded_time_slots_expr :
     f_resolve_tse_name:f_resolve_tse_name ->
