@@ -439,14 +439,15 @@ module Interpret_string = struct
       space *> unbounded_time_slots_expr >>= fun e -> return (bound, e)
   end
 
-  let time_expr =
-    Time_points_expr.time_points_expr
-    >>| (fun e -> Time_expr_ast.Time_points_expr e)
-        <|> ( Time_slots_expr.time_slots_expr
-              >>| fun e -> Time_expr_ast.Time_slots_expr e )
-
   let of_string (s : string) : (Time_expr_ast.t, string) result =
-    parse_string (time_expr <* end_of_input) s
+    parse_string
+      ( Time_points_expr.time_points_expr
+        <* end_of_input
+        >>| (fun e -> Time_expr_ast.Time_points_expr e)
+            <|> ( Time_slots_expr.time_slots_expr
+                  <* end_of_input
+                  >>| fun e -> Time_expr_ast.Time_slots_expr e ) )
+      s
 
   let time_points_expr_of_string (s : string) :
     (Time_expr_ast.time_points_expr, string) result =
@@ -462,8 +463,7 @@ module To_time_pattern_lossy = struct
     let update_time_pattern_using_second_expr (e : Time_expr_ast.second_expr)
         (base : Time_pattern.t) : Time_pattern.t =
       if Time.check_second ~second:e then { base with seconds = [ e ] }
-      else
-        raise (Invalid_time_expr (Printf.sprintf "Invalid second: ::%d" e))
+      else raise (Invalid_time_expr (Printf.sprintf "Invalid second: ::%d" e))
 
     let time_range_pattern_of_second_range_expr_and_base_time_pattern
         (e : Time_expr_ast.second_range_expr) (base : Time_pattern.t) :
@@ -496,8 +496,7 @@ module To_time_pattern_lossy = struct
       else
         raise
           (Invalid_time_expr
-             (Printf.sprintf "Invalid minute second: :%d:%d" e.minute
-                e.second))
+             (Printf.sprintf "Invalid minute second: :%d:%d" e.minute e.second))
 
     let time_range_pattern_of_minute_second_range_expr_and_base_time_pattern
         (e : Time_expr_ast.minute_second_range_expr) (base : Time_pattern.t) :
