@@ -181,8 +181,7 @@ module Serialize = struct
       ~pack_time:Misc_utils.int32_int32_of_int64
       ~pack_time_slot:Time_slot.Serialize.pack_time_slot sched_req_data_unit
 
-  let rec pack_sched_req_record (id, data_list) :
-    Sched_req_t.sched_req_record =
+  let rec pack_sched_req_record (id, data_list) : Sched_req_t.sched_req_record =
     ( Misc_utils.int32_int32_of_int64 id,
       List.map pack_sched_req_record_data_unit data_list )
 

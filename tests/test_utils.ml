@@ -419,8 +419,7 @@ let sched_req_gen : Daypack_lib.Sched_req.sched_req QCheck.Gen.t =
   pair pos_int64_gen (list_size (int_bound 2) sched_req_data_unit_gen)
 
 let sched_req =
-  QCheck.make
-    ~print:Daypack_lib.Sched_req.To_string.debug_string_of_sched_req
+  QCheck.make ~print:Daypack_lib.Sched_req.To_string.debug_string_of_sched_req
     sched_req_gen
 
 let sched_req_record_data_unit_gen :
@@ -435,8 +434,7 @@ let sched_req_record_data_unit_gen :
          sched_req_template)
     task_seg_id_gen sched_req_template_data_unit_gen
 
-let sched_req_record_gen :
-  Daypack_lib.Sched_req.sched_req_record QCheck.Gen.t =
+let sched_req_record_gen : Daypack_lib.Sched_req.sched_req_record QCheck.Gen.t =
   let open QCheck.Gen in
   pair pos_int64_gen (list_size (int_bound 2) sched_req_record_data_unit_gen)
 

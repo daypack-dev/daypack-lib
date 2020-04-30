@@ -3228,9 +3228,7 @@ module Serialize = struct
     |> List.of_seq
 
   let pack_sched_req_pending_store_diff (x : sched_req_store_diff) :
-    ( Sched_req_t.sched_req_id,
-      Sched_req_t.sched_req_data )
-      Map_utils_t.diff =
+    (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff =
     {
       added = pack_sched_req_pending_store x.added;
       removed = pack_sched_req_pending_store x.removed;
@@ -3244,9 +3242,7 @@ module Serialize = struct
     |> List.of_seq
 
   let pack_sched_req_discarded_store_diff (x : sched_req_store_diff) :
-    ( Sched_req_t.sched_req_id,
-      Sched_req_t.sched_req_data )
-      Map_utils_t.diff =
+    (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff =
     {
       added = pack_sched_req_discarded_store x.added;
       removed = pack_sched_req_discarded_store x.removed;
@@ -3726,9 +3722,8 @@ module Deserialize = struct
 
   let unpack_sched_req_pending_list_diff
       (x :
-         ( Sched_req_t.sched_req_id,
-           Sched_req_t.sched_req_data )
-           Map_utils_t.diff) : sched_req_store_diff =
+         (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff)
+    : sched_req_store_diff =
     {
       added = unpack_sched_req_pending_list x.added;
       removed = unpack_sched_req_pending_list x.removed;
@@ -3743,9 +3738,8 @@ module Deserialize = struct
 
   let unpack_sched_req_discarded_list_diff
       (x :
-         ( Sched_req_t.sched_req_id,
-           Sched_req_t.sched_req_data )
-           Map_utils_t.diff) : sched_req_store_diff =
+         (Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) Map_utils_t.diff)
+    : sched_req_store_diff =
     {
       added = unpack_sched_req_discarded_list x.added;
       removed = unpack_sched_req_discarded_list x.removed;
