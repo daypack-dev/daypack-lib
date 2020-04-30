@@ -153,9 +153,9 @@ module Store = struct
         f_unpack_suffix = "sched_req_pending_list";
         store_typ = "sched_req_store";
         diff_typ = "sched_req_store_diff";
-        ret_typ = "Sched_req_ds_t.sched_req list";
+        ret_typ = "Sched_req_t.sched_req list";
         diff_ret_typ =
-          "(Sched_req_ds_t.sched_req_id, Sched_req_ds_t.sched_req_data) \
+          "(Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) \
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";
@@ -170,9 +170,9 @@ module Store = struct
         f_unpack_suffix = "sched_req_discarded_list";
         store_typ = "sched_req_store";
         diff_typ = "sched_req_store_diff";
-        ret_typ = "Sched_req_ds_t.sched_req list";
+        ret_typ = "Sched_req_t.sched_req list";
         diff_ret_typ =
-          "(Sched_req_ds_t.sched_req_id, Sched_req_ds_t.sched_req_data) \
+          "(Sched_req_t.sched_req_id, Sched_req_t.sched_req_data) \
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";
@@ -187,9 +187,9 @@ module Store = struct
         f_unpack_suffix = "sched_req_record_list";
         store_typ = "sched_req_record_store";
         diff_typ = "sched_req_record_store_diff";
-        ret_typ = "Sched_req_ds_t.sched_req_record list";
+        ret_typ = "Sched_req_t.sched_req_record list";
         diff_ret_typ =
-          "(Sched_req_ds_t.sched_req_id, Sched_req_ds_t.sched_req_record_data) \
+          "(Sched_req_t.sched_req_id, Sched_req_t.sched_req_record_data) \
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";

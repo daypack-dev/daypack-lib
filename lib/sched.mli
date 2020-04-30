@@ -901,10 +901,10 @@ module Serialize : sig
   val pack_task_seg_discarded_store : task_seg_store -> Sched_t.task_seg list
 
   val pack_sched_req_pending_store :
-    sched_req_store -> Sched_req_ds_t.sched_req list
+    sched_req_store -> Sched_req_t.sched_req list
 
   val pack_sched_req_record_store :
-    sched_req_record_store -> Sched_req_ds_t.sched_req_record list
+    sched_req_record_store -> Sched_req_t.sched_req_record list
 
   val pack_quota :
     int64 Task_inst_id_map.t -> (Task_t.task_inst_id * (int32 * int32)) list
@@ -971,10 +971,10 @@ module Deserialize : sig
   val unpack_task_seg_discarded_list : Sched_t.task_seg list -> task_seg_store
 
   val unpack_sched_req_pending_list :
-    Sched_req_ds_t.sched_req list -> sched_req_store
+    Sched_req_t.sched_req list -> sched_req_store
 
   val unpack_sched_req_record_list :
-    Sched_req_ds_t.sched_req_record list -> sched_req_record_store
+    Sched_req_t.sched_req_record list -> sched_req_record_store
 
   val unpack_quota :
     (Task_t.task_inst_id * (int32 * int32)) list -> int64 Task_inst_id_map.t

@@ -3221,15 +3221,15 @@ module Serialize = struct
     }
 
   let pack_sched_req_pending_store (x : sched_req_store) :
-    Sched_req_ds_t.sched_req list =
+    Sched_req_t.sched_req list =
     x
     |> Sched_req_id_map.to_seq
     |> Seq.map Sched_req_.Serialize.pack_sched_req
     |> List.of_seq
 
   let pack_sched_req_pending_store_diff (x : sched_req_store_diff) :
-    ( Sched_req_ds_t.sched_req_id,
-      Sched_req_ds_t.sched_req_data )
+    ( Sched_req_t.sched_req_id,
+      Sched_req_t.sched_req_data )
       Map_utils_t.diff =
     {
       added = pack_sched_req_pending_store x.added;
@@ -3237,15 +3237,15 @@ module Serialize = struct
     }
 
   let pack_sched_req_discarded_store (x : sched_req_store) :
-    Sched_req_ds_t.sched_req list =
+    Sched_req_t.sched_req list =
     x
     |> Sched_req_id_map.to_seq
     |> Seq.map Sched_req_.Serialize.pack_sched_req
     |> List.of_seq
 
   let pack_sched_req_discarded_store_diff (x : sched_req_store_diff) :
-    ( Sched_req_ds_t.sched_req_id,
-      Sched_req_ds_t.sched_req_data )
+    ( Sched_req_t.sched_req_id,
+      Sched_req_t.sched_req_data )
       Map_utils_t.diff =
     {
       added = pack_sched_req_discarded_store x.added;
@@ -3253,15 +3253,15 @@ module Serialize = struct
     }
 
   let pack_sched_req_record_store (x : sched_req_record_store) :
-    Sched_req_ds_t.sched_req_record list =
+    Sched_req_t.sched_req_record list =
     x
     |> Sched_req_id_map.to_seq
     |> Seq.map Sched_req_.Serialize.pack_sched_req_record
     |> List.of_seq
 
   let pack_sched_req_record_store_diff (x : sched_req_record_store_diff) :
-    ( Sched_req_ds_t.sched_req_id,
-      Sched_req_ds_t.sched_req_record_data )
+    ( Sched_req_t.sched_req_id,
+      Sched_req_t.sched_req_record_data )
       Map_utils_t.diff =
     {
       added = pack_sched_req_record_store x.added;
@@ -3717,7 +3717,7 @@ module Deserialize = struct
       removed = unpack_task_seg_discarded_list x.removed;
     }
 
-  let unpack_sched_req_pending_list (x : Sched_req_ds_t.sched_req list) :
+  let unpack_sched_req_pending_list (x : Sched_req_t.sched_req list) :
     sched_req_store =
     x
     |> List.to_seq
@@ -3726,15 +3726,15 @@ module Deserialize = struct
 
   let unpack_sched_req_pending_list_diff
       (x :
-         ( Sched_req_ds_t.sched_req_id,
-           Sched_req_ds_t.sched_req_data )
+         ( Sched_req_t.sched_req_id,
+           Sched_req_t.sched_req_data )
            Map_utils_t.diff) : sched_req_store_diff =
     {
       added = unpack_sched_req_pending_list x.added;
       removed = unpack_sched_req_pending_list x.removed;
     }
 
-  let unpack_sched_req_discarded_list (x : Sched_req_ds_t.sched_req list) :
+  let unpack_sched_req_discarded_list (x : Sched_req_t.sched_req list) :
     sched_req_store =
     x
     |> List.to_seq
@@ -3743,15 +3743,15 @@ module Deserialize = struct
 
   let unpack_sched_req_discarded_list_diff
       (x :
-         ( Sched_req_ds_t.sched_req_id,
-           Sched_req_ds_t.sched_req_data )
+         ( Sched_req_t.sched_req_id,
+           Sched_req_t.sched_req_data )
            Map_utils_t.diff) : sched_req_store_diff =
     {
       added = unpack_sched_req_discarded_list x.added;
       removed = unpack_sched_req_discarded_list x.removed;
     }
 
-  let unpack_sched_req_record_list (x : Sched_req_ds_t.sched_req_record list) :
+  let unpack_sched_req_record_list (x : Sched_req_t.sched_req_record list) :
     sched_req_record_store =
     x
     |> List.to_seq
@@ -3760,8 +3760,8 @@ module Deserialize = struct
 
   let unpack_sched_req_record_list_diff
       (x :
-         ( Sched_req_ds_t.sched_req_id,
-           Sched_req_ds_t.sched_req_record_data )
+         ( Sched_req_t.sched_req_id,
+           Sched_req_t.sched_req_record_data )
            Map_utils_t.diff) : sched_req_record_store_diff =
     {
       added = unpack_sched_req_record_list x.added;
