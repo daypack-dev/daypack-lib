@@ -2,6 +2,12 @@ open Int64_utils
 
 type t = int64 * int64
 
+module Single = struct
+  let to_string ((start, end_exc) : t) : string =
+    Printf.sprintf "[%Ld, %Ld)" start end_exc
+end
+
+module Multi = struct
 module Normalize = struct
   let filter_invalid_or_empty (time_slots : t Seq.t) : t Seq.t =
     Seq.filter (fun (x, y) -> x < y) time_slots
@@ -373,9 +379,7 @@ let a_is_subset_of_b ~(a : t Seq.t) ~(b : t Seq.t) : bool =
   let inter = intersect a b |> List.of_seq in
   let a = List.of_seq a in
   a = inter
-
-let to_string ((start, end_exc) : t) : string =
-  Printf.sprintf "[%Ld, %Ld)" start end_exc
+  end
 
 module Check = struct
   let check_time_slot ((start, end_exc) : t) : bool =

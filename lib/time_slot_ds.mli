@@ -1,5 +1,11 @@
 type t = int64 * int64
 
+module Single : sig
+val to_string : t -> string
+
+end
+
+module Multi : sig
 val normalize : ?skip_filter:bool -> ?skip_sort:bool -> t Seq.t -> t Seq.t
 
 val normalize_list_in_seq_out :
@@ -50,8 +56,8 @@ val shift_list : offset:int64 -> t list -> t list
 val equal : t list -> t list -> bool
 
 val a_is_subset_of_b : a:t Seq.t -> b:t Seq.t -> bool
+end
 
-val to_string : t -> string
 
 module Check : sig
   val check_time_slot : t -> bool
