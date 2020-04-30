@@ -104,52 +104,39 @@ module Flatten = struct
 end
 
 module Of_seq = struct
-  let range_seq_of_seq_big (type a) ~(to_int64 : a -> int64) (s : a Seq.t) :
+  let range_seq_of_seq_big (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (s : a Seq.t) :
     a t Seq.t =
-    let rec aux to_int64 (acc_inc : (a * a) option) (s : a Seq.t) : a t Seq.t =
-      match s () with
-      | Seq.Nil -> (
-          match acc_inc with
-          | None -> Seq.empty
-          | Some (start, end_inc) -> Seq.return (`Range_inc (start, end_inc)) )
-      | Seq.Cons (x, rest) -> (
-          match acc_inc with
-          | None -> aux to_int64 (Some (x, x)) rest
-          | Some (start, end_inc) ->
-            if b_is_next_of_a_int64 ~to_int64 end_inc x then
-              aux to_int64 (Some (start, x)) rest
-            else fun () ->
-              Seq.Cons (`Range_inc (start, end_inc), aux to_int64 None rest)
-        )
-    in
-    aux to_int64 None s
+    s
+    |> Seq.map (fun x -> `Range_inc (x, x))
+    |> Normalize.normalize ~skip_filter:true ~skip_sort:true ~to_int64 ~of_int64
 
-  let range_list_of_seq_big (type a) ~(to_int64 : a -> int64) (s : a Seq.t) :
+  let range_list_of_seq_big (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (s : a Seq.t) :
     a t list =
-    range_seq_of_seq_big ~to_int64 s |> List.of_seq
+    range_seq_of_seq_big ~to_int64 ~of_int64 s |> List.of_seq
 
-  let range_seq_of_seq (type a) ~(to_int : a -> int) (s : a Seq.t) : a t Seq.t =
+  let range_seq_of_seq (type a) ~(to_int : a -> int) ~(of_int : int -> a) (s : a Seq.t) : a t Seq.t =
     let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
-    range_seq_of_seq_big ~to_int64 s
+    let of_int64 = Misc_utils.convert_of_int_to_int64 of_int in
+    range_seq_of_seq_big ~to_int64 ~of_int64 s
 
-  let range_list_of_seq (type a) ~(to_int : a -> int) (s : a Seq.t) : a t list =
-    range_seq_of_seq ~to_int s |> List.of_seq
+  let range_list_of_seq (type a) ~(to_int : a -> int) ~(of_int : int -> a) (s : a Seq.t) : a t list =
+    range_seq_of_seq ~to_int ~of_int s |> List.of_seq
 end
 
 module Of_list = struct
-  let range_seq_of_list_big (type a) ~(to_int64 : a -> int64) (l : a list) :
+  let range_seq_of_list_big (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (l : a list) :
     a t Seq.t =
-    List.to_seq l |> Of_seq.range_seq_of_seq_big ~to_int64
+    List.to_seq l |> Of_seq.range_seq_of_seq_big ~to_int64 ~of_int64
 
-  let range_list_of_list_big (type a) ~(to_int64 : a -> int64) (l : a list) :
+  let range_list_of_list_big (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (l : a list) :
     a t list =
-    List.to_seq l |> Of_seq.range_seq_of_seq_big ~to_int64 |> List.of_seq
+    List.to_seq l |> Of_seq.range_seq_of_seq_big ~to_int64 ~of_int64 |> List.of_seq
 
-  let range_seq_of_list (type a) ~(to_int : a -> int) (l : a list) : a t Seq.t =
-    List.to_seq l |> Of_seq.range_seq_of_seq ~to_int
+  let range_seq_of_list (type a) ~(to_int : a -> int) ~(of_int : int -> a) (l : a list) : a t Seq.t =
+    List.to_seq l |> Of_seq.range_seq_of_seq ~to_int ~of_int
 
-  let range_list_of_list (type a) ~(to_int : a -> int) (l : a list) : a t list =
-    List.to_seq l |> Of_seq.range_seq_of_seq ~to_int |> List.of_seq
+  let range_list_of_list (type a) ~(to_int : a -> int) ~(of_int : int -> a) (l : a list) : a t list =
+    List.to_seq l |> Of_seq.range_seq_of_seq ~to_int ~of_int |> List.of_seq
 end
 
 module Merge = struct
