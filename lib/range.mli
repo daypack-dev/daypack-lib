@@ -6,6 +6,28 @@ type 'a t =
 val map :
   f_inc:('a * 'a -> 'b * 'b) -> f_exc:('a * 'a -> 'b * 'b) -> 'a t -> 'b t
 
+module Normalize : sig
+  val normalize_to_inc :
+    to_int64:('a -> int64) ->
+    of_int64:(int64 -> 'a) ->
+    'a t ->
+    'a * 'a
+
+  val normalize_to_exc :
+    to_int64:('a -> int64) ->
+    of_int64:(int64 -> 'a) ->
+    'a t ->
+    'a * 'a
+
+  val normalize :
+    ?skip_filter:bool ->
+    ?skip_sort:bool ->
+    to_int64:('a -> int64) ->
+    of_int64:(int64 -> 'a) ->
+    'a t Seq.t ->
+    'a t Seq.t
+end
+
 module Flatten : sig
   val big_flatten_into_seq :
     ?modulo:int64 ->

@@ -23,9 +23,29 @@ let map ~(f_inc : 'a * 'a -> 'b * 'b) ~(f_exc : 'a * 'a -> 'b * 'b) (t : 'a t) :
     let x, y = f_exc (x, y) in
     `Range_exc (x, y)
 
+module Normalize = struct
+  let normalize_to_inc (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (x : a t) : a * a =
+    match x with
+    | `Range_inc (x, y) -> (x, y)
+    | `Range_exc (x, y) -> (x, y |> to_int64 |> Int64.pred |> of_int64)
+
+  let normalize_to_exc (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (x : a t) : a * a =
+    match x with
+    | `Range_inc (x, y) -> (x, y |> to_int64 |> Int64.succ |> of_int64)
+    | `Range_exc (x, y) -> (x, y)
+
+  let normalize (type a) ?(skip_filter = false) ?(skip_sort = false) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (s : a t Seq.t) =
+    s
+    |> Seq.map (normalize_to_exc ~to_int64 ~of_int64)
+    |> Seq.map (fun (x, y) -> to_int64 x, to_int64 y)
+    |> Time_slot_ds.normalize ~skip_filter ~skip_sort
+    |> Seq.map (fun (x, y) -> of_int64 x, of_int64 y)
+    |> Seq.map (fun (x, y) -> `Range_exc (x, y))
+end
+
 module Flatten = struct
   let flatten_into_seq_internal_int64 ~(modulo : int64 option)
-      ~(of_int64 : int64 -> 'a) ~(to_int64 : 'a -> int64) (t : 'a t) : 'a Seq.t
+      ~(to_int64 : 'a -> int64) ~(of_int64 : int64 -> 'a) (t : 'a t) : 'a Seq.t
     =
     match t with
     | `Range_inc (start, end_inc) -> (
@@ -99,7 +119,8 @@ module Of_seq = struct
             if b_is_next_of_a_int64 ~to_int64 end_inc x then
               aux to_int64 (Some (start, x)) rest
             else fun () ->
-              Seq.Cons (`Range_inc (start, end_inc), aux to_int64 None rest) )
+              Seq.Cons (`Range_inc (start, end_inc), aux to_int64 None rest)
+        )
     in
     aux to_int64 None s
 
