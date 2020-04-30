@@ -2,10 +2,8 @@ open Int64_utils
 
 type t = int64 * int64
 
-module Single = struct
-  let to_string ((start, end_exc) : t) : string =
-    Printf.sprintf "[%Ld, %Ld)" start end_exc
-end
+let to_string ((start, end_exc) : t) : string =
+  Printf.sprintf "[%Ld, %Ld)" start end_exc
 
 module Multi = struct
   module Normalize = struct

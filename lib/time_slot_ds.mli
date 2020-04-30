@@ -1,8 +1,6 @@
 type t = int64 * int64
 
-module Single : sig
-  val to_string : t -> string
-end
+val to_string : t -> string
 
 module Multi : sig
   val normalize : ?skip_filter:bool -> ?skip_sort:bool -> t Seq.t -> t Seq.t
