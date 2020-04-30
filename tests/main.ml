@@ -9,7 +9,7 @@ let () =
       ("Time_profile", Time_profile.suite);
       ("Time_profile_store", Time_profile_store.suite);
       ("Task_seg_place_gens", Task_seg_place_gens.suite);
-      ("Task", Task_ds.suite);
+      ("Task", Task.suite);
       ("Sched", Sched.suite);
       ("Sched_ver_history", Sched_ver_history.suite);
     ]

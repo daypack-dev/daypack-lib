@@ -71,9 +71,9 @@ let display_overdue_task_segs (context : Context.t) : unit =
     print_endline "  - Overdue task segments:";
     List.iter
       (fun (task_seg_id, place_start, place_end_exc) ->
-         let open Daypack_lib.Task_ds in
+         let open Daypack_lib.Task in
          let task_id =
-           Daypack_lib.Task_ds.Id.task_id_of_task_seg_id task_seg_id
+           Daypack_lib.Task.Id.task_id_of_task_seg_id task_seg_id
          in
          let task_data =
            Daypack_lib.Sched.Task.Find.find_task_any_opt task_id hd |> Option.get
@@ -104,7 +104,7 @@ let display_todos (context : Context.t) : unit =
     print_endline "  - TODOs:";
     List.iter
       (fun (task_id, task_data) ->
-         let open Daypack_lib.Task_ds in
+         let open Daypack_lib.Task in
          Printf.printf "    - | %s | %s\n"
            (Id.string_of_task_id task_id)
            task_data.name)

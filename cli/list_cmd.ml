@@ -29,20 +29,20 @@ let run (list_task_uncompleted : bool) (list_task_inst_uncompleted : bool)
       Printf.printf "Tasks :\n";
       Seq.iter
         (fun task ->
-           Daypack_lib.Task_ds.Print.debug_print_task ~indent_level:1 task)
+           Daypack_lib.Task.Print.debug_print_task ~indent_level:1 task)
         (Daypack_lib.Sched.Task.To_seq.task_seq_all hd) );
     if list_task_inst_uncompleted then (
       Printf.printf "Task instances :\n";
       Seq.iter
         (fun task_inst ->
-           Daypack_lib.Task_ds.Print.debug_print_task_inst ~indent_level:1
+           Daypack_lib.Task.Print.debug_print_task_inst ~indent_level:1
              task_inst)
         (Daypack_lib.Sched.Task_inst.To_seq.task_inst_seq_all hd) );
     if list_task_seg_uncompleted then (
       Printf.printf "Task segments :\n";
       Seq.iter
         (fun task_seg ->
-           Daypack_lib.Task_ds.Print.debug_print_task_seg ~indent_level:1
+           Daypack_lib.Task.Print.debug_print_task_seg ~indent_level:1
              task_seg)
         (Daypack_lib.Sched.Task_seg.To_seq.task_seg_seq_all hd) );
     if list_pending_sched_req then (

@@ -6,7 +6,7 @@ let show_all_arg = Arg.(value & flag & info [ "all" ])
 
 let display_place ~start sched
     ((task_seg_id, place_start, place_end_exc) :
-       Daypack_lib.Task_ds.task_seg_place) : unit =
+       Daypack_lib.Task.task_seg_place) : unit =
   let start_str =
     Daypack_lib.Time.To_string.yyyymmdd_hhmm_string_of_unix_time
       ~display_in_time_zone:`Local place_start
@@ -20,9 +20,9 @@ let display_place ~start sched
     |> Daypack_lib.Duration.of_seconds
     |> Daypack_lib.Duration.To_string.human_readable_string_of_duration
   in
-  let task_id = Daypack_lib.Task_ds.Id.task_id_of_task_seg_id task_seg_id in
+  let task_id = Daypack_lib.Task.Id.task_id_of_task_seg_id task_seg_id in
   let task_seg_id_str =
-    Daypack_lib.Task_ds.Id.string_of_task_seg_id task_seg_id
+    Daypack_lib.Task.Id.string_of_task_seg_id task_seg_id
   in
   let task =
     Daypack_lib.Sched.Task.Find.find_task_any_opt task_id sched |> Option.get
