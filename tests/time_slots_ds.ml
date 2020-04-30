@@ -184,10 +184,12 @@ let qc_intersect_associative =
        let s2 = l2 |> List.to_seq in
        let s3 = l3 |> List.to_seq in
        let inter1 =
-         Daypack_lib.Time_slots_ds.(intersect (intersect s1 s2) s3) |> List.of_seq
+         Daypack_lib.Time_slots_ds.(intersect (intersect s1 s2) s3)
+         |> List.of_seq
        in
        let inter2 =
-         Daypack_lib.Time_slots_ds.(intersect s1 (intersect s2 s3)) |> List.of_seq
+         Daypack_lib.Time_slots_ds.(intersect s1 (intersect s2 s3))
+         |> List.of_seq
        in
        inter1 = inter2)
 

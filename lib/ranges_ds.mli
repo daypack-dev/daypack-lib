@@ -37,15 +37,25 @@ module Flatten : sig
     'a Seq.t
 
   val flatten_into_list :
-    ?modulo:int -> to_int:('a -> int) -> of_int:(int -> 'a) -> 'a Range_ds.t -> 'a list
+    ?modulo:int ->
+    to_int:('a -> int) ->
+    of_int:(int -> 'a) ->
+    'a Range_ds.t ->
+    'a list
 end
 
 module Of_seq : sig
   val range_seq_of_seq_big :
-    to_int64:('a -> int64) -> of_int64:(int64 -> 'a) -> 'a Seq.t -> 'a Range_ds.t Seq.t
+    to_int64:('a -> int64) ->
+    of_int64:(int64 -> 'a) ->
+    'a Seq.t ->
+    'a Range_ds.t Seq.t
 
   val range_list_of_seq_big :
-    to_int64:('a -> int64) -> of_int64:(int64 -> 'a) -> 'a Seq.t -> 'a Range_ds.t list
+    to_int64:('a -> int64) ->
+    of_int64:(int64 -> 'a) ->
+    'a Seq.t ->
+    'a Range_ds.t list
 
   val range_seq_of_seq :
     to_int:('a -> int) -> of_int:(int -> 'a) -> 'a Seq.t -> 'a Range_ds.t Seq.t
@@ -56,10 +66,16 @@ end
 
 module Of_list : sig
   val range_seq_of_list_big :
-    to_int64:('a -> int64) -> of_int64:(int64 -> 'a) -> 'a list -> 'a Range_ds.t Seq.t
+    to_int64:('a -> int64) ->
+    of_int64:(int64 -> 'a) ->
+    'a list ->
+    'a Range_ds.t Seq.t
 
   val range_list_of_list_big :
-    to_int64:('a -> int64) -> of_int64:(int64 -> 'a) -> 'a list -> 'a Range_ds.t list
+    to_int64:('a -> int64) ->
+    of_int64:(int64 -> 'a) ->
+    'a list ->
+    'a Range_ds.t list
 
   val range_seq_of_list :
     to_int:('a -> int) -> of_int:(int -> 'a) -> 'a list -> 'a Range_ds.t Seq.t
@@ -69,11 +85,15 @@ module Of_list : sig
 end
 
 module Compress : sig
-  val compress_seq_big : to_int64:('a -> int64) -> 'a Range_ds.t Seq.t -> 'a Range_ds.t Seq.t
+  val compress_seq_big :
+    to_int64:('a -> int64) -> 'a Range_ds.t Seq.t -> 'a Range_ds.t Seq.t
 
-  val compress_list_big : to_int64:('a -> int64) -> 'a Range_ds.t list -> 'a Range_ds.t list
+  val compress_list_big :
+    to_int64:('a -> int64) -> 'a Range_ds.t list -> 'a Range_ds.t list
 
-  val compress_seq : to_int:('a -> int) -> 'a Range_ds.t Seq.t -> 'a Range_ds.t Seq.t
+  val compress_seq :
+    to_int:('a -> int) -> 'a Range_ds.t Seq.t -> 'a Range_ds.t Seq.t
 
-  val compress_list : to_int:('a -> int) -> 'a Range_ds.t list -> 'a Range_ds.t list
+  val compress_list :
+    to_int:('a -> int) -> 'a Range_ds.t list -> 'a Range_ds.t list
 end
