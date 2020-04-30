@@ -191,7 +191,7 @@ module Id = struct
           };
       } )
 
-  let get_new_task_id (user_id : Task.user_id) ((sid, sd) : sched) :
+  let get_new_task_id (user_id : Task_.user_id) ((sid, sd) : sched) :
     Task_.task_id * sched =
     let task_ids =
       User_id_map.find_opt user_id sd.store.user_id_to_task_ids
@@ -818,9 +818,9 @@ module Task_inst = struct
       in
       let quota =
         match data.task_inst_type with
-        | Task.Reminder_quota_counting { quota } ->
+        | Task_.Reminder_quota_counting { quota } ->
           Task_inst_id_map.add task_inst_id quota sd.store.quota
-        | Task.Reminder | Passing -> sd.store.quota
+        | Task_.Reminder | Passing -> sd.store.quota
       in
       ( (task_inst_id, data),
         ( sid,
@@ -1173,7 +1173,7 @@ end
 
 module Task = struct
   module Add = struct
-    let add_task ~(parent_user_id : Task.user_id) (data : Task_.task_data)
+    let add_task ~(parent_user_id : Task_.user_id) (data : Task_.task_data)
         (task_inst_data_list : Task_.task_inst_data list) ((sid, sd) : sched) :
       Task_.task * Task_.task_inst list * sched =
       let parent_task_id, (sid, sd) =
