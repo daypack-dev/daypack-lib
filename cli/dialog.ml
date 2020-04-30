@@ -137,7 +137,7 @@ let ask_task_seg_id ~indent_level
 
 let ask_pending_sched_req_id ~indent_level
     ~(exists_in_sched : Daypack_lib.Sched.sched option) :
-  Daypack_lib.Sched_req_ds.sched_req_id =
+  Daypack_lib.Sched_req.sched_req_id =
   let f_until =
     match exists_in_sched with
     | None -> None
@@ -162,7 +162,7 @@ let ask_pending_sched_req_id ~indent_level
 
 let ask_sched_req_record_id ~indent_level
     ~(exists_in_sched : Daypack_lib.Sched.sched option) :
-  Daypack_lib.Sched_req_ds.sched_req_id =
+  Daypack_lib.Sched_req.sched_req_id =
   let f_until =
     match exists_in_sched with
     | None -> None
@@ -332,7 +332,7 @@ let ask_task_inst_alloc_reqs ~indent_level ~task_inst_id :
 
 let ask_sched_req_data_unit ~indent_level
     ?(task_inst_id : Daypack_lib.Task.task_inst_id option) () :
-  (Daypack_lib.Sched_req_ds.sched_req_data_unit, string) result =
+  (Daypack_lib.Sched_req.sched_req_data_unit, string) result =
   let sched_req_choice =
     ask_pick_choice ~indent_level ~prompt:"Pick scheduling request type"
       [

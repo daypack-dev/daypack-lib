@@ -48,7 +48,7 @@ let run (list_task_uncompleted : bool) (list_task_inst_uncompleted : bool)
       Printf.printf "Pending scheduling requests :\n";
       Seq.iter
         (fun sched_req ->
-           Daypack_lib.Sched_req_ds.Print.debug_print_sched_req ~indent_level:1
+           Daypack_lib.Sched_req.Print.debug_print_sched_req ~indent_level:1
              sched_req)
         (Daypack_lib.Sched.Sched_req.To_seq.Pending.pending_sched_req_seq hd)
     );
@@ -56,7 +56,7 @@ let run (list_task_uncompleted : bool) (list_task_inst_uncompleted : bool)
       Printf.printf "Scheduling request records :\n";
       Seq.iter
         (fun sched_req ->
-           Daypack_lib.Sched_req_ds.Print.debug_print_sched_req_record
+           Daypack_lib.Sched_req.Print.debug_print_sched_req_record
              ~indent_level:1 sched_req)
         (Daypack_lib.Sched.Sched_req.To_seq.Record.sched_req_record_seq hd) )
 

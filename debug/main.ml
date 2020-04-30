@@ -428,7 +428,7 @@ let debug_sched_backtracking_search_pending () =
   in
   print_endline "scheduling requests";
   List.iter
-    (Sched_req_ds.Print.debug_print_sched_req_data ~indent_level:1)
+    (Sched_req.Print.debug_print_sched_req_data ~indent_level:1)
     sched_req_data_list;
   print_newline ();
   let _, base =
