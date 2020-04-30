@@ -67,9 +67,9 @@ module In_place_head : sig
   module Sched_req : sig
     module Add : sig
       val add_sched_req :
-        Sched_req_ds.sched_req_data ->
+        Sched_req.sched_req_data ->
         t ->
-        (Sched_req_ds.sched_req, unit) result * action_record
+        (Sched_req.sched_req, unit) result * action_record
     end
   end
 
@@ -99,14 +99,14 @@ module Maybe_append_to_head : sig
   val remove_task_inst_progress_chunk :
     Task_.task_inst_id -> int64 * int64 -> t -> action_record
 
-  val remove_pending_sched_req : Sched_req_ds.sched_req_id -> t -> action_record
+  val remove_pending_sched_req : Sched_req.sched_req_id -> t -> action_record
 
   val sched :
     start:int64 ->
     end_exc:int64 ->
     include_sched_reqs_starting_within_time_slot:bool ->
     include_sched_reqs_ending_within_time_slot:bool ->
-    up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
+    up_to_sched_req_id_inc:Sched_req.sched_req_id option ->
     t ->
     (unit, unit) result * action_record
 end

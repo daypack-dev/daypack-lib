@@ -1,4 +1,5 @@
 module Task_ = Task
+module Sched_req_ = Sched_req
 
 type sched_id = int
 
@@ -14,16 +15,16 @@ type task_seg_store = Task_.task_seg_size Task_seg_id_map.t
 
 type task_seg_store_diff = Task_.task_seg_size Task_seg_id_map_utils.diff
 
-type sched_req_store = Sched_req_ds.sched_req_data Sched_req_id_map.t
+type sched_req_store = Sched_req_.sched_req_data Sched_req_id_map.t
 
 type sched_req_store_diff =
-  Sched_req_ds.sched_req_data Sched_req_id_map_utils.diff
+  Sched_req_.sched_req_data Sched_req_id_map_utils.diff
 
 type sched_req_record_store =
-  Sched_req_ds.sched_req_record_data Sched_req_id_map.t
+  Sched_req_.sched_req_record_data Sched_req_id_map.t
 
 type sched_req_record_store_diff =
-  Sched_req_ds.sched_req_record_data Sched_req_id_map_utils.diff
+  Sched_req_.sched_req_record_data Sched_req_id_map_utils.diff
 
 type task_seg_place_map = Task_seg_id_set.t Int64_map.t
 
@@ -662,19 +663,19 @@ end
 module Sched_req : sig
   module Status : sig
     val get_sched_req_status :
-      Sched_req_ds.sched_req_id -> sched -> sched_req_status option
+      Sched_req_.sched_req_id -> sched -> sched_req_status option
   end
 
   module Add : sig
     val add_sched_req_data :
-      Sched_req_ds.sched_req_data ->
+      Sched_req_.sched_req_data ->
       sched ->
-      (Sched_req_ds.sched_req * sched, unit) result
+      (Sched_req_.sched_req * sched, unit) result
 
     val add_sched_req_data_list :
-      Sched_req_ds.sched_req_data list ->
+      Sched_req_.sched_req_data list ->
       sched ->
-      (Sched_req_ds.sched_req list * sched, unit) result
+      (Sched_req_.sched_req list * sched, unit) result
   end
 
   module Partition : sig
@@ -695,26 +696,26 @@ module Sched_req : sig
       val partition_based_on_time_point :
         int64 ->
         sched ->
-        Sched_req_ds.sched_req_data partition_based_on_time_point
+        Sched_req_.sched_req_data partition_based_on_time_point
 
       val partition_based_on_time_slot :
         start:int64 ->
         end_exc:int64 ->
         sched ->
-        Sched_req_ds.sched_req_data partition_based_on_time_slot
+        Sched_req_.sched_req_data partition_based_on_time_slot
     end
 
     module Record : sig
       val partition_based_on_time_point :
         int64 ->
         sched ->
-        Sched_req_ds.sched_req_record_data partition_based_on_time_point
+        Sched_req_.sched_req_record_data partition_based_on_time_point
 
       val partition_based_on_time_slot :
         start:int64 ->
         end_exc:int64 ->
         sched ->
-        Sched_req_ds.sched_req_record_data partition_based_on_time_slot
+        Sched_req_.sched_req_record_data partition_based_on_time_slot
     end
   end
 
@@ -726,7 +727,7 @@ module Sched_req : sig
         ?include_sched_req_starting_within_time_slot:bool ->
         ?include_sched_req_ending_within_time_slot:bool ->
         sched ->
-        Sched_req_ds.sched_req Seq.t
+        Sched_req_.sched_req Seq.t
     end
 
     module Record : sig
@@ -736,7 +737,7 @@ module Sched_req : sig
         ?include_sched_req_record_starting_within_time_slot:bool ->
         ?include_sched_req_record_ending_within_time_slot:bool ->
         sched ->
-        Sched_req_ds.sched_req_record Seq.t
+        Sched_req_.sched_req_record Seq.t
     end
   end
 
@@ -747,9 +748,9 @@ module Sched_req : sig
         ?end_exc:int64 ->
         ?include_sched_req_starting_within_time_slot:bool ->
         ?include_sched_req_ending_within_time_slot:bool ->
-        (Sched_req_ds.sched_req -> bool) ->
+        (Sched_req_.sched_req -> bool) ->
         sched ->
-        Sched_req_ds.sched_req Seq.t
+        Sched_req_.sched_req Seq.t
     end
 
     module Record : sig
@@ -758,44 +759,44 @@ module Sched_req : sig
         ?end_exc:int64 ->
         ?include_sched_req_record_starting_within_time_slot:bool ->
         ?include_sched_req_record_ending_within_time_slot:bool ->
-        (Sched_req_ds.sched_req_record -> bool) ->
+        (Sched_req_.sched_req_record -> bool) ->
         sched ->
-        Sched_req_ds.sched_req_record Seq.t
+        Sched_req_.sched_req_record Seq.t
     end
   end
 
   module Find : sig
     module Pending : sig
       val find_pending_sched_req :
-        Sched_req_ds.sched_req_id -> sched -> Sched_req_ds.sched_req_data option
+        Sched_req_.sched_req_id -> sched -> Sched_req_.sched_req_data option
 
       val find_pending_sched_req_by_task_id :
-        Task_.task_id -> sched -> Sched_req_ds.sched_req Seq.t
+        Task_.task_id -> sched -> Sched_req_.sched_req Seq.t
 
       val find_pending_sched_req_by_task_inst_id :
-        Task_.task_inst_id -> sched -> Sched_req_ds.sched_req Seq.t
+        Task_.task_inst_id -> sched -> Sched_req_.sched_req Seq.t
     end
 
     module Record : sig
       val find_sched_req_record :
-        Sched_req_ds.sched_req_id ->
+        Sched_req_.sched_req_id ->
         sched ->
-        Sched_req_ds.sched_req_record_data option
+        Sched_req_.sched_req_record_data option
 
       val find_sched_req_record_by_task_id :
-        Task_.task_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+        Task_.task_id -> sched -> Sched_req_.sched_req_record Seq.t
 
       val find_sched_req_record_by_task_inst_id :
-        Task_.task_inst_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+        Task_.task_inst_id -> sched -> Sched_req_.sched_req_record Seq.t
 
       val find_sched_req_record_by_task_seg_id :
-        Task_.task_seg_id -> sched -> Sched_req_ds.sched_req_record Seq.t
+        Task_.task_seg_id -> sched -> Sched_req_.sched_req_record Seq.t
     end
   end
 
   module Remove : sig
     module Pending : sig
-      val remove_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+      val remove_pending_sched_req : Sched_req_.sched_req_id -> sched -> sched
 
       val remove_pending_sched_req_if_contains_matching_task_seg_alloc_req :
         (Task_.task_seg_alloc_req -> bool) -> sched -> sched
@@ -822,7 +823,7 @@ module Sched_req : sig
     end
 
     module Record : sig
-      val remove_sched_req_record : Sched_req_ds.sched_req_id -> sched -> sched
+      val remove_sched_req_record : Sched_req_.sched_req_id -> sched -> sched
 
       val remove_sched_req_record_if_contains_matching_task_seg :
         (Task_.task_seg -> bool) -> sched -> sched
@@ -850,7 +851,7 @@ module Sched_req : sig
   end
 
   module Discard : sig
-    val discard_pending_sched_req : Sched_req_ds.sched_req_id -> sched -> sched
+    val discard_pending_sched_req : Sched_req_.sched_req_id -> sched -> sched
   end
 
   module Allocate_task_segs : sig
@@ -859,9 +860,9 @@ module Sched_req : sig
       end_exc:int64 ->
       include_sched_reqs_starting_within_time_slot:bool ->
       include_sched_reqs_ending_within_time_slot:bool ->
-      up_to_sched_req_id_inc:Sched_req_ds.sched_req_id option ->
+      up_to_sched_req_id_inc:Sched_req_.sched_req_id option ->
       sched ->
-      Sched_req_ds.sched_req_record list * sched
+      Sched_req_.sched_req_record list * sched
   end
 end
 

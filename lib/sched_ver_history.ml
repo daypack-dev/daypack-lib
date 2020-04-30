@@ -180,8 +180,8 @@ module In_place_head = struct
 
   module Sched_req = struct
     module Add = struct
-      let add_sched_req (data : Sched_req_ds.sched_req_data) (t : t) :
-        (Sched_req_ds.sched_req, unit) result * action_record =
+      let add_sched_req (data : Sched_req.sched_req_data) (t : t) :
+        (Sched_req.sched_req, unit) result * action_record =
         map_head
           (fun sched ->
              match Sched.Sched_req.Add.add_sched_req_data data sched with
@@ -345,7 +345,7 @@ module Maybe_append_to_head = struct
          else Do_nothing)
       t
 
-  let remove_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id)
+  let remove_pending_sched_req (sched_req_id : Sched_req.sched_req_id)
       (t : t) : action_record =
     map_head_no_ret
       (fun sched ->

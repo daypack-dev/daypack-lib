@@ -159,11 +159,11 @@ module Store = struct
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";
-        f_inner_pack = Some "Sched_req_ds.Serialize.pack_sched_req";
-        f_inner_pack_data = Some "Sched_req_ds.Serialize.pack_sched_req_data";
-        f_inner_unpack = Some "Sched_req_ds.Deserialize.unpack_sched_req";
+        f_inner_pack = Some "Sched_req.Serialize.pack_sched_req";
+        f_inner_pack_data = Some "Sched_req.Serialize.pack_sched_req_data";
+        f_inner_unpack = Some "Sched_req.Deserialize.unpack_sched_req";
         f_inner_unpack_data =
-          Some "Sched_req_ds.Deserialize.unpack_sched_req_data_unit";
+          Some "Sched_req.Deserialize.unpack_sched_req_data_unit";
       };
       {
         f_pack_suffix = "sched_req_discarded_store";
@@ -176,11 +176,11 @@ module Store = struct
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";
-        f_inner_pack = Some "Sched_req_ds.Serialize.pack_sched_req";
-        f_inner_pack_data = Some "Sched_req_ds.Serialize.pack_sched_req_data";
-        f_inner_unpack = Some "Sched_req_ds.Deserialize.unpack_sched_req";
+        f_inner_pack = Some "Sched_req.Serialize.pack_sched_req";
+        f_inner_pack_data = Some "Sched_req.Serialize.pack_sched_req_data";
+        f_inner_unpack = Some "Sched_req.Deserialize.unpack_sched_req";
         f_inner_unpack_data =
-          Some "Sched_req_ds.Deserialize.unpack_sched_req_data_unit";
+          Some "Sched_req.Deserialize.unpack_sched_req_data_unit";
       };
       {
         f_pack_suffix = "sched_req_record_store";
@@ -193,12 +193,12 @@ module Store = struct
            Map_utils_t.diff";
         f_to_seq = "Sched_req_id_map.to_seq";
         f_of_seq = "Sched_req_id_map.of_seq";
-        f_inner_pack = Some "Sched_req_ds.Serialize.pack_sched_req_record";
+        f_inner_pack = Some "Sched_req.Serialize.pack_sched_req_record";
         f_inner_pack_data =
-          Some "Sched_req_ds.Serialize.pack_sched_req_record_data";
-        f_inner_unpack = Some "Sched_req_ds.Deserialize.unpack_sched_req_record";
+          Some "Sched_req.Serialize.pack_sched_req_record_data";
+        f_inner_unpack = Some "Sched_req.Deserialize.unpack_sched_req_record";
         f_inner_unpack_data =
-          Some "Sched_req_ds.Deserialize.unpack_sched_req_record_data";
+          Some "Sched_req.Deserialize.unpack_sched_req_record_data";
       };
       {
         f_pack_suffix = "quota";

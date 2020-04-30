@@ -1,6 +1,6 @@
 let sched_req_template_data_unit_matches_sched_req_data_unit
     (sched_req_template_data_unit : Task.sched_req_template_data_unit)
-    (sched_req_data_unit : Sched_req_ds.sched_req_data_unit) : bool =
+    (sched_req_data_unit : Sched_req.sched_req_data_unit) : bool =
   match (sched_req_template_data_unit, sched_req_data_unit) with
   | ( Sched_req_data_unit_skeleton.Fixed
         { task_seg_related_data = size1; start = start1 },
@@ -59,7 +59,7 @@ let sched_req_template_data_unit_matches_sched_req_data_unit
 
 let sched_req_template_matches_sched_req_data
     (sched_req_template : Task.sched_req_template)
-    (sched_req_data : Sched_req_ds.sched_req_data) : bool =
+    (sched_req_data : Sched_req.sched_req_data) : bool =
   List.for_all2
     (fun sched_req_template_data_unit sched_req_data_unit ->
        sched_req_template_data_unit_matches_sched_req_data_unit
@@ -68,12 +68,12 @@ let sched_req_template_matches_sched_req_data
 
 let sched_req_template_matches_sched_req
     (sched_req_template : Task.sched_req_template)
-    ((_sched_req_id, sched_req_data) : Sched_req_ds.sched_req) : bool =
+    ((_sched_req_id, sched_req_data) : Sched_req.sched_req) : bool =
   sched_req_template_matches_sched_req_data sched_req_template sched_req_data
 
 let sched_req_template_data_unit_matches_sched_req_record_data_unit
     (sched_req_template_data_unit : Task.sched_req_template_data_unit)
-    (sched_req_record_data_unit : Sched_req_ds.sched_req_record_data_unit) :
+    (sched_req_record_data_unit : Sched_req.sched_req_record_data_unit) :
   bool =
   match (sched_req_template_data_unit, sched_req_record_data_unit) with
   | ( Sched_req_data_unit_skeleton.Fixed
@@ -132,7 +132,7 @@ let sched_req_template_data_unit_matches_sched_req_record_data_unit
 
 let sched_req_template_matches_sched_req_record_data
     (sched_req_template : Task.sched_req_template)
-    (sched_req_record_data : Sched_req_ds.sched_req_record_data) : bool =
+    (sched_req_record_data : Sched_req.sched_req_record_data) : bool =
   List.for_all2
     (fun sched_req_template_data_unit sched_req_record_data_unit ->
        sched_req_template_data_unit_matches_sched_req_record_data_unit
@@ -142,6 +142,6 @@ let sched_req_template_matches_sched_req_record_data
 let sched_req_template_matches_sched_req_record
     (sched_req_template : Task.sched_req_template)
     ((_sched_req_record_id, sched_req_record_data) :
-       Sched_req_ds.sched_req_record) : bool =
+       Sched_req.sched_req_record) : bool =
   sched_req_template_matches_sched_req_record_data sched_req_template
     sched_req_record_data

@@ -2,7 +2,7 @@ open Int64_utils
 
 let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     ((_sched_req_id, sched_req_record_data_list) :
-       Sched_req_ds.sched_req_record) : Sched.sched Seq.t =
+       Sched_req.sched_req_record) : Sched.sched Seq.t =
   let free_time_slots =
     Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc base
   in
@@ -92,10 +92,10 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     (sched_req_record_data_list |> List.to_seq)
 
 let backtracking_search_multi ~start ~end_exc ~base
-    (sched_req_records : Sched_req_ds.sched_req_record list) : Sched.sched Seq.t
+    (sched_req_records : Sched_req.sched_req_record list) : Sched.sched Seq.t
   =
   sched_req_records
-  |> Sched_req_ds.sort_sched_req_record_list_by_flexibility_score
+  |> Sched_req.sort_sched_req_record_list_by_flexibility_score
   |> List.fold_left
     (fun sched_seq sched_req ->
        Seq.flat_map

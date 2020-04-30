@@ -1,5 +1,6 @@
 open Int64_utils
 module Task_ = Task
+module Sched_req_ = Sched_req
 
 type sched_id = int
 
@@ -26,16 +27,16 @@ type task_seg_store_diff = Task_.task_seg_size Task_seg_id_map_utils.diff
  * 
  * type transit_time_store_diff = transit_time_record Transit_time_map_utils.diff *)
 
-type sched_req_store = Sched_req_ds.sched_req_data Sched_req_id_map.t
+type sched_req_store = Sched_req_.sched_req_data Sched_req_id_map.t
 
 type sched_req_store_diff =
-  Sched_req_ds.sched_req_data Sched_req_id_map_utils.diff
+  Sched_req_.sched_req_data Sched_req_id_map_utils.diff
 
 type sched_req_record_store =
-  Sched_req_ds.sched_req_record_data Sched_req_id_map.t
+  Sched_req_.sched_req_record_data Sched_req_id_map.t
 
 type sched_req_record_store_diff =
-  Sched_req_ds.sched_req_record_data Sched_req_id_map_utils.diff
+  Sched_req_.sched_req_record_data Sched_req_id_map_utils.diff
 
 type task_seg_place_map = Task_seg_id_set.t Int64_map.t
 
@@ -396,14 +397,14 @@ module Id = struct
         } )
 
   let get_new_sched_req_id ((sid, sd) : sched) :
-    Sched_req_ds.sched_req_id * sched =
+    Sched_req_.sched_req_id * sched =
     let sched_req_id =
       Int64_set.max_elt_opt sd.store.sched_req_ids |> incre_int64_id
     in
     let sched_req_ids = Int64_set.add sched_req_id sd.store.sched_req_ids in
     (sched_req_id, (sid, { sd with store = { sd.store with sched_req_ids } }))
 
-  let remove_sched_req_id (sched_req_id : Sched_req_ds.sched_req_id)
+  let remove_sched_req_id (sched_req_id : Sched_req_.sched_req_id)
       ((sid, sd) : sched) : sched =
     let sched_req_ids = Int64_set.remove sched_req_id sd.store.sched_req_ids in
     (sid, { sd with store = { sd.store with sched_req_ids } })
@@ -2068,9 +2069,9 @@ end
 
 module Sched_req = struct
   module Add = struct
-    let add_sched_req_data (sched_req_data : Sched_req_ds.sched_req_data)
-        (sched : sched) : (Sched_req_ds.sched_req * sched, unit) result =
-      if Sched_req_ds.Check.check_sched_req_data sched_req_data then
+    let add_sched_req_data (sched_req_data : Sched_req_.sched_req_data)
+        (sched : sched) : (Sched_req_.sched_req * sched, unit) result =
+      if Sched_req_.Check.check_sched_req_data sched_req_data then
         let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
         Ok
           ( (sched_req_id, sched_req_data),
@@ -2088,9 +2089,9 @@ module Sched_req = struct
       else Error ()
 
     let add_sched_req_data_list
-        (sched_req_data_list : Sched_req_ds.sched_req_data list) (sched : sched)
-      : (Sched_req_ds.sched_req list * sched, unit) result =
-      if Sched_req_ds.Check.check_sched_req_data_list sched_req_data_list then
+        (sched_req_data_list : Sched_req_.sched_req_data list) (sched : sched)
+      : (Sched_req_.sched_req list * sched, unit) result =
+      if Sched_req_.Check.check_sched_req_data_list sched_req_data_list then
         List.fold_left
           (fun (sched_reqs, sched) sched_req_data ->
              let sched_req, sched =
@@ -2118,8 +2119,8 @@ module Sched_req = struct
 
     let partition_based_on_time_point_internal (type a)
         ~(f_get : sched -> a Sched_req_id_map.t)
-        ~(f_before_time : int64 -> Sched_req_ds.sched_req_id * a -> bool)
-        ~(f_after_time : int64 -> Sched_req_ds.sched_req_id * a -> bool)
+        ~(f_before_time : int64 -> Sched_req_.sched_req_id * a -> bool)
+        ~(f_after_time : int64 -> Sched_req_.sched_req_id * a -> bool)
         (x : int64) (sched : sched) : a partition_based_on_time_point =
       let before, crossing_or_after =
         Sched_req_id_map.partition
@@ -2136,11 +2137,11 @@ module Sched_req = struct
     let partition_based_on_time_slot_internal (type a)
         ~(f_get : sched -> a Sched_req_id_map.t)
         ~(f_fully_within_time_slot :
-            start:int64 -> end_exc:int64 -> Sched_req_ds.sched_req_id * a -> bool)
+            start:int64 -> end_exc:int64 -> Sched_req_.sched_req_id * a -> bool)
         ~(f_starting_within_time_slot :
-            start:int64 -> end_exc:int64 -> Sched_req_ds.sched_req_id * a -> bool)
+            start:int64 -> end_exc:int64 -> Sched_req_.sched_req_id * a -> bool)
         ~(f_ending_within_time_slot :
-            start:int64 -> end_exc:int64 -> Sched_req_ds.sched_req_id * a -> bool)
+            start:int64 -> end_exc:int64 -> Sched_req_.sched_req_id * a -> bool)
         ~start ~end_exc (sched : sched) : a partition_based_on_time_slot =
       let fully_within, leftover =
         Sched_req_id_map.partition
@@ -2162,43 +2163,43 @@ module Sched_req = struct
 
     module Pending = struct
       let partition_based_on_time_point (x : int64) (sched : sched) :
-        Sched_req_ds.sched_req_data partition_based_on_time_point =
+        Sched_req_.sched_req_data partition_based_on_time_point =
         partition_based_on_time_point_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
-          ~f_before_time:Sched_req_ds.sched_req_or_record_before_time
-          ~f_after_time:Sched_req_ds.sched_req_or_record_after_time x sched
+          ~f_before_time:Sched_req_.sched_req_or_record_before_time
+          ~f_after_time:Sched_req_.sched_req_or_record_after_time x sched
 
       let partition_based_on_time_slot ~start ~end_exc (sched : sched) :
-        Sched_req_ds.sched_req_data partition_based_on_time_slot =
+        Sched_req_.sched_req_data partition_based_on_time_slot =
         partition_based_on_time_slot_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_pending_store)
           ~f_fully_within_time_slot:
-            Sched_req_ds.sched_req_or_record_fully_within_time_slot
+            Sched_req_.sched_req_or_record_fully_within_time_slot
           ~f_starting_within_time_slot:
-            Sched_req_ds.sched_req_or_record_starting_within_time_slot
+            Sched_req_.sched_req_or_record_starting_within_time_slot
           ~f_ending_within_time_slot:
-            Sched_req_ds.sched_req_or_record_ending_within_time_slot ~start
+            Sched_req_.sched_req_or_record_ending_within_time_slot ~start
           ~end_exc sched
     end
 
     module Record = struct
       let partition_based_on_time_point (x : int64) (sched : sched) :
-        Sched_req_ds.sched_req_record_data partition_based_on_time_point =
+        Sched_req_.sched_req_record_data partition_based_on_time_point =
         partition_based_on_time_point_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
-          ~f_before_time:Sched_req_ds.sched_req_or_record_before_time
-          ~f_after_time:Sched_req_ds.sched_req_or_record_after_time x sched
+          ~f_before_time:Sched_req_.sched_req_or_record_before_time
+          ~f_after_time:Sched_req_.sched_req_or_record_after_time x sched
 
       let partition_based_on_time_slot ~start ~end_exc (sched : sched) :
-        Sched_req_ds.sched_req_record_data partition_based_on_time_slot =
+        Sched_req_.sched_req_record_data partition_based_on_time_slot =
         partition_based_on_time_slot_internal
           ~f_get:(fun (_sid, sd) -> sd.store.sched_req_record_store)
           ~f_fully_within_time_slot:
-            Sched_req_ds.sched_req_or_record_fully_within_time_slot
+            Sched_req_.sched_req_or_record_fully_within_time_slot
           ~f_starting_within_time_slot:
-            Sched_req_ds.sched_req_or_record_starting_within_time_slot
+            Sched_req_.sched_req_or_record_starting_within_time_slot
           ~f_ending_within_time_slot:
-            Sched_req_ds.sched_req_or_record_ending_within_time_slot ~start
+            Sched_req_.sched_req_or_record_ending_within_time_slot ~start
           ~end_exc sched
     end
   end
@@ -2215,7 +2216,7 @@ module Sched_req = struct
         ~(end_exc : int64 option)
         ~(include_starting_within_time_slot : bool option)
         ~(include_ending_within_time_slot : bool option) (sched : sched) :
-      (Sched_req_ds.sched_req_id * a) Seq.t =
+      (Sched_req_.sched_req_id * a) Seq.t =
       let include_task_seg_place_starting_within_time_slot =
         Option.fold ~none:false
           ~some:(fun x -> x)
@@ -2291,8 +2292,8 @@ module Sched_req = struct
       let filter_pending_sched_req_seq ~start ~end_exc
           ~include_sched_req_starting_within_time_slot
           ~include_sched_req_ending_within_time_slot
-          (f : Sched_req_ds.sched_req -> bool) (sched : sched) :
-        Sched_req_ds.sched_req Seq.t =
+          (f : Sched_req_.sched_req -> bool) (sched : sched) :
+        Sched_req_.sched_req Seq.t =
         To_seq_internal.Pending.pending_sched_req_seq sched ~start ~end_exc
           ~include_sched_req_starting_within_time_slot
           ~include_sched_req_ending_within_time_slot
@@ -2303,8 +2304,8 @@ module Sched_req = struct
       let filter_sched_req_record_seq ~start ~end_exc
           ~include_sched_req_record_starting_within_time_slot
           ~include_sched_req_record_ending_within_time_slot
-          (f : Sched_req_ds.sched_req_record -> bool) (sched : sched) :
-        Sched_req_ds.sched_req_record Seq.t =
+          (f : Sched_req_.sched_req_record -> bool) (sched : sched) :
+        Sched_req_.sched_req_record Seq.t =
         To_seq_internal.Record.sched_req_record_seq ~start ~end_exc
           ~include_sched_req_record_starting_within_time_slot
           ~include_sched_req_record_ending_within_time_slot sched
@@ -2318,7 +2319,7 @@ module Sched_req = struct
           ?(end_exc : int64 option)
           ?(include_sched_req_starting_within_time_slot : bool option)
           ?(include_sched_req_ending_within_time_slot : bool option)
-          (sched : sched) : Sched_req_ds.sched_req Seq.t =
+          (sched : sched) : Sched_req_.sched_req Seq.t =
         To_seq_internal.Pending.pending_sched_req_seq ~start ~end_exc
           ~include_sched_req_starting_within_time_slot
           ~include_sched_req_ending_within_time_slot sched
@@ -2328,7 +2329,7 @@ module Sched_req = struct
       let sched_req_record_seq ?(start : int64 option) ?(end_exc : int64 option)
           ?(include_sched_req_record_starting_within_time_slot : bool option)
           ?(include_sched_req_record_ending_within_time_slot : bool option)
-          (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
+          (sched : sched) : Sched_req_.sched_req_record Seq.t =
         To_seq_internal.Record.sched_req_record_seq ~start ~end_exc
           ~include_sched_req_record_starting_within_time_slot
           ~include_sched_req_record_ending_within_time_slot sched
@@ -2341,8 +2342,8 @@ module Sched_req = struct
           ?(end_exc : int64 option)
           ?(include_sched_req_starting_within_time_slot : bool option)
           ?(include_sched_req_ending_within_time_slot : bool option)
-          (f : Sched_req_ds.sched_req -> bool) (sched : sched) :
-        Sched_req_ds.sched_req Seq.t =
+          (f : Sched_req_.sched_req -> bool) (sched : sched) :
+        Sched_req_.sched_req Seq.t =
         Filter_internal.Pending.filter_pending_sched_req_seq ~start ~end_exc
           ~include_sched_req_starting_within_time_slot
           ~include_sched_req_ending_within_time_slot f sched
@@ -2353,8 +2354,8 @@ module Sched_req = struct
           ?(end_exc : int64 option)
           ?(include_sched_req_record_starting_within_time_slot : bool option)
           ?(include_sched_req_record_ending_within_time_slot : bool option)
-          (f : Sched_req_ds.sched_req_record -> bool) (sched : sched) :
-        Sched_req_ds.sched_req_record Seq.t =
+          (f : Sched_req_.sched_req_record -> bool) (sched : sched) :
+        Sched_req_.sched_req_record Seq.t =
         Filter_internal.Record.filter_sched_req_record_seq ~start ~end_exc
           ~include_sched_req_record_starting_within_time_slot
           ~include_sched_req_record_ending_within_time_slot f sched
@@ -2363,12 +2364,12 @@ module Sched_req = struct
 
   module Find = struct
     module Pending = struct
-      let find_pending_sched_req (id : Sched_req_ds.sched_req_id)
-          ((_, sd) : sched) : Sched_req_ds.sched_req_data option =
+      let find_pending_sched_req (id : Sched_req_.sched_req_id)
+          ((_, sd) : sched) : Sched_req_.sched_req_data option =
         Sched_req_id_map.find_opt id sd.store.sched_req_pending_store
 
       let find_pending_sched_req_by_task_id (task_id : Task_.task_id)
-          (sched : sched) : Sched_req_ds.sched_req Seq.t =
+          (sched : sched) : Sched_req_.sched_req Seq.t =
         Filter.Pending.filter_pending_sched_req_seq
           (fun (_, l) ->
              List.exists
@@ -2382,7 +2383,7 @@ module Sched_req = struct
 
       let find_pending_sched_req_by_task_inst_id
           (task_inst_id : Task_.task_inst_id) (sched : sched) :
-        Sched_req_ds.sched_req Seq.t =
+        Sched_req_.sched_req Seq.t =
         Filter.Pending.filter_pending_sched_req_seq
           (fun (_, l) ->
              List.exists
@@ -2395,12 +2396,12 @@ module Sched_req = struct
     end
 
     module Record = struct
-      let find_sched_req_record (id : Sched_req_ds.sched_req_id)
-          ((_, sd) : sched) : Sched_req_ds.sched_req_record_data option =
+      let find_sched_req_record (id : Sched_req_.sched_req_id)
+          ((_, sd) : sched) : Sched_req_.sched_req_record_data option =
         Sched_req_id_map.find_opt id sd.store.sched_req_record_store
 
       let find_sched_req_record_by_task_id (task_id : Task_.task_id)
-          (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
+          (sched : sched) : Sched_req_.sched_req_record Seq.t =
         Filter.Record.filter_sched_req_record_seq
           (fun (_, l) ->
              List.exists
@@ -2414,7 +2415,7 @@ module Sched_req = struct
 
       let find_sched_req_record_by_task_inst_id
           (task_inst_id : Task_.task_inst_id) (sched : sched) :
-        Sched_req_ds.sched_req_record Seq.t =
+        Sched_req_.sched_req_record Seq.t =
         Filter.Record.filter_sched_req_record_seq
           (fun (_, l) ->
              List.exists
@@ -2428,7 +2429,7 @@ module Sched_req = struct
           sched
 
       let find_sched_req_record_by_task_seg_id (task_seg_id : Task_.task_seg_id)
-          (sched : sched) : Sched_req_ds.sched_req_record Seq.t =
+          (sched : sched) : Sched_req_.sched_req_record Seq.t =
         Filter.Record.filter_sched_req_record_seq
           (fun (_, l) ->
              List.exists
@@ -2441,7 +2442,7 @@ module Sched_req = struct
 
       let find_sched_req_record_by_task_seg_id_ignore_sub_id
           (task_seg_id : Task_.task_seg_id) (sched : sched) :
-        Sched_req_ds.sched_req_record Seq.t =
+        Sched_req_.sched_req_record Seq.t =
         Filter.Record.filter_sched_req_record_seq
           (fun (_, l) ->
              List.exists
@@ -2457,7 +2458,7 @@ module Sched_req = struct
   end
 
   module Status = struct
-    let get_sched_req_status (id : Sched_req_ds.sched_req_id) ((_, sd) : sched)
+    let get_sched_req_status (id : Sched_req_.sched_req_id) ((_, sd) : sched)
       : sched_req_status option =
       match Sched_req_id_map.find_opt id sd.store.sched_req_pending_store with
       | Some _ -> Some `Pending
@@ -2620,7 +2621,7 @@ module Sched_req = struct
     end
 
     module Record = struct
-      let remove_sched_req_record (sched_req_id : Sched_req_ds.sched_req_id)
+      let remove_sched_req_record (sched_req_id : Sched_req_.sched_req_id)
           ((sid, sd) : sched) : sched =
         ( sid,
           {
@@ -2757,7 +2758,7 @@ module Sched_req = struct
   end
 
   module Discard = struct
-    let discard_pending_sched_req (sched_req_id : Sched_req_ds.sched_req_id)
+    let discard_pending_sched_req (sched_req_id : Sched_req_.sched_req_id)
         ((sid, sd) : sched) : sched =
       match
         Sched_req_id_map.find_opt sched_req_id sd.store.sched_req_pending_store
@@ -2782,8 +2783,8 @@ module Sched_req = struct
 
   module Allocate_task_segs = struct
     let allocate_task_segs_for_sched_req_data
-        (sched_req_data : Sched_req_ds.sched_req_data) (sched : sched) :
-      Sched_req_ds.sched_req_record_data * sched =
+        (sched_req_data : Sched_req_.sched_req_data) (sched : sched) :
+      Sched_req_.sched_req_record_data * sched =
       List.fold_left
         (fun (acc, sched) sched_req_data_unit ->
            match sched_req_data_unit with
@@ -2831,8 +2832,8 @@ module Sched_req = struct
       |> fun (l, sched) -> (List.rev l, sched)
 
     let allocate_task_segs_for_sched_req_list
-        (sched_req_list : Sched_req_ds.sched_req list) (sched : sched) :
-      Sched_req_ds.sched_req_record list * sched =
+        (sched_req_list : Sched_req_.sched_req list) (sched : sched) :
+      Sched_req_.sched_req_record list * sched =
       List.fold_left
         (fun (acc, sched) (sched_req_id, sched_req_data) ->
            let sched_req_record_data_unit_list, (sid, sd) =
@@ -2857,8 +2858,8 @@ module Sched_req = struct
     let allocate_task_segs_for_pending_sched_reqs ~start ~end_exc
         ~(include_sched_reqs_starting_within_time_slot : bool)
         ~(include_sched_reqs_ending_within_time_slot : bool)
-        ~(up_to_sched_req_id_inc : Sched_req_ds.sched_req_id option)
-        ((sid, sd) : sched) : Sched_req_ds.sched_req_record list * sched =
+        ~(up_to_sched_req_id_inc : Sched_req_.sched_req_id option)
+        ((sid, sd) : sched) : Sched_req_.sched_req_record list * sched =
       let union m1 m2 = Sched_req_id_map.union (fun _ _ _ -> None) m1 m2 in
       let partition =
         Partition.Pending.partition_based_on_time_slot ~start ~end_exc (sid, sd)
@@ -3088,7 +3089,7 @@ module Overdue = struct
                   incre = 1L;
                 };
             ]
-            : Sched_req_ds.sched_req_data ))
+            : Sched_req_.sched_req_data ))
     in
     Seq.fold_left
       (fun sched sched_req_data ->
@@ -3223,7 +3224,7 @@ module Serialize = struct
     Sched_req_ds_t.sched_req list =
     x
     |> Sched_req_id_map.to_seq
-    |> Seq.map Sched_req_ds.Serialize.pack_sched_req
+    |> Seq.map Sched_req_.Serialize.pack_sched_req
     |> List.of_seq
 
   let pack_sched_req_pending_store_diff (x : sched_req_store_diff) :
@@ -3239,7 +3240,7 @@ module Serialize = struct
     Sched_req_ds_t.sched_req list =
     x
     |> Sched_req_id_map.to_seq
-    |> Seq.map Sched_req_ds.Serialize.pack_sched_req
+    |> Seq.map Sched_req_.Serialize.pack_sched_req
     |> List.of_seq
 
   let pack_sched_req_discarded_store_diff (x : sched_req_store_diff) :
@@ -3255,7 +3256,7 @@ module Serialize = struct
     Sched_req_ds_t.sched_req_record list =
     x
     |> Sched_req_id_map.to_seq
-    |> Seq.map Sched_req_ds.Serialize.pack_sched_req_record
+    |> Seq.map Sched_req_.Serialize.pack_sched_req_record
     |> List.of_seq
 
   let pack_sched_req_record_store_diff (x : sched_req_record_store_diff) :
@@ -3720,7 +3721,7 @@ module Deserialize = struct
     sched_req_store =
     x
     |> List.to_seq
-    |> Seq.map Sched_req_ds.Deserialize.unpack_sched_req
+    |> Seq.map Sched_req_.Deserialize.unpack_sched_req
     |> Sched_req_id_map.of_seq
 
   let unpack_sched_req_pending_list_diff
@@ -3737,7 +3738,7 @@ module Deserialize = struct
     sched_req_store =
     x
     |> List.to_seq
-    |> Seq.map Sched_req_ds.Deserialize.unpack_sched_req
+    |> Seq.map Sched_req_.Deserialize.unpack_sched_req
     |> Sched_req_id_map.of_seq
 
   let unpack_sched_req_discarded_list_diff
@@ -3754,7 +3755,7 @@ module Deserialize = struct
     sched_req_record_store =
     x
     |> List.to_seq
-    |> Seq.map Sched_req_ds.Deserialize.unpack_sched_req_record
+    |> Seq.map Sched_req_.Deserialize.unpack_sched_req_record
     |> Sched_req_id_map.of_seq
 
   let unpack_sched_req_record_list_diff
@@ -4456,7 +4457,7 @@ module To_string = struct
       "pending scheduling requests :\n";
     Sched_req_id_map.iter
       (fun id data ->
-         Sched_req_ds.To_string.debug_string_of_sched_req
+         Sched_req_.To_string.debug_string_of_sched_req
            ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.sched_req_pending_store;
@@ -4464,7 +4465,7 @@ module To_string = struct
       "scheduling request record :\n";
     Sched_req_id_map.iter
       (fun id data ->
-         Sched_req_ds.To_string.debug_string_of_sched_req_record
+         Sched_req_.To_string.debug_string_of_sched_req_record
            ~indent_level:(indent_level + 2) ~buffer (id, data)
          |> ignore)
       sd.store.sched_req_record_store;
