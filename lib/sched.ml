@@ -396,8 +396,8 @@ module Id = struct
             };
         } )
 
-  let get_new_sched_req_id ((sid, sd) : sched) :
-    Sched_req_.sched_req_id * sched =
+  let get_new_sched_req_id ((sid, sd) : sched) : Sched_req_.sched_req_id * sched
+    =
     let sched_req_id =
       Int64_set.max_elt_opt sd.store.sched_req_ids |> incre_int64_id
     in
@@ -2089,8 +2089,8 @@ module Sched_req = struct
       else Error ()
 
     let add_sched_req_data_list
-        (sched_req_data_list : Sched_req_.sched_req_data list) (sched : sched)
-      : (Sched_req_.sched_req list * sched, unit) result =
+        (sched_req_data_list : Sched_req_.sched_req_data list) (sched : sched) :
+      (Sched_req_.sched_req list * sched, unit) result =
       if Sched_req_.Check.check_sched_req_data_list sched_req_data_list then
         List.fold_left
           (fun (sched_reqs, sched) sched_req_data ->
@@ -2396,8 +2396,8 @@ module Sched_req = struct
     end
 
     module Record = struct
-      let find_sched_req_record (id : Sched_req_.sched_req_id)
-          ((_, sd) : sched) : Sched_req_.sched_req_record_data option =
+      let find_sched_req_record (id : Sched_req_.sched_req_id) ((_, sd) : sched)
+        : Sched_req_.sched_req_record_data option =
         Sched_req_id_map.find_opt id sd.store.sched_req_record_store
 
       let find_sched_req_record_by_task_id (task_id : Task_.task_id)
@@ -2458,8 +2458,8 @@ module Sched_req = struct
   end
 
   module Status = struct
-    let get_sched_req_status (id : Sched_req_.sched_req_id) ((_, sd) : sched)
-      : sched_req_status option =
+    let get_sched_req_status (id : Sched_req_.sched_req_id) ((_, sd) : sched) :
+      sched_req_status option =
       match Sched_req_id_map.find_opt id sd.store.sched_req_pending_store with
       | Some _ -> Some `Pending
       | None -> (

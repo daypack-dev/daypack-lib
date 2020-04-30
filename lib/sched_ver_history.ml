@@ -345,8 +345,8 @@ module Maybe_append_to_head = struct
          else Do_nothing)
       t
 
-  let remove_pending_sched_req (sched_req_id : Sched_req.sched_req_id)
-      (t : t) : action_record =
+  let remove_pending_sched_req (sched_req_id : Sched_req.sched_req_id) (t : t) :
+    action_record =
     map_head_no_ret
       (fun sched ->
          match
