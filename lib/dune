@@ -97,15 +97,15 @@ let () = Jbuild_plugin.V1.send @@ {|
  (action  (run atdgen -t %{deps})))
 
 (rule
- (targets task_ds_j.ml
-          task_ds_j.mli)
- (deps    task_ds.atd)
+ (targets task_j.ml
+          task_j.mli)
+ (deps    task.atd)
  (action  (run atdgen -j -j-std %{deps})))
 
 (rule
- (targets task_ds_t.ml
-          task_ds_t.mli)
- (deps    task_ds.atd)
+ (targets task_t.ml
+          task_t.mli)
+ (deps    task.atd)
  (action  (run atdgen -t %{deps})))
 
 (rule
