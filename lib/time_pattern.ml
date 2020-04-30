@@ -69,14 +69,14 @@ let push_search_param_to_later_start ~(start : int64)
     (search_param : search_param) : search_param =
   match search_param with
   | Time_slots { search_in_time_zone; time_slots } -> (
-      match Time_slot_ds.Multi.min_start_and_max_end_exc_list time_slots with
+      match Time_slots_ds.min_start_and_max_end_exc_list time_slots with
       | None -> search_param
       | Some (start', end_exc') ->
         let start = max start' start in
         let time_slots =
           time_slots
           |> List.to_seq
-          |> Time_slot_ds.Multi.intersect (Seq.return (start, end_exc'))
+          |> Time_slots_ds.intersect (Seq.return (start, end_exc'))
           |> List.of_seq
         in
         Time_slots { search_in_time_zone; time_slots } )
@@ -133,7 +133,9 @@ module Matching_seconds = struct
            ({ acc with tm_sec = start_sec }, { acc with tm_sec = 60 }))
     | l ->
       List.sort_uniq compare l
-      |> Range_ds.Multi.Of_list.range_seq_of_list ~to_int:(fun x -> x) ~of_int:(fun x -> x)
+      |> Ranges_ds.Of_list.range_seq_of_list
+        ~to_int:(fun x -> x)
+        ~of_int:(fun x -> x)
       |> Seq.map
         (Range_ds.map
            ~f_inc:(fun (x, y) ->
@@ -191,7 +193,9 @@ module Matching_minutes = struct
       in
       List.filter (fun pat_min -> start_min <= pat_min) l
       |> List.sort_uniq compare
-      |> Range_ds.Multi.Of_list.range_seq_of_list ~to_int:(fun x -> x) ~of_int:(fun x -> x)
+      |> Ranges_ds.Of_list.range_seq_of_list
+        ~to_int:(fun x -> x)
+        ~of_int:(fun x -> x)
       |> Seq.map (Range_ds.map ~f_inc ~f_exc)
 end
 
@@ -246,7 +250,9 @@ module Matching_hours = struct
       in
       List.filter (fun hour -> start_hour <= hour) l
       |> List.sort_uniq compare
-      |> Range_ds.Multi.Of_list.range_seq_of_list ~to_int:(fun x -> x) ~of_int:(fun x -> x)
+      |> Ranges_ds.Of_list.range_seq_of_list
+        ~to_int:(fun x -> x)
+        ~of_int:(fun x -> x)
       |> Seq.map (Range_ds.map ~f_inc ~f_exc)
 end
 
@@ -345,15 +351,21 @@ module Matching_days = struct
              } ))
     | [], _weekdays ->
       matching_weekdays t start acc
-      |> Range_ds.Multi.Of_seq.range_seq_of_seq ~to_int:(fun x -> x) ~of_int:(fun x -> x)
+      |> Ranges_ds.Of_seq.range_seq_of_seq
+        ~to_int:(fun x -> x)
+        ~of_int:(fun x -> x)
       |> Seq.map (Range_ds.map ~f_inc ~f_exc)
     | _month_days, [] ->
       matching_month_days t start acc
-      |> Range_ds.Multi.Of_seq.range_seq_of_seq ~to_int:(fun x -> x) ~of_int:(fun x -> x)
+      |> Ranges_ds.Of_seq.range_seq_of_seq
+        ~to_int:(fun x -> x)
+        ~of_int:(fun x -> x)
       |> Seq.map (Range_ds.map ~f_inc ~f_exc)
     | _, _ ->
       matching_int_days t start acc
-      |> Range_ds.Multi.Of_seq.range_seq_of_seq ~to_int:(fun x -> x) ~of_int:(fun x -> x)
+      |> Ranges_ds.Of_seq.range_seq_of_seq
+        ~to_int:(fun x -> x)
+        ~of_int:(fun x -> x)
       |> Seq.map (Range_ds.map ~f_inc ~f_exc)
 end
 
@@ -458,7 +470,9 @@ module Matching_months = struct
       in
       List.map Time.tm_int_of_month l
       |> List.sort_uniq compare
-      |> Range_ds.Multi.Of_list.range_seq_of_list ~to_int:(fun x -> x) ~of_int:(fun x -> x)
+      |> Ranges_ds.Of_list.range_seq_of_list
+        ~to_int:(fun x -> x)
+        ~of_int:(fun x -> x)
       |> Seq.map (Range_ds.map ~f_inc ~f_exc)
 end
 
@@ -537,7 +551,9 @@ module Matching_years = struct
             end_tm )
       in
       List.sort_uniq compare l
-      |> Range_ds.Multi.Of_list.range_seq_of_list ~to_int:(fun x -> x) ~of_int:(fun x -> x)
+      |> Ranges_ds.Of_list.range_seq_of_list
+        ~to_int:(fun x -> x)
+        ~of_int:(fun x -> x)
       |> Seq.map (Range_ds.map ~f_inc ~f_exc)
 end
 
@@ -559,7 +575,7 @@ let start_tm_and_search_years_ahead_of_search_param
     (search_param : search_param) : (Unix.tm * int) option =
   match search_param with
   | Time_slots { search_in_time_zone; time_slots } -> (
-      match Time_slot_ds.Multi.min_start_and_max_end_exc_list time_slots with
+      match Time_slots_ds.min_start_and_max_end_exc_list time_slots with
       | None -> None
       | Some (start, end_exc) ->
         let start_tm =
@@ -607,7 +623,9 @@ module Single_pattern = struct
         Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone y )
     in
     s
-    |> Range_ds.Multi.Of_seq.range_seq_of_seq_big ~to_int64:(fun x -> x) ~of_int64:(fun x -> x)
+    |> Ranges_ds.Of_seq.range_seq_of_seq_big
+      ~to_int64:(fun x -> x)
+      ~of_int64:(fun x -> x)
     |> Seq.map (Range_ds.map ~f_inc:f ~f_exc:f)
 
   let matching_tm_seq (search_param : search_param) (t : t) : Unix.tm Seq.t =
@@ -723,14 +741,14 @@ module Single_pattern = struct
     match time_slots with
     | None -> l
     | Some time_slots ->
-      Time_slot_ds.Multi.intersect (List.to_seq time_slots) l
-      |> Time_slot_ds.Multi.normalize ~skip_filter:false ~skip_sort:true
+      Time_slots_ds.intersect (List.to_seq time_slots) l
+      |> Time_slots_ds.normalize ~skip_filter:false ~skip_sort:true
 
   let matching_time_slots_round_robin_non_decreasing
       (search_param : search_param) (l : t list) : Time_slot_ds.t list Seq.t =
     l
     |> List.map (matching_time_slots search_param)
-    |> Time_slot_ds.Multi.collect_round_robin_non_decreasing
+    |> Time_slots_ds.collect_round_robin_non_decreasing
     |> OSeq.take_while (List.for_all Option.is_some)
     |> Seq.map (List.map Option.get)
 
@@ -798,7 +816,7 @@ module Range_pattern = struct
     l
     |> List.to_seq
     |> Seq.map (matching_time_slots search_param)
-    |> Time_slot_ds.Multi.merge_multi_seq
+    |> Time_slots_ds.merge_multi_seq
 
   let next_match_time_slot_multi (search_param : search_param)
       (l : time_range_pattern list) : (int64 * int64) option =
@@ -811,7 +829,7 @@ module Range_pattern = struct
     Time_slot_ds.t list Seq.t =
     l
     |> List.map (matching_time_slots search_param)
-    |> Time_slot_ds.Multi.collect_round_robin_non_decreasing
+    |> Time_slots_ds.collect_round_robin_non_decreasing
     |> OSeq.take_while (List.for_all Option.is_some)
     |> Seq.map (List.map Option.get)
 

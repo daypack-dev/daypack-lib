@@ -107,18 +107,24 @@ let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
   | Sat -> `Sat
 
 let weekday_seq_of_weekday_range (x : weekday_range) : weekday Seq.t =
-  Range_ds.Multi.Flatten.flatten_into_seq ~modulo:7 ~of_int:weekday_of_tm_int
+  Ranges_ds.Flatten.flatten_into_seq ~modulo:7 ~of_int:weekday_of_tm_int
     ~to_int:tm_int_of_weekday x
 
 let weekday_list_of_weekday_range (x : weekday_range) : weekday list =
-  Range_ds.Multi.Flatten.flatten_into_list ~modulo:7 ~of_int:weekday_of_tm_int
+  Ranges_ds.Flatten.flatten_into_list ~modulo:7 ~of_int:weekday_of_tm_int
     ~to_int:tm_int_of_weekday x
 
 let month_day_seq_of_month_day_range (x : int Range_ds.t) : int Seq.t =
-  Range_ds.Multi.Flatten.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
+  Ranges_ds.Flatten.flatten_into_seq
+    ~of_int:(fun x -> x)
+    ~to_int:(fun x -> x)
+    x
 
 let month_day_list_of_month_day_range (x : int Range_ds.t) : int list =
-  Range_ds.Multi.Flatten.flatten_into_list ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
+  Ranges_ds.Flatten.flatten_into_list
+    ~of_int:(fun x -> x)
+    ~to_int:(fun x -> x)
+    x
 
 let tm_int_of_month (month : month) : int =
   match month with
@@ -287,27 +293,27 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
 let flatten_month_day_ranges (l : int Range_ds.t list) : int Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Range_ds.Multi.Flatten.flatten_into_seq
+    (Ranges_ds.Flatten.flatten_into_seq
        ~of_int:(fun x -> x)
        ~to_int:(fun x -> x))
 
 let flatten_weekday_ranges (l : weekday Range_ds.t list) : weekday Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Range_ds.Multi.Flatten.flatten_into_seq ~modulo:7 ~of_int:weekday_of_tm_int
-       ~to_int:tm_int_of_weekday)
+    (Ranges_ds.Flatten.flatten_into_seq ~modulo:7
+       ~of_int:weekday_of_tm_int ~to_int:tm_int_of_weekday)
 
 let flatten_month_ranges (l : month Range_ds.t list) : month Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Range_ds.Multi.Flatten.flatten_into_seq
+    (Ranges_ds.Flatten.flatten_into_seq
        ~of_int:(fun x -> month_of_tm_int x |> Result.get_ok)
        ~to_int:tm_int_of_month)
 
 let flatten_year_ranges (l : int Range_ds.t list) : int Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Range_ds.Multi.Flatten.flatten_into_seq
+    (Ranges_ds.Flatten.flatten_into_seq
        ~of_int:(fun x -> x)
        ~to_int:(fun x -> x))
 

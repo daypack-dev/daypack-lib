@@ -155,7 +155,7 @@ let sched_req_template_bound_on_start_and_end_exc
          | Split_even { time_slots; _ }
          | Time_share { time_slots; _ }
          | Push_toward { time_slots; _ } ->
-           Time_slot_ds.Multi.min_start_and_max_end_exc_list time_slots
+           Time_slots_ds.min_start_and_max_end_exc_list time_slots
        in
        match acc with
        | None -> cur
@@ -243,7 +243,7 @@ module Serialize = struct
   and pack_recur (recur : recur) : Task_ds_t.recur =
     {
       excluded_time_slots =
-        Time_slot_ds.Serialize.pack_time_slots recur.excluded_time_slots;
+        Time_slots_ds.Serialize.pack_time_slots recur.excluded_time_slots;
       recur_type = pack_recur_type recur.recur_type;
     }
 
@@ -348,7 +348,7 @@ module Deserialize = struct
   and unpack_recur (recur : Task_ds_t.recur) : recur =
     {
       excluded_time_slots =
-        Time_slot_ds.Deserialize.unpack_time_slots recur.excluded_time_slots;
+        Time_slots_ds.Deserialize.unpack_time_slots recur.excluded_time_slots;
       recur_type = unpack_recur_type recur.recur_type;
     }
 
