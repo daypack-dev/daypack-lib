@@ -110,9 +110,7 @@ let debug_single_task_seg_multi_splits_exact () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n"
-             (Task.Id.string_of_task_seg_id id)
-             x)
+           Printf.printf "  %s - %Ld\n" (Task.Id.string_of_task_seg_id id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_max () =
@@ -133,9 +131,7 @@ let debug_single_task_seg_multi_splits_max () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n"
-             (Task.Id.string_of_task_seg_id id)
-             x)
+           Printf.printf "  %s - %Ld\n" (Task.Id.string_of_task_seg_id id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_exact_shift () =

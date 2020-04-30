@@ -334,8 +334,7 @@ let task_inst_gen = QCheck.Gen.(pair task_inst_id_gen task_inst_data_gen)
 
 let task_inst =
   let open QCheck in
-  make ~print:Daypack_lib.Task.To_string.debug_string_of_task_inst
-    task_inst_gen
+  make ~print:Daypack_lib.Task.To_string.debug_string_of_task_inst task_inst_gen
 
 let split_count_gen =
   let open QCheck.Gen in
@@ -712,8 +711,7 @@ let task_inst_store =
         s
         |> Daypack_lib.Task_inst_id_map.to_seq
         |> List.of_seq
-        |> QCheck.Print.list
-          Daypack_lib.Task.To_string.debug_string_of_task_inst)
+        |> QCheck.Print.list Daypack_lib.Task.To_string.debug_string_of_task_inst)
     task_inst_store_gen
 
 let task_seg_store_gen =
@@ -728,8 +726,7 @@ let task_seg_store =
         s
         |> Daypack_lib.Task_seg_id_map.to_seq
         |> List.of_seq
-        |> QCheck.Print.list
-          Daypack_lib.Task.To_string.debug_string_of_task_seg)
+        |> QCheck.Print.list Daypack_lib.Task.To_string.debug_string_of_task_seg)
     task_seg_store_gen
 
 let sched_req_store_gen =

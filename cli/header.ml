@@ -72,9 +72,7 @@ let display_overdue_task_segs (context : Context.t) : unit =
     List.iter
       (fun (task_seg_id, place_start, place_end_exc) ->
          let open Daypack_lib.Task in
-         let task_id =
-           Daypack_lib.Task.Id.task_id_of_task_seg_id task_seg_id
-         in
+         let task_id = Daypack_lib.Task.Id.task_id_of_task_seg_id task_seg_id in
          let task_data =
            Daypack_lib.Sched.Task.Find.find_task_any_opt task_id hd |> Option.get
          in

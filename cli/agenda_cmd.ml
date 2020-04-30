@@ -21,9 +21,7 @@ let display_place ~start sched
     |> Daypack_lib.Duration.To_string.human_readable_string_of_duration
   in
   let task_id = Daypack_lib.Task.Id.task_id_of_task_seg_id task_seg_id in
-  let task_seg_id_str =
-    Daypack_lib.Task.Id.string_of_task_seg_id task_seg_id
-  in
+  let task_seg_id_str = Daypack_lib.Task.Id.string_of_task_seg_id task_seg_id in
   let task =
     Daypack_lib.Sched.Task.Find.find_task_any_opt task_id sched |> Option.get
   in

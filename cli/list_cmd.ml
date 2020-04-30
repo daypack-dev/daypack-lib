@@ -42,8 +42,7 @@ let run (list_task_uncompleted : bool) (list_task_inst_uncompleted : bool)
       Printf.printf "Task segments :\n";
       Seq.iter
         (fun task_seg ->
-           Daypack_lib.Task.Print.debug_print_task_seg ~indent_level:1
-             task_seg)
+           Daypack_lib.Task.Print.debug_print_task_seg ~indent_level:1 task_seg)
         (Daypack_lib.Sched.Task_seg.To_seq.task_seg_seq_all hd) );
     if list_pending_sched_req then (
       Printf.printf "Pending scheduling requests :\n";
