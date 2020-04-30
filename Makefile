@@ -27,7 +27,7 @@ test :
 .PHONY: covtest
 covtest :
 	BISECT_ENABLE=yes OCAMLRUNPARAM=b dune exec ./tests/main.exe
-	bisect-ppx-report -html _coverage -I _build/default/ bisect*.out
+	bisect-ppx-report html
 
 .PHONY: debug
 debug :
