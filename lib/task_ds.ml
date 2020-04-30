@@ -32,12 +32,12 @@ and recur_type =
   | Time_pattern_match of Time_pattern.t * recur_data
 
 and recur = {
-  excluded_time_slots : Time_slot_ds.t list;
+  excluded_time_slots : Time_slot.t list;
   recur_type : recur_type;
 }
 
 and sched_req_template_data_unit =
-  (task_seg_size, int64, Time_slot_ds.t) Sched_req_data_unit_skeleton.t
+  (task_seg_size, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
 
 and sched_req_template = sched_req_template_data_unit list
 
@@ -155,7 +155,7 @@ let sched_req_template_bound_on_start_and_end_exc
          | Split_even { time_slots; _ }
          | Time_share { time_slots; _ }
          | Push_toward { time_slots; _ } ->
-           Time_slots_ds.Bound.min_start_and_max_end_exc_list time_slots
+           Time_slots.Bound.min_start_and_max_end_exc_list time_slots
        in
        match acc with
        | None -> cur
@@ -243,7 +243,7 @@ module Serialize = struct
   and pack_recur (recur : recur) : Task_ds_t.recur =
     {
       excluded_time_slots =
-        Time_slots_ds.Serialize.pack_time_slots recur.excluded_time_slots;
+        Time_slots.Serialize.pack_time_slots recur.excluded_time_slots;
       recur_type = pack_recur_type recur.recur_type;
     }
 
@@ -253,7 +253,7 @@ module Serialize = struct
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:Misc_utils.int32_int32_of_int64
       ~pack_time:Misc_utils.int32_int32_of_int64
-      ~pack_time_slot:Time_slot_ds.Serialize.pack_time_slot
+      ~pack_time_slot:Time_slot.Serialize.pack_time_slot
       sched_req_template_data_unit
 
   and pack_sched_req_template (sched_req_template : sched_req_template) :
@@ -348,7 +348,7 @@ module Deserialize = struct
   and unpack_recur (recur : Task_ds_t.recur) : recur =
     {
       excluded_time_slots =
-        Time_slots_ds.Deserialize.unpack_time_slots recur.excluded_time_slots;
+        Time_slots.Deserialize.unpack_time_slots recur.excluded_time_slots;
       recur_type = unpack_recur_type recur.recur_type;
     }
 
@@ -358,7 +358,7 @@ module Deserialize = struct
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:Misc_utils.int64_of_int32_int32
       ~unpack_time:Misc_utils.int64_of_int32_int32
-      ~unpack_time_slot:Time_slot_ds.Deserialize.unpack_time_slot
+      ~unpack_time_slot:Time_slot.Deserialize.unpack_time_slot
       sched_req_template_data_unit
 
   and unpack_sched_req_template
@@ -411,7 +411,7 @@ module To_string = struct
          Sched_req_data_unit_skeleton.To_string
          .debug_string_of_sched_req_data_unit_skeleton ~buffer ~indent_level
            ~string_of_data:Int64.to_string ~string_of_time:Int64.to_string
-           ~string_of_time_slot:Time_slot_ds.to_string x
+           ~string_of_time_slot:Time_slot.to_string x
          |> ignore)
       sched_req_template;
     Buffer.contents buffer
@@ -450,7 +450,7 @@ module To_string = struct
           List.iter
             (fun time_slot ->
                Debug_print.bprintf ~indent_level:(indent_level + 2) buffer "%s\n"
-                 (Time_slot_ds.to_string time_slot))
+                 (Time_slot.to_string time_slot))
             recur.excluded_time_slots;
           match recur.recur_type with
           | Arithemtic_seq

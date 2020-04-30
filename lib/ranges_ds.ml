@@ -17,7 +17,7 @@ module Normalize = struct
     s
     |> Seq.map (normalize_to_exc ~to_int64 ~of_int64)
     |> Seq.map (fun (x, y) -> (to_int64 x, to_int64 y))
-    |> Time_slots_ds.Normalize.normalize ~skip_filter ~skip_sort
+    |> Time_slots.Normalize.normalize ~skip_filter ~skip_sort
     |> Seq.map (fun (x, y) -> (of_int64 x, of_int64 y))
     |> Seq.map (fun (x, y) -> `Range_exc (x, y))
 end

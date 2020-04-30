@@ -957,8 +957,8 @@ module Time_slots_expr = struct
 
   let get_first_or_last_n_matches_of_same_month
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
-      (search_param : search_param) (s : Time_slot_ds.t Seq.t) :
-    Time_slot_ds.t Seq.t =
+      (search_param : search_param) (s : Time_slot.t Seq.t) :
+    Time_slot.t Seq.t =
     let time_zone_of_tm =
       Time_pattern.search_in_time_zone_of_search_param search_param
     in
@@ -975,7 +975,7 @@ module Time_slots_expr = struct
       ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (search_param : search_param) ((bound, e) : Time_expr_ast.time_slots_expr)
-    : (Time_slot_ds.t Seq.t, string) result =
+    : (Time_slot.t Seq.t, string) result =
     match
       Resolve.resolve_unbounded_time_slots_expr ~f_resolve_tse_name
         ~f_resolve_tpe_name e
