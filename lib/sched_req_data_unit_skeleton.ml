@@ -58,8 +58,7 @@ let shift_time ~offset (t : ('a, int64, Time_slot.t) t) :
   | Fixed { task_seg_related_data; start } ->
     Fixed { task_seg_related_data; start = start +^ offset }
   | Shift x ->
-    Shift
-      { x with time_slots = Time_slots.shift_list ~offset x.time_slots }
+    Shift { x with time_slots = Time_slots.shift_list ~offset x.time_slots }
   | Split_and_shift x ->
     Split_and_shift
       { x with time_slots = Time_slots.shift_list ~offset x.time_slots }

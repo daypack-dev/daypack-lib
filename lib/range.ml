@@ -6,8 +6,7 @@ module type B_big = sig
   val of_int64 : int64 -> t
 end
 
-module type S = sig
-end
+module type S = sig end
 
 module Make_big (B : B_big) : S = struct
   open B
@@ -18,8 +17,7 @@ module Make_big (B : B_big) : S = struct
     Int64.succ x = y
 
   module Merge = struct
-    let merge_big (x : t Range_ds.t) (y : t Range_ds.t) :
-      t Range_ds.t option =
+    let merge_big (x : t Range_ds.t) (y : t Range_ds.t) : t Range_ds.t option =
       match (x, y) with
       | `Range_inc (x_start, x_end_inc), `Range_inc (y_start, y_end_inc) ->
         if b_is_next_of_a_int64 x_end_inc y_start then

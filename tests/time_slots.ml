@@ -117,8 +117,7 @@ let qc_invert_fit_gaps =
          |> Daypack_lib.Time_slots.invert ~start ~end_exc
          |> List.of_seq
          |> (fun inverted ->
-             ( Daypack_lib.Time_slots.Slice.slice ~start ~end_exc
-                 (List.to_seq l)
+             ( Daypack_lib.Time_slots.Slice.slice ~start ~end_exc (List.to_seq l)
                |> List.of_seq )
              @ inverted)
          |> List.to_seq
@@ -134,8 +133,8 @@ let qc_relatvie_complement_result_disjoint_from_not_mem_of =
     QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
     (fun (mem_of, not_mem_of) ->
        let res =
-         Daypack_lib.Time_slots.relative_complement
-           ~mem_of:(List.to_seq mem_of) ~not_mem_of:(List.to_seq not_mem_of)
+         Daypack_lib.Time_slots.relative_complement ~mem_of:(List.to_seq mem_of)
+           ~not_mem_of:(List.to_seq not_mem_of)
          |> List.of_seq
        in
        let not_mem_of_count = List.length not_mem_of in
@@ -149,8 +148,8 @@ let qc_relatvie_complement_result_subset_of_mem_of =
     QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
     (fun (mem_of, not_mem_of) ->
        let res_s =
-         Daypack_lib.Time_slots.relative_complement
-           ~mem_of:(List.to_seq mem_of) ~not_mem_of:(List.to_seq not_mem_of)
+         Daypack_lib.Time_slots.relative_complement ~mem_of:(List.to_seq mem_of)
+           ~not_mem_of:(List.to_seq not_mem_of)
        in
        let res = res_s |> List.of_seq in
        Daypack_lib.Time_slots.intersect (List.to_seq mem_of) res_s
@@ -192,12 +191,10 @@ let qc_intersect_associative =
        let s2 = l2 |> List.to_seq in
        let s3 = l3 |> List.to_seq in
        let inter1 =
-         Daypack_lib.Time_slots.(intersect (intersect s1 s2) s3)
-         |> List.of_seq
+         Daypack_lib.Time_slots.(intersect (intersect s1 s2) s3) |> List.of_seq
        in
        let inter2 =
-         Daypack_lib.Time_slots.(intersect s1 (intersect s2 s3))
-         |> List.of_seq
+         Daypack_lib.Time_slots.(intersect s1 (intersect s2 s3)) |> List.of_seq
        in
        inter1 = inter2)
 
@@ -247,8 +244,7 @@ let qc_intersect_union_distributive1 =
        let s2 = l2 |> List.to_seq in
        let s3 = l3 |> List.to_seq in
        let res1 =
-         Daypack_lib.Time_slots.(Union.union s1 (intersect s2 s3))
-         |> List.of_seq
+         Daypack_lib.Time_slots.(Union.union s1 (intersect s2 s3)) |> List.of_seq
        in
        let res2 =
          Daypack_lib.Time_slots.(
@@ -267,12 +263,10 @@ let qc_intersect_union_distributive2 =
        let s2 = l2 |> List.to_seq in
        let s3 = l3 |> List.to_seq in
        let res1 =
-         Daypack_lib.Time_slots.(intersect s1 (Union.union s2 s3))
-         |> List.of_seq
+         Daypack_lib.Time_slots.(intersect s1 (Union.union s2 s3)) |> List.of_seq
        in
        let res2 =
-         Daypack_lib.Time_slots.(
-           Union.union (intersect s1 s2) (intersect s1 s3))
+         Daypack_lib.Time_slots.(Union.union (intersect s1 s2) (intersect s1 s3))
          |> List.of_seq
        in
 

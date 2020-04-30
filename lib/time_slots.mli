@@ -12,34 +12,24 @@ module Normalize : sig
     Time_slot.t Seq.t
 end
 
-val seq_of_unix_time_seq :
-  ?skip_sort:bool -> int64 Seq.t -> Time_slot.t Seq.t
+val seq_of_unix_time_seq : ?skip_sort:bool -> int64 Seq.t -> Time_slot.t Seq.t
 
 module Slice : sig
   val slice :
-    ?start:int64 ->
-    ?end_exc:int64 ->
-    Time_slot.t Seq.t ->
-    Time_slot.t Seq.t
+    ?start:int64 -> ?end_exc:int64 -> Time_slot.t Seq.t -> Time_slot.t Seq.t
 
   val slice_rev :
-    ?start:int64 ->
-    ?end_exc:int64 ->
-    Time_slot.t Seq.t ->
-    Time_slot.t Seq.t
+    ?start:int64 -> ?end_exc:int64 -> Time_slot.t Seq.t -> Time_slot.t Seq.t
 end
 
 val invert :
   start:int64 -> end_exc:int64 -> Time_slot.t Seq.t -> Time_slot.t Seq.t
 
 val relative_complement :
-  mem_of:Time_slot.t Seq.t ->
-  not_mem_of:Time_slot.t Seq.t ->
-  Time_slot.t Seq.t
+  mem_of:Time_slot.t Seq.t -> not_mem_of:Time_slot.t Seq.t -> Time_slot.t Seq.t
 
 module Merge : sig
-  val merge :
-    Time_slot.t Seq.t -> Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val merge : Time_slot.t Seq.t -> Time_slot.t Seq.t -> Time_slot.t Seq.t
 
   val merge_multi_seq : Time_slot.t Seq.t Seq.t -> Time_slot.t Seq.t
 
@@ -57,12 +47,10 @@ module Round_robin : sig
     Time_slot.t Seq.t list -> Time_slot.t Seq.t
 end
 
-val intersect :
-  Time_slot.t Seq.t -> Time_slot.t Seq.t -> Time_slot.t Seq.t
+val intersect : Time_slot.t Seq.t -> Time_slot.t Seq.t -> Time_slot.t Seq.t
 
 module Union : sig
-  val union :
-    Time_slot.t Seq.t -> Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val union : Time_slot.t Seq.t -> Time_slot.t Seq.t -> Time_slot.t Seq.t
 
   val union_multi_seq : Time_slot.t Seq.t Seq.t -> Time_slot.t Seq.t
 

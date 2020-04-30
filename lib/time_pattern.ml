@@ -867,8 +867,7 @@ module Single_or_ranges = struct
         search_param l
 
   let matching_time_slots_round_robin_non_decreasing_flat
-      (search_param : search_param) (t : single_or_ranges) :
-    Time_slot.t Seq.t =
+      (search_param : search_param) (t : single_or_ranges) : Time_slot.t Seq.t =
     matching_time_slots_round_robin_non_decreasing search_param t
     |> Seq.flat_map List.to_seq
 end

@@ -19,8 +19,8 @@ module Normalize = struct
          else 1)
       time_slots
 
-  let sort_uniq_time_slots (time_slots : Time_slot.t Seq.t) :
-    Time_slot.t Seq.t =
+  let sort_uniq_time_slots (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t
+    =
     time_slots |> List.of_seq |> sort_uniq_time_slots_list |> List.to_seq
 
   let defrag_and_join_overlapping (time_slots : Time_slot.t Seq.t) :
@@ -70,8 +70,7 @@ end
 
 let seq_of_unix_time_seq ?(skip_sort = false) (s : int64 Seq.t) :
   Time_slot.t Seq.t =
-  let rec aux (acc : Time_slot.t option) (s : int64 Seq.t) :
-    Time_slot.t Seq.t =
+  let rec aux (acc : Time_slot.t option) (s : int64 Seq.t) : Time_slot.t Seq.t =
     match s () with
     | Seq.Nil -> ( match acc with None -> Seq.empty | Some x -> Seq.return x )
     | Seq.Cons (t, rest) -> (
@@ -91,8 +90,7 @@ let seq_of_unix_time_seq ?(skip_sort = false) (s : int64 Seq.t) :
   if skip_sort then s else Normalize.normalize ~skip_filter:true ~skip_sort s
 
 module Slice_internal = struct
-  let slice_start ~start (time_slots : Time_slot.t Seq.t) :
-    Time_slot.t Seq.t =
+  let slice_start ~start (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     let rec aux start time_slots =
       match time_slots () with
       | Seq.Nil -> Seq.empty
@@ -130,8 +128,7 @@ module Slice_internal = struct
 end
 
 module Slice_rev_internal = struct
-  let slice_start ~start (time_slots : Time_slot.t Seq.t) :
-    Time_slot.t Seq.t =
+  let slice_start ~start (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     let rec aux acc start time_slots =
       match time_slots () with
       | Seq.Nil -> List.rev acc |> List.to_seq
@@ -235,8 +232,8 @@ let relative_complement ~(mem_of : Time_slot.t Seq.t)
   in
   aux mem_of not_mem_of
 
-let invert ~start ~end_exc (time_slots : Time_slot.t Seq.t) :
-  Time_slot.t Seq.t =
+let invert ~start ~end_exc (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t
+  =
   relative_complement
     ~mem_of:(Seq.return (start, end_exc))
     ~not_mem_of:time_slots
@@ -269,8 +266,8 @@ let intersect (time_slots1 : Time_slot.t Seq.t)
   aux time_slots1 time_slots2
 
 module Merge = struct
-  let merge (time_slots1 : Time_slot.t Seq.t)
-      (time_slots2 : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+  let merge (time_slots1 : Time_slot.t Seq.t) (time_slots2 : Time_slot.t Seq.t)
+    : Time_slot.t Seq.t =
     let rec aux time_slots1 time_slots2 =
       match (time_slots1 (), time_slots2 ()) with
       | Seq.Nil, s | s, Seq.Nil -> fun () -> s
@@ -305,8 +302,8 @@ module Round_robin = struct
         else if end_exc <= cur_start then get_usable_part cur_start rest
         else fun () -> Seq.Cons ((cur_start, end_exc), rest)
     in
-    let rec aux (cur_start : int64 option) (batches : Time_slot.t Seq.t list)
-      : Time_slot.t option list Seq.t =
+    let rec aux (cur_start : int64 option) (batches : Time_slot.t Seq.t list) :
+      Time_slot.t option list Seq.t =
       let cur_start, acc, new_batches =
         List.fold_left
           (fun (cur_start, acc, new_batches) seq ->
@@ -353,8 +350,8 @@ module Union = struct
     List.to_seq time_slot_batches |> union_multi_seq
 end
 
-let chunk ~chunk_size ?(drop_partial = false)
-    (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+let chunk ~chunk_size ?(drop_partial = false) (time_slots : Time_slot.t Seq.t) :
+  Time_slot.t Seq.t =
   let rec aux time_slots =
     match time_slots () with
     | Seq.Nil -> Seq.empty
@@ -394,14 +391,13 @@ module Bound = struct
     time_slots |> List.to_seq |> min_start_and_max_end_exc
 end
 
-let shift_list ~offset (time_slots : Time_slot.t list) : Time_slot.t list
-  =
+let shift_list ~offset (time_slots : Time_slot.t list) : Time_slot.t list =
   List.map
     (fun (start, end_exc) -> (start +^ offset, end_exc +^ offset))
     time_slots
 
-let equal (time_slots1 : Time_slot.t list)
-    (time_slots2 : Time_slot.t list) : bool =
+let equal (time_slots1 : Time_slot.t list) (time_slots2 : Time_slot.t list) :
+  bool =
   let time_slots1 =
     time_slots1 |> List.to_seq |> Normalize.normalize |> List.of_seq
   in
@@ -410,8 +406,7 @@ let equal (time_slots1 : Time_slot.t list)
   in
   time_slots1 = time_slots2
 
-let a_is_subset_of_b ~(a : Time_slot.t Seq.t) ~(b : Time_slot.t Seq.t) :
-  bool =
+let a_is_subset_of_b ~(a : Time_slot.t Seq.t) ~(b : Time_slot.t Seq.t) : bool =
   let inter = intersect a b |> List.of_seq in
   let a = List.of_seq a in
   a = inter
