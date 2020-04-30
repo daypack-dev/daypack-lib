@@ -288,7 +288,7 @@ let ask_time_slots ~indent_level ~(prompt : string) : (int64 * int64) list =
     process_time_slots_string
   |> List.to_seq
   |> Seq.flat_map List.to_seq
-  |> Daypack_lib.Time_slot_ds.normalize
+  |> Daypack_lib.Time_slots_ds.normalize
   |> List.of_seq
 
 let process_task_inst_alloc_req_string (s : string) :

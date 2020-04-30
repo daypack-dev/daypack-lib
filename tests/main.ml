@@ -4,7 +4,7 @@ let () =
       ("Misc_utils", Misc_utils.suite);
       ("Map_utils", Map_utils.suite);
       ("Set_utils", Set_utils.suite);
-      ("Time_slot", Time_slot_ds.suite);
+      ("Time_slots_ds", Time_slots_ds.suite);
       ("Time_pattern", Time_pattern.suite);
       ("Time_profile", Time_profile.suite);
       ("Time_profile_store", Time_profile_store.suite);
