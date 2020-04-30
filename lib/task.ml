@@ -361,8 +361,8 @@ module Deserialize = struct
       ~unpack_time_slot:Time_slot.Deserialize.unpack_time_slot
       sched_req_template_data_unit
 
-  and unpack_sched_req_template
-      (sched_req_template : Task_t.sched_req_template) : sched_req_template =
+  and unpack_sched_req_template (sched_req_template : Task_t.sched_req_template)
+    : sched_req_template =
     List.map unpack_sched_req_template_data_unit sched_req_template
 
   and unpack_recur_data (recur_data : Task_t.recur_data) : recur_data =

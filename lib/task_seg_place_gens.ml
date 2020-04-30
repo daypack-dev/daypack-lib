@@ -76,8 +76,7 @@ let multi_task_segs_shift ~incre ~(task_segs : Task.task_seg list)
     |> Seq.map List.rev
 
 let single_task_seg_single_split ~min_seg_size ~max_seg_size ~cur_split_pos
-    ~(task_seg : Task.task_seg) : (Task.task_seg * Task.task_seg) Seq.t
-  =
+    ~(task_seg : Task.task_seg) : (Task.task_seg * Task.task_seg) Seq.t =
   let rec aux min_seg_size max_seg_size cur_split_pos
       ((task_seg_id, task_seg_size) as task_seg) =
     if cur_split_pos >= task_seg_size then Seq.empty
@@ -163,9 +162,8 @@ let single_task_seg_multi_splits_max_shift ~min_seg_size ~max_seg_size
   |> Seq.flat_map (fun task_segs ->
       multi_task_segs_shift ~incre ~task_segs time_slots)
 
-let multi_task_segs_interleave ~interval_size
-    ~(task_segs : Task.task_seg list) (time_slots : Time_slot.t Seq.t) :
-  Task.task_seg_place Seq.t =
+let multi_task_segs_interleave ~interval_size ~(task_segs : Task.task_seg list)
+    (time_slots : Time_slot.t Seq.t) : Task.task_seg_place Seq.t =
   assert (interval_size > 0L);
   let quota =
     List.fold_left

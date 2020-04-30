@@ -22,8 +22,7 @@ module Store = struct
         store_typ = "task_store";
         diff_typ = "task_store_diff";
         ret_typ = "Sched_t.task list";
-        diff_ret_typ =
-          "(Task_t.task_id, Task_t.task_data) Map_utils_t.diff";
+        diff_ret_typ = "(Task_t.task_id, Task_t.task_data) Map_utils_t.diff";
         f_to_seq = "Task_id_map.to_seq";
         f_of_seq = "Task_id_map.of_seq";
         f_inner_pack = Some "Task.Serialize.pack_task";
@@ -37,8 +36,7 @@ module Store = struct
         store_typ = "task_store";
         diff_typ = "task_store_diff";
         ret_typ = "Sched_t.task list";
-        diff_ret_typ =
-          "(Task_t.task_id, Task_t.task_data) Map_utils_t.diff";
+        diff_ret_typ = "(Task_t.task_id, Task_t.task_data) Map_utils_t.diff";
         f_to_seq = "Task_id_map.to_seq";
         f_of_seq = "Task_id_map.of_seq";
         f_inner_pack = Some "Task.Serialize.pack_task";
@@ -52,8 +50,7 @@ module Store = struct
         store_typ = "task_store";
         diff_typ = "task_store_diff";
         ret_typ = "Sched_t.task list";
-        diff_ret_typ =
-          "(Task_t.task_id, Task_t.task_data) Map_utils_t.diff";
+        diff_ret_typ = "(Task_t.task_id, Task_t.task_data) Map_utils_t.diff";
         f_to_seq = "Task_id_map.to_seq";
         f_of_seq = "Task_id_map.of_seq";
         f_inner_pack = Some "Task.Serialize.pack_task";
@@ -209,8 +206,7 @@ module Store = struct
         store_typ = "int64 Task_inst_id_map.t";
         diff_typ = "int64 Task_inst_id_map_utils.diff";
         ret_typ = "(Task_t.task_inst_id * (int32 * int32)) list";
-        diff_ret_typ =
-          "(Task_t.task_inst_id, (int32 * int32)) Map_utils_t.diff";
+        diff_ret_typ = "(Task_t.task_inst_id, (int32 * int32)) Map_utils_t.diff";
         f_to_seq = "Task_inst_id_map.to_seq";
         f_of_seq = "Task_inst_id_map.of_seq";
         f_inner_pack =
@@ -230,8 +226,7 @@ module Store = struct
         store_typ = "Task.progress Task_seg_id_map.t";
         diff_typ = "Task.progress Task_seg_id_map_utils.diff";
         ret_typ = "(Task_t.task_seg_id * Task_t.progress) list";
-        diff_ret_typ =
-          "(Task_t.task_seg_id, Task_t.progress) Map_utils_t.diff";
+        diff_ret_typ = "(Task_t.task_seg_id, Task_t.progress) Map_utils_t.diff";
         f_to_seq = "Task_seg_id_map.to_seq";
         f_of_seq = "Task_seg_id_map.of_seq";
         f_inner_pack =
@@ -241,8 +236,8 @@ module Store = struct
         f_inner_pack_data = Some "Task.Serialize.pack_progress";
         f_inner_unpack =
           Some
-            "(fun (id, progress) -> (Task.Deserialize.unpack_task_seg_id \
-             id, Task.Deserialize.unpack_progress progress))";
+            "(fun (id, progress) -> (Task.Deserialize.unpack_task_seg_id id, \
+             Task.Deserialize.unpack_progress progress))";
         f_inner_unpack_data = Some "Task.Deserialize.unpack_progress";
       };
       {
@@ -251,8 +246,7 @@ module Store = struct
         store_typ = "Task.progress Task_inst_id_map.t";
         diff_typ = "Task.progress Task_inst_id_map_utils.diff";
         ret_typ = "(Task_t.task_inst_id * Task_t.progress) list";
-        diff_ret_typ =
-          "(Task_t.task_inst_id, Task_t.progress) Map_utils_t.diff";
+        diff_ret_typ = "(Task_t.task_inst_id, Task_t.progress) Map_utils_t.diff";
         f_to_seq = "Task_inst_id_map.to_seq";
         f_of_seq = "Task_inst_id_map.of_seq";
         f_inner_pack =
@@ -262,8 +256,8 @@ module Store = struct
         f_inner_pack_data = Some "Task.Serialize.pack_progress";
         f_inner_unpack =
           Some
-            "(fun (id, progress) -> (Task.Deserialize.unpack_task_inst_id \
-             id, Task.Deserialize.unpack_progress progress))";
+            "(fun (id, progress) -> (Task.Deserialize.unpack_task_inst_id id, \
+             Task.Deserialize.unpack_progress progress))";
         f_inner_unpack_data = Some "Task.Deserialize.unpack_progress";
       };
       {
@@ -280,9 +274,8 @@ module Store = struct
         f_of_seq = "Task_seg_id_map.of_seq";
         f_inner_pack =
           Some
-            "(fun (id, (start, end_exc)) -> \
-             (Task.Serialize.pack_task_seg_id id, \
-             (Misc_utils.int32_int32_of_int64 start, \
+            "(fun (id, (start, end_exc)) -> (Task.Serialize.pack_task_seg_id \
+             id, (Misc_utils.int32_int32_of_int64 start, \
              Misc_utils.int32_int32_of_int64 end_exc)))";
         f_inner_pack_data = Some "(fun x -> x)";
         f_inner_unpack =
@@ -423,8 +416,8 @@ module Bucket_store = struct
         diff_typ =
           "Task_inst_id_map_utils.Int64_int64_option_bucketed.diff_bucketed";
         ret_typ =
-          "(Task_t.task_inst_id * ((int32 * int32) * (int32 * int32) \
-           option) list) list";
+          "(Task_t.task_inst_id * ((int32 * int32) * (int32 * int32) option) \
+           list) list";
         diff_ret_typ =
           "(Task_t.task_inst_id, (int32 * int32) * (int32 * int32) option) \
            Map_utils_t.diff_bucketed";
@@ -973,8 +966,8 @@ let print_task_seg_find () =
   List.iter
     (fun s ->
        Printf.printf
-         "let find_task_seg_%s_opt (id : Task.task_seg_id) ((_, sd) : sched) \
-          : Task.task_seg_size option =\n"
+         "let find_task_seg_%s_opt (id : Task.task_seg_id) ((_, sd) : sched) : \
+          Task.task_seg_size option =\n"
          s;
        Printf.printf "Task_seg_id_map.find_opt id sd.store.task_seg_%s_store\n" s)
     store_types;
@@ -1090,8 +1083,7 @@ let print_task_seg_remove () =
          s s)
     store_types;
   Printf.printf
-    "let remove_task_seg_all (id : Task.task_seg_id) (sched : sched) : \
-     sched =\n";
+    "let remove_task_seg_all (id : Task.task_seg_id) (sched : sched) : sched =\n";
   Printf.printf "sched\n";
   List.iter (fun s -> Printf.printf "|> remove_task_seg_%s id\n" s) store_types
 
@@ -1099,8 +1091,8 @@ let print_task_seg_remove_strict () =
   List.iter
     (fun s ->
        Printf.printf
-         "let remove_task_seg_%s_strict (id : Task.task_seg_id) (sched : \
-          sched) : (sched, unit) result =\n"
+         "let remove_task_seg_%s_strict (id : Task.task_seg_id) (sched : sched) \
+          : (sched, unit) result =\n"
          s;
        Printf.printf "match Find.find_task_seg_%s_opt id sched with\n" s;
        print_endline "| None -> Error ()";
@@ -1158,15 +1150,15 @@ let print_task_inst_find () =
   List.iter
     (fun s ->
        Printf.printf
-         "let find_task_inst_%s_opt (id : Task.task_inst_id) ((_, sd) : \
-          sched) : Task.task_inst_data option =\n"
+         "let find_task_inst_%s_opt (id : Task.task_inst_id) ((_, sd) : sched) \
+          : Task.task_inst_data option =\n"
          s;
        Printf.printf "Task_inst_id_map.find_opt id sd.store.task_inst_%s_store\n"
          s)
     store_types;
   Printf.printf
-    "let find_task_inst_any_with_status_opt (id : Task.task_inst_id) (sched \
-     : sched) : (Task.task_inst_data * task_related_status) option =\n";
+    "let find_task_inst_any_with_status_opt (id : Task.task_inst_id) (sched : \
+     sched) : (Task.task_inst_data * task_related_status) option =\n";
   Printf.printf "match find_task_inst_uncompleted_opt id sched with\n";
   Printf.printf "| Some x -> Some (x, `Uncompleted)\n";
   Printf.printf "| None ->\n";
@@ -1262,8 +1254,8 @@ let print_task_inst_remove_strict () =
     (fun s ->
        Printf.printf
          "let remove_task_inst_%s_strict ?(remove_children_task_segs : bool = \
-          true) (id : Task.task_inst_id) (sched : sched) : (sched, unit) \
-          result =\n"
+          true) (id : Task.task_inst_id) (sched : sched) : (sched, unit) result \
+          =\n"
          s;
        Printf.printf "match Find.find_task_inst_%s_opt id sched with\n" s;
        print_endline "| None -> Error ()";
@@ -1292,8 +1284,8 @@ let print_task_add () =
   List.iter
     (fun s ->
        Printf.printf
-         "let add_task_%s (id : Task.task_id) (data : Task.task_data) \
-          ((sid, sd) : sched) : sched =\n"
+         "let add_task_%s (id : Task.task_id) (data : Task.task_data) ((sid, \
+          sd) : sched) : sched =\n"
          s;
        Printf.printf
          {|
@@ -1308,8 +1300,7 @@ let print_task_add () =
 let print_task_to_seq () =
   List.iter
     (fun s ->
-       Printf.printf "let task_seq_%s ((_, sd) : sched) : Task.task Seq.t =\n"
-         s;
+       Printf.printf "let task_seq_%s ((_, sd) : sched) : Task.task Seq.t =\n" s;
        Printf.printf "Task_id_map.to_seq sd.store.task_%s_store\n" s)
     store_types;
   Printf.printf "let task_seq_all ((_, sd) : sched) : Task.task Seq.t =\n";
@@ -1333,8 +1324,8 @@ let print_task_find () =
        Printf.printf "Task_id_map.find_opt id sd.store.task_%s_store\n" s)
     store_types;
   Printf.printf
-    "let find_task_any_with_status_opt (id : Task.task_id) (sched : sched) \
-     : (Task.task_data * task_related_status) option =\n";
+    "let find_task_any_with_status_opt (id : Task.task_id) (sched : sched) : \
+     (Task.task_data * task_related_status) option =\n";
   Printf.printf "match find_task_uncompleted_opt id sched with\n";
   Printf.printf "| Some x -> Some (x, `Uncompleted)\n";
   Printf.printf "| None ->\n";
@@ -1355,8 +1346,8 @@ let print_task_remove () =
     (fun s ->
        Printf.printf
          "let remove_task_%s ?(remove_children_task_insts : bool = true) \
-          ?(remove_children_task_segs : bool = true) (id : Task.task_id) \
-          (sched : sched) : sched =\n"
+          ?(remove_children_task_segs : bool = true) (id : Task.task_id) (sched \
+          : sched) : sched =\n"
          s;
        Printf.printf
          "let children_task_inst_ids = Id.task_inst_id_seq_of_task_id sched id in\n";
@@ -1378,8 +1369,8 @@ let print_task_remove () =
     store_types;
   Printf.printf
     "let remove_task_all ?(remove_children_task_insts : bool = true) \
-     ?(remove_children_task_segs : bool = true) (id : Task.task_id) (sched \
-     : sched) : sched =\n";
+     ?(remove_children_task_segs : bool = true) (id : Task.task_id) (sched : \
+     sched) : sched =\n";
   Printf.printf "sched\n";
   List.iter
     (fun s ->
@@ -1394,8 +1385,8 @@ let print_task_remove_strict () =
     (fun s ->
        Printf.printf
          "let remove_task_%s_strict ?(remove_children_task_insts : bool = true) \
-          ?(remove_children_task_segs : bool = true) (id : Task.task_id) \
-          (sched : sched) : (sched, unit) result =\n"
+          ?(remove_children_task_segs : bool = true) (id : Task.task_id) (sched \
+          : sched) : (sched, unit) result =\n"
          s;
        Printf.printf "match Find.find_task_%s_opt id sched with\n" s;
        print_endline "| None -> Error ()";

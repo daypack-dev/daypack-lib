@@ -143,8 +143,7 @@ module Task_seg : sig
     val add_task_segs_via_task_seg_alloc_req_list :
       Task_.task_seg_alloc_req list -> sched -> Task_.task_seg list * sched
 
-    val add_task_seg_via_task_seg_place :
-      Task_.task_seg_place -> sched -> sched
+    val add_task_seg_via_task_seg_place : Task_.task_seg_place -> sched -> sched
 
     val add_task_segs_via_task_seg_place_list :
       Task_.task_seg_place list -> sched -> sched
@@ -321,9 +320,7 @@ module Task_inst : sig
       Task_.task_id -> sched -> Task_.task_inst Seq.t
 
     val find_task_inst_seq_any_with_status_by_task_id :
-      Task_.task_id ->
-      sched ->
-      (Task_.task_inst * task_related_status) Seq.t
+      Task_.task_id -> sched -> (Task_.task_inst * task_related_status) Seq.t
   end
 
   module Remove : sig
@@ -422,9 +419,7 @@ module Task : sig
     val find_task_any_opt : Task_.task_id -> sched -> Task_.task_data option
 
     val find_task_any_with_status_opt :
-      Task_.task_id ->
-      sched ->
-      (Task_.task_data * task_related_status) option
+      Task_.task_id -> sched -> (Task_.task_data * task_related_status) option
   end
 
   module Remove : sig
@@ -644,8 +639,7 @@ module Agenda : sig
   module Remove : sig
     val remove_task_seg_place : Task_.task_seg_place -> sched -> sched
 
-    val remove_task_seg_place_seq :
-      Task_.task_seg_place Seq.t -> sched -> sched
+    val remove_task_seg_place_seq : Task_.task_seg_place Seq.t -> sched -> sched
 
     val remove_task_seg_place_by_task_id : Task_.task_id -> sched -> sched
 
@@ -809,8 +803,7 @@ module Sched_req : sig
       val remove_pending_sched_req_data_unit_if_contains_matching_task_seg_alloc_req :
         (Task_.task_seg_alloc_req -> bool) -> sched -> sched
 
-      val remove_pending_sched_req_by_task_id :
-        Task_.task_id -> sched -> sched
+      val remove_pending_sched_req_by_task_id : Task_.task_id -> sched -> sched
 
       val remove_pending_sched_req_by_task_inst_id :
         Task_.task_inst_id -> sched -> sched
@@ -923,8 +916,7 @@ module Serialize : sig
 
   val pack_task_inst_id_to_task_seg_ids :
     Int64_int64_option_set.t Task_inst_id_map.t ->
-    (Task_t.task_inst_id * ((int32 * int32) * (int32 * int32) option) list)
-      list
+    (Task_t.task_inst_id * ((int32 * int32) * (int32 * int32) option) list) list
 
   val pack_task_seg_id_to_progress :
     Task_.progress Task_seg_id_map.t ->
@@ -993,8 +985,7 @@ module Deserialize : sig
     (Task_t.task_id * (int32 * int32) list) list -> Int64_set.t Task_id_map.t
 
   val unpack_task_inst_id_to_task_seg_ids :
-    (Task_t.task_inst_id * ((int32 * int32) * (int32 * int32) option) list)
-      list ->
+    (Task_t.task_inst_id * ((int32 * int32) * (int32 * int32) option) list) list ->
     Int64_int64_option_set.t Task_inst_id_map.t
 
   val unpack_task_seg_id_to_progress :
