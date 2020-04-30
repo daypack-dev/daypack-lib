@@ -155,7 +155,7 @@ let sched_req_template_bound_on_start_and_end_exc
          | Split_even { time_slots; _ }
          | Time_share { time_slots; _ }
          | Push_toward { time_slots; _ } ->
-           Time_slots_ds.min_start_and_max_end_exc_list time_slots
+           Time_slots_ds.Bound.min_start_and_max_end_exc_list time_slots
        in
        match acc with
        | None -> cur

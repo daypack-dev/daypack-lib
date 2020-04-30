@@ -69,7 +69,7 @@ let push_search_param_to_later_start ~(start : int64)
     (search_param : search_param) : search_param =
   match search_param with
   | Time_slots { search_in_time_zone; time_slots } -> (
-      match Time_slots_ds.min_start_and_max_end_exc_list time_slots with
+      match Time_slots_ds.Bound.min_start_and_max_end_exc_list time_slots with
       | None -> search_param
       | Some (start', end_exc') ->
         let start = max start' start in
@@ -575,7 +575,7 @@ let start_tm_and_search_years_ahead_of_search_param
     (search_param : search_param) : (Unix.tm * int) option =
   match search_param with
   | Time_slots { search_in_time_zone; time_slots } -> (
-      match Time_slots_ds.min_start_and_max_end_exc_list time_slots with
+      match Time_slots_ds.Bound.min_start_and_max_end_exc_list time_slots with
       | None -> None
       | Some (start, end_exc) ->
         let start_tm =
@@ -742,13 +742,13 @@ module Single_pattern = struct
     | None -> l
     | Some time_slots ->
       Time_slots_ds.intersect (List.to_seq time_slots) l
-      |> Time_slots_ds.normalize ~skip_filter:false ~skip_sort:true
+      |> Time_slots_ds.Normalize.normalize ~skip_filter:false ~skip_sort:true
 
   let matching_time_slots_round_robin_non_decreasing
       (search_param : search_param) (l : t list) : Time_slot_ds.t list Seq.t =
     l
     |> List.map (matching_time_slots search_param)
-    |> Time_slots_ds.collect_round_robin_non_decreasing
+    |> Time_slots_ds.Round_robin.collect_round_robin_non_decreasing
     |> OSeq.take_while (List.for_all Option.is_some)
     |> Seq.map (List.map Option.get)
 
@@ -816,7 +816,7 @@ module Range_pattern = struct
     l
     |> List.to_seq
     |> Seq.map (matching_time_slots search_param)
-    |> Time_slots_ds.merge_multi_seq
+    |> Time_slots_ds.Merge.merge_multi_seq
 
   let next_match_time_slot_multi (search_param : search_param)
       (l : time_range_pattern list) : (int64 * int64) option =
@@ -829,7 +829,7 @@ module Range_pattern = struct
     Time_slot_ds.t list Seq.t =
     l
     |> List.map (matching_time_slots search_param)
-    |> Time_slots_ds.collect_round_robin_non_decreasing
+    |> Time_slots_ds.Round_robin.collect_round_robin_non_decreasing
     |> OSeq.take_while (List.for_all Option.is_some)
     |> Seq.map (List.map Option.get)
 

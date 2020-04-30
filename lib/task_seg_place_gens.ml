@@ -4,7 +4,7 @@ let single_task_seg_shift ~incre ~cur_pos ~(task_seg : Task_ds.task_seg)
     (time_slots : Time_slot_ds.t Seq.t) : Task_ds.task_seg_place Seq.t =
   let rec aux incre cur_pos ((task_seg_id, task_seg_size) as task_seg)
       time_slots =
-    let time_slots = Time_slots_ds.slice ~start:cur_pos time_slots in
+    let time_slots = Time_slots_ds.Slice.slice ~start:cur_pos time_slots in
     match time_slots () with
     | Seq.Nil -> Seq.empty
     | Seq.Cons ((start, end_exc), slots) ->
@@ -27,7 +27,7 @@ let single_task_seg_shift_rev ~incre ~cur_end_pos_exc
   let rec aux incre cur_end_pos_exc ((task_seg_id, task_seg_size) as task_seg)
       time_slots =
     let time_slots =
-      Time_slots_ds.slice_rev ~end_exc:cur_end_pos_exc time_slots
+      Time_slots_ds.Slice.slice_rev ~end_exc:cur_end_pos_exc time_slots
     in
     match time_slots () with
     | Seq.Nil -> Seq.Nil
@@ -61,7 +61,7 @@ let multi_task_segs_shift ~incre ~(task_segs : Task_ds.task_seg list)
                 |> Seq.map (fun x -> [ x ])
               | (last_id, last_start, last_end_exc) :: pos_s ->
                 let time_slots =
-                  Time_slots_ds.slice ~start:last_end_exc time_slots
+                  Time_slots_ds.Slice.slice ~start:last_end_exc time_slots
                 in
                 (* costruct next shifter which begins at last end_exc position *)
                 single_task_seg_shift ~incre ~cur_pos:last_end_exc ~task_seg

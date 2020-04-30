@@ -2053,13 +2053,13 @@ module Agenda = struct
       |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
       |> (fun l ->
           Option.fold ~none:l
-            ~some:(fun start -> Time_slots_ds.slice ~start l)
+            ~some:(fun start -> Time_slots_ds.Slice.slice ~start l)
             start)
       |> (fun l ->
           Option.fold ~none:l
-            ~some:(fun end_exc -> Time_slots_ds.slice ~end_exc l)
+            ~some:(fun end_exc -> Time_slots_ds.Slice.slice ~end_exc l)
             end_exc)
-      |> Time_slots_ds.normalize ~skip_sort:true
+      |> Time_slots_ds.Normalize.normalize ~skip_sort:true
 
     let get_free_time_slots ~start ~end_exc (sched : sched) :
       (int64 * int64) Seq.t =
