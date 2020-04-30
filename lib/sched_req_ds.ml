@@ -29,23 +29,23 @@ let flexibility_score_of_sched_req_record
       |> Int64.to_float
     in
     let time_slot_sum_len =
-      Time_slot_ds.sum_length_list x.time_slots |> Int64.to_float
+      Time_slot_ds.Multi.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (task_seg_alloc_req_sum_len /. time_slot_sum_len)
   | Split_and_shift x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slot_ds.sum_length_list x.time_slots |> Int64.to_float
+      Time_slot_ds.Multi.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
   | Split_even x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slot_ds.intersect
+      Time_slot_ds.Multi.intersect
         (x.time_slots |> List.to_seq)
         (x.buckets |> List.to_seq)
       |> List.of_seq
-      |> Time_slot_ds.sum_length_list
+      |> Time_slot_ds.Multi.sum_length_list
       |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
@@ -55,13 +55,13 @@ let flexibility_score_of_sched_req_record
       |> Int64.to_float
     in
     let time_slot_sum_len =
-      Time_slot_ds.sum_length_list x.time_slots |> Int64.to_float
+      Time_slot_ds.Multi.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (task_seg_alloc_req_sum_len /. time_slot_sum_len)
   | Push_toward x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slot_ds.sum_length_list x.time_slots |> Int64.to_float
+      Time_slot_ds.Multi.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
 
@@ -91,7 +91,7 @@ let start_and_end_exc_bound_of_sched_req_or_record
          | Split_even { time_slots; _ }
          | Time_share { time_slots; _ }
          | Push_toward { time_slots; _ } ->
-           Time_slot_ds.min_start_and_max_end_exc_list time_slots
+           Time_slot_ds.Multi.min_start_and_max_end_exc_list time_slots
        in
        match acc with
        | None -> cur

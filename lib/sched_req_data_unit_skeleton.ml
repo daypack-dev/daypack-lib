@@ -58,26 +58,26 @@ let shift_time ~offset (t : ('a, int64, Time_slot_ds.t) t) :
   | Fixed { task_seg_related_data; start } ->
     Fixed { task_seg_related_data; start = start +^ offset }
   | Shift x ->
-    Shift { x with time_slots = Time_slot_ds.shift_list ~offset x.time_slots }
+    Shift { x with time_slots = Time_slot_ds.Multi.shift_list ~offset x.time_slots }
   | Split_and_shift x ->
     Split_and_shift
-      { x with time_slots = Time_slot_ds.shift_list ~offset x.time_slots }
+      { x with time_slots = Time_slot_ds.Multi.shift_list ~offset x.time_slots }
   | Split_even x ->
     Split_even
       {
         x with
-        time_slots = Time_slot_ds.shift_list ~offset x.time_slots;
-        buckets = Time_slot_ds.shift_list ~offset x.buckets;
+        time_slots = Time_slot_ds.Multi.shift_list ~offset x.time_slots;
+        buckets = Time_slot_ds.Multi.shift_list ~offset x.buckets;
       }
   | Time_share x ->
     Time_share
-      { x with time_slots = Time_slot_ds.shift_list ~offset x.time_slots }
+      { x with time_slots = Time_slot_ds.Multi.shift_list ~offset x.time_slots }
   | Push_toward x ->
     Push_toward
       {
         x with
         target = x.target +^ offset;
-        time_slots = Time_slot_ds.shift_list ~offset x.time_slots;
+        time_slots = Time_slot_ds.Multi.shift_list ~offset x.time_slots;
       }
 
 let shift_time_list ~offset (ts : ('a, int64, Time_slot_ds.t) t list) :

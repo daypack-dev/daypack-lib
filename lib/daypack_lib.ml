@@ -34,4 +34,4 @@ module Time_expr = Time_expr
 module Duration = Duration
 module String_map = String_map
 module Misc_utils = Misc_utils
-module Range = Range
+module Range_ds = Range_ds

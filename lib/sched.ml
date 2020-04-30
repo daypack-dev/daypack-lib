@@ -2053,18 +2053,18 @@ module Agenda = struct
       |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
       |> (fun l ->
           Option.fold ~none:l
-            ~some:(fun start -> Time_slot_ds.slice ~start l)
+            ~some:(fun start -> Time_slot_ds.Multi.slice ~start l)
             start)
       |> (fun l ->
           Option.fold ~none:l
-            ~some:(fun end_exc -> Time_slot_ds.slice ~end_exc l)
+            ~some:(fun end_exc -> Time_slot_ds.Multi.slice ~end_exc l)
             end_exc)
-      |> Time_slot_ds.normalize ~skip_sort:true
+      |> Time_slot_ds.Multi.normalize ~skip_sort:true
 
     let get_free_time_slots ~start ~end_exc (sched : sched) :
       (int64 * int64) Seq.t =
       get_occupied_time_slots ~start ~end_exc sched
-      |> Time_slot_ds.invert ~start ~end_exc
+      |> Time_slot_ds.Multi.invert ~start ~end_exc
   end
 end
 
@@ -2919,7 +2919,7 @@ module Recur = struct
     | Task_ds.One_off -> Seq.empty
     | Task_ds.Recurring recur ->
       let usable_time_slot_seq =
-        Time_slot_ds.invert ~start ~end_exc
+        Time_slot_ds.Multi.invert ~start ~end_exc
           (List.to_seq recur.excluded_time_slots)
       in
       let usable_time_slot_list = List.of_seq usable_time_slot_seq in
@@ -2982,7 +2982,7 @@ module Recur = struct
            match template_bound with
            | None -> true
            | Some bound ->
-             Time_slot_ds.a_is_subset_of_b ~a:(Seq.return bound)
+             Time_slot_ds.Multi.a_is_subset_of_b ~a:(Seq.return bound)
                ~b:usable_time_slot_seq)
       |> Seq.map (fun (task_inst_data, sched_req_template, _template_bound) ->
           (task_inst_data, sched_req_template))
