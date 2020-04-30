@@ -262,7 +262,7 @@ let debug_slice_time_slots_start () =
   print_endline "Debug print for Time_slots_ds.slice start";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = List.to_seq time_slots in
-  Time_slots_ds.slice ~start:12L time_slots
+  Time_slots_ds.Slice.slice ~start:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
@@ -270,7 +270,7 @@ let debug_slice_time_slots_end_exc () =
   print_endline "Debug print for Time_slots_ds.slice end_exc";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = List.to_seq time_slots in
-  Time_slots_ds.slice ~end_exc:12L time_slots
+  Time_slots_ds.Slice.slice ~end_exc:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
@@ -278,7 +278,7 @@ let debug_slice_time_slots_start_rev () =
   print_endline "Debug print for Time_slots_ds.slice_rev start";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = time_slots |> List.rev |> List.to_seq in
-  Time_slots_ds.slice_rev ~start:12L time_slots
+  Time_slots_ds.Slice.slice_rev ~start:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
@@ -286,7 +286,7 @@ let debug_slice_time_slots_end_exc_rev () =
   print_endline "Debug print for Time_slots_ds.slice_rev end_exc";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = time_slots |> List.rev |> List.to_seq in
-  Time_slots_ds.slice_rev ~end_exc:12L time_slots
+  Time_slots_ds.Slice.slice_rev ~end_exc:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
@@ -296,7 +296,7 @@ let debug_normalize_time_slots () =
     [ (0L, 10L); (10L, 11L); (11L, 20L); (22L, 25L); (20L, 22L); (25L, 30L) ]
   in
   let time_slots = List.to_seq time_slots in
-  Time_slots_ds.normalize time_slots
+  Time_slots_ds.Normalize.normalize time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
@@ -335,7 +335,7 @@ let debug_union_time_slots () =
   let time_slots2 = [ (0L, 1L); (2L, 3L); (10L, 20L); (25L, 30L) ] in
   let time_slots1 = List.to_seq time_slots1 in
   let time_slots2 = List.to_seq time_slots2 in
-  Time_slots_ds.union time_slots1 time_slots2
+  Time_slots_ds.Union.union time_slots1 time_slots2
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
