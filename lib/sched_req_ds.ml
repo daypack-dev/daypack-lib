@@ -5,7 +5,7 @@ type sched_req_id = int64
 type sched_req = sched_req_id * sched_req_data
 
 and sched_req_data_unit =
-  ( Task_ds.task_seg_alloc_req,
+  ( Task.task_seg_alloc_req,
     int64,
     Time_slot.t )
     Sched_req_data_unit_skeleton.t
@@ -15,7 +15,7 @@ and sched_req_data = sched_req_data_unit list
 type sched_req_record = sched_req_id * sched_req_record_data
 
 and sched_req_record_data_unit =
-  (Task_ds.task_seg, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
+  (Task.task_seg, int64, Time_slot.t) Sched_req_data_unit_skeleton.t
 
 and sched_req_record_data = sched_req_record_data_unit list
 
@@ -25,7 +25,7 @@ let flexibility_score_of_sched_req_record
   | Sched_req_data_unit_skeleton.Fixed _ -> 0.0
   | Shift x ->
     let task_seg_alloc_req_sum_len =
-      Task_ds.task_seg_alloc_req_sum_length x.task_seg_related_data_list
+      Task.task_seg_alloc_req_sum_length x.task_seg_related_data_list
       |> Int64.to_float
     in
     let time_slot_sum_len =
@@ -51,7 +51,7 @@ let flexibility_score_of_sched_req_record
     1. -. (Int64.to_float size /. time_slot_sum_len)
   | Time_share x ->
     let task_seg_alloc_req_sum_len =
-      Task_ds.task_seg_alloc_req_sum_length x.task_seg_related_data_list
+      Task.task_seg_alloc_req_sum_length x.task_seg_related_data_list
       |> Int64.to_float
     in
     let time_slot_sum_len =
@@ -147,7 +147,7 @@ module Check = struct
     List.for_all
       (fun x ->
          Sched_req_data_unit_skeleton.Check.check
-           ~f_data:Task_ds.Check.check_task_seg_alloc_req
+           ~f_data:Task.Check.check_task_seg_alloc_req
            ~f_time:Time.Check.check_unix_time
            ~f_time_slot:Time_slot.Check.check_time_slot x)
       data
@@ -162,7 +162,7 @@ module Check = struct
     List.for_all
       (fun x ->
          Sched_req_data_unit_skeleton.Check.check
-           ~f_data:Task_ds.Check.check_task_seg
+           ~f_data:Task.Check.check_task_seg
            ~f_time:Time.Check.check_unix_time
            ~f_time_slot:Time_slot.Check.check_time_slot x)
       data
@@ -181,7 +181,7 @@ module Serialize = struct
   and pack_sched_req_data_unit (sched_req_data_unit : sched_req_data_unit) :
     Sched_req_ds_t.sched_req_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:Task_ds.Serialize.pack_task_seg_alloc_req
+      ~pack_data:Task.Serialize.pack_task_seg_alloc_req
       ~pack_time:Misc_utils.int32_int32_of_int64
       ~pack_time_slot:Time_slot.Serialize.pack_time_slot sched_req_data_unit
 
@@ -194,7 +194,7 @@ module Serialize = struct
       (sched_req_record_data : sched_req_record_data_unit) :
     Sched_req_ds_t.sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Serialize.pack
-      ~pack_data:Task_ds.Serialize.pack_task_seg
+      ~pack_data:Task.Serialize.pack_task_seg
       ~pack_time:Misc_utils.int32_int32_of_int64
       ~pack_time_slot:Time_slot.Serialize.pack_time_slot sched_req_record_data
 end
@@ -208,7 +208,7 @@ module Deserialize = struct
       (sched_req_data_unit : Sched_req_ds_t.sched_req_data_unit) :
     sched_req_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
-      ~unpack_data:Task_ds.Deserialize.unpack_task_seg_alloc_req
+      ~unpack_data:Task.Deserialize.unpack_task_seg_alloc_req
       ~unpack_time:Misc_utils.int64_of_int32_int32
       ~unpack_time_slot:Time_slot.Deserialize.unpack_time_slot
       sched_req_data_unit
@@ -221,7 +221,7 @@ module Deserialize = struct
       (sched_req_record_data_unit : Sched_req_ds_t.sched_req_record_data_unit) :
     sched_req_record_data_unit =
     Sched_req_data_unit_skeleton.Deserialize.unpack
-      ~unpack_data:Task_ds.Deserialize.unpack_task_seg
+      ~unpack_data:Task.Deserialize.unpack_task_seg
       ~unpack_time:Misc_utils.int64_of_int32_int32
       ~unpack_time_slot:Time_slot.Deserialize.unpack_time_slot
       sched_req_record_data_unit
@@ -234,7 +234,7 @@ module To_string = struct
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
           Printf.sprintf "task_id : %s, len : %Ld\n"
-            (Task_ds.Id.string_of_task_inst_id id)
+            (Task.Id.string_of_task_inst_id id)
             len)
       ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot.to_string
       req_data
@@ -262,7 +262,7 @@ module To_string = struct
     .debug_string_of_sched_req_data_unit_skeleton ~indent_level ~buffer
       ~string_of_data:(fun (id, len) ->
           Printf.sprintf "task_seg_id : %s, len : %Ld\n"
-            (Task_ds.Id.string_of_task_seg_id id)
+            (Task.Id.string_of_task_seg_id id)
             len)
       ~string_of_time:Int64.to_string ~string_of_time_slot:Time_slot.to_string
       req_data

@@ -2,9 +2,9 @@ type int64 <ocaml from="Int64"> = abstract
 
 type time_slot <ocaml from="Time_slot"> = abstract
 
-type task_seg <ocaml from="Task_ds"> = abstract
+type task_seg <ocaml from="Task"> = abstract
 
-type task_seg_alloc_req <ocaml from="Task_ds"> = abstract
+type task_seg_alloc_req <ocaml from="Task"> = abstract
 
 type ('a, 'b, 'c) sched_req_data_unit_skeleton <ocaml from ="Sched_req_data_unit_skeleton"> = abstract
 

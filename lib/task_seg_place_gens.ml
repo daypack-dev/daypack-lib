@@ -1,7 +1,7 @@
 open Int64_utils
 
-let single_task_seg_shift ~incre ~cur_pos ~(task_seg : Task_ds.task_seg)
-    (time_slots : Time_slot.t Seq.t) : Task_ds.task_seg_place Seq.t =
+let single_task_seg_shift ~incre ~cur_pos ~(task_seg : Task.task_seg)
+    (time_slots : Time_slot.t Seq.t) : Task.task_seg_place Seq.t =
   let rec aux incre cur_pos ((task_seg_id, task_seg_size) as task_seg)
       time_slots =
     let time_slots = Time_slots.Slice.slice ~start:cur_pos time_slots in
@@ -22,7 +22,7 @@ let single_task_seg_shift ~incre ~cur_pos ~(task_seg : Task_ds.task_seg)
   aux incre cur_pos task_seg time_slots
 
 let single_task_seg_shift_rev ~incre ~cur_end_pos_exc
-    ~(task_seg : Task_ds.task_seg) (time_slots : Time_slot.t Seq.t) :
+    ~(task_seg : Task.task_seg) (time_slots : Time_slot.t Seq.t) :
   ('a * int64 * int64) Seq.t =
   let rec aux incre cur_end_pos_exc ((task_seg_id, task_seg_size) as task_seg)
       time_slots =
@@ -45,8 +45,8 @@ let single_task_seg_shift_rev ~incre ~cur_end_pos_exc
   let time_slots = time_slots |> List.of_seq |> List.rev |> List.to_seq in
   fun () -> aux incre cur_end_pos_exc task_seg time_slots
 
-let multi_task_segs_shift ~incre ~(task_segs : Task_ds.task_seg list)
-    (time_slots : Time_slot.t Seq.t) : Task_ds.task_seg_place list Seq.t =
+let multi_task_segs_shift ~incre ~(task_segs : Task.task_seg list)
+    (time_slots : Time_slot.t Seq.t) : Task.task_seg_place list Seq.t =
   assert (incre > 0L);
   match task_segs with
   | [] -> Seq.empty
@@ -76,7 +76,7 @@ let multi_task_segs_shift ~incre ~(task_segs : Task_ds.task_seg list)
     |> Seq.map List.rev
 
 let single_task_seg_single_split ~min_seg_size ~max_seg_size ~cur_split_pos
-    ~(task_seg : Task_ds.task_seg) : (Task_ds.task_seg * Task_ds.task_seg) Seq.t
+    ~(task_seg : Task.task_seg) : (Task.task_seg * Task.task_seg) Seq.t
   =
   let rec aux min_seg_size max_seg_size cur_split_pos
       ((task_seg_id, task_seg_size) as task_seg) =
@@ -93,7 +93,7 @@ let single_task_seg_single_split ~min_seg_size ~max_seg_size ~cur_split_pos
       else fun () ->
         Seq.Cons
           ( ( (task_seg_id, l_split_size),
-              (Task_ds.Id.succ_task_seg_sub_id task_seg_id, r_split_size) ),
+              (Task.Id.succ_task_seg_sub_id task_seg_id, r_split_size) ),
             aux min_seg_size max_seg_size (Int64.succ cur_split_pos) task_seg )
   in
   let _, task_seg_size = task_seg in
@@ -101,12 +101,12 @@ let single_task_seg_single_split ~min_seg_size ~max_seg_size ~cur_split_pos
   assert (max_seg_size > 0L);
   assert (cur_split_pos >= 0L);
   assert (task_seg_size > 0L);
-  let task_seg = Task_ds.Id.init_task_seg_sub_id task_seg in
+  let task_seg = Task.Id.init_task_seg_sub_id task_seg in
   aux min_seg_size max_seg_size cur_split_pos task_seg
 
 let single_task_seg_multi_splits_exact ~min_seg_size ~max_seg_size
-    ~(split_count : int64) ~(task_seg : Task_ds.task_seg) :
-  Task_ds.task_seg list Seq.t =
+    ~(split_count : int64) ~(task_seg : Task.task_seg) :
+  Task.task_seg list Seq.t =
   let _, task_seg_size = task_seg in
   assert (min_seg_size > 0L);
   Option.iter (fun max_seg_size -> assert (max_seg_size > 0L)) max_seg_size;
@@ -139,8 +139,8 @@ let single_task_seg_multi_splits_exact ~min_seg_size ~max_seg_size
   |> Seq.map List.rev
 
 let single_task_seg_multi_splits_max ~min_seg_size ~max_seg_size
-    ~(split_count : int64) ~(task_seg : Task_ds.task_seg) :
-  Task_ds.task_seg list Seq.t =
+    ~(split_count : int64) ~(task_seg : Task.task_seg) :
+  Task.task_seg list Seq.t =
   Seq.flat_map
     (fun split_count ->
        single_task_seg_multi_splits_exact ~min_seg_size ~max_seg_size
@@ -148,24 +148,24 @@ let single_task_seg_multi_splits_max ~min_seg_size ~max_seg_size
     (Seq_utils.zero_to_n_inc_int64 split_count)
 
 let single_task_seg_multi_splits_exact_shift ~min_seg_size ~max_seg_size
-    ~split_count ~(incre : int64) ~(task_seg : Task_ds.task_seg)
-    (time_slots : Time_slot.t Seq.t) : Task_ds.task_seg_place list Seq.t =
+    ~split_count ~(incre : int64) ~(task_seg : Task.task_seg)
+    (time_slots : Time_slot.t Seq.t) : Task.task_seg_place list Seq.t =
   single_task_seg_multi_splits_exact ~min_seg_size ~max_seg_size ~split_count
     ~task_seg
   |> Seq.flat_map (fun task_segs ->
       multi_task_segs_shift ~incre ~task_segs time_slots)
 
 let single_task_seg_multi_splits_max_shift ~min_seg_size ~max_seg_size
-    ~split_count ~(incre : int64) ~(task_seg : Task_ds.task_seg)
-    (time_slots : Time_slot.t Seq.t) : Task_ds.task_seg_place list Seq.t =
+    ~split_count ~(incre : int64) ~(task_seg : Task.task_seg)
+    (time_slots : Time_slot.t Seq.t) : Task.task_seg_place list Seq.t =
   single_task_seg_multi_splits_max ~min_seg_size ~max_seg_size ~split_count
     ~task_seg
   |> Seq.flat_map (fun task_segs ->
       multi_task_segs_shift ~incre ~task_segs time_slots)
 
 let multi_task_segs_interleave ~interval_size
-    ~(task_segs : Task_ds.task_seg list) (time_slots : Time_slot.t Seq.t) :
-  Task_ds.task_seg_place Seq.t =
+    ~(task_segs : Task.task_seg list) (time_slots : Time_slot.t Seq.t) :
+  Task.task_seg_place Seq.t =
   assert (interval_size > 0L);
   let quota =
     List.fold_left
@@ -210,9 +210,9 @@ let multi_task_segs_interleave ~interval_size
       (fun id (start, end_exc) -> (id, start, end_exc))
       task_segs time_slots_chunked
 
-let single_task_seg_multi_even_splits ~incre ~(task_seg : Task_ds.task_seg)
+let single_task_seg_multi_even_splits ~incre ~(task_seg : Task.task_seg)
     ~(buckets : Time_slot.t list) ~(usable_time_slots : Time_slot.t Seq.t) :
-  Task_ds.task_seg_place list Seq.t =
+  Task.task_seg_place list Seq.t =
   let rec aux task_seg_size n buckets =
     (* try to find maximum number of buckets to fit into *)
     if n = 0L then (None, [])

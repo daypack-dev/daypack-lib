@@ -1,5 +1,5 @@
 module Task_seg_place_gens = Task_seg_place_gens
-module Task_ds = Task_ds
+module Task = Task
 module Time_slot = Time_slot
 module Time_slots = Time_slots
 module Sched = Sched

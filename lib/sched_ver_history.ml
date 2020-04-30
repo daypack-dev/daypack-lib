@@ -1,3 +1,5 @@
+module Task_ = Task
+
 type t = { mutable history : Sched.sched list }
 
 type head_choice =
@@ -57,9 +59,9 @@ end
 module In_place_head = struct
   module Task = struct
     module Add = struct
-      let add_task ~parent_user_id (data : Task_ds.task_data)
-          (task_inst_data_list : Task_ds.task_inst_data list) (t : t) :
-        Task_ds.task * Task_ds.task_inst list * action_record =
+      let add_task ~parent_user_id (data : Task_.task_data)
+          (task_inst_data_list : Task_.task_inst_data list) (t : t) :
+        Task_.task * Task_.task_inst list * action_record =
         let (task, task_inst_list), ar =
           map_head
             (fun sched ->
@@ -75,25 +77,25 @@ module In_place_head = struct
 
     module Move = struct
       let move_task_internal
-          ~(move_task_by_id : Task_ds.task_id -> Sched.sched -> Sched.sched)
-          (task_inst_id : Task_ds.task_id) (t : t) : action_record =
+          ~(move_task_by_id : Task_.task_id -> Sched.sched -> Sched.sched)
+          (task_inst_id : Task_.task_id) (t : t) : action_record =
         map_head_no_ret
           (fun sched ->
              let sched = move_task_by_id task_inst_id sched in
              Replace_head sched)
           t
 
-      let move_task_to_completed (task_id : Task_ds.task_id) (t : t) :
+      let move_task_to_completed (task_id : Task_.task_id) (t : t) :
         action_record =
         move_task_internal
           ~move_task_by_id:Sched.Task.Move.move_task_to_completed task_id t
 
-      let move_task_to_uncompleted (task_id : Task_ds.task_id) (t : t) :
+      let move_task_to_uncompleted (task_id : Task_.task_id) (t : t) :
         action_record =
         move_task_internal
           ~move_task_by_id:Sched.Task.Move.move_task_to_uncompleted task_id t
 
-      let move_task_to_discarded (task_id : Task_ds.task_id) (t : t) :
+      let move_task_to_discarded (task_id : Task_.task_id) (t : t) :
         action_record =
         move_task_internal
           ~move_task_by_id:Sched.Task.Move.move_task_to_discarded task_id t
@@ -102,8 +104,8 @@ module In_place_head = struct
 
   module Task_inst = struct
     module Add = struct
-      let add_task_inst ~parent_task_id (data : Task_ds.task_inst_data) (t : t)
-        : Task_ds.task_inst * action_record =
+      let add_task_inst ~parent_task_id (data : Task_.task_inst_data) (t : t)
+        : Task_.task_inst * action_record =
         map_head
           (fun sched ->
              let task_inst, sched =
@@ -116,27 +118,27 @@ module In_place_head = struct
     module Move = struct
       let move_task_inst_internal
           ~(move_task_inst_by_id :
-              Task_ds.task_inst_id -> Sched.sched -> Sched.sched)
-          (task_inst_id : Task_ds.task_inst_id) (t : t) : action_record =
+              Task_.task_inst_id -> Sched.sched -> Sched.sched)
+          (task_inst_id : Task_.task_inst_id) (t : t) : action_record =
         map_head_no_ret
           (fun sched ->
              let sched = move_task_inst_by_id task_inst_id sched in
              Replace_head sched)
           t
 
-      let move_task_inst_to_completed (task_inst_id : Task_ds.task_inst_id)
+      let move_task_inst_to_completed (task_inst_id : Task_.task_inst_id)
           (t : t) : action_record =
         move_task_inst_internal
           ~move_task_inst_by_id:Sched.Task_inst.Move.move_task_inst_to_completed
           task_inst_id t
 
-      let move_task_inst_to_uncompleted (task_inst_id : Task_ds.task_inst_id)
+      let move_task_inst_to_uncompleted (task_inst_id : Task_.task_inst_id)
           (t : t) : action_record =
         move_task_inst_internal
           ~move_task_inst_by_id:
             Sched.Task_inst.Move.move_task_inst_to_uncompleted task_inst_id t
 
-      let move_task_inst_to_discarded (task_inst_id : Task_ds.task_inst_id)
+      let move_task_inst_to_discarded (task_inst_id : Task_.task_inst_id)
           (t : t) : action_record =
         move_task_inst_internal
           ~move_task_inst_by_id:Sched.Task_inst.Move.move_task_inst_to_discarded
@@ -148,27 +150,27 @@ module In_place_head = struct
     module Move = struct
       let move_task_seg_internal
           ~(move_task_seg_by_id :
-              Task_ds.task_seg_id -> Sched.sched -> Sched.sched)
-          (task_seg_id : Task_ds.task_seg_id) (t : t) : action_record =
+              Task_.task_seg_id -> Sched.sched -> Sched.sched)
+          (task_seg_id : Task_.task_seg_id) (t : t) : action_record =
         map_head_no_ret
           (fun sched ->
              let sched = move_task_seg_by_id task_seg_id sched in
              Replace_head sched)
           t
 
-      let move_task_seg_to_completed (task_seg_id : Task_ds.task_seg_id) (t : t)
+      let move_task_seg_to_completed (task_seg_id : Task_.task_seg_id) (t : t)
         : action_record =
         move_task_seg_internal
           ~move_task_seg_by_id:Sched.Task_seg.Move.move_task_seg_to_completed
           task_seg_id t
 
-      let move_task_seg_to_uncompleted (task_seg_id : Task_ds.task_seg_id)
+      let move_task_seg_to_uncompleted (task_seg_id : Task_.task_seg_id)
           (t : t) : action_record =
         move_task_seg_internal
           ~move_task_seg_by_id:Sched.Task_seg.Move.move_task_seg_to_uncompleted
           task_seg_id t
 
-      let move_task_seg_to_discarded (task_seg_id : Task_ds.task_seg_id) (t : t)
+      let move_task_seg_to_discarded (task_seg_id : Task_.task_seg_id) (t : t)
         : action_record =
         move_task_seg_internal
           ~move_task_seg_by_id:Sched.Task_seg.Move.move_task_seg_to_discarded
@@ -200,7 +202,7 @@ module In_place_head = struct
 
   module Progress = struct
     module Add = struct
-      let add_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
+      let add_task_seg_progress_chunk (task_seg_id : Task_.task_seg_id)
           (chunk : int64 * int64) (t : t) : action_record =
         map_head_no_ret
           (fun sched ->
@@ -211,7 +213,7 @@ module In_place_head = struct
              Replace_head sched)
           t
 
-      let add_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
+      let add_task_inst_progress_chunk (task_inst_id : Task_.task_inst_id)
           (chunk : int64 * int64) (t : t) : action_record =
         map_head_no_ret
           (fun sched ->
@@ -226,7 +228,7 @@ module In_place_head = struct
 end
 
 module Maybe_append_to_head = struct
-  let remove_task (task_id : Task_ds.task_id) (t : t) : action_record =
+  let remove_task (task_id : Task_.task_id) (t : t) : action_record =
     map_head_no_ret
       (fun hd ->
          let task_seg_place_seq =
@@ -266,7 +268,7 @@ module Maybe_append_to_head = struct
            New_head hd')
       t
 
-  let remove_task_inst (task_inst_id : Task_ds.task_inst_id) (t : t) :
+  let remove_task_inst (task_inst_id : Task_.task_inst_id) (t : t) :
     action_record =
     map_head_no_ret
       (fun hd ->
@@ -308,7 +310,7 @@ module Maybe_append_to_head = struct
            New_head hd')
       t
 
-  let remove_task_seg_progress_chunk (task_seg_id : Task_ds.task_seg_id)
+  let remove_task_seg_progress_chunk (task_seg_id : Task_.task_seg_id)
       (chunk : int64 * int64) (t : t) : action_record =
     map_head_no_ret
       (fun sched ->
@@ -325,7 +327,7 @@ module Maybe_append_to_head = struct
          else Do_nothing)
       t
 
-  let remove_task_inst_progress_chunk (task_inst_id : Task_ds.task_inst_id)
+  let remove_task_inst_progress_chunk (task_inst_id : Task_.task_inst_id)
       (chunk : int64 * int64) (t : t) : action_record =
     map_head_no_ret
       (fun sched ->

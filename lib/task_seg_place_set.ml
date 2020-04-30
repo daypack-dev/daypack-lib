@@ -1,5 +1,5 @@
 include Set.Make (struct
-    type t = Task_ds.task_seg_place
+    type t = Task.task_seg_place
 
     let compare (task_seg_id1, start1, end_exc1) (task_seg_id2, start2, end_exc2)
       =
@@ -12,9 +12,9 @@ include Set.Make (struct
   end)
 
 module Serialize = struct
-  let pack (t : t) : Task_ds.task_seg_place list = t |> to_seq |> List.of_seq
+  let pack (t : t) : Task.task_seg_place list = t |> to_seq |> List.of_seq
 end
 
 module Deserialize = struct
-  let unpack (l : Task_ds.task_seg_place list) : t = l |> List.to_seq |> of_seq
+  let unpack (l : Task.task_seg_place list) : t = l |> List.to_seq |> of_seq
 end
