@@ -72,7 +72,7 @@ let ask_ids (type a) ~indent_level ~(name : string)
 
 let ask_task_id ~indent_level
     ~(exists_in_sched : Daypack_lib.Sched.sched option) :
-  Daypack_lib.Task_ds.task_id =
+  Daypack_lib.Task.task_id =
   let f_until =
     match exists_in_sched with
     | None -> None
@@ -83,15 +83,15 @@ let ask_task_id ~indent_level
            | None ->
              Error
                (Printf.sprintf "Failed to find task with ID: %s"
-                  (Daypack_lib.Task_ds.Id.string_of_task_id id))
+                  (Daypack_lib.Task.Id.string_of_task_id id))
            | Some _ -> Ok id)
   in
   ask_id ~indent_level ~name:"task ID" ~f_until
-    Daypack_lib.Task_ds.Id.task_id_of_string
+    Daypack_lib.Task.Id.task_id_of_string
 
 let ask_task_inst_id ~indent_level
     ~(exists_in_sched : Daypack_lib.Sched.sched option) :
-  Daypack_lib.Task_ds.task_inst_id =
+  Daypack_lib.Task.task_inst_id =
   let f_until =
     match exists_in_sched with
     | None -> None
@@ -104,19 +104,19 @@ let ask_task_inst_id ~indent_level
            | None ->
              Error
                (Printf.sprintf "Failed to find task instance with ID: %s"
-                  (Daypack_lib.Task_ds.Id.string_of_task_inst_id id))
+                  (Daypack_lib.Task.Id.string_of_task_inst_id id))
            | Some _ -> Ok id)
   in
   ask_id ~indent_level ~name:"task inst ID" ~f_until
-    Daypack_lib.Task_ds.Id.task_inst_id_of_string
+    Daypack_lib.Task.Id.task_inst_id_of_string
 
-let ask_task_inst_ids ~indent_level : Daypack_lib.Task_ds.task_inst_id list =
+let ask_task_inst_ids ~indent_level : Daypack_lib.Task.task_inst_id list =
   ask_ids ~indent_level ~name:"task inst IDs"
-    Daypack_lib.Task_ds.Id.task_inst_id_of_string
+    Daypack_lib.Task.Id.task_inst_id_of_string
 
 let ask_task_seg_id ~indent_level
     ~(exists_in_sched : Daypack_lib.Sched.sched option) :
-  Daypack_lib.Task_ds.task_seg_id =
+  Daypack_lib.Task.task_seg_id =
   let f_until =
     match exists_in_sched with
     | None -> None
@@ -129,15 +129,15 @@ let ask_task_seg_id ~indent_level
            | None ->
              Error
                (Printf.sprintf "Failed to find task segment with ID: %s"
-                  (Daypack_lib.Task_ds.Id.string_of_task_seg_id id))
+                  (Daypack_lib.Task.Id.string_of_task_seg_id id))
            | Some _ -> Ok id)
   in
   ask_id ~indent_level ~name:"task seg ID" ~f_until
-    Daypack_lib.Task_ds.Id.task_seg_id_of_string
+    Daypack_lib.Task.Id.task_seg_id_of_string
 
 let ask_pending_sched_req_id ~indent_level
     ~(exists_in_sched : Daypack_lib.Sched.sched option) :
-  Daypack_lib.Sched_req_ds.sched_req_id =
+  Daypack_lib.Sched_req.sched_req_id =
   let f_until =
     match exists_in_sched with
     | None -> None
@@ -162,7 +162,7 @@ let ask_pending_sched_req_id ~indent_level
 
 let ask_sched_req_record_id ~indent_level
     ~(exists_in_sched : Daypack_lib.Sched.sched option) :
-  Daypack_lib.Sched_req_ds.sched_req_id =
+  Daypack_lib.Sched_req.sched_req_id =
   let f_until =
     match exists_in_sched with
     | None -> None
@@ -288,22 +288,20 @@ let ask_time_slots ~indent_level ~(prompt : string) : (int64 * int64) list =
     process_time_slots_string
   |> List.to_seq
   |> Seq.flat_map List.to_seq
-  |> Daypack_lib.Time_slot_ds.normalize
+  |> Daypack_lib.Time_slots.Normalize.normalize
   |> List.of_seq
 
 let process_task_inst_alloc_req_string (s : string) :
-  (Daypack_lib.Task_ds.task_seg_alloc_req, string) result =
+  (Daypack_lib.Task.task_seg_alloc_req, string) result =
   try
     Scanf.sscanf s "%[^,],%Ld" (fun maybe_task_inst_id task_seg_size ->
-        match
-          Daypack_lib.Task_ds.Id.task_inst_id_of_string maybe_task_inst_id
-        with
+        match Daypack_lib.Task.Id.task_inst_id_of_string maybe_task_inst_id with
         | Error () -> Error "Failed to parse task inst id string"
         | Ok task_inst_id -> Ok (task_inst_id, task_seg_size))
   with _ -> Error "Failed to parse task inst alloc req"
 
 let ask_task_inst_alloc_req ~indent_level ~task_inst_id :
-  Daypack_lib.Task_ds.task_seg_alloc_req =
+  Daypack_lib.Task.task_seg_alloc_req =
   match task_inst_id with
   | None ->
     ask ~indent_level
@@ -319,7 +317,7 @@ let ask_task_inst_alloc_req ~indent_level ~task_inst_id :
     (task_inst_id, task_seg_size)
 
 let ask_task_inst_alloc_reqs ~indent_level ~task_inst_id :
-  Daypack_lib.Task_ds.task_seg_alloc_req list =
+  Daypack_lib.Task.task_seg_alloc_req list =
   match task_inst_id with
   | None ->
     ask_multiple ~indent_level
@@ -333,8 +331,8 @@ let ask_task_inst_alloc_reqs ~indent_level ~task_inst_id :
     |> List.map (fun task_seg_size -> (task_inst_id, task_seg_size))
 
 let ask_sched_req_data_unit ~indent_level
-    ?(task_inst_id : Daypack_lib.Task_ds.task_inst_id option) () :
-  (Daypack_lib.Sched_req_ds.sched_req_data_unit, string) result =
+    ?(task_inst_id : Daypack_lib.Task.task_inst_id option) () :
+  (Daypack_lib.Sched_req.sched_req_data_unit, string) result =
   let sched_req_choice =
     ask_pick_choice ~indent_level ~prompt:"Pick scheduling request type"
       [

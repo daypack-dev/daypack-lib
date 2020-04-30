@@ -20,7 +20,7 @@ type t = string * data
  * |> OSeq.merge *)
 
 let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
-  Time_slot_ds.t Seq.t =
+  Time_slot.t Seq.t =
   let time_slots = [ (start, end_exc) ] in
   periods
   |> List.to_seq
@@ -41,11 +41,11 @@ let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
   |> OSeq.merge
 
 let matching_time_slots_of_data ~start ~end_exc (data : data) :
-  Time_slot_ds.t Seq.t =
+  Time_slot.t Seq.t =
   matching_time_slots_of_periods ~start ~end_exc data.periods
 
 let matching_time_slots_of_profile ~start ~end_exc ((_id, data) : t) :
-  Time_slot_ds.t Seq.t =
+  Time_slot.t Seq.t =
   matching_time_slots_of_periods ~start ~end_exc data.periods
 
 module Equal = struct

@@ -48,7 +48,7 @@ let run (remove_task : bool) (remove_task_inst : bool) (remove_task_seg : bool)
           sched_req_id hd
         |> Option.get
       in
-      Daypack_lib.Sched_req_ds.Print.debug_print_sched_req_data sched_req_data;
+      Daypack_lib.Sched_req.Print.debug_print_sched_req_data sched_req_data;
       if
         Dialog.ask_yn ~indent_level:0
           ~prompt:"Really remove pending schedule request?"

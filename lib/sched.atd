@@ -12,7 +12,7 @@ type 'a set_diff <ocaml from="Set_utils" t="diff"> = abstract
 
 (* corresponds to Time_slot
 *)
-type time_slot <ocaml from="Time_slot_ds"> = abstract
+type time_slot <ocaml from="Time_slot"> = abstract
 
 (* corresponds to Sched_req_data_unit_skeleton
 *)
@@ -22,61 +22,61 @@ type ('a, 'b) split_even <ocaml from="Sched_req_data_unit_skeleton"> = abstract
 
 type ('a, 'b, 'c) sched_req_data_unit_skeleton <ocaml from="Sched_req_data_unit_skeleton"> = abstract
 
-(* corresponds to Task_ds
+(* corresponds to Task
 *)
-type arith_seq <ocaml from="Task_ds"> = abstract
+type arith_seq <ocaml from="Task"> = abstract
 
-type user_id <ocaml from="Task_ds"> = abstract
+type user_id <ocaml from="Task"> = abstract
 
-type task_id <ocaml from="Task_ds"> = abstract
+type task_id <ocaml from="Task"> = abstract
 
-type task_inst_id <ocaml from="Task_ds"> = abstract
+type task_inst_id <ocaml from="Task"> = abstract
 
-type task_seg_id <ocaml from="Task_ds"> = abstract
+type task_seg_id <ocaml from="Task"> = abstract
 
-type task <ocaml from="Task_ds"> = abstract
+type task <ocaml from="Task"> = abstract
 
-type task_data <ocaml from="Task_ds"> = abstract
+type task_data <ocaml from="Task"> = abstract
 
-type task_type <ocaml from="Task_ds"> = abstract
+type task_type <ocaml from="Task"> = abstract
 
-type recur <ocaml from="Task_ds"> = abstract
+type recur <ocaml from="Task"> = abstract
 
-type sched_req_template <ocaml from="Task_ds"> = abstract
+type sched_req_template <ocaml from="Task"> = abstract
 
-type recur_data <ocaml from="Task_ds"> = abstract
+type recur_data <ocaml from="Task"> = abstract
 
-type task_inst <ocaml from="Task_ds"> = abstract
+type task_inst <ocaml from="Task"> = abstract
 
-type task_inst_data <ocaml from="Task_ds"> = abstract
+type task_inst_data <ocaml from="Task"> = abstract
 
-type task_inst_type <ocaml from="Task_ds"> = abstract
+type task_inst_type <ocaml from="Task"> = abstract
 
-type task_seg <ocaml from="Task_ds"> = abstract
+type task_seg <ocaml from="Task"> = abstract
 
-type task_seg_alloc_req <ocaml from="Task_ds"> = abstract
+type task_seg_alloc_req <ocaml from="Task"> = abstract
 
-type task_seg_size <ocaml from="Task_ds"> = abstract
+type task_seg_size <ocaml from="Task"> = abstract
 
-type task_seg_place <ocaml from="Task_ds"> = abstract
+type task_seg_place <ocaml from="Task"> = abstract
 
-type progress <ocaml from="Task_ds"> = abstract
+type progress <ocaml from="Task"> = abstract
 
 (* corresponds to Sched_req
 *)
-type sched_req_id <ocaml from="Sched_req_ds"> = abstract
+type sched_req_id <ocaml from="Sched_req"> = abstract
 
-type sched_req <ocaml from="Sched_req_ds"> = abstract
+type sched_req <ocaml from="Sched_req"> = abstract
 
-type sched_req_data_unit <ocaml from="Sched_req_ds"> = abstract
+type sched_req_data_unit <ocaml from="Sched_req"> = abstract
 
-type sched_req_data <ocaml from="Sched_req_ds"> = abstract
+type sched_req_data <ocaml from="Sched_req"> = abstract
 
-type sched_req_record <ocaml from="Sched_req_ds"> = abstract
+type sched_req_record <ocaml from="Sched_req"> = abstract
 
-type sched_req_record_data_unit <ocaml from="Sched_req_ds"> = abstract
+type sched_req_record_data_unit <ocaml from="Sched_req"> = abstract
 
-type sched_req_record_data <ocaml from="Sched_req_ds"> = abstract
+type sched_req_record_data <ocaml from="Sched_req"> = abstract
 
 (* corresponds to Sched
 *)

@@ -38,6 +38,19 @@ module Time_slots_expr : sig
     ((int64 * int64) Seq.t, string) result
 end
 
+module Resolve : sig
+  val resolve_unbounded_time_points_expr :
+    f_resolve_tpe_name:f_resolve_tpe_name ->
+    Time_expr_ast.unbounded_time_points_expr ->
+    (Time_expr_ast.unbounded_time_points_expr, string) result
+
+  val resolve_unbounded_time_slots_expr :
+    f_resolve_tse_name:f_resolve_tse_name ->
+    f_resolve_tpe_name:f_resolve_tpe_name ->
+    Time_expr_ast.unbounded_time_slots_expr ->
+    (Time_expr_ast.unbounded_time_slots_expr, string) result
+end
+
 module To_string : sig
   val debug_string_of_hour_minute_second_ranges :
     Time_expr_ast.hour_minute_second_expr -> string

@@ -16,11 +16,11 @@ type hour_minute_second_expr = {
   second : int;
 }
 
-type second_range_expr = second_expr Range.t
+type second_range_expr = second_expr Range_ds.t
 
-type minute_second_range_expr = minute_second_expr Range.t
+type minute_second_range_expr = minute_second_expr Range_ds.t
 
-type hour_minute_second_range_expr = hour_minute_second_expr Range.t
+type hour_minute_second_range_expr = hour_minute_second_expr Range_ds.t
 
 type day_expr =
   | Weekday of Time.weekday
@@ -67,33 +67,33 @@ type unbounded_time_slots_expr =
   | Explicit_time_slots of
       (unbounded_time_points_expr * unbounded_time_points_expr) list
   | Month_days_and_hour_minute_second_ranges of {
-      month_days : int Range.t list;
+      month_days : int Range_ds.t list;
       hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
   | Weekdays_and_hour_minute_second_ranges of {
-      weekdays : Time.weekday Range.t list;
+      weekdays : Time.weekday Range_ds.t list;
       hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
   | Months_and_month_days_and_hour_minute_second_ranges of {
-      months : month_expr Range.t list;
-      month_days : int Range.t list;
+      months : month_expr Range_ds.t list;
+      month_days : int Range_ds.t list;
       hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
   | Months_and_weekdays_and_hour_minute_second_ranges of {
-      months : month_expr Range.t list;
-      weekdays : Time.weekday Range.t list;
+      months : month_expr Range_ds.t list;
+      weekdays : Time.weekday Range_ds.t list;
       hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
   | Months_and_weekday_and_hour_minute_second_ranges of {
-      months : month_expr Range.t list;
+      months : month_expr Range_ds.t list;
       weekday : Time.weekday;
       hour_minute_second_ranges : hour_minute_second_range_expr list;
       month_weekday_mode : month_weekday_mode option;
     }
   | Years_and_months_and_month_days_and_hour_minute_second_ranges of {
-      years : int Range.t list;
-      months : month_expr Range.t list;
-      month_days : int Range.t list;
+      years : int Range_ds.t list;
+      months : month_expr Range_ds.t list;
+      month_days : int Range_ds.t list;
       hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
 

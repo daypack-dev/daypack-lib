@@ -1,1 +1,1 @@
-type t = Task_ds.task_inst Stream.t
+type t = Task.task_inst Stream.t

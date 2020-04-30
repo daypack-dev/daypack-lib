@@ -20,7 +20,7 @@ let debug_single_task_seg_shift () =
   Task_seg_place_gens.single_task_seg_shift ~incre ~cur_pos ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task_ds.Id.string_of_task_seg_id id)
+        (Task.Id.string_of_task_seg_id id)
         start end_exc)
 
 let debug_single_task_seg_shift_rev () =
@@ -44,7 +44,7 @@ let debug_single_task_seg_shift_rev () =
     ~task_seg time_slots
   |> Seq.iter (fun (id, start, end_exc) ->
       Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-        (Task_ds.Id.string_of_task_seg_id id)
+        (Task.Id.string_of_task_seg_id id)
         start end_exc)
 
 let debug_multi_task_segs_shift () =
@@ -58,7 +58,7 @@ let debug_multi_task_segs_shift () =
   List.iter
     (fun (id, size) ->
        Printf.printf "time seg id : %s size : %Ld\n"
-         (Task_ds.Id.string_of_task_seg_id id)
+         (Task.Id.string_of_task_seg_id id)
          size)
     task_segs;
   List.iteri
@@ -73,7 +73,7 @@ let debug_multi_task_segs_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.Id.string_of_task_seg_id id)
+             (Task.Id.string_of_task_seg_id id)
              start end_exc)
         pos_s)
 
@@ -110,9 +110,7 @@ let debug_single_task_seg_multi_splits_exact () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n"
-             (Task_ds.Id.string_of_task_seg_id id)
-             x)
+           Printf.printf "  %s - %Ld\n" (Task.Id.string_of_task_seg_id id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_max () =
@@ -133,9 +131,7 @@ let debug_single_task_seg_multi_splits_max () =
       Printf.printf "splits :\n";
       List.iter
         (fun (id, x) ->
-           Printf.printf "  %s - %Ld\n"
-             (Task_ds.Id.string_of_task_seg_id id)
-             x)
+           Printf.printf "  %s - %Ld\n" (Task.Id.string_of_task_seg_id id) x)
         splits)
 
 let debug_single_task_seg_multi_splits_exact_shift () =
@@ -165,7 +161,7 @@ let debug_single_task_seg_multi_splits_exact_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.Id.string_of_task_seg_id id)
+             (Task.Id.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -195,7 +191,7 @@ let debug_single_task_seg_multi_splits_max_shift () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.Id.string_of_task_seg_id id)
+             (Task.Id.string_of_task_seg_id id)
              start end_exc)
         splits)
 
@@ -218,7 +214,7 @@ let debug_multi_tasks_interleave () =
   Seq.iter
     (fun (id, start, end_exc) ->
        Printf.printf "possible time slot to use : %s [%Ld, %Ld)\n"
-         (Task_ds.Id.string_of_task_seg_id id)
+         (Task.Id.string_of_task_seg_id id)
          start end_exc)
     s
 
@@ -254,88 +250,88 @@ let debug_single_task_seg_multi_even_splits () =
       List.iter
         (fun (id, start, end_exc) ->
            Printf.printf "  %s - [%Ld, %Ld)\n"
-             (Task_ds.Id.string_of_task_seg_id id)
+             (Task.Id.string_of_task_seg_id id)
              start end_exc)
         splits)
 
 let debug_slice_time_slots_start () =
-  print_endline "Debug print for Time_slot_ds.slice start";
+  print_endline "Debug print for Time_slots.slice start";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = List.to_seq time_slots in
-  Time_slot_ds.slice ~start:12L time_slots
+  Time_slots.Slice.slice ~start:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_slice_time_slots_end_exc () =
-  print_endline "Debug print for Time_slot_ds.slice end_exc";
+  print_endline "Debug print for Time_slots.slice end_exc";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = List.to_seq time_slots in
-  Time_slot_ds.slice ~end_exc:12L time_slots
+  Time_slots.Slice.slice ~end_exc:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_slice_time_slots_start_rev () =
-  print_endline "Debug print for Time_slot_ds.slice_rev start";
+  print_endline "Debug print for Time_slots.slice_rev start";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = time_slots |> List.rev |> List.to_seq in
-  Time_slot_ds.slice_rev ~start:12L time_slots
+  Time_slots.Slice.slice_rev ~start:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_slice_time_slots_end_exc_rev () =
-  print_endline "Debug print for Time_slot_ds.slice_rev end_exc";
+  print_endline "Debug print for Time_slots.slice_rev end_exc";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = time_slots |> List.rev |> List.to_seq in
-  Time_slot_ds.slice_rev ~end_exc:12L time_slots
+  Time_slots.Slice.slice_rev ~end_exc:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_normalize_time_slots () =
-  print_endline "Debug print for Time_slot_ds.normalize";
+  print_endline "Debug print for Time_slots.normalize";
   let time_slots =
     [ (0L, 10L); (10L, 11L); (11L, 20L); (22L, 25L); (20L, 22L); (25L, 30L) ]
   in
   let time_slots = List.to_seq time_slots in
-  Time_slot_ds.normalize time_slots
+  Time_slots.Normalize.normalize time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_invert_time_slots () =
-  print_endline "Debug print for Time_slot_ds.invert";
+  print_endline "Debug print for Time_slots.invert";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = List.to_seq time_slots in
-  Time_slot_ds.invert ~start:0L ~end_exc:22L time_slots
+  Time_slots.invert ~start:0L ~end_exc:22L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_relative_complement_time_slots () =
-  print_endline "Debug print for Time_slot_ds.relative_complement";
+  print_endline "Debug print for Time_slots.relative_complement";
   let mem_of_time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let not_mem_of_time_slots = [ (0L, 5L); (6L, 15L); (25L, 30L) ] in
   let mem_of_time_slots = List.to_seq mem_of_time_slots in
   let not_mem_of_time_slots = List.to_seq not_mem_of_time_slots in
-  Time_slot_ds.relative_complement ~mem_of:mem_of_time_slots
+  Time_slots.relative_complement ~mem_of:mem_of_time_slots
     ~not_mem_of:not_mem_of_time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_intersect_time_slots () =
-  print_endline "Debug print for Time_slot_ds.intersect";
+  print_endline "Debug print for Time_slots.intersect";
   let time_slots1 = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots2 = [ (0L, 1L); (2L, 3L); (10L, 20L); (25L, 30L) ] in
   let time_slots1 = List.to_seq time_slots1 in
   let time_slots2 = List.to_seq time_slots2 in
-  Time_slot_ds.intersect time_slots1 time_slots2
+  Time_slots.intersect time_slots1 time_slots2
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_union_time_slots () =
-  print_endline "Debug print for Time_slot_ds.union";
+  print_endline "Debug print for Time_slots.union";
   let time_slots1 = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots2 = [ (0L, 1L); (2L, 3L); (10L, 20L); (25L, 30L) ] in
   let time_slots1 = List.to_seq time_slots1 in
   let time_slots2 = List.to_seq time_slots2 in
-  Time_slot_ds.union time_slots1 time_slots2
+  Time_slots.Union.union time_slots1 time_slots2
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
@@ -432,7 +428,7 @@ let debug_sched_backtracking_search_pending () =
   in
   print_endline "scheduling requests";
   List.iter
-    (Sched_req_ds.Print.debug_print_sched_req_data ~indent_level:1)
+    (Sched_req.Print.debug_print_sched_req_data ~indent_level:1)
     sched_req_data_list;
   print_newline ();
   let _, base =
@@ -465,7 +461,7 @@ let debug_sched_agenda_range () =
     ~include_task_seg_place_starting_within_time_slot:true
     ~include_task_seg_place_ending_within_time_slot:true
   |> Seq.iter (fun task_seg_place ->
-      Task_ds.Print.debug_print_task_seg_place task_seg_place)
+      Task.Print.debug_print_task_seg_place task_seg_place)
 
 let debug_sched_usage_simulation () =
   let add_task ~parent_user_id task_data task_inst_data_list t : unit =
@@ -475,22 +471,22 @@ let debug_sched_usage_simulation () =
     in
     print_endline "Added task";
     Sched_ver_history.Print.debug_print_action_record ar;
-    Task_ds.Print.debug_print_task ~indent_level:1 task
+    Task.Print.debug_print_task ~indent_level:1 task
   in
   let time_profile_store = Time_profile_store.make_empty () in
   let sched_ver_history = Sched_ver_history.make_empty () in
   add_task ~parent_user_id:0L
-    Task_ds.
+    Task.
       {
         splittable = false;
         parallelizable = false;
         task_type = One_off;
         name = "Test1";
       }
-    Task_ds.[ { task_inst_type = Reminder } ]
+    Task.[ { task_inst_type = Reminder } ]
     sched_ver_history;
   add_task ~parent_user_id:0L
-    Task_ds.
+    Task.
       {
         splittable = false;
         parallelizable = false;
@@ -511,14 +507,14 @@ let debug_sched_usage_simulation () =
       }
     [] sched_ver_history;
   add_task ~parent_user_id:0L
-    Task_ds.
+    Task.
       {
         splittable = false;
         parallelizable = false;
         task_type = One_off;
         name = "Test3";
       }
-    Task_ds.[ { task_inst_type = Reminder } ]
+    Task.[ { task_inst_type = Reminder } ]
     sched_ver_history;
   List.iter
     (fun sched_req_data ->

@@ -18,11 +18,15 @@ let zero_to_n_exc n : int Seq.t =
 
 let zero_to_n_inc n = zero_to_n_exc (n + 1)
 
-let zero_to_n_exc_int64 n : int64 Seq.t =
+let a_to_b_exc_int64 ~a ~b : int64 Seq.t =
   let rec aux cur n =
     if cur < n then fun () -> Seq.Cons (cur, aux (cur +^ 1L) n) else Seq.empty
   in
-  aux 0L n
+  aux a b
+
+let a_to_b_inc_int64 ~a ~b : int64 Seq.t = a_to_b_exc_int64 ~a ~b:(b +^ 1L)
+
+let zero_to_n_exc_int64 n : int64 Seq.t = a_to_b_exc_int64 ~a:0L ~b:n
 
 let zero_to_n_inc_int64 n = zero_to_n_exc_int64 (n +^ 1L)
 

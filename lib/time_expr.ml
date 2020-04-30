@@ -25,74 +25,77 @@ exception Invalid_time_expr of string
 
 let max_resolve_depth = 1000
 
-let resolve_unbounded_time_points_expr
-    ~(f_resolve_tpe_name : f_resolve_tpe_name)
-    (e : Time_expr_ast.unbounded_time_points_expr) :
-  (Time_expr_ast.unbounded_time_points_expr, string) result =
-  let rec aux f_resolve_tpe_name remaining_resolve_depth name e =
-    if remaining_resolve_depth <= 0 then Error "Maximum resolve depth reached"
-    else
-      match e with
-      | Time_expr_ast.Tpe_name s -> (
-          if name = Some s then
-            Error
-              (Printf.sprintf "Name resolution loop detected for name: %s" s)
-          else
-            let name = match name with None -> Some s | Some x -> Some x in
-            match f_resolve_tpe_name s with
-            | None ->
-              Error (Printf.sprintf "Name resolution failed for name: %s" s)
-            | Some e ->
-              aux f_resolve_tpe_name (pred remaining_resolve_depth) name e )
-      | e -> Ok e
-  in
-  aux f_resolve_tpe_name max_resolve_depth None e
+module Resolve = struct
+  let resolve_unbounded_time_points_expr
+      ~(f_resolve_tpe_name : f_resolve_tpe_name)
+      (e : Time_expr_ast.unbounded_time_points_expr) :
+    (Time_expr_ast.unbounded_time_points_expr, string) result =
+    let rec aux f_resolve_tpe_name remaining_resolve_depth name e =
+      if remaining_resolve_depth <= 0 then Error "Maximum resolve depth reached"
+      else
+        match e with
+        | Time_expr_ast.Tpe_name s -> (
+            if name = Some s then
+              Error
+                (Printf.sprintf "Name resolution loop detected for name: %s" s)
+            else
+              let name = match name with None -> Some s | Some x -> Some x in
+              match f_resolve_tpe_name s with
+              | None ->
+                Error (Printf.sprintf "Name resolution failed for name: %s" s)
+              | Some e ->
+                aux f_resolve_tpe_name (pred remaining_resolve_depth) name e )
+        | e -> Ok e
+    in
+    aux f_resolve_tpe_name max_resolve_depth None e
 
-let resolve_unbounded_time_slots_expr ~(f_resolve_tse_name : f_resolve_tse_name)
-    ~(f_resolve_tpe_name : f_resolve_tpe_name)
-    (e : Time_expr_ast.unbounded_time_slots_expr) :
-  (Time_expr_ast.unbounded_time_slots_expr, string) result =
-  let rec aux f_resolve_tse_name f_resolve_tpe_name remaining_resolve_depth name
-      e =
-    if remaining_resolve_depth <= 0 then Error "Maximum resolve depth reached"
-    else
-      match e with
-      | Time_expr_ast.Tse_name s -> (
-          if name = Some s then
-            Error
-              (Printf.sprintf "Name resolution loop detected for name: %s" s)
-          else
-            let name = match name with None -> Some s | Some x -> Some x in
-            match f_resolve_tse_name s with
-            | None ->
-              Error (Printf.sprintf "Name resolution failed for name: %s" s)
-            | Some e ->
-              aux f_resolve_tse_name f_resolve_tpe_name
-                (pred remaining_resolve_depth)
-                name e )
-      | Explicit_time_slots l -> (
-          try
-            Ok
-              (Time_expr_ast.Explicit_time_slots
-                 (List.map
-                    (fun (start, end_exc) ->
-                       match
-                         resolve_unbounded_time_points_expr ~f_resolve_tpe_name
-                           start
-                       with
-                       | Error msg -> raise (Invalid_time_expr msg)
-                       | Ok start -> (
-                           match
-                             resolve_unbounded_time_points_expr
-                               ~f_resolve_tpe_name end_exc
-                           with
-                           | Error msg -> raise (Invalid_time_expr msg)
-                           | Ok end_exc -> (start, end_exc) ))
-                    l))
-          with Invalid_time_expr msg -> Error msg )
-      | e -> Ok e
-  in
-  aux f_resolve_tse_name f_resolve_tpe_name max_resolve_depth None e
+  let resolve_unbounded_time_slots_expr
+      ~(f_resolve_tse_name : f_resolve_tse_name)
+      ~(f_resolve_tpe_name : f_resolve_tpe_name)
+      (e : Time_expr_ast.unbounded_time_slots_expr) :
+    (Time_expr_ast.unbounded_time_slots_expr, string) result =
+    let rec aux f_resolve_tse_name f_resolve_tpe_name remaining_resolve_depth
+        name e =
+      if remaining_resolve_depth <= 0 then Error "Maximum resolve depth reached"
+      else
+        match e with
+        | Time_expr_ast.Tse_name s -> (
+            if name = Some s then
+              Error
+                (Printf.sprintf "Name resolution loop detected for name: %s" s)
+            else
+              let name = match name with None -> Some s | Some x -> Some x in
+              match f_resolve_tse_name s with
+              | None ->
+                Error (Printf.sprintf "Name resolution failed for name: %s" s)
+              | Some e ->
+                aux f_resolve_tse_name f_resolve_tpe_name
+                  (pred remaining_resolve_depth)
+                  name e )
+        | Explicit_time_slots l -> (
+            try
+              Ok
+                (Time_expr_ast.Explicit_time_slots
+                   (List.map
+                      (fun (start, end_exc) ->
+                         match
+                           resolve_unbounded_time_points_expr ~f_resolve_tpe_name
+                             start
+                         with
+                         | Error msg -> raise (Invalid_time_expr msg)
+                         | Ok start -> (
+                             match
+                               resolve_unbounded_time_points_expr
+                                 ~f_resolve_tpe_name end_exc
+                             with
+                             | Error msg -> raise (Invalid_time_expr msg)
+                             | Ok end_exc -> (start, end_exc) ))
+                      l))
+            with Invalid_time_expr msg -> Error msg )
+        | e -> Ok e
+    in
+    aux f_resolve_tse_name f_resolve_tpe_name max_resolve_depth None e
+end
 
 module Interpret_string = struct
   open Angstrom
@@ -117,20 +120,20 @@ module Interpret_string = struct
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "lasst"; "coming"; "every" ]
 
-  let range_inc_expr (p : 'a t) : 'a Range.t t =
+  let range_inc_expr (p : 'a t) : 'a Range_ds.t t =
     p
     >>= (fun x ->
         space *> to_string *> space *> p >>| fun y -> `Range_inc (x, y))
         <|> (p >>| fun x -> `Range_inc (x, x))
 
-  let range_exc_expr (p : 'a t) : 'a Range.t t =
+  let range_exc_expr (p : 'a t) : 'a Range_ds.t t =
     p
     >>= (fun x ->
         space *> to_string *> space *> p >>| fun y -> `Range_exc (x, y))
         <|> (p >>| fun x -> `Range_inc (x, x))
 
-  let ranges_expr ~to_int (p : 'a Range.t t) : 'a Range.t list t =
-    sep_by_comma1 p >>| Range.compress_list ~to_int
+  let ranges_expr ~to_int (p : 'a Range_ds.t t) : 'a Range_ds.t list t =
+    sep_by_comma1 p >>| Ranges_ds.Compress.compress_list ~to_int
 
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =
@@ -202,9 +205,9 @@ module Interpret_string = struct
       if 1 <= x && x <= 31 then return x
       else fail (Printf.sprintf "Invalid month day: %d" x)
 
-    let month_day_range_expr : int Range.t t = range_inc_expr month_day_expr
+    let month_day_range_expr : int Range_ds.t t = range_inc_expr month_day_expr
 
-    let month_day_ranges_expr : int Range.t list t =
+    let month_day_ranges_expr : int Range_ds.t list t =
       ranges_expr ~to_int:(fun x -> x) month_day_range_expr
   end
 
@@ -216,10 +219,10 @@ module Interpret_string = struct
       | Ok x -> return x
       | Error _ -> fail "Failed to interpret weekday string"
 
-    let weekday_range_expr : Time.weekday Range.t t =
+    let weekday_range_expr : Time.weekday Range_ds.t t =
       range_inc_expr weekday_expr
 
-    let weekday_ranges_expr : Time.weekday Range.t list t =
+    let weekday_ranges_expr : Time.weekday Range_ds.t list t =
       ranges_expr ~to_int:Time.tm_int_of_weekday weekday_range_expr
   end
 
@@ -272,7 +275,7 @@ module Interpret_string = struct
 
   module Time_points_expr = struct
     let tp_name =
-      string_ci "tp:" *> ident_string >>| fun s -> Time_expr_ast.Tpe_name s
+      string_ci "at:" *> ident_string >>| fun s -> Time_expr_ast.Tpe_name s
 
     let tp_ymd_hour_minute_second =
       nat_zero
@@ -339,7 +342,7 @@ module Interpret_string = struct
 
   module Time_slots_expr = struct
     let ts_name =
-      string_ci "ts:" *> ident_string >>| fun s -> Time_expr_ast.Tse_name s
+      string_ci "during:" *> ident_string >>| fun s -> Time_expr_ast.Tse_name s
 
     let ts_explicit_time_slots =
       sep_by_comma1
@@ -641,7 +644,9 @@ module To_time_pattern_lossy = struct
       (e : Time_expr_ast.unbounded_time_points_expr) :
     (Time_pattern.t, string) result =
     try
-      match resolve_unbounded_time_points_expr ~f_resolve_tpe_name e with
+      match
+        Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e
+      with
       | Error msg -> Error msg
       | Ok e ->
         Ok
@@ -696,7 +701,7 @@ module To_time_pattern_lossy = struct
     (Time_pattern.time_range_pattern list, string) result =
     try
       match
-        resolve_unbounded_time_slots_expr ~f_resolve_tse_name
+        Resolve.resolve_unbounded_time_slots_expr ~f_resolve_tse_name
           ~f_resolve_tpe_name e
       with
       | Error msg -> Error msg
@@ -900,7 +905,9 @@ module Time_points_expr = struct
     with
     | Error msg -> Error msg
     | Ok pat -> (
-        match resolve_unbounded_time_points_expr ~f_resolve_tpe_name e with
+        match
+          Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e
+        with
         | Error msg -> Error msg
         | Ok e ->
           let selector =
@@ -950,8 +957,8 @@ module Time_slots_expr = struct
 
   let get_first_or_last_n_matches_of_same_month
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
-      (search_param : search_param) (s : Time_slot_ds.t Seq.t) :
-    Time_slot_ds.t Seq.t =
+      (search_param : search_param) (s : Time_slot.t Seq.t) : Time_slot.t Seq.t
+    =
     let time_zone_of_tm =
       Time_pattern.search_in_time_zone_of_search_param search_param
     in
@@ -968,10 +975,10 @@ module Time_slots_expr = struct
       ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (search_param : search_param) ((bound, e) : Time_expr_ast.time_slots_expr)
-    : (Time_slot_ds.t Seq.t, string) result =
+    : (Time_slot.t Seq.t, string) result =
     match
-      resolve_unbounded_time_slots_expr ~f_resolve_tse_name ~f_resolve_tpe_name
-        e
+      Resolve.resolve_unbounded_time_slots_expr ~f_resolve_tse_name
+        ~f_resolve_tpe_name e
     with
     | Error msg -> Error msg
     | Ok e -> (
