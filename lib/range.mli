@@ -29,17 +29,17 @@ module Normalize : sig
 end
 
 module Flatten : sig
-  val big_flatten_into_seq :
+  val flatten_into_seq_big :
     ?modulo:int64 ->
-    of_int64:(int64 -> 'a) ->
     to_int64:('a -> int64) ->
+    of_int64:(int64 -> 'a) ->
     'a t ->
     'a Seq.t
 
-  val big_flatten_into_list :
+  val flatten_into_list_big :
     ?modulo:int64 ->
-    of_int64:(int64 -> 'a) ->
     to_int64:('a -> int64) ->
+    of_int64:(int64 -> 'a) ->
     'a t ->
     'a list
 
@@ -51,9 +51,9 @@ module Flatten : sig
 end
 
 module Of_seq : sig
-  val big_range_seq_of_seq : to_int64:('a -> int64) -> 'a Seq.t -> 'a t Seq.t
+  val range_seq_of_seq_big : to_int64:('a -> int64) -> 'a Seq.t -> 'a t Seq.t
 
-  val big_range_list_of_seq : to_int64:('a -> int64) -> 'a Seq.t -> 'a t list
+  val range_list_of_seq_big : to_int64:('a -> int64) -> 'a Seq.t -> 'a t list
 
   val range_seq_of_seq : to_int:('a -> int) -> 'a Seq.t -> 'a t Seq.t
 
@@ -61,9 +61,9 @@ module Of_seq : sig
 end
 
 module Of_list : sig
-  val big_range_seq_of_list : to_int64:('a -> int64) -> 'a list -> 'a t Seq.t
+  val range_seq_of_list_big : to_int64:('a -> int64) -> 'a list -> 'a t Seq.t
 
-  val big_range_list_of_list : to_int64:('a -> int64) -> 'a list -> 'a t list
+  val range_list_of_list_big : to_int64:('a -> int64) -> 'a list -> 'a t list
 
   val range_seq_of_list : to_int:('a -> int) -> 'a list -> 'a t Seq.t
 
@@ -71,15 +71,15 @@ module Of_list : sig
 end
 
 module Merge : sig
-  val big_merge : to_int64:('a -> int64) -> 'a t -> 'a t -> 'a t option
+  val merge_big : to_int64:('a -> int64) -> 'a t -> 'a t -> 'a t option
 
   val merge : to_int:('a -> int) -> 'a t -> 'a t -> 'a t option
 end
 
 module Compress : sig
-  val big_compress_seq : to_int64:('a -> int64) -> 'a t Seq.t -> 'a t Seq.t
+  val compress_seq_big : to_int64:('a -> int64) -> 'a t Seq.t -> 'a t Seq.t
 
-  val big_compress_list : to_int64:('a -> int64) -> 'a t list -> 'a t list
+  val compress_list_big : to_int64:('a -> int64) -> 'a t list -> 'a t list
 
   val compress_seq : to_int:('a -> int) -> 'a t Seq.t -> 'a t Seq.t
 

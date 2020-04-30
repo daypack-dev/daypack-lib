@@ -86,11 +86,11 @@ module Flatten = struct
     let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
     flatten_into_seq_internal_int64 ~modulo ~of_int64 ~to_int64 t
 
-  let big_flatten_into_seq ?(modulo : int64 option) ~(of_int64 : int64 -> 'a)
+  let flatten_into_seq_big ?(modulo : int64 option) ~(of_int64 : int64 -> 'a)
       ~(to_int64 : 'a -> int64) (t : 'a t) : 'a Seq.t =
     flatten_into_seq_internal_int64 ~modulo ~of_int64 ~to_int64 t
 
-  let big_flatten_into_list ?(modulo : int64 option) ~(of_int64 : int64 -> 'a)
+  let flatten_into_list_big ?(modulo : int64 option) ~(of_int64 : int64 -> 'a)
       ~(to_int64 : 'a -> int64) (t : 'a t) : 'a list =
     flatten_into_seq_internal_int64 ~modulo ~of_int64 ~to_int64 t |> List.of_seq
 
@@ -104,7 +104,7 @@ module Flatten = struct
 end
 
 module Of_seq = struct
-  let big_range_seq_of_seq (type a) ~(to_int64 : a -> int64) (s : a Seq.t) :
+  let range_seq_of_seq_big (type a) ~(to_int64 : a -> int64) (s : a Seq.t) :
     a t Seq.t =
     let rec aux to_int64 (acc_inc : (a * a) option) (s : a Seq.t) : a t Seq.t =
       match s () with
@@ -124,26 +124,26 @@ module Of_seq = struct
     in
     aux to_int64 None s
 
-  let big_range_list_of_seq (type a) ~(to_int64 : a -> int64) (s : a Seq.t) :
+  let range_list_of_seq_big (type a) ~(to_int64 : a -> int64) (s : a Seq.t) :
     a t list =
-    big_range_seq_of_seq ~to_int64 s |> List.of_seq
+    range_seq_of_seq_big ~to_int64 s |> List.of_seq
 
   let range_seq_of_seq (type a) ~(to_int : a -> int) (s : a Seq.t) : a t Seq.t =
     let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
-    big_range_seq_of_seq ~to_int64 s
+    range_seq_of_seq_big ~to_int64 s
 
   let range_list_of_seq (type a) ~(to_int : a -> int) (s : a Seq.t) : a t list =
     range_seq_of_seq ~to_int s |> List.of_seq
 end
 
 module Of_list = struct
-  let big_range_seq_of_list (type a) ~(to_int64 : a -> int64) (l : a list) :
+  let range_seq_of_list_big (type a) ~(to_int64 : a -> int64) (l : a list) :
     a t Seq.t =
-    List.to_seq l |> Of_seq.big_range_seq_of_seq ~to_int64
+    List.to_seq l |> Of_seq.range_seq_of_seq_big ~to_int64
 
-  let big_range_list_of_list (type a) ~(to_int64 : a -> int64) (l : a list) :
+  let range_list_of_list_big (type a) ~(to_int64 : a -> int64) (l : a list) :
     a t list =
-    List.to_seq l |> Of_seq.big_range_seq_of_seq ~to_int64 |> List.of_seq
+    List.to_seq l |> Of_seq.range_seq_of_seq_big ~to_int64 |> List.of_seq
 
   let range_seq_of_list (type a) ~(to_int : a -> int) (l : a list) : a t Seq.t =
     List.to_seq l |> Of_seq.range_seq_of_seq ~to_int
@@ -153,7 +153,7 @@ module Of_list = struct
 end
 
 module Merge = struct
-  let big_merge (type a) ~(to_int64 : a -> int64) (x : a t) (y : a t) :
+  let merge_big (type a) ~(to_int64 : a -> int64) (x : a t) (y : a t) :
     a t option =
     match (x, y) with
     | `Range_inc (x_start, x_end_inc), `Range_inc (y_start, y_end_inc) ->
@@ -173,7 +173,7 @@ module Merge = struct
 
   let merge (type a) ~(to_int : a -> int) (x : a t) (y : a t) : a t option =
     let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
-    big_merge ~to_int64 x y
+    merge_big ~to_int64 x y
 end
 
 module Compress = struct
@@ -188,7 +188,7 @@ module Compress = struct
           match acc with
           | None -> aux to_int64 (Some x) rest
           | Some acc -> (
-              match Merge.big_merge ~to_int64 acc x with
+              match Merge.merge_big ~to_int64 acc x with
               | None -> fun () -> Seq.Cons (acc, aux to_int64 (Some x) rest)
               | Some res -> aux to_int64 (Some res) rest ) )
     in
