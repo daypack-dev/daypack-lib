@@ -9,27 +9,16 @@ val map :
   'a range ->
   'b range
 
-val int64_range_of_range :
-  to_int64:('a -> int64) ->
-  'a range ->
-  int64 range
+val int64_range_of_range : to_int64:('a -> int64) -> 'a range -> int64 range
 
 val int64_exc_range_of_range :
-  to_int64:('a -> int64) ->
-  'a range ->
-  int64 * int64
+  to_int64:('a -> int64) -> 'a range -> int64 * int64
 
 val inc_range_of_range :
-  to_int64:('a -> int64) ->
-  of_int64:(int64 -> 'a) ->
-  'a range ->
-  'a * 'a
+  to_int64:('a -> int64) -> of_int64:(int64 -> 'a) -> 'a range -> 'a * 'a
 
 val exc_range_of_range :
-  to_int64:('a -> int64) ->
-  of_int64:(int64 -> 'a) ->
-  'a range ->
-  'a * 'a
+  to_int64:('a -> int64) -> of_int64:(int64 -> 'a) -> 'a range -> 'a * 'a
 
 val join :
   to_int64:('a -> int64) ->

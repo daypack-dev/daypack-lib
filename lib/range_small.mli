@@ -1,24 +1,12 @@
-val int_range_of_range :
-  to_int:('a -> int) ->
-  'a Range.range ->
-  int Range.range
+val int_range_of_range : to_int:('a -> int) -> 'a Range.range -> int Range.range
 
-val int_exc_range_of_range :
-  to_int:('a -> int) ->
-  'a Range.range ->
-  int * int
+val int_exc_range_of_range : to_int:('a -> int) -> 'a Range.range -> int * int
 
 val inc_range_of_range :
-  to_int:('a -> int) ->
-  of_int:(int -> 'a) ->
-  'a Range.range ->
-  'a * 'a
+  to_int:('a -> int) -> of_int:(int -> 'a) -> 'a Range.range -> 'a * 'a
 
 val exc_range_of_range :
-  to_int:('a -> int) ->
-  of_int:(int -> 'a) ->
-  'a Range.range ->
-  'a * 'a
+  to_int:('a -> int) -> of_int:(int -> 'a) -> 'a Range.range -> 'a * 'a
 
 val join :
   to_int:('a -> int) ->

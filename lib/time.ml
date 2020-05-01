@@ -106,10 +106,14 @@ let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
   | Fri -> `Fri
   | Sat -> `Sat
 
-module Weekday_range = Range_small.Make (struct type t = weekday
+module Weekday_range = Range_small.Make (struct
+    type t = weekday
+
     let modulo = Some 7
-        let to_int = tm_int_of_weekday
-        let of_int = weekday_of_tm_int
+
+    let to_int = tm_int_of_weekday
+
+    let of_int = weekday_of_tm_int
   end)
 
 let month_day_seq_of_month_day_range (x : int Range.range) : int Seq.t =
