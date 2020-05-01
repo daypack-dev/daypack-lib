@@ -35,6 +35,12 @@ module type S = sig
   val exc_range_of_range : t range -> t * t
 
   val join : t range -> t range -> t range option
+
+  module Flatten : sig
+    val flatten_into_seq : t range -> t Seq.t
+
+    val flatten_into_list : t range -> t list
+  end
 end
 
 module Make_big (B : B_big) : S with type t := B.t = struct
@@ -67,5 +73,47 @@ module Make_big (B : B_big) : S with type t := B.t = struct
     let y = int64_exc_range_of_range y in
     Time_slot.join x y
     |> Option.map (fun (x, y) -> `Range_exc (of_int64 x, of_int64 y))
+
+  module Flatten = struct
+    let flatten_into_seq_internal (t : t range) :
+      t Seq.t =
+      match t with
+      | `Range_inc (start, end_inc) -> (
+          let start = to_int64 start in
+          let end_inc = to_int64 end_inc in
+          if start <= end_inc then
+            Seq_utils.a_to_b_inc_int64 ~a:start ~b:end_inc |> Seq.map of_int64
+          else
+            match modulo with
+            | None -> raise (Invalid_argument "End is before start")
+            | Some modulo ->
+              if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
+              else
+                OSeq.append
+                  (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
+                  (Seq_utils.a_to_b_inc_int64 ~a:0L ~b:end_inc)
+                |> Seq.map of_int64 )
+      | `Range_exc (start, end_exc) -> (
+          let start = to_int64 start in
+          let end_exc = to_int64 end_exc in
+          if start <= end_exc then
+            Seq_utils.a_to_b_exc_int64 ~a:start ~b:end_exc |> Seq.map of_int64
+          else
+            match modulo with
+            | None -> raise (Invalid_argument "End is before start")
+            | Some modulo ->
+              if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
+              else
+                OSeq.append
+                  (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
+                  (Seq_utils.a_to_b_exc_int64 ~a:0L ~b:end_exc)
+                |> Seq.map of_int64 )
+
+    let flatten_into_seq (t : t range) : t Seq.t =
+      flatten_into_seq_internal t
+
+    let flatten_into_list (t : t range) : t list =
+      flatten_into_seq_internal t |> List.of_seq
+  end
 end
 
