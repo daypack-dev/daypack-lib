@@ -609,12 +609,9 @@ module Single_pattern = struct
     in
     if Unix_tm_set.is_empty matching_unix_times then s
     else
-      match s () with
-      | Seq.Nil -> Unix_tm_set.to_seq matching_unix_times
-      | Seq.Cons _ as s ->
-        Seq.filter
-          (fun x -> Unix_tm_set.mem x matching_unix_times)
-          (fun () -> s)
+      Seq.filter
+        (fun x -> Unix_tm_set.mem x matching_unix_times)
+        s
 
   let tm_range_seq_of_unix_times ~search_in_time_zone (s : int64 Seq.t) :
     Unix.tm Range.range Seq.t =
