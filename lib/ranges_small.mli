@@ -1,5 +1,6 @@
 val normalize :
-  ?skip_filter:bool ->
+  ?skip_filter_invalid:bool ->
+  ?skip_filter_empty:bool ->
   ?skip_sort:bool ->
   to_int:('a -> int) ->
   of_int:(int -> 'a) ->
@@ -24,7 +25,8 @@ end
 
 module Of_seq : sig
   val range_seq_of_seq :
-    ?skip_filter:bool ->
+  ?skip_filter_invalid:bool ->
+  ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
@@ -32,7 +34,8 @@ module Of_seq : sig
     'a Range.range Seq.t
 
   val range_list_of_seq :
-    ?skip_filter:bool ->
+  ?skip_filter_invalid:bool ->
+  ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
@@ -42,7 +45,8 @@ end
 
 module Of_list : sig
   val range_seq_of_list :
-    ?skip_filter:bool ->
+  ?skip_filter_invalid:bool ->
+  ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
@@ -50,7 +54,8 @@ module Of_list : sig
     'a Range.range Seq.t
 
   val range_list_of_list :
-    ?skip_filter:bool ->
+  ?skip_filter_invalid:bool ->
+  ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
