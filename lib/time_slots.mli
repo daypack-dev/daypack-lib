@@ -1,18 +1,18 @@
 module Normalize : sig
   val normalize :
-    ?skip_filter:bool ->
+    ?skip_filter_invalid:bool ->
+    ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     Time_slot.t Seq.t ->
     Time_slot.t Seq.t
 
   val normalize_list_in_seq_out :
-    ?skip_filter:bool ->
+    ?skip_filter_invalid:bool ->
+    ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     Time_slot.t list ->
     Time_slot.t Seq.t
 end
-
-val seq_of_unix_time_seq : ?skip_sort:bool -> int64 Seq.t -> Time_slot.t Seq.t
 
 module Slice : sig
   val slice :

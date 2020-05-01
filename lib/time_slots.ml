@@ -1,13 +1,21 @@
 open Int64_utils
 
 module Normalize = struct
-  let filter_invalid_or_empty (time_slots : Time_slot.t Seq.t) :
+  let filter_invalid (time_slots : Time_slot.t Seq.t) :
     Time_slot.t Seq.t =
-    Seq.filter (fun (x, y) -> x < y) time_slots
+    Seq.filter (fun (x, y) -> x <= y) time_slots
 
-  let filter_invalid_or_empty_list (time_slots : Time_slot.t list) :
+  let filter_invalid_list (time_slots : Time_slot.t list) :
     Time_slot.t list =
-    List.filter (fun (x, y) -> x < y) time_slots
+    List.filter (fun (x, y) -> x <= y) time_slots
+
+  let filter_empty (time_slots : Time_slot.t Seq.t) :
+    Time_slot.t Seq.t =
+    Seq.filter (fun (x, y) -> x <> y) time_slots
+
+  let filter_empty_list (time_slots : Time_slot.t list) :
+    Time_slot.t list =
+    List.filter (fun (x, y) -> x <> y) time_slots
 
   let sort_uniq_time_slots_list (time_slots : Time_slot.t list) :
     Time_slot.t list =
@@ -49,41 +57,22 @@ module Normalize = struct
     in
     aux None time_slots
 
-  let normalize ?(skip_filter = false) ?(skip_sort = false) time_slots =
+  let normalize ?(skip_filter_invalid = false) ?(skip_filter_empty = false) ?(skip_sort = false) time_slots =
     time_slots
-    |> (fun s -> if skip_filter then s else filter_invalid_or_empty s)
+    |> (fun s -> if skip_filter_invalid then s else filter_invalid s)
+    |> (fun s -> if skip_filter_empty then s else filter_empty s)
     |> (fun s -> if skip_sort then s else sort_uniq_time_slots s)
     |> defrag_and_join_overlapping
 
-  let normalize_list_in_seq_out ?(skip_filter = false) ?(skip_sort = false)
+  let normalize_list_in_seq_out ?(skip_filter_invalid = false) ?(skip_filter_empty = false) ?(skip_sort = false)
       time_slots =
     time_slots
-    |> (fun s -> if skip_filter then s else filter_invalid_or_empty_list s)
+    |> (fun s -> if skip_filter_invalid then s else filter_invalid_list s)
+    |> (fun s -> if skip_filter_empty then s else filter_empty_list s)
     |> (fun s -> if skip_sort then s else sort_uniq_time_slots_list s)
     |> List.to_seq
     |> defrag_and_join_overlapping
 end
-
-let seq_of_unix_time_seq ?(skip_sort = false) (s : int64 Seq.t) :
-  Time_slot.t Seq.t =
-  let rec aux (acc : Time_slot.t option) (s : int64 Seq.t) : Time_slot.t Seq.t =
-    match s () with
-    | Seq.Nil -> ( match acc with None -> Seq.empty | Some x -> Seq.return x )
-    | Seq.Cons (t, rest) -> (
-        match acc with
-        | None -> aux (Some (t, Int64.succ t)) rest
-        | Some (acc_start, acc_end_exc) ->
-          if acc_start <= t && t < acc_end_exc then
-            aux (Some (acc_start, acc_end_exc)) rest
-          else if t = acc_end_exc then
-            aux (Some (acc_start, Int64.succ t)) rest
-          else fun () ->
-            Seq.Cons
-              ((acc_start, acc_end_exc), aux (Some (t, Int64.succ t)) rest) )
-  in
-  aux None s
-  |> fun s ->
-  if skip_sort then s else Normalize.normalize ~skip_filter:true ~skip_sort s
 
 module Slice_internal = struct
   let slice_start ~start (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
@@ -333,7 +322,7 @@ end
 module Union = struct
   let union time_slots1 time_slots2 =
     Merge.merge time_slots1 time_slots2
-    |> Normalize.normalize ~skip_filter:true ~skip_sort:true
+    |> Normalize.normalize ~skip_filter_invalid:true ~skip_filter_empty:true ~skip_sort:true
 
   let union_multi_seq (time_slot_batches : Time_slot.t Seq.t Seq.t) :
     Time_slot.t Seq.t =
