@@ -26,8 +26,8 @@ end
 
 module Of_seq : sig
   val range_seq_of_seq :
-  ?skip_filter_invalid:bool ->
-  ?skip_filter_empty:bool ->
+    ?skip_filter_invalid:bool ->
+    ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     modulo:int option ->
     to_int:('a -> int) ->
@@ -36,8 +36,8 @@ module Of_seq : sig
     'a Range.range Seq.t
 
   val range_list_of_seq :
-  ?skip_filter_invalid:bool ->
-  ?skip_filter_empty:bool ->
+    ?skip_filter_invalid:bool ->
+    ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     modulo:int option ->
     to_int:('a -> int) ->
@@ -48,8 +48,8 @@ end
 
 module Of_list : sig
   val range_seq_of_list :
-  ?skip_filter_invalid:bool ->
-  ?skip_filter_empty:bool ->
+    ?skip_filter_invalid:bool ->
+    ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     modulo:int option ->
     to_int:('a -> int) ->
@@ -58,8 +58,8 @@ module Of_list : sig
     'a Range.range Seq.t
 
   val range_list_of_list :
-  ?skip_filter_invalid:bool ->
-  ?skip_filter_empty:bool ->
+    ?skip_filter_invalid:bool ->
+    ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
     modulo:int option ->
     to_int:('a -> int) ->

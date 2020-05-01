@@ -1,20 +1,16 @@
 open Int64_utils
 
 module Normalize = struct
-  let filter_invalid (time_slots : Time_slot.t Seq.t) :
-    Time_slot.t Seq.t =
+  let filter_invalid (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     Seq.filter (fun (x, y) -> x <= y) time_slots
 
-  let filter_invalid_list (time_slots : Time_slot.t list) :
-    Time_slot.t list =
+  let filter_invalid_list (time_slots : Time_slot.t list) : Time_slot.t list =
     List.filter (fun (x, y) -> x <= y) time_slots
 
-  let filter_empty (time_slots : Time_slot.t Seq.t) :
-    Time_slot.t Seq.t =
+  let filter_empty (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     Seq.filter (fun (x, y) -> x <> y) time_slots
 
-  let filter_empty_list (time_slots : Time_slot.t list) :
-    Time_slot.t list =
+  let filter_empty_list (time_slots : Time_slot.t list) : Time_slot.t list =
     List.filter (fun (x, y) -> x <> y) time_slots
 
   let sort_uniq_time_slots_list (time_slots : Time_slot.t list) :
@@ -31,8 +27,7 @@ module Normalize = struct
     =
     time_slots |> List.of_seq |> sort_uniq_time_slots_list |> List.to_seq
 
-  let join (time_slots : Time_slot.t Seq.t) :
-    Time_slot.t Seq.t =
+  let join (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     let rec aux last_start_and_last_end_exc time_slots =
       match time_slots () with
       | Seq.Nil -> (
@@ -57,15 +52,16 @@ module Normalize = struct
     in
     aux None time_slots
 
-  let normalize ?(skip_filter_invalid = false) ?(skip_filter_empty = false) ?(skip_sort = false) time_slots =
+  let normalize ?(skip_filter_invalid = false) ?(skip_filter_empty = false)
+      ?(skip_sort = false) time_slots =
     time_slots
     |> (fun s -> if skip_filter_invalid then s else filter_invalid s)
     |> (fun s -> if skip_filter_empty then s else filter_empty s)
     |> (fun s -> if skip_sort then s else sort_uniq_time_slots s)
     |> join
 
-  let normalize_list_in_seq_out ?(skip_filter_invalid = false) ?(skip_filter_empty = false) ?(skip_sort = false)
-      time_slots =
+  let normalize_list_in_seq_out ?(skip_filter_invalid = false)
+      ?(skip_filter_empty = false) ?(skip_sort = false) time_slots =
     time_slots
     |> List.to_seq
     |> normalize ~skip_filter_invalid ~skip_filter_empty ~skip_sort
@@ -319,7 +315,8 @@ end
 module Union = struct
   let union time_slots1 time_slots2 =
     Merge.merge time_slots1 time_slots2
-    |> Normalize.normalize ~skip_filter_invalid:true ~skip_filter_empty:true ~skip_sort:true
+    |> Normalize.normalize ~skip_filter_invalid:true ~skip_filter_empty:true
+      ~skip_sort:true
 
   let union_multi_seq (time_slot_batches : Time_slot.t Seq.t Seq.t) :
     Time_slot.t Seq.t =
