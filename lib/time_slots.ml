@@ -36,15 +36,10 @@ module Normalize = struct
           match last_start_and_last_end_exc with
           | None -> aux (Some (start, end_exc)) rest
           | Some (last_start, last_end_exc) ->
-            if start <= last_end_exc then
-              (* can be merged with the time slot currently carrying *)
-              if last_end_exc <= end_exc then
-                (* larger than the time slot currently carrying completely *)
-                aux (Some (last_start, end_exc)) rest
-              else
-                (* falls within the time slot currently carrying completely *)
-                aux (Some (last_start, last_end_exc)) rest
-            else
+            match Time_slot.join (start, end_exc) (last_start, last_end_exc) with
+            | Some x ->
+              aux (Some x) rest
+            | None ->
               (* cannot be merged, add time slot being carried to the sequence *)
               fun () ->
                 Seq.Cons
