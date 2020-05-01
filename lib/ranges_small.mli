@@ -2,6 +2,7 @@ val normalize :
   ?skip_filter_invalid:bool ->
   ?skip_filter_empty:bool ->
   ?skip_sort:bool ->
+  modulo:int option ->
   to_int:('a -> int) ->
   of_int:(int -> 'a) ->
   'a Range.range Seq.t ->
@@ -9,14 +10,14 @@ val normalize :
 
 module Flatten : sig
   val flatten :
-    ?modulo:int ->
+    modulo:int option ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
     'a Range.range Seq.t ->
     'a Seq.t
 
   val flatten_list :
-    ?modulo:int ->
+    modulo:int option ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
     'a Range.range list ->
@@ -28,6 +29,7 @@ module Of_seq : sig
   ?skip_filter_invalid:bool ->
   ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
+    modulo:int option ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
     'a Seq.t ->
@@ -37,6 +39,7 @@ module Of_seq : sig
   ?skip_filter_invalid:bool ->
   ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
+    modulo:int option ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
     'a Seq.t ->
@@ -48,6 +51,7 @@ module Of_list : sig
   ?skip_filter_invalid:bool ->
   ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
+    modulo:int option ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
     'a list ->
@@ -57,6 +61,7 @@ module Of_list : sig
   ?skip_filter_invalid:bool ->
   ?skip_filter_empty:bool ->
     ?skip_sort:bool ->
+    modulo:int option ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
     'a list ->
