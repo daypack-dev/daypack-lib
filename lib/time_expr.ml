@@ -120,19 +120,19 @@ module Interpret_string = struct
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "lasst"; "coming"; "every" ]
 
-  let range_inc_expr (p : 'a t) : 'a Range_ds.t t =
+  let range_inc_expr (p : 'a t) : 'a Range.range t =
     p
     >>= (fun x ->
         space *> to_string *> space *> p >>| fun y -> `Range_inc (x, y))
         <|> (p >>| fun x -> `Range_inc (x, x))
 
-  let range_exc_expr (p : 'a t) : 'a Range_ds.t t =
+  let range_exc_expr (p : 'a t) : 'a Range.range t =
     p
     >>= (fun x ->
         space *> to_string *> space *> p >>| fun y -> `Range_exc (x, y))
         <|> (p >>| fun x -> `Range_inc (x, x))
 
-  let ranges_expr ~to_int (p : 'a Range_ds.t t) : 'a Range_ds.t list t =
+  let ranges_expr ~to_int (p : 'a Range.range t) : 'a Range.range list t =
     sep_by_comma1 p >>| Ranges_ds.Compress.compress_list ~to_int
 
   module Second = struct
@@ -205,9 +205,9 @@ module Interpret_string = struct
       if 1 <= x && x <= 31 then return x
       else fail (Printf.sprintf "Invalid month day: %d" x)
 
-    let month_day_range_expr : int Range_ds.t t = range_inc_expr month_day_expr
+    let month_day_range_expr : int Range.range t = range_inc_expr month_day_expr
 
-    let month_day_ranges_expr : int Range_ds.t list t =
+    let month_day_ranges_expr : int Range.range list t =
       ranges_expr ~to_int:(fun x -> x) month_day_range_expr
   end
 
@@ -219,10 +219,10 @@ module Interpret_string = struct
       | Ok x -> return x
       | Error _ -> fail "Failed to interpret weekday string"
 
-    let weekday_range_expr : Time.weekday Range_ds.t t =
+    let weekday_range_expr : Time.weekday Range.range t =
       range_inc_expr weekday_expr
 
-    let weekday_ranges_expr : Time.weekday Range_ds.t list t =
+    let weekday_ranges_expr : Time.weekday Range.range list t =
       ranges_expr ~to_int:Time.tm_int_of_weekday weekday_range_expr
   end
 

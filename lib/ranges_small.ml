@@ -49,23 +49,23 @@ module Make (B : Range_small.B) : Ranges.S with type t := B.t = struct
   open B
 
   let normalize ?(skip_filter = false) ?(skip_sort = false)
-      (s : t range Seq.t)
+      (s : t Range.range Seq.t)
     =
     normalize ~skip_filter ~skip_sort ~to_int ~of_int s
 
   module Of_seq = struct
-    let range_seq_of_seq (s : t Seq.t) : t range Seq.t =
+    let range_seq_of_seq (s : t Seq.t) : t Range.range Seq.t =
       Of_seq.range_seq_of_seq ~to_int ~of_int s
 
-    let range_list_of_seq (s : t Seq.t) : t range list =
+    let range_list_of_seq (s : t Seq.t) : t Range.range list =
       Of_seq.range_list_of_seq ~to_int ~of_int s
   end
 
   module Of_list = struct
-    let range_seq_of_list (l : t list) : t range Seq.t =
+    let range_seq_of_list (l : t list) : t Range.range Seq.t =
       List.to_seq l |> Of_seq.range_seq_of_seq
 
-    let range_list_of_list (l : t list) : t range list =
+    let range_list_of_list (l : t list) : t Range.range list =
       List.to_seq l
       |> Of_seq.range_seq_of_seq
       |> List.of_seq

@@ -26,7 +26,7 @@ type t = {
   unix_times : int64 list;
 }
 
-type time_range_pattern = t Range_ds.t
+type time_range_pattern = t Range.range
 
 type single_or_ranges =
   | Single_time_pattern of t
@@ -124,7 +124,7 @@ module Matching_seconds = struct
       |> Seq.map (fun pat_sec -> { acc with tm_min = pat_sec })
 
   let matching_second_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) :
-    Unix.tm Range_ds.t Seq.t =
+    Unix.tm Range.range Seq.t =
     let start_sec = get_start ~start ~acc in
     match t.seconds with
     | [] ->
@@ -133,11 +133,11 @@ module Matching_seconds = struct
            ({ acc with tm_sec = start_sec }, { acc with tm_sec = 60 }))
     | l ->
       List.sort_uniq compare l
-      |> Ranges_ds.Of_list.range_seq_of_list
+      |> Ranges_small.Of_list.range_seq_of_list
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
       |> Seq.map
-        (Range_ds.map
+        (Range.map
            ~f_inc:(fun (x, y) ->
                ({ acc with tm_sec = x }, { acc with tm_sec = y }))
            ~f_exc:(fun (x, y) ->
@@ -166,7 +166,7 @@ module Matching_minutes = struct
       |> Seq.map (fun pat_min -> { acc with tm_min = pat_min })
 
   let matching_minute_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) :
-    Unix.tm Range_ds.t Seq.t =
+    Unix.tm Range.range Seq.t =
     let start_min, start_sec = get_start_min_sec ~start ~acc in
     match t.minutes with
     | [] ->
@@ -196,7 +196,7 @@ module Matching_minutes = struct
       |> Ranges_ds.Of_list.range_seq_of_list
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
-      |> Seq.map (Range_ds.map ~f_inc ~f_exc)
+      |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
 module Matching_hours = struct
@@ -223,7 +223,7 @@ module Matching_hours = struct
       |> Seq.map (fun pat_hour -> { acc with tm_hour = pat_hour })
 
   let matching_hour_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) :
-    Unix.tm Range_ds.t Seq.t =
+    Unix.tm Range.range Seq.t =
     let start_hour, start_min, start_sec = get_start_hour_min_sec ~start ~acc in
     let start_tm =
       { acc with tm_hour = start_hour; tm_min = start_min; tm_sec = start_sec }
@@ -253,7 +253,7 @@ module Matching_hours = struct
       |> Ranges_ds.Of_list.range_seq_of_list
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
-      |> Seq.map (Range_ds.map ~f_inc ~f_exc)
+      |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
 module Matching_days = struct
@@ -305,7 +305,7 @@ module Matching_days = struct
     |> Seq.map (fun mday -> { acc with tm_mday = mday })
 
   let matching_day_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) :
-    Unix.tm Range_ds.t Seq.t =
+    Unix.tm Range.range Seq.t =
     let start_mday, start_hour, start_min, start_sec =
       get_start_mday_hour_min_sec ~start ~acc
     in
@@ -354,19 +354,19 @@ module Matching_days = struct
       |> Ranges_ds.Of_seq.range_seq_of_seq
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
-      |> Seq.map (Range_ds.map ~f_inc ~f_exc)
+      |> Seq.map (Range.map ~f_inc ~f_exc)
     | _month_days, [] ->
       matching_month_days t start acc
       |> Ranges_ds.Of_seq.range_seq_of_seq
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
-      |> Seq.map (Range_ds.map ~f_inc ~f_exc)
+      |> Seq.map (Range.map ~f_inc ~f_exc)
     | _, _ ->
       matching_int_days t start acc
       |> Ranges_ds.Of_seq.range_seq_of_seq
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
-      |> Seq.map (Range_ds.map ~f_inc ~f_exc)
+      |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
 module Matching_months = struct
@@ -391,7 +391,7 @@ module Matching_months = struct
           { acc with tm_mon = Time.tm_int_of_month pat_mon })
 
   let matching_month_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) :
-    Unix.tm Range_ds.t Seq.t =
+    Unix.tm Range.range Seq.t =
     let start_mon, start_mday, start_hour, start_min, start_sec =
       get_start_mon_mday_hour_min_sec ~start ~acc
     in
@@ -473,7 +473,7 @@ module Matching_months = struct
       |> Ranges_ds.Of_list.range_seq_of_list
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
-      |> Seq.map (Range_ds.map ~f_inc ~f_exc)
+      |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
 module Matching_years = struct
@@ -492,7 +492,7 @@ module Matching_years = struct
           { acc with tm_year = pat_year - Time.tm_year_offset })
 
   let matching_year_ranges ~search_years_ahead (t : t) (start : Unix.tm)
-      (acc : Unix.tm) : Unix.tm Range_ds.t Seq.t =
+      (acc : Unix.tm) : Unix.tm Range.range Seq.t =
     let start_tm = start in
     match t.years with
     | [] ->
@@ -554,7 +554,7 @@ module Matching_years = struct
       |> Ranges_ds.Of_list.range_seq_of_list
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
-      |> Seq.map (Range_ds.map ~f_inc ~f_exc)
+      |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
 module Matching_unix_times = struct
@@ -617,7 +617,7 @@ module Single_pattern = struct
           (fun () -> s)
 
   let tm_range_seq_of_unix_times ~search_in_time_zone (s : int64 Seq.t) :
-    Unix.tm Range_ds.t Seq.t =
+    Unix.tm Range.range Seq.t =
     let f (x, y) =
       ( Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone x,
         Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone y )
@@ -626,7 +626,7 @@ module Single_pattern = struct
     |> Ranges_ds.Of_seq.range_seq_of_seq_big
       ~to_int64:(fun x -> x)
       ~of_int64:(fun x -> x)
-    |> Seq.map (Range_ds.map ~f_inc:f ~f_exc:f)
+    |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
 
   let matching_tm_seq (search_param : search_param) (t : t) : Unix.tm Seq.t =
     match start_tm_and_search_years_ahead_of_search_param search_param with
@@ -644,7 +644,7 @@ module Single_pattern = struct
       |> filter_using_matching_unix_times ~search_in_time_zone t start
 
   let matching_tm_range_seq (search_param : search_param) (t : t) :
-    Unix.tm Range_ds.t Seq.t =
+    Unix.tm Range.range Seq.t =
     match start_tm_and_search_years_ahead_of_search_param search_param with
     | None -> Seq.empty
     | Some (start, search_years_ahead) -> (
@@ -732,7 +732,7 @@ module Single_pattern = struct
         Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone y )
     in
     matching_tm_range_seq search_param t
-    |> Seq.map (Range_ds.map ~f_inc:f ~f_exc:f)
+    |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
     |> Seq.map (fun r ->
         match r with
         | `Range_inc (x, y) -> (x, Int64.succ y)
