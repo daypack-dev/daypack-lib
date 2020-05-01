@@ -132,8 +132,13 @@ module Interpret_string = struct
         space *> to_string *> space *> p >>| fun y -> `Range_exc (x, y))
         <|> (p >>| fun x -> `Range_inc (x, x))
 
-  let ranges_expr ~to_int (p : 'a Range.range t) : 'a Range.range list t =
-    sep_by_comma1 p >>| Ranges_ds.Compress.compress_list ~to_int
+  (* let ranges_expr ~(to_int : 'a -> int) ~(of_int : int -> 'a) (p : 'a Range.range t) : 'a Range.range list t =
+   *   sep_by_comma1 p >>| fun l ->
+   *   l |> List.to_seq |>
+   *   Ranges_small.normalize ~to_int ~of_int |> List.of_seq *)
+
+  let ranges_expr (p : 'a Range.range t) : 'a Range.range list t =
+    sep_by_comma1 p
 
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =
@@ -208,7 +213,7 @@ module Interpret_string = struct
     let month_day_range_expr : int Range.range t = range_inc_expr month_day_expr
 
     let month_day_ranges_expr : int Range.range list t =
-      ranges_expr ~to_int:(fun x -> x) month_day_range_expr
+      ranges_expr month_day_range_expr
   end
 
   module Weekday = struct
@@ -223,7 +228,7 @@ module Interpret_string = struct
       range_inc_expr weekday_expr
 
     let weekday_ranges_expr : Time.weekday Range.range list t =
-      ranges_expr ~to_int:Time.tm_int_of_weekday weekday_range_expr
+      ranges_expr weekday_range_expr
   end
 
   module Day = struct
