@@ -35,16 +35,17 @@ module Normalize = struct
       | Seq.Cons ((start, end_exc), rest) -> (
           match last_start_and_last_end_exc with
           | None -> aux (Some (start, end_exc)) rest
-          | Some (last_start, last_end_exc) ->
-            match Time_slot.join (start, end_exc) (last_start, last_end_exc) with
-            | Some x ->
-              aux (Some x) rest
-            | None ->
-              (* cannot be merged, add time slot being carried to the sequence *)
-              fun () ->
-                Seq.Cons
-                  ((last_start, last_end_exc), aux (Some (start, end_exc)) rest)
-        )
+          | Some (last_start, last_end_exc) -> (
+              match
+                Time_slot.join (start, end_exc) (last_start, last_end_exc)
+              with
+              | Some x -> aux (Some x) rest
+              | None ->
+                (* cannot be merged, add time slot being carried to the sequence *)
+                fun () ->
+                  Seq.Cons
+                    ( (last_start, last_end_exc),
+                      aux (Some (start, end_exc)) rest ) ) )
     in
     aux None time_slots
 

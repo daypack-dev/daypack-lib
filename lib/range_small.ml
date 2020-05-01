@@ -1,50 +1,52 @@
-let int_range_of_range (type a) ~(to_int : a -> int) (x : a Range.range) : int Range.range =
-  let f (x, y) =
-    (to_int x,
-     to_int y)
-  in
+let int_range_of_range (type a) ~(to_int : a -> int) (x : a Range.range) :
+  int Range.range =
+  let f (x, y) = (to_int x, to_int y) in
   Range.map ~f_inc:f ~f_exc:f x
 
-let int_exc_range_of_range (type a) ~(to_int : a -> int) (x : a Range.range) : int * int =
+let int_exc_range_of_range (type a) ~(to_int : a -> int) (x : a Range.range) :
+  int * int =
   match x with
   | `Range_inc (x, y) -> (to_int x, y |> to_int |> Int.succ)
   | `Range_exc (x, y) -> (to_int x, to_int y)
 
-let inc_range_of_range (type a) ~(to_int : a -> int) ~(of_int : int -> a) (x : a Range.range) : a * a =
+let inc_range_of_range (type a) ~(to_int : a -> int) ~(of_int : int -> a)
+    (x : a Range.range) : a * a =
   match x with
   | `Range_inc (x, y) -> (x, y)
   | `Range_exc (x, y) -> (x, y |> to_int |> Int.pred |> of_int)
 
-let exc_range_of_range (type a) ~(to_int : a -> int) ~(of_int : int -> a) (x : a Range.range) : a * a =
+let exc_range_of_range (type a) ~(to_int : a -> int) ~(of_int : int -> a)
+    (x : a Range.range) : a * a =
   match x with
   | `Range_inc (x, y) -> (x, y |> to_int |> Int.succ |> of_int)
   | `Range_exc (x, y) -> (x, y)
 
-let join (type a) ~(to_int : a -> int) ~(of_int : int -> a) (x : a Range.range) (y : a Range.range) : a Range.range option =
+let join (type a) ~(to_int : a -> int) ~(of_int : int -> a) (x : a Range.range)
+    (y : a Range.range) : a Range.range option =
   let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
   let of_int64 = Misc_utils.convert_of_int_to_int64 of_int in
   Range.join ~to_int64 ~of_int64 x y
 
 module Flatten = struct
-  let flatten_into_seq_internal (type a) ~(modulo : int option) ~(to_int : a -> int) ~(of_int : int -> a) (t : a Range.range) : a Seq.t =
+  let flatten_into_seq_internal (type a) ~(modulo : int option)
+      ~(to_int : a -> int) ~(of_int : int -> a) (t : a Range.range) : a Seq.t =
     let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
     let of_int64 = Misc_utils.convert_of_int_to_int64 of_int in
     match modulo with
-    | None ->
-      Range.Flatten.flatten_into_seq ~to_int64 ~of_int64 t
+    | None -> Range.Flatten.flatten_into_seq ~to_int64 ~of_int64 t
     | Some modulo ->
       let modulo = Int64.of_int modulo in
       Range.Flatten.flatten_into_seq ~modulo ~to_int64 ~of_int64 t
 
-  let flatten_into_seq (type a) ?(modulo : int option) ~(to_int : a -> int) ~(of_int : int -> a) (t : a Range.range) : a Seq.t =
+  let flatten_into_seq (type a) ?(modulo : int option) ~(to_int : a -> int)
+      ~(of_int : int -> a) (t : a Range.range) : a Seq.t =
     flatten_into_seq_internal ~modulo ~to_int ~of_int t
 
-  let flatten_into_list (type a) ?(modulo : int option) ~(to_int : a -> int) ~(of_int : int -> a) (t : a Range.range) : a list =
+  let flatten_into_list (type a) ?(modulo : int option) ~(to_int : a -> int)
+      ~(of_int : int -> a) (t : a Range.range) : a list =
     match modulo with
-    | None ->
-      flatten_into_seq ~to_int ~of_int t |> List.of_seq
-    | Some modulo ->
-      flatten_into_seq ~modulo ~to_int ~of_int t |> List.of_seq
+    | None -> flatten_into_seq ~to_int ~of_int t |> List.of_seq
+    | Some modulo -> flatten_into_seq ~modulo ~to_int ~of_int t |> List.of_seq
 end
 
 module type B = sig

@@ -115,7 +115,10 @@ let weekday_list_of_weekday_range (x : weekday_range) : weekday list =
     ~to_int:tm_int_of_weekday x
 
 let month_day_seq_of_month_day_range (x : int Range.range) : int Seq.t =
-  Range_small.Flatten.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
+  Range_small.Flatten.flatten_into_seq
+    ~of_int:(fun x -> x)
+    ~to_int:(fun x -> x)
+    x
 
 let month_day_list_of_month_day_range (x : int Range.range) : int list =
   Range_small.Flatten.flatten_into_list

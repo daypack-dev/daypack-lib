@@ -1,9 +1,6 @@
 let normalize (type a) ?(skip_filter = false) ?(skip_sort = false)
-    ~(to_int64 : a -> int64)
-    ~(of_int64 : int64 -> a)
-    (s : a Range.range Seq.t)
-  : a Range.range Seq.t
-  =
+    ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (s : a Range.range Seq.t)
+  : a Range.range Seq.t =
   s
   |> Seq.map (Range.int64_exc_range_of_range ~to_int64)
   |> Time_slots.Normalize.normalize ~skip_filter ~skip_sort
@@ -11,39 +8,25 @@ let normalize (type a) ?(skip_filter = false) ?(skip_sort = false)
   |> Seq.map (fun (x, y) -> `Range_exc (x, y))
 
 module Of_seq = struct
-  let range_seq_of_seq
-    (type a)
-    ~(to_int64 : a -> int64)
-    ~(of_int64 : int64 -> a)
-      (s : a Seq.t) : a Range.range Seq.t =
+  let range_seq_of_seq (type a) ~(to_int64 : a -> int64)
+      ~(of_int64 : int64 -> a) (s : a Seq.t) : a Range.range Seq.t =
     s
     |> Seq.map (fun x -> `Range_inc (x, x))
     |> normalize ~skip_filter:true ~skip_sort:true ~to_int64 ~of_int64
 
-  let range_list_of_seq
-    (type a)
-    ~(to_int64 : a -> int64)
-    ~(of_int64 : int64 -> a)
-      (s : a Seq.t) : a Range.range list =
+  let range_list_of_seq (type a) ~(to_int64 : a -> int64)
+      ~(of_int64 : int64 -> a) (s : a Seq.t) : a Range.range list =
     range_seq_of_seq ~to_int64 ~of_int64 s |> List.of_seq
 end
 
 module Of_list = struct
-  let range_seq_of_list
-    (type a)
-    ~(to_int64 : a -> int64)
-    ~(of_int64 : int64 -> a)
-      (l : a list) : a Range.range Seq.t =
+  let range_seq_of_list (type a) ~(to_int64 : a -> int64)
+      ~(of_int64 : int64 -> a) (l : a list) : a Range.range Seq.t =
     List.to_seq l |> Of_seq.range_seq_of_seq ~to_int64 ~of_int64
 
-  let range_list_of_list
-    (type a)
-    ~(to_int64 : a -> int64)
-    ~(of_int64 : int64 -> a)
-      (l : a list) : a Range.range list =
-    List.to_seq l
-    |> Of_seq.range_seq_of_seq ~to_int64 ~of_int64
-    |> List.of_seq
+  let range_list_of_list (type a) ~(to_int64 : a -> int64)
+      ~(of_int64 : int64 -> a) (l : a list) : a Range.range list =
+    List.to_seq l |> Of_seq.range_seq_of_seq ~to_int64 ~of_int64 |> List.of_seq
 end
 
 module type S = sig
@@ -72,8 +55,7 @@ module Make (B : Range.B) : S with type t := B.t = struct
   open Range
   open B
 
-  let normalize ?(skip_filter = false) ?(skip_sort = false)
-      (s : t range Seq.t)
+  let normalize ?(skip_filter = false) ?(skip_sort = false) (s : t range Seq.t)
     =
     normalize ~skip_filter ~skip_sort ~to_int64 ~of_int64 s
 
@@ -90,8 +72,6 @@ module Make (B : Range.B) : S with type t := B.t = struct
       List.to_seq l |> Of_seq.range_seq_of_seq
 
     let range_list_of_list (l : t list) : t range list =
-      List.to_seq l
-      |> Of_seq.range_seq_of_seq
-      |> List.of_seq
+      List.to_seq l |> Of_seq.range_seq_of_seq |> List.of_seq
   end
 end

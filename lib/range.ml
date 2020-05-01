@@ -3,8 +3,8 @@ type 'a range =
   | `Range_exc of 'a * 'a
   ]
 
-let map ~(f_inc : 'a * 'a -> 'b * 'b) ~(f_exc : 'a * 'a -> 'b * 'b) (t : 'a range) :
-  'b range =
+let map ~(f_inc : 'a * 'a -> 'b * 'b) ~(f_exc : 'a * 'a -> 'b * 'b)
+    (t : 'a range) : 'b range =
   match t with
   | `Range_inc (x, y) ->
     let x, y = f_inc (x, y) in
@@ -13,37 +13,40 @@ let map ~(f_inc : 'a * 'a -> 'b * 'b) ~(f_exc : 'a * 'a -> 'b * 'b) (t : 'a rang
     let x, y = f_exc (x, y) in
     `Range_exc (x, y)
 
-let int64_range_of_range (type a) ~(to_int64 : a -> int64) (x : a range) : int64 range =
-  let f (x, y) =
-    (to_int64 x,
-     to_int64 y)
-  in
+let int64_range_of_range (type a) ~(to_int64 : a -> int64) (x : a range) :
+  int64 range =
+  let f (x, y) = (to_int64 x, to_int64 y) in
   map ~f_inc:f ~f_exc:f x
 
-let int64_exc_range_of_range (type a) ~(to_int64 : a -> int64) (x : a range) : int64 * int64 =
+let int64_exc_range_of_range (type a) ~(to_int64 : a -> int64) (x : a range) :
+  int64 * int64 =
   match x with
   | `Range_inc (x, y) -> (to_int64 x, y |> to_int64 |> Int64.succ)
   | `Range_exc (x, y) -> (to_int64 x, to_int64 y)
 
-let inc_range_of_range (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (x : a range) : a * a =
+let inc_range_of_range (type a) ~(to_int64 : a -> int64)
+    ~(of_int64 : int64 -> a) (x : a range) : a * a =
   match x with
   | `Range_inc (x, y) -> (x, y)
   | `Range_exc (x, y) -> (x, y |> to_int64 |> Int64.pred |> of_int64)
 
-let exc_range_of_range (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (x : a range) : a * a =
+let exc_range_of_range (type a) ~(to_int64 : a -> int64)
+    ~(of_int64 : int64 -> a) (x : a range) : a * a =
   match x with
   | `Range_inc (x, y) -> (x, y |> to_int64 |> Int64.succ |> of_int64)
   | `Range_exc (x, y) -> (x, y)
 
-let join (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (x : a range) (y : a range) : a range option =
+let join (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a)
+    (x : a range) (y : a range) : a range option =
   let x = int64_exc_range_of_range ~to_int64 x in
   let y = int64_exc_range_of_range ~to_int64 y in
   Time_slot.join x y
   |> Option.map (fun (x, y) -> `Range_exc (of_int64 x, of_int64 y))
 
 module Flatten = struct
-  let flatten_into_seq_internal (type a) ~(modulo : int64 option) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) :
-    a Seq.t =
+  let flatten_into_seq_internal (type a) ~(modulo : int64 option)
+      ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a Seq.t
+    =
     match t with
     | `Range_inc (start, end_inc) -> (
         let start = to_int64 start in
@@ -76,10 +79,13 @@ module Flatten = struct
                 (Seq_utils.a_to_b_exc_int64 ~a:0L ~b:end_exc)
               |> Seq.map of_int64 )
 
-  let flatten_into_seq (type a) ?(modulo : int64 option) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a Seq.t =
+  let flatten_into_seq (type a) ?(modulo : int64 option)
+      ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a Seq.t
+    =
     flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t
 
-  let flatten_into_list (type a) ?(modulo : int64 option) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a list =
+  let flatten_into_list (type a) ?(modulo : int64 option)
+      ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a list =
     flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t |> List.of_seq
 end
 
@@ -136,6 +142,7 @@ module Make (B : B) : S with type t := B.t = struct
       Flatten.flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t
 
     let flatten_into_list (t : t range) : t list =
-      Flatten.flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t |> List.of_seq
+      Flatten.flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t
+      |> List.of_seq
   end
 end
