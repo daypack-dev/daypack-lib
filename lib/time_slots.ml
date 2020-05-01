@@ -31,7 +31,7 @@ module Normalize = struct
     =
     time_slots |> List.of_seq |> sort_uniq_time_slots_list |> List.to_seq
 
-  let defrag_and_join_overlapping (time_slots : Time_slot.t Seq.t) :
+  let join (time_slots : Time_slot.t Seq.t) :
     Time_slot.t Seq.t =
     let rec aux last_start_and_last_end_exc time_slots =
       match time_slots () with
@@ -62,16 +62,13 @@ module Normalize = struct
     |> (fun s -> if skip_filter_invalid then s else filter_invalid s)
     |> (fun s -> if skip_filter_empty then s else filter_empty s)
     |> (fun s -> if skip_sort then s else sort_uniq_time_slots s)
-    |> defrag_and_join_overlapping
+    |> join
 
   let normalize_list_in_seq_out ?(skip_filter_invalid = false) ?(skip_filter_empty = false) ?(skip_sort = false)
       time_slots =
     time_slots
-    |> (fun s -> if skip_filter_invalid then s else filter_invalid_list s)
-    |> (fun s -> if skip_filter_empty then s else filter_empty_list s)
-    |> (fun s -> if skip_sort then s else sort_uniq_time_slots_list s)
     |> List.to_seq
-    |> defrag_and_join_overlapping
+    |> normalize ~skip_filter_invalid ~skip_filter_empty ~skip_sort
 end
 
 module Slice_internal = struct
