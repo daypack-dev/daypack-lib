@@ -13,6 +13,76 @@ let map ~(f_inc : 'a * 'a -> 'b * 'b) ~(f_exc : 'a * 'a -> 'b * 'b) (t : 'a rang
     let x, y = f_exc (x, y) in
     `Range_exc (x, y)
 
+let int64_range_of_range (type a) ~(to_int64 : a -> int64) (x : a range) : int64 range =
+  let f (x, y) =
+    (to_int64 x,
+     to_int64 y)
+  in
+  map ~f_inc:f ~f_exc:f x
+
+let int64_exc_range_of_range (type a) ~(to_int64 : a -> int64) (x : a range) : int64 * int64 =
+  match x with
+  | `Range_inc (x, y) -> (to_int64 x, y |> to_int64 |> Int64.succ)
+  | `Range_exc (x, y) -> (to_int64 x, to_int64 y)
+
+let inc_range_of_range (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (x : a range) : a * a =
+  match x with
+  | `Range_inc (x, y) -> (x, y)
+  | `Range_exc (x, y) -> (x, y |> to_int64 |> Int64.pred |> of_int64)
+
+let exc_range_of_range (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (x : a range) : a * a =
+  match x with
+  | `Range_inc (x, y) -> (x, y |> to_int64 |> Int64.succ |> of_int64)
+  | `Range_exc (x, y) -> (x, y)
+
+let join (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (x : a range) (y : a range) : a range option =
+  let x = int64_exc_range_of_range ~to_int64 x in
+  let y = int64_exc_range_of_range ~to_int64 y in
+  Time_slot.join x y
+  |> Option.map (fun (x, y) -> `Range_exc (of_int64 x, of_int64 y))
+
+module Flatten = struct
+  let flatten_into_seq_internal (type a) ~(modulo : int64 option) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) :
+    a Seq.t =
+    match t with
+    | `Range_inc (start, end_inc) -> (
+        let start = to_int64 start in
+        let end_inc = to_int64 end_inc in
+        if start <= end_inc then
+          Seq_utils.a_to_b_inc_int64 ~a:start ~b:end_inc |> Seq.map of_int64
+        else
+          match modulo with
+          | None -> raise (Invalid_argument "End is before start")
+          | Some modulo ->
+            if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
+            else
+              OSeq.append
+                (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
+                (Seq_utils.a_to_b_inc_int64 ~a:0L ~b:end_inc)
+              |> Seq.map of_int64 )
+    | `Range_exc (start, end_exc) -> (
+        let start = to_int64 start in
+        let end_exc = to_int64 end_exc in
+        if start <= end_exc then
+          Seq_utils.a_to_b_exc_int64 ~a:start ~b:end_exc |> Seq.map of_int64
+        else
+          match modulo with
+          | None -> raise (Invalid_argument "End is before start")
+          | Some modulo ->
+            if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
+            else
+              OSeq.append
+                (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
+                (Seq_utils.a_to_b_exc_int64 ~a:0L ~b:end_exc)
+              |> Seq.map of_int64 )
+
+  let flatten_into_seq (type a) ?(modulo : int64 option) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a Seq.t =
+    flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t
+
+  let flatten_into_list (type a) ?(modulo : int64 option) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a list =
+    flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t |> List.of_seq
+end
+
 module type B_big = sig
   type t
 
@@ -47,73 +117,25 @@ module Make_big (B : B_big) : S with type t := B.t = struct
   open B
 
   let int64_range_of_range (x : t range) : int64 range =
-    let f (x, y) =
-      (to_int64 x,
-       to_int64 y)
-    in
-    map ~f_inc:f ~f_exc:f x
+    int64_range_of_range ~to_int64 x
 
   let int64_exc_range_of_range (x : t range) : int64 * int64 =
-    match x with
-    | `Range_inc (x, y) -> (to_int64 x, y |> to_int64 |> Int64.succ)
-    | `Range_exc (x, y) -> (to_int64 x, to_int64 y)
+    int64_exc_range_of_range ~to_int64 x
 
   let inc_range_of_range (x : t range) : t * t =
-    match x with
-    | `Range_inc (x, y) -> (x, y)
-    | `Range_exc (x, y) -> (x, y |> to_int64 |> Int64.pred |> of_int64)
+    inc_range_of_range ~to_int64 ~of_int64 x
 
   let exc_range_of_range (x : t range) : t * t =
-    match x with
-    | `Range_inc (x, y) -> (x, y |> to_int64 |> Int64.succ |> of_int64)
-    | `Range_exc (x, y) -> (x, y)
+    exc_range_of_range ~to_int64 ~of_int64 x
 
   let join (x : t range) (y : t range) : t range option =
-    let x = int64_exc_range_of_range x in
-    let y = int64_exc_range_of_range y in
-    Time_slot.join x y
-    |> Option.map (fun (x, y) -> `Range_exc (of_int64 x, of_int64 y))
+    join ~to_int64 ~of_int64 x y
 
   module Flatten = struct
-    let flatten_into_seq_internal (t : t range) :
-      t Seq.t =
-      match t with
-      | `Range_inc (start, end_inc) -> (
-          let start = to_int64 start in
-          let end_inc = to_int64 end_inc in
-          if start <= end_inc then
-            Seq_utils.a_to_b_inc_int64 ~a:start ~b:end_inc |> Seq.map of_int64
-          else
-            match modulo with
-            | None -> raise (Invalid_argument "End is before start")
-            | Some modulo ->
-              if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
-              else
-                OSeq.append
-                  (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
-                  (Seq_utils.a_to_b_inc_int64 ~a:0L ~b:end_inc)
-                |> Seq.map of_int64 )
-      | `Range_exc (start, end_exc) -> (
-          let start = to_int64 start in
-          let end_exc = to_int64 end_exc in
-          if start <= end_exc then
-            Seq_utils.a_to_b_exc_int64 ~a:start ~b:end_exc |> Seq.map of_int64
-          else
-            match modulo with
-            | None -> raise (Invalid_argument "End is before start")
-            | Some modulo ->
-              if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
-              else
-                OSeq.append
-                  (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
-                  (Seq_utils.a_to_b_exc_int64 ~a:0L ~b:end_exc)
-                |> Seq.map of_int64 )
-
     let flatten_into_seq (t : t range) : t Seq.t =
-      flatten_into_seq_internal t
+      Flatten.flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t
 
     let flatten_into_list (t : t range) : t list =
-      flatten_into_seq_internal t |> List.of_seq
+      Flatten.flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t |> List.of_seq
   end
 end
-
