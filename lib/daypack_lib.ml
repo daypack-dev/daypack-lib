@@ -39,3 +39,5 @@ module Range_ds = Range_ds
 module Ranges_ds = Ranges_ds
 module Range = Range
 module Ranges = Ranges
+module Range_small = Range_small
+module Ranges_small = Ranges_small

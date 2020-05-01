@@ -83,7 +83,7 @@ module Flatten = struct
     flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t |> List.of_seq
 end
 
-module type B_big = sig
+module type B = sig
   type t
 
   val to_int64 : t -> int64
@@ -113,7 +113,7 @@ module type S = sig
   end
 end
 
-module Make_big (B : B_big) : S with type t := B.t = struct
+module Make (B : B) : S with type t := B.t = struct
   open B
 
   let int64_range_of_range (x : t range) : int64 range =
