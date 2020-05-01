@@ -134,6 +134,7 @@ module Matching_seconds = struct
     | l ->
       List.sort_uniq compare l
       |> Ranges_small.Of_list.range_seq_of_list
+        ~modulo:None
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
       |> Seq.map
@@ -194,6 +195,7 @@ module Matching_minutes = struct
       List.filter (fun pat_min -> start_min <= pat_min) l
       |> List.sort_uniq compare
       |> Ranges_small.Of_list.range_seq_of_list
+           ~modulo:None
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
@@ -251,6 +253,7 @@ module Matching_hours = struct
       List.filter (fun hour -> start_hour <= hour) l
       |> List.sort_uniq compare
       |> Ranges_small.Of_list.range_seq_of_list
+           ~modulo:None
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
@@ -352,18 +355,21 @@ module Matching_days = struct
     | [], _weekdays ->
       matching_weekdays t start acc
       |> Ranges_small.Of_seq.range_seq_of_seq
+        ~modulo:(Some 7)
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
     | _month_days, [] ->
       matching_month_days t start acc
       |> Ranges_small.Of_seq.range_seq_of_seq
+        ~modulo:(Some 7)
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
     | _, _ ->
       matching_int_days t start acc
       |> Ranges_small.Of_seq.range_seq_of_seq
+        ~modulo:(Some 7)
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
@@ -471,6 +477,7 @@ module Matching_months = struct
       List.map Time.tm_int_of_month l
       |> List.sort_uniq compare
       |> Ranges_small.Of_list.range_seq_of_list
+        ~modulo:None
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
@@ -552,6 +559,7 @@ module Matching_years = struct
       in
       List.sort_uniq compare l
       |> Ranges_small.Of_list.range_seq_of_list
+        ~modulo:None
         ~to_int:(fun x -> x)
         ~of_int:(fun x -> x)
       |> Seq.map (Range.map ~f_inc ~f_exc)
@@ -621,6 +629,7 @@ module Single_pattern = struct
     in
     s
     |> Ranges.Of_seq.range_seq_of_seq
+      ~modulo:None
       ~to_int64:(fun x -> x)
       ~of_int64:(fun x -> x)
     |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
