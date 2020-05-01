@@ -38,3 +38,4 @@ module Misc_utils = Misc_utils
 module Range_ds = Range_ds
 module Ranges_ds = Ranges_ds
 module Range = Range
+module Ranges = Ranges
