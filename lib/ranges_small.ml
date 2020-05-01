@@ -28,7 +28,6 @@ module Of_list = struct
 end
 
 module Make (B : Range_small.B) : Ranges.S with type t := B.t = struct
-  open Range_small
   open B
 
   let normalize ?(skip_filter = false) ?(skip_sort = false)
