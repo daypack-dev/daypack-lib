@@ -120,20 +120,25 @@ module Interpret_string = struct
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "lasst"; "coming"; "every" ]
 
-  let range_inc_expr (p : 'a t) : 'a Range_ds.t t =
+  let range_inc_expr (p : 'a t) : 'a Range.range t =
     p
     >>= (fun x ->
         space *> to_string *> space *> p >>| fun y -> `Range_inc (x, y))
         <|> (p >>| fun x -> `Range_inc (x, x))
 
-  let range_exc_expr (p : 'a t) : 'a Range_ds.t t =
+  let range_exc_expr (p : 'a t) : 'a Range.range t =
     p
     >>= (fun x ->
         space *> to_string *> space *> p >>| fun y -> `Range_exc (x, y))
         <|> (p >>| fun x -> `Range_inc (x, x))
 
-  let ranges_expr ~to_int (p : 'a Range_ds.t t) : 'a Range_ds.t list t =
-    sep_by_comma1 p >>| Ranges_ds.Compress.compress_list ~to_int
+  (* let ranges_expr ~(to_int : 'a -> int) ~(of_int : int -> 'a) (p : 'a Range.range t) : 'a Range.range list t =
+   *   sep_by_comma1 p >>| fun l ->
+   *   l |> List.to_seq |>
+   *   Ranges_small.normalize ~to_int ~of_int |> List.of_seq *)
+
+  let ranges_expr (p : 'a Range.range t) : 'a Range.range list t =
+    sep_by_comma1 p
 
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =
@@ -205,10 +210,10 @@ module Interpret_string = struct
       if 1 <= x && x <= 31 then return x
       else fail (Printf.sprintf "Invalid month day: %d" x)
 
-    let month_day_range_expr : int Range_ds.t t = range_inc_expr month_day_expr
+    let month_day_range_expr : int Range.range t = range_inc_expr month_day_expr
 
-    let month_day_ranges_expr : int Range_ds.t list t =
-      ranges_expr ~to_int:(fun x -> x) month_day_range_expr
+    let month_day_ranges_expr : int Range.range list t =
+      ranges_expr month_day_range_expr
   end
 
   module Weekday = struct
@@ -219,11 +224,11 @@ module Interpret_string = struct
       | Ok x -> return x
       | Error _ -> fail "Failed to interpret weekday string"
 
-    let weekday_range_expr : Time.weekday Range_ds.t t =
+    let weekday_range_expr : Time.weekday Range.range t =
       range_inc_expr weekday_expr
 
-    let weekday_ranges_expr : Time.weekday Range_ds.t list t =
-      ranges_expr ~to_int:Time.tm_int_of_weekday weekday_range_expr
+    let weekday_ranges_expr : Time.weekday Range.range list t =
+      ranges_expr weekday_range_expr
   end
 
   module Day = struct
@@ -737,7 +742,9 @@ module To_time_pattern_lossy = struct
               |> List.of_seq
             | Weekdays_and_hour_minute_second_ranges
                 { weekdays; hour_minute_second_ranges } ->
-              Time.flatten_weekday_ranges weekdays
+              weekdays
+              |> List.to_seq
+              |> Time.Weekday_ranges.Flatten.flatten
               |> Seq.map Weekday.time_pattern_of_weekday_expr
               |> Seq.flat_map
                 (Hour_minute_second
@@ -763,7 +770,7 @@ module To_time_pattern_lossy = struct
             | Months_and_weekdays_and_hour_minute_second_ranges
                 { months; weekdays; hour_minute_second_ranges } ->
               let weekdays =
-                Time.flatten_weekday_ranges weekdays |> List.of_seq
+                Time.Weekday_ranges.Flatten.flatten_list weekdays
               in
               Time.flatten_month_ranges months
               |> Seq.map Month.time_pattern_of_month_expr

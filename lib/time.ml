@@ -23,9 +23,9 @@ type month =
   | `Dec
   ]
 
-type weekday_range = weekday Range_ds.t
+type weekday_range = weekday Range.range
 
-type month_day_range = int Range_ds.t
+type month_day_range = int Range.range
 
 type day_range =
   | Weekday_range of weekday_range
@@ -106,19 +106,104 @@ let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
   | Fri -> `Fri
   | Sat -> `Sat
 
-let weekday_seq_of_weekday_range (x : weekday_range) : weekday Seq.t =
-  Ranges_ds.Flatten.flatten_into_seq ~modulo:7 ~of_int:weekday_of_tm_int
-    ~to_int:tm_int_of_weekday x
+module Second_ranges = Ranges_small.Make (struct
+    type t = int
 
-let weekday_list_of_weekday_range (x : weekday_range) : weekday list =
-  Ranges_ds.Flatten.flatten_into_list ~modulo:7 ~of_int:weekday_of_tm_int
-    ~to_int:tm_int_of_weekday x
+    let modulo = None
 
-let month_day_seq_of_month_day_range (x : int Range_ds.t) : int Seq.t =
-  Ranges_ds.Flatten.flatten_into_seq ~of_int:(fun x -> x) ~to_int:(fun x -> x) x
+    let to_int x = x
 
-let month_day_list_of_month_day_range (x : int Range_ds.t) : int list =
-  Ranges_ds.Flatten.flatten_into_list
+    let of_int x = x
+  end)
+
+module Minute_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Hour_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Weekday_tm_int_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = Some 7
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Weekday_range = Range_small.Make (struct
+    type t = weekday
+
+    let modulo = Some 7
+
+    let to_int = tm_int_of_weekday
+
+    let of_int = weekday_of_tm_int
+  end)
+
+module Weekday_ranges = Ranges_small.Make (struct
+    type t = weekday
+
+    let modulo = Some 7
+
+    let to_int = tm_int_of_weekday
+
+    let of_int = weekday_of_tm_int
+  end)
+
+module Month_day_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Month_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Year_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+let month_day_seq_of_month_day_range (x : int Range.range) : int Seq.t =
+  Range_small.Flatten.flatten_into_seq ~modulo:None
+    ~of_int:(fun x -> x)
+    ~to_int:(fun x -> x)
+    x
+
+let month_day_list_of_month_day_range (x : int Range.range) : int list =
+  Range_small.Flatten.flatten_into_list ~modulo:None
     ~of_int:(fun x -> x)
     ~to_int:(fun x -> x)
     x
@@ -287,30 +372,24 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
   Unix.gmtime timestamp
 
-let flatten_month_day_ranges (l : int Range_ds.t list) : int Seq.t =
+let flatten_month_day_ranges (l : int Range.range list) : int Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Ranges_ds.Flatten.flatten_into_seq
+    (Range_small.Flatten.flatten_into_seq ~modulo:None
        ~of_int:(fun x -> x)
        ~to_int:(fun x -> x))
 
-let flatten_weekday_ranges (l : weekday Range_ds.t list) : weekday Seq.t =
+let flatten_month_ranges (l : month Range.range list) : month Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Ranges_ds.Flatten.flatten_into_seq ~modulo:7 ~of_int:weekday_of_tm_int
-       ~to_int:tm_int_of_weekday)
-
-let flatten_month_ranges (l : month Range_ds.t list) : month Seq.t =
-  List.to_seq l
-  |> Seq.flat_map
-    (Ranges_ds.Flatten.flatten_into_seq
+    (Range_small.Flatten.flatten_into_seq ~modulo:None
        ~of_int:(fun x -> month_of_tm_int x |> Result.get_ok)
        ~to_int:tm_int_of_month)
 
-let flatten_year_ranges (l : int Range_ds.t list) : int Seq.t =
+let flatten_year_ranges (l : int Range.range list) : int Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Ranges_ds.Flatten.flatten_into_seq
+    (Range_small.Flatten.flatten_into_seq ~modulo:None
        ~of_int:(fun x -> x)
        ~to_int:(fun x -> x))
 

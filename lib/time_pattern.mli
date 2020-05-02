@@ -26,7 +26,7 @@ type t = {
   unix_times : int64 list;
 }
 
-type time_range_pattern = t Range_ds.t
+type time_range_pattern = t Range.range
 
 type single_or_ranges =
   | Single_time_pattern of t
