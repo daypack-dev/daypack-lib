@@ -30,10 +30,10 @@ let agenda_search_day_count_close = 7
 
 let agenda_search_day_count_far = 30
 
-let agenda_display_task_seg_place_soon_max_count = 100
+let agenda_display_task_seg_place_soon_max_count = 10
 
-let agenda_display_task_seg_place_close_max_count = 100
+let agenda_display_task_seg_place_close_max_count = 10
 
-let agenda_display_task_seg_place_far_max_count = 100
+let agenda_display_task_seg_place_far_max_count = 10
 
 let sched_day_count = 30

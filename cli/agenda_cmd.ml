@@ -33,14 +33,29 @@ let display_place ~start sched
 
 let display_places ~title ~show_all ~start ~end_exc ~max_count
     (sched : Daypack_lib.Sched.sched) : unit =
-  let places =
+  let places_all =
     Daypack_lib.Sched.Agenda.To_seq.task_seg_place_uncompleted ~start ~end_exc
       ~include_task_seg_place_starting_within_time_slot:true sched
-    |> (fun s -> if show_all then s else OSeq.take max_count s)
-    |> List.of_seq
   in
-  print_endline title;
-  List.iter (display_place ~start sched) places
+  let total_count = OSeq.length places_all in
+  let title =
+    title
+    ^
+    if show_all then ""
+    else if total_count <= max_count || show_all then
+      Printf.sprintf " (displaying %d/%d)" total_count total_count
+    else Printf.sprintf " (displaying %d/%d)" max_count total_count
+  in
+  print_string title;
+  print_newline ();
+  let title_len = String.length title in
+  for _ = 0 to title_len - 1 do
+    print_char '='
+  done;
+  print_newline ();
+  places_all
+  |> (fun s -> if show_all then s else OSeq.take max_count s)
+  |> Seq.iter (display_place ~start sched)
 
 let display_places_active_or_soon ~show_all ~cur_time sched : unit =
   let end_exc =
@@ -50,12 +65,8 @@ let display_places_active_or_soon ~show_all ~cur_time sched : unit =
     |> Int64.add cur_time
   in
   let title =
-    Printf.sprintf "Active or starting within next %d minutes%s:"
+    Printf.sprintf "Active or starting within next %d minutes"
       Config.agenda_search_minute_count_soon
-      ( if show_all then ""
-        else
-          Printf.sprintf " (displaying up to %d task segments)"
-            Config.agenda_display_task_seg_place_soon_max_count )
   in
   display_places ~title ~show_all ~start:cur_time ~end_exc
     ~max_count:Config.agenda_display_task_seg_place_soon_max_count sched
@@ -74,12 +85,8 @@ let display_places_close ~show_all ~cur_time sched : unit =
     |> Int64.add cur_time
   in
   let title =
-    Printf.sprintf "Next batch starting within next %d days%s:"
+    Printf.sprintf "Next batch starting within next %d days"
       Config.agenda_search_day_count_close
-      ( if show_all then ""
-        else
-          Printf.sprintf " (displaying up to %d task segments)"
-            Config.agenda_display_task_seg_place_close_max_count )
   in
   display_places ~title ~show_all ~start ~end_exc
     ~max_count:Config.agenda_display_task_seg_place_close_max_count sched
@@ -98,12 +105,8 @@ let display_places_far ~show_all ~cur_time sched : unit =
     |> Int64.add cur_time
   in
   let title =
-    Printf.sprintf "Next batch starting within next %d days%s:"
+    Printf.sprintf "Next batch starting within next %d days"
       Config.agenda_search_day_count_far
-      ( if show_all then ""
-        else
-          Printf.sprintf " (displaying up to %d task segments)"
-            Config.agenda_display_task_seg_place_far_max_count )
   in
   display_places ~title ~show_all ~start ~end_exc
     ~max_count:Config.agenda_display_task_seg_place_far_max_count sched
