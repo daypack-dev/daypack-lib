@@ -133,9 +133,7 @@ module Matching_seconds = struct
            ({ acc with tm_sec = start_sec }, { acc with tm_sec = 60 }))
     | l ->
       List.sort_uniq compare l
-      |> Ranges_small.Of_list.range_seq_of_list ~modulo:None
-        ~to_int:(fun x -> x)
-        ~of_int:(fun x -> x)
+      |> Time.Second_ranges.Of_list.range_seq_of_list
       |> Seq.map
         (Range.map
            ~f_inc:(fun (x, y) ->
@@ -193,9 +191,7 @@ module Matching_minutes = struct
       in
       List.filter (fun pat_min -> start_min <= pat_min) l
       |> List.sort_uniq compare
-      |> Ranges_small.Of_list.range_seq_of_list ~modulo:None
-        ~to_int:(fun x -> x)
-        ~of_int:(fun x -> x)
+      |> Time.Minute_ranges.Of_list.range_seq_of_list
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
@@ -250,9 +246,7 @@ module Matching_hours = struct
       in
       List.filter (fun hour -> start_hour <= hour) l
       |> List.sort_uniq compare
-      |> Ranges_small.Of_list.range_seq_of_list ~modulo:None
-        ~to_int:(fun x -> x)
-        ~of_int:(fun x -> x)
+      |> Time.Hour_ranges.Of_list.range_seq_of_list
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
@@ -263,7 +257,7 @@ module Matching_days = struct
       (start.tm_mday, start.tm_hour, start.tm_min, start.tm_sec)
     else (1, 0, 0, 0)
 
-  let matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm) : int Seq.t =
+  let month_days_of_matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm) : int Seq.t =
     let year = acc.tm_year + Time.tm_year_offset in
     let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
     let day_count = Time.day_count_of_month ~year ~month in
@@ -294,11 +288,11 @@ module Matching_days = struct
       |> List.to_seq
 
   let matching_int_days (t : t) (start : Unix.tm) (acc : Unix.tm) : int Seq.t =
-    let matching_weekdays = matching_weekdays t start acc |> List.of_seq in
+    let month_days_of_matching_weekdays = month_days_of_matching_weekdays t start acc |> List.of_seq in
     let matching_month_days = matching_month_days t start acc |> List.of_seq in
     OSeq.(1 -- 31)
     |> Seq.filter (fun mday ->
-        List.mem mday matching_weekdays && List.mem mday matching_month_days)
+        List.mem mday month_days_of_matching_weekdays && List.mem mday matching_month_days)
 
   let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     matching_int_days t start acc
@@ -350,22 +344,16 @@ module Matching_days = struct
                tm_sec = 0;
              } ))
     | [], _weekdays ->
-      matching_weekdays t start acc
-      |> Ranges_small.Of_seq.range_seq_of_seq ~modulo:(Some 7)
-        ~to_int:(fun x -> x)
-        ~of_int:(fun x -> x)
+      month_days_of_matching_weekdays t start acc
+      |> Time.Month_day_ranges.Of_seq.range_seq_of_seq
       |> Seq.map (Range.map ~f_inc ~f_exc)
     | _month_days, [] ->
       matching_month_days t start acc
-      |> Ranges_small.Of_seq.range_seq_of_seq ~modulo:(Some 7)
-        ~to_int:(fun x -> x)
-        ~of_int:(fun x -> x)
+      |> Time.Month_day_ranges.Of_seq.range_seq_of_seq
       |> Seq.map (Range.map ~f_inc ~f_exc)
     | _, _ ->
       matching_int_days t start acc
-      |> Ranges_small.Of_seq.range_seq_of_seq ~modulo:(Some 7)
-        ~to_int:(fun x -> x)
-        ~of_int:(fun x -> x)
+      |> Time.Month_day_ranges.Of_seq.range_seq_of_seq
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
@@ -470,9 +458,7 @@ module Matching_months = struct
       in
       List.map Time.tm_int_of_month l
       |> List.sort_uniq compare
-      |> Ranges_small.Of_list.range_seq_of_list ~modulo:None
-        ~to_int:(fun x -> x)
-        ~of_int:(fun x -> x)
+      |> Time.Month_ranges.Of_list.range_seq_of_list 
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
@@ -551,9 +537,7 @@ module Matching_years = struct
             end_tm )
       in
       List.sort_uniq compare l
-      |> Ranges_small.Of_list.range_seq_of_list ~modulo:None
-        ~to_int:(fun x -> x)
-        ~of_int:(fun x -> x)
+      |> Time.Year_ranges.Of_list.range_seq_of_list
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 

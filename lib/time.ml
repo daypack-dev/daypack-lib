@@ -106,7 +106,37 @@ let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
   | Fri -> `Fri
   | Sat -> `Sat
 
-module Tm_int_weekday_range = Range_small.Make (struct
+module Second_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int = fun x -> x
+
+    let of_int = fun x -> x
+  end)
+
+module Minute_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int = fun x -> x
+
+    let of_int = fun x -> x
+  end)
+
+module Hour_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int = fun x -> x
+
+    let of_int = fun x -> x
+  end)
+
+module Weekday_tm_int_ranges = Ranges_small.Make (struct
     type t = int
 
     let modulo = Some 7
@@ -134,6 +164,36 @@ module Weekday_ranges = Ranges_small.Make (struct
     let to_int = tm_int_of_weekday
 
     let of_int = weekday_of_tm_int
+  end)
+
+module Month_day_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int = fun x -> x
+
+    let of_int = fun x -> x
+  end)
+
+module Month_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int = fun x -> x
+
+    let of_int = fun x -> x
+  end)
+
+module Year_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int = fun x -> x
+
+    let of_int = fun x -> x
   end)
 
 let month_day_seq_of_month_day_range (x : int Range.range) : int Seq.t =
