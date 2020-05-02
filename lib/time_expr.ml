@@ -742,7 +742,9 @@ module To_time_pattern_lossy = struct
               |> List.of_seq
             | Weekdays_and_hour_minute_second_ranges
                 { weekdays; hour_minute_second_ranges } ->
-              Time.flatten_weekday_ranges weekdays
+              weekdays
+              |> List.to_seq
+              |> Time.Weekday_ranges.Flatten.flatten
               |> Seq.map Weekday.time_pattern_of_weekday_expr
               |> Seq.flat_map
                 (Hour_minute_second
@@ -768,7 +770,7 @@ module To_time_pattern_lossy = struct
             | Months_and_weekdays_and_hour_minute_second_ranges
                 { months; weekdays; hour_minute_second_ranges } ->
               let weekdays =
-                Time.flatten_weekday_ranges weekdays |> List.of_seq
+                Time.Weekday_ranges.Flatten.flatten_list weekdays
               in
               Time.flatten_month_ranges months
               |> Seq.map Month.time_pattern_of_month_expr

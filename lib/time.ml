@@ -106,7 +106,27 @@ let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
   | Fri -> `Fri
   | Sat -> `Sat
 
+module Tm_int_weekday_range = Range_small.Make (struct
+    type t = int
+
+    let modulo = Some 7
+
+    let to_int = fun x -> x
+
+    let of_int = fun x -> x
+  end)
+
 module Weekday_range = Range_small.Make (struct
+    type t = weekday
+
+    let modulo = Some 7
+
+    let to_int = tm_int_of_weekday
+
+    let of_int = weekday_of_tm_int
+  end)
+
+module Weekday_ranges = Ranges_small.Make (struct
     type t = weekday
 
     let modulo = Some 7
@@ -118,12 +138,14 @@ module Weekday_range = Range_small.Make (struct
 
 let month_day_seq_of_month_day_range (x : int Range.range) : int Seq.t =
   Range_small.Flatten.flatten_into_seq
+    ~modulo:None
     ~of_int:(fun x -> x)
     ~to_int:(fun x -> x)
     x
 
 let month_day_list_of_month_day_range (x : int Range.range) : int list =
   Range_small.Flatten.flatten_into_list
+    ~modulo:None
     ~of_int:(fun x -> x)
     ~to_int:(fun x -> x)
     x
@@ -296,19 +318,15 @@ let flatten_month_day_ranges (l : int Range.range list) : int Seq.t =
   List.to_seq l
   |> Seq.flat_map
     (Range_small.Flatten.flatten_into_seq
+       ~modulo:None
        ~of_int:(fun x -> x)
        ~to_int:(fun x -> x))
-
-let flatten_weekday_ranges (l : weekday Range.range list) : weekday Seq.t =
-  List.to_seq l
-  |> Seq.flat_map
-    (Range_small.Flatten.flatten_into_seq ~modulo:7 ~of_int:weekday_of_tm_int
-       ~to_int:tm_int_of_weekday)
 
 let flatten_month_ranges (l : month Range.range list) : month Seq.t =
   List.to_seq l
   |> Seq.flat_map
     (Range_small.Flatten.flatten_into_seq
+    ~modulo:None
        ~of_int:(fun x -> month_of_tm_int x |> Result.get_ok)
        ~to_int:tm_int_of_month)
 
@@ -316,6 +334,7 @@ let flatten_year_ranges (l : int Range.range list) : int Seq.t =
   List.to_seq l
   |> Seq.flat_map
     (Range_small.Flatten.flatten_into_seq
+    ~modulo:None
        ~of_int:(fun x -> x)
        ~to_int:(fun x -> x))
 
