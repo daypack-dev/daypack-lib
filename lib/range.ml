@@ -44,7 +44,7 @@ let join (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a)
   |> Option.map (fun (x, y) -> `Range_exc (of_int64 x, of_int64 y))
 
 module Flatten = struct
-  let flatten_into_seq_internal (type a) ~(modulo : int64 option)
+  let flatten_into_seq (type a) ~(modulo : int64 option)
       ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a Seq.t
     =
     match t with
@@ -66,27 +66,23 @@ module Flatten = struct
     | `Range_exc (start, end_exc) -> (
         let start = to_int64 start in
         let end_exc = to_int64 end_exc in
-        if start <= end_exc then
-          Seq_utils.a_to_b_exc_int64 ~a:start ~b:end_exc |> Seq.map of_int64
-        else
-          match modulo with
-          | None -> raise (Invalid_argument "End is before start")
-          | Some modulo ->
-            if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
-            else
-              OSeq.append
-                (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
-                (Seq_utils.a_to_b_exc_int64 ~a:0L ~b:end_exc)
-              |> Seq.map of_int64 )
-
-  let flatten_into_seq (type a) ~(modulo : int64 option)
-      ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a Seq.t
-    =
-    flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t
+        match modulo with
+        | None ->
+          if start <= end_exc then
+            Seq_utils.a_to_b_exc_int64 ~a:start ~b:end_exc |> Seq.map of_int64
+          else
+            raise (Invalid_argument "End is before start")
+        | Some modulo ->
+          if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
+          else
+            OSeq.append
+              (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
+              (Seq_utils.a_to_b_exc_int64 ~a:0L ~b:end_exc)
+            |> Seq.map of_int64 )
 
   let flatten_into_list (type a) ~(modulo : int64 option)
       ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a list =
-    flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t |> List.of_seq
+    flatten_into_seq ~modulo ~to_int64 ~of_int64 t |> List.of_seq
 end
 
 module type B = sig
@@ -139,10 +135,10 @@ module Make (B : B) : S with type t := B.t = struct
 
   module Flatten = struct
     let flatten_into_seq (t : t range) : t Seq.t =
-      Flatten.flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t
+      Flatten.flatten_into_seq ~modulo ~to_int64 ~of_int64 t
 
     let flatten_into_list (t : t range) : t list =
-      Flatten.flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t
+      Flatten.flatten_into_seq ~modulo ~to_int64 ~of_int64 t
       |> List.of_seq
   end
 end
