@@ -70,8 +70,7 @@ module Flatten = struct
         | None ->
           if start <= end_exc then
             Seq_utils.a_to_b_exc_int64 ~a:start ~b:end_exc |> Seq.map of_int64
-          else
-            raise (Invalid_argument "End is before start")
+          else raise (Invalid_argument "End is before start")
         | Some modulo ->
           if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
           else
@@ -138,7 +137,6 @@ module Make (B : B) : S with type t := B.t = struct
       Flatten.flatten_into_seq ~modulo ~to_int64 ~of_int64 t
 
     let flatten_into_list (t : t range) : t list =
-      Flatten.flatten_into_seq ~modulo ~to_int64 ~of_int64 t
-      |> List.of_seq
+      Flatten.flatten_into_seq ~modulo ~to_int64 ~of_int64 t |> List.of_seq
   end
 end

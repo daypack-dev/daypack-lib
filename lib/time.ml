@@ -111,9 +111,9 @@ module Second_ranges = Ranges_small.Make (struct
 
     let modulo = None
 
-    let to_int = fun x -> x
+    let to_int x = x
 
-    let of_int = fun x -> x
+    let of_int x = x
   end)
 
 module Minute_ranges = Ranges_small.Make (struct
@@ -121,9 +121,9 @@ module Minute_ranges = Ranges_small.Make (struct
 
     let modulo = None
 
-    let to_int = fun x -> x
+    let to_int x = x
 
-    let of_int = fun x -> x
+    let of_int x = x
   end)
 
 module Hour_ranges = Ranges_small.Make (struct
@@ -131,9 +131,9 @@ module Hour_ranges = Ranges_small.Make (struct
 
     let modulo = None
 
-    let to_int = fun x -> x
+    let to_int x = x
 
-    let of_int = fun x -> x
+    let of_int x = x
   end)
 
 module Weekday_tm_int_ranges = Ranges_small.Make (struct
@@ -141,9 +141,9 @@ module Weekday_tm_int_ranges = Ranges_small.Make (struct
 
     let modulo = Some 7
 
-    let to_int = fun x -> x
+    let to_int x = x
 
-    let of_int = fun x -> x
+    let of_int x = x
   end)
 
 module Weekday_range = Range_small.Make (struct
@@ -171,9 +171,9 @@ module Month_day_ranges = Ranges_small.Make (struct
 
     let modulo = None
 
-    let to_int = fun x -> x
+    let to_int x = x
 
-    let of_int = fun x -> x
+    let of_int x = x
   end)
 
 module Month_ranges = Ranges_small.Make (struct
@@ -181,9 +181,9 @@ module Month_ranges = Ranges_small.Make (struct
 
     let modulo = None
 
-    let to_int = fun x -> x
+    let to_int x = x
 
-    let of_int = fun x -> x
+    let of_int x = x
   end)
 
 module Year_ranges = Ranges_small.Make (struct
@@ -191,21 +191,19 @@ module Year_ranges = Ranges_small.Make (struct
 
     let modulo = None
 
-    let to_int = fun x -> x
+    let to_int x = x
 
-    let of_int = fun x -> x
+    let of_int x = x
   end)
 
 let month_day_seq_of_month_day_range (x : int Range.range) : int Seq.t =
-  Range_small.Flatten.flatten_into_seq
-    ~modulo:None
+  Range_small.Flatten.flatten_into_seq ~modulo:None
     ~of_int:(fun x -> x)
     ~to_int:(fun x -> x)
     x
 
 let month_day_list_of_month_day_range (x : int Range.range) : int list =
-  Range_small.Flatten.flatten_into_list
-    ~modulo:None
+  Range_small.Flatten.flatten_into_list ~modulo:None
     ~of_int:(fun x -> x)
     ~to_int:(fun x -> x)
     x
@@ -377,24 +375,21 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
 let flatten_month_day_ranges (l : int Range.range list) : int Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Range_small.Flatten.flatten_into_seq
-       ~modulo:None
+    (Range_small.Flatten.flatten_into_seq ~modulo:None
        ~of_int:(fun x -> x)
        ~to_int:(fun x -> x))
 
 let flatten_month_ranges (l : month Range.range list) : month Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Range_small.Flatten.flatten_into_seq
-    ~modulo:None
+    (Range_small.Flatten.flatten_into_seq ~modulo:None
        ~of_int:(fun x -> month_of_tm_int x |> Result.get_ok)
        ~to_int:tm_int_of_month)
 
 let flatten_year_ranges (l : int Range.range list) : int Seq.t =
   List.to_seq l
   |> Seq.flat_map
-    (Range_small.Flatten.flatten_into_seq
-    ~modulo:None
+    (Range_small.Flatten.flatten_into_seq ~modulo:None
        ~of_int:(fun x -> x)
        ~to_int:(fun x -> x))
 

@@ -257,7 +257,8 @@ module Matching_days = struct
       (start.tm_mday, start.tm_hour, start.tm_min, start.tm_sec)
     else (1, 0, 0, 0)
 
-  let month_days_of_matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm) : int Seq.t =
+  let month_days_of_matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm)
+    : int Seq.t =
     let year = acc.tm_year + Time.tm_year_offset in
     let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
     let day_count = Time.day_count_of_month ~year ~month in
@@ -288,11 +289,14 @@ module Matching_days = struct
       |> List.to_seq
 
   let matching_int_days (t : t) (start : Unix.tm) (acc : Unix.tm) : int Seq.t =
-    let month_days_of_matching_weekdays = month_days_of_matching_weekdays t start acc |> List.of_seq in
+    let month_days_of_matching_weekdays =
+      month_days_of_matching_weekdays t start acc |> List.of_seq
+    in
     let matching_month_days = matching_month_days t start acc |> List.of_seq in
     OSeq.(1 -- 31)
     |> Seq.filter (fun mday ->
-        List.mem mday month_days_of_matching_weekdays && List.mem mday matching_month_days)
+        List.mem mday month_days_of_matching_weekdays
+        && List.mem mday matching_month_days)
 
   let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
     matching_int_days t start acc
@@ -458,7 +462,7 @@ module Matching_months = struct
       in
       List.map Time.tm_int_of_month l
       |> List.sort_uniq compare
-      |> Time.Month_ranges.Of_list.range_seq_of_list 
+      |> Time.Month_ranges.Of_list.range_seq_of_list
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
