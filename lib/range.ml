@@ -66,18 +66,18 @@ module Flatten = struct
     | `Range_exc (start, end_exc) -> (
         let start = to_int64 start in
         let end_exc = to_int64 end_exc in
-        match modulo with
-        | None ->
-          if start <= end_exc then
-            Seq_utils.a_to_b_exc_int64 ~a:start ~b:end_exc |> Seq.map of_int64
-          else raise (Invalid_argument "End is before start")
-        | Some modulo ->
-          if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
-          else
-            OSeq.append
-              (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
-              (Seq_utils.a_to_b_exc_int64 ~a:0L ~b:end_exc)
-            |> Seq.map of_int64 )
+        if start <= end_exc then
+          Seq_utils.a_to_b_exc_int64 ~a:start ~b:end_exc |> Seq.map of_int64
+        else
+          match modulo with
+          | None -> raise (Invalid_argument "End is before start")
+          | Some modulo ->
+            if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
+            else
+              OSeq.append
+                (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
+                (Seq_utils.a_to_b_exc_int64 ~a:0L ~b:end_exc)
+              |> Seq.map of_int64 )
 
   let flatten_into_list (type a) ~(modulo : int64 option)
       ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a list =
