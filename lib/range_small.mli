@@ -17,14 +17,14 @@ val join :
 
 module Flatten : sig
   val flatten_into_seq :
-    ?modulo:int ->
+    modulo:int option ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
     'a Range.range ->
     'a Seq.t
 
   val flatten_into_list :
-    ?modulo:int ->
+    modulo:int option ->
     to_int:('a -> int) ->
     of_int:(int -> 'a) ->
     'a Range.range ->

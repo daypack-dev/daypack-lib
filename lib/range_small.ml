@@ -28,25 +28,16 @@ let join (type a) ~(to_int : a -> int) ~(of_int : int -> a) (x : a Range.range)
   Range.join ~to_int64 ~of_int64 x y
 
 module Flatten = struct
-  let flatten_into_seq_internal (type a) ~(modulo : int option)
-      ~(to_int : a -> int) ~(of_int : int -> a) (t : a Range.range) : a Seq.t =
+  let flatten_into_seq (type a) ~(modulo : int option) ~(to_int : a -> int)
+      ~(of_int : int -> a) (t : a Range.range) : a Seq.t =
+    let modulo = Option.map Int64.of_int modulo in
     let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
     let of_int64 = Misc_utils.convert_of_int_to_int64 of_int in
-    match modulo with
-    | None -> Range.Flatten.flatten_into_seq ~to_int64 ~of_int64 t
-    | Some modulo ->
-      let modulo = Int64.of_int modulo in
-      Range.Flatten.flatten_into_seq ~modulo ~to_int64 ~of_int64 t
+    Range.Flatten.flatten_into_seq ~modulo ~to_int64 ~of_int64 t
 
-  let flatten_into_seq (type a) ?(modulo : int option) ~(to_int : a -> int)
-      ~(of_int : int -> a) (t : a Range.range) : a Seq.t =
-    flatten_into_seq_internal ~modulo ~to_int ~of_int t
-
-  let flatten_into_list (type a) ?(modulo : int option) ~(to_int : a -> int)
+  let flatten_into_list (type a) ~(modulo : int option) ~(to_int : a -> int)
       ~(of_int : int -> a) (t : a Range.range) : a list =
-    match modulo with
-    | None -> flatten_into_seq ~to_int ~of_int t |> List.of_seq
-    | Some modulo -> flatten_into_seq ~modulo ~to_int ~of_int t |> List.of_seq
+    flatten_into_seq ~modulo ~to_int ~of_int t |> List.of_seq
 end
 
 module type B = sig
@@ -99,9 +90,9 @@ module Make (B : B) : S with type t := B.t = struct
 
   module Flatten = struct
     let flatten_into_seq (t : t Range.range) : t Seq.t =
-      Flatten.flatten_into_seq_internal ~modulo ~to_int ~of_int t
+      Flatten.flatten_into_seq ~modulo ~to_int ~of_int t
 
     let flatten_into_list (t : t Range.range) : t list =
-      Flatten.flatten_into_seq_internal ~modulo ~to_int ~of_int t |> List.of_seq
+      Flatten.flatten_into_seq ~modulo ~to_int ~of_int t |> List.of_seq
   end
 end

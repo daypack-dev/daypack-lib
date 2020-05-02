@@ -79,12 +79,12 @@ module Flatten = struct
                 (Seq_utils.a_to_b_exc_int64 ~a:0L ~b:end_exc)
               |> Seq.map of_int64 )
 
-  let flatten_into_seq (type a) ?(modulo : int64 option)
+  let flatten_into_seq (type a) ~(modulo : int64 option)
       ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a Seq.t
     =
     flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t
 
-  let flatten_into_list (type a) ?(modulo : int64 option)
+  let flatten_into_list (type a) ~(modulo : int64 option)
       ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a) (t : a range) : a list =
     flatten_into_seq_internal ~modulo ~to_int64 ~of_int64 t |> List.of_seq
 end

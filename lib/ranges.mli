@@ -78,6 +78,12 @@ module type S = sig
     t Range.range Seq.t ->
     t Range.range Seq.t
 
+  module Flatten : sig
+    val flatten : t Range.range Seq.t -> t Seq.t
+
+    val flatten_list : t Range.range list -> t list
+  end
+
   module Of_seq : sig
     val range_seq_of_seq : t Seq.t -> t Range.range Seq.t
 

@@ -29,14 +29,14 @@ val join :
 
 module Flatten : sig
   val flatten_into_seq :
-    ?modulo:int64 ->
+    modulo:int64 option ->
     to_int64:('a -> int64) ->
     of_int64:(int64 -> 'a) ->
     'a range ->
     'a Seq.t
 
   val flatten_into_list :
-    ?modulo:int64 ->
+    modulo:int64 option ->
     to_int64:('a -> int64) ->
     of_int64:(int64 -> 'a) ->
     'a range ->

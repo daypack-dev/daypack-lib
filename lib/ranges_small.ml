@@ -67,6 +67,14 @@ module Make (B : Range_small.B) : Ranges.S with type t := B.t = struct
     normalize ~skip_filter_invalid ~skip_filter_empty ~skip_sort ~modulo ~to_int
       ~of_int s
 
+  module Flatten = struct
+    let flatten (s : t Range.range Seq.t) : t Seq.t =
+      Flatten.flatten ~modulo ~to_int ~of_int s
+
+    let flatten_list (l : t Range.range list) : t list =
+      Flatten.flatten_list ~modulo ~to_int ~of_int l
+  end
+
   module Of_seq = struct
     let range_seq_of_seq (s : t Seq.t) : t Range.range Seq.t =
       Of_seq.range_seq_of_seq ~modulo ~to_int ~of_int s
