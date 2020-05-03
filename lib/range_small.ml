@@ -43,11 +43,11 @@ end
 module type B = sig
   type t
 
+  val modulo : int option
+
   val to_int : t -> int
 
   val of_int : int -> t
-
-  val modulo : int option
 end
 
 module type S = sig
