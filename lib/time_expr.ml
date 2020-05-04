@@ -295,10 +295,34 @@ module Interpret_string = struct
         (Time_expr_ast.Year_month_day_hour_minute_second
            { year; month; month_day; hour_minute_second })
 
+    let tp_ymond_hour_minute_second =
+      nat_zero
+      >>= fun year ->
+      space *> Month.direct_pick_month_expr
+      >>= fun month ->
+      space *> nat_zero
+      >>= fun month_day ->
+      space *> Hour_minute_second.hour_minute_second_expr
+      >>= fun hour_minute_second ->
+      return
+        (Time_expr_ast.Year_month_day_hour_minute_second
+           { year; month; month_day; hour_minute_second })
+
     let tp_md_hour_minute_second =
       Month.month_expr
       >>= fun month ->
       hyphen *> nat_zero
+      >>= fun month_day ->
+      space *> Hour_minute_second.hour_minute_second_expr
+      >>= fun hour_minute_second ->
+      return
+        (Time_expr_ast.Month_day_hour_minute_second
+           { month; month_day; hour_minute_second })
+
+    let tp_mond_hour_minute_second =
+      Month.direct_pick_month_expr
+      >>= fun month ->
+      space *> nat_zero
       >>= fun month_day ->
       space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
@@ -332,7 +356,9 @@ module Interpret_string = struct
         [
           tp_name;
           tp_ymd_hour_minute_second;
+          tp_ymond_hour_minute_second;
           tp_md_hour_minute_second;
+          tp_mond_hour_minute_second;
           tp_d_hour_minute_second;
           tp_hour_minute_second;
           tp_minute_second;
