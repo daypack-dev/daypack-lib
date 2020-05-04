@@ -113,7 +113,8 @@ val unix_time_of_tm : time_zone_of_tm:time_zone -> Unix.tm -> int64
 
 val normalize_tm : Unix.tm -> Unix.tm
 
-val tm_change_time_zone : from_time_zone:time_zone -> to_time_zone:time_zone -> Unix.tm -> Unix.tm
+val tm_change_time_zone :
+  from_time_zone:time_zone -> to_time_zone:time_zone -> Unix.tm -> Unix.tm
 
 val is_leap_year : year:int -> bool
 
@@ -178,17 +179,21 @@ module To_string : sig
 
   val yyyymondd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result
 
-  val yyyymondd_hhmmss_string_of_unix_time : display_in_time_zone:time_zone -> int64 -> string
+  val yyyymondd_hhmmss_string_of_unix_time :
+    display_in_time_zone:time_zone -> int64 -> string
 
   val yyyymmdd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result
 
-  val yyyymmdd_hhmmss_string_of_unix_time : display_in_time_zone:time_zone -> int64 -> string
+  val yyyymmdd_hhmmss_string_of_unix_time :
+    display_in_time_zone:time_zone -> int64 -> string
 
   val yyyymondd_hhmm_string_of_tm : Unix.tm -> (string, unit) result
 
-  val yyyymondd_hhmm_string_of_unix_time : display_in_time_zone:time_zone -> int64 -> string
+  val yyyymondd_hhmm_string_of_unix_time :
+    display_in_time_zone:time_zone -> int64 -> string
 
   val yyyymmdd_hhmm_string_of_tm : Unix.tm -> (string, unit) result
 
-  val yyyymmdd_hhmm_string_of_unix_time : display_in_time_zone:time_zone -> int64 -> string
+  val yyyymmdd_hhmm_string_of_unix_time :
+    display_in_time_zone:time_zone -> int64 -> string
 end

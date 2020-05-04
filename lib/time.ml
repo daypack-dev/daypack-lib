@@ -218,15 +218,14 @@ let time_zone_of_cal_time_zone (tz : CalendarLib.Time_Zone.t) : time_zone =
   | UTC_Plus x -> `UTC_plus x
 
 let tm_of_unix_time ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
-  let time =
-    Int64.to_float time
-  in
+  let time = Int64.to_float time in
   match time_zone_of_tm with
   | `Local -> Unix.localtime time
   | `UTC -> Unix.gmtime time
   | `UTC_plus x ->
     let date_time = CalendarLib.Calendar.from_unixfloat time in
-    CalendarLib.Calendar.convert date_time CalendarLib.Time_Zone.UTC CalendarLib.Time_Zone.(UTC_Plus x)
+    CalendarLib.Calendar.convert date_time CalendarLib.Time_Zone.UTC
+      CalendarLib.Time_Zone.(UTC_Plus x)
     |> CalendarLib.Calendar.to_unixtm
 
 let unix_time_of_tm ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
@@ -245,8 +244,7 @@ let unix_time_of_tm ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
         let date_time = CalendarLib.Calendar.from_unixtm tm in
         let tz = cal_time_zone_of_time_zone time_zone_of_tm in
         CalendarLib.Calendar.convert date_time tz CalendarLib.Time_Zone.UTC
-        |> CalendarLib.Calendar.to_unixfloat
-    )
+        |> CalendarLib.Calendar.to_unixfloat)
   |> fun time -> time |> Int64.of_float
 
 let normalize_tm tm =
