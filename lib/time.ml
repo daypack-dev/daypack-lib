@@ -335,16 +335,6 @@ module Weekday_tm_int_ranges = Ranges_small.Make (struct
     let of_int x = x
   end)
 
-module Weekday_range = Range_small.Make (struct
-    type t = weekday
-
-    let modulo = Some 7
-
-    let to_int = tm_int_of_weekday
-
-    let of_int = weekday_of_tm_int
-  end)
-
 module Weekday_ranges = Ranges_small.Make (struct
     type t = weekday
 

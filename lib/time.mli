@@ -197,3 +197,10 @@ module To_string : sig
   val yyyymmdd_hhmm_string_of_unix_time :
     display_in_time_zone:time_zone -> int64 -> string
 end
+
+module Print : sig
+  val debug_print_time :
+    ?indent_level:int ->
+    display_in_time_zone:time_zone ->
+    int64 -> unit
+end
