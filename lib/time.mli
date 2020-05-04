@@ -200,7 +200,5 @@ end
 
 module Print : sig
   val debug_print_time :
-    ?indent_level:int ->
-    display_in_time_zone:time_zone ->
-    int64 -> unit
+    ?indent_level:int -> display_in_time_zone:time_zone -> int64 -> unit
 end
