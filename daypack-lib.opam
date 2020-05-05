@@ -10,7 +10,7 @@ authors: "Daypack developers"
 license: "MIT"
 homepage: "https://github.com/daypack-dev/daypack"
 bug-reports: "https://github.com/daypack-dev/daypack/issues"
-dev-repo: "https://github.com/daypack-dev/daypack.git"
+dev-repo: "git+https://github.com/daypack-dev/daypack"
 depends: [
   "ocaml"
   "oseq"
