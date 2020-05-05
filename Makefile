@@ -18,7 +18,7 @@ all :
 
 .PHONY: lib
 lib :
-	dune build lib
+	dune build src
 
 .PHONY: test
 test :
