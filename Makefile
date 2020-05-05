@@ -33,10 +33,6 @@ covtest :
 debug :
 	dune exec ./debug/main.exe
 
-.PHONY: cli
-cli :
-	dune exec ./cli/daypc.exe
-
 .PHONY: doc
 doc :
 	dune build @doc
