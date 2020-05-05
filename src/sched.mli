@@ -229,15 +229,6 @@ module Task_seg : sig
 
     val remove_task_seg_all : Task_.task_seg_id -> sched -> sched
 
-    (* val remove_task_seg_uncompleted_strict :
-     *   Task_.task_seg_id -> sched -> (sched, unit) result
-     * 
-     * val remove_task_seg_completed_strict :
-     *   Task_.task_seg_id -> sched -> (sched, unit) result
-     * 
-     * val remove_task_seg_discarded_strict :
-     *   Task_.task_seg_id -> sched -> (sched, unit) result *)
-
     val remove_task_seg_uncompleted_seq :
       Task_.task_seg_id Seq.t -> sched -> sched
 
