@@ -1,3 +1,9 @@
+type time_zone =
+  [ `Local
+  | `UTC
+  | `UTC_plus of int
+  ]
+
 type weekday =
   [ `Sun
   | `Mon
@@ -41,17 +47,21 @@ let hour_to_second_multiplier = Int64.mul 60L minute_to_second_multiplier
 
 let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
 
-let check_second ~(second : int) : bool = 0 <= second && second < 60
+module Check = struct
+  let check_unix_time (x : int64) = x >= 0L
 
-let check_minute_second ~(minute : int) ~(second : int) : bool =
-  0 <= minute && minute < 60 && check_second ~second
+  let check_second ~(second : int) : bool = 0 <= second && second < 60
 
-let check_hour_minute_second ~(hour : int) ~(minute : int) ~(second : int) :
-  bool =
-  (0 <= hour && hour < 24) && check_minute_second ~minute ~second
+  let check_minute_second ~(minute : int) ~(second : int) : bool =
+    0 <= minute && minute < 60 && check_second ~second
+
+  let check_hour_minute_second ~(hour : int) ~(minute : int) ~(second : int) :
+    bool =
+    (0 <= hour && hour < 24) && check_minute_second ~minute ~second
+end
 
 let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
-  if check_hour_minute_second ~hour ~minute ~second:0 then
+  if Check.check_hour_minute_second ~hour ~minute ~second:0 then
     if minute < 59 then Ok (hour, succ minute) else Ok (succ hour mod 24, 0)
   else Error ()
 
@@ -106,108 +116,6 @@ let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
   | Fri -> `Fri
   | Sat -> `Sat
 
-module Second_ranges = Ranges_small.Make (struct
-    type t = int
-
-    let modulo = None
-
-    let to_int x = x
-
-    let of_int x = x
-  end)
-
-module Minute_ranges = Ranges_small.Make (struct
-    type t = int
-
-    let modulo = None
-
-    let to_int x = x
-
-    let of_int x = x
-  end)
-
-module Hour_ranges = Ranges_small.Make (struct
-    type t = int
-
-    let modulo = None
-
-    let to_int x = x
-
-    let of_int x = x
-  end)
-
-module Weekday_tm_int_ranges = Ranges_small.Make (struct
-    type t = int
-
-    let modulo = Some 7
-
-    let to_int x = x
-
-    let of_int x = x
-  end)
-
-module Weekday_range = Range_small.Make (struct
-    type t = weekday
-
-    let modulo = Some 7
-
-    let to_int = tm_int_of_weekday
-
-    let of_int = weekday_of_tm_int
-  end)
-
-module Weekday_ranges = Ranges_small.Make (struct
-    type t = weekday
-
-    let modulo = Some 7
-
-    let to_int = tm_int_of_weekday
-
-    let of_int = weekday_of_tm_int
-  end)
-
-module Month_day_ranges = Ranges_small.Make (struct
-    type t = int
-
-    let modulo = None
-
-    let to_int x = x
-
-    let of_int x = x
-  end)
-
-module Month_ranges = Ranges_small.Make (struct
-    type t = int
-
-    let modulo = None
-
-    let to_int x = x
-
-    let of_int x = x
-  end)
-
-module Year_ranges = Ranges_small.Make (struct
-    type t = int
-
-    let modulo = None
-
-    let to_int x = x
-
-    let of_int x = x
-  end)
-
-let month_day_seq_of_month_day_range (x : int Range.range) : int Seq.t =
-  Range_small.Flatten.flatten_into_seq ~modulo:None
-    ~of_int:(fun x -> x)
-    ~to_int:(fun x -> x)
-    x
-
-let month_day_list_of_month_day_range (x : int Range.range) : int list =
-  Range_small.Flatten.flatten_into_list ~modulo:None
-    ~of_int:(fun x -> x)
-    ~to_int:(fun x -> x)
-    x
-
 let tm_int_of_month (month : month) : int =
   match month with
   | `Jan -> 0
@@ -222,8 +130,6 @@ let tm_int_of_month (month : month) : int =
   | `Oct -> 9
   | `Nov -> 10
   | `Dec -> 11
-
-let human_int_of_month (month : month) : int = tm_int_of_month month + 1
 
 let month_of_tm_int (x : int) : (month, unit) result =
   match x with
@@ -240,6 +146,8 @@ let month_of_tm_int (x : int) : (month, unit) result =
   | 10 -> Ok `Nov
   | 11 -> Ok `Dec
   | _ -> Error ()
+
+let human_int_of_month (month : month) : int = tm_int_of_month month + 1
 
 let month_of_human_int (x : int) : (month, unit) result = month_of_tm_int (x - 1)
 
@@ -295,20 +203,30 @@ let weekday_gt d1 d2 = tm_int_of_weekday d1 > tm_int_of_weekday d2
 
 let weekday_ge d1 d2 = tm_int_of_weekday d1 >= tm_int_of_weekday d2
 
-type time_zone =
-  [ `Local
-  | `UTC
-  ]
-
 let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
 
+let cal_time_zone_of_time_zone (tz : time_zone) : CalendarLib.Time_Zone.t =
+  match tz with
+  | `Local -> CalendarLib.Time_Zone.Local
+  | `UTC -> CalendarLib.Time_Zone.UTC
+  | `UTC_plus x -> CalendarLib.Time_Zone.UTC_Plus x
+
+let time_zone_of_cal_time_zone (tz : CalendarLib.Time_Zone.t) : time_zone =
+  match tz with
+  | CalendarLib.Time_Zone.Local -> `Local
+  | UTC -> `UTC
+  | UTC_Plus x -> `UTC_plus x
+
 let tm_of_unix_time ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
-  time
-  |> Int64.to_float
-  |> fun x ->
+  let time = Int64.to_float time in
   match time_zone_of_tm with
-  | `Local -> Unix.localtime x
-  | `UTC -> Unix.gmtime x
+  | `Local -> Unix.localtime time
+  | `UTC -> Unix.gmtime time
+  | `UTC_plus x ->
+    let date_time = CalendarLib.Calendar.from_unixfloat time in
+    CalendarLib.Calendar.convert date_time CalendarLib.Time_Zone.UTC
+      CalendarLib.Time_Zone.(UTC_Plus x)
+    |> CalendarLib.Calendar.to_unixtm
 
 let unix_time_of_tm ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
   tm
@@ -321,6 +239,11 @@ let unix_time_of_tm ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
         x
         |> CalendarLib.Calendar.from_unixtm
         |> CalendarLib.Calendar.from_gmt
+        |> CalendarLib.Calendar.to_unixfloat
+      | `UTC_plus _ ->
+        let date_time = CalendarLib.Calendar.from_unixtm tm in
+        let tz = cal_time_zone_of_time_zone time_zone_of_tm in
+        CalendarLib.Calendar.convert date_time tz CalendarLib.Time_Zone.UTC
         |> CalendarLib.Calendar.to_unixfloat)
   |> fun time -> time |> Int64.of_float
 
@@ -372,26 +295,95 @@ let local_tm_to_utc_tm (tm : Unix.tm) : Unix.tm =
   let timestamp, _ = Unix.mktime tm in
   Unix.gmtime timestamp
 
-let flatten_month_day_ranges (l : int Range.range list) : int Seq.t =
-  List.to_seq l
-  |> Seq.flat_map
-    (Range_small.Flatten.flatten_into_seq ~modulo:None
-       ~of_int:(fun x -> x)
-       ~to_int:(fun x -> x))
+module Second_ranges = Ranges_small.Make (struct
+    type t = int
 
-let flatten_month_ranges (l : month Range.range list) : month Seq.t =
-  List.to_seq l
-  |> Seq.flat_map
-    (Range_small.Flatten.flatten_into_seq ~modulo:None
-       ~of_int:(fun x -> month_of_tm_int x |> Result.get_ok)
-       ~to_int:tm_int_of_month)
+    let modulo = None
 
-let flatten_year_ranges (l : int Range.range list) : int Seq.t =
-  List.to_seq l
-  |> Seq.flat_map
-    (Range_small.Flatten.flatten_into_seq ~modulo:None
-       ~of_int:(fun x -> x)
-       ~to_int:(fun x -> x))
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Minute_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Hour_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Weekday_tm_int_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = Some 7
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Weekday_ranges = Ranges_small.Make (struct
+    type t = weekday
+
+    let modulo = Some 7
+
+    let to_int = tm_int_of_weekday
+
+    let of_int = weekday_of_tm_int
+  end)
+
+module Month_day_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Month_tm_int_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
+
+module Month_ranges = Ranges_small.Make (struct
+    type t = month
+
+    let modulo = None
+
+    let to_int = tm_int_of_month
+
+    let of_int x = x |> month_of_tm_int |> Result.get_ok
+  end)
+
+module Year_ranges = Ranges_small.Make (struct
+    type t = int
+
+    let modulo = None
+
+    let to_int x = x
+
+    let of_int x = x
+  end)
 
 module Current = struct
   let cur_unix_time () : int64 = Unix.time () |> Int64.of_float
@@ -445,10 +437,6 @@ module Add = struct
     tm_of_unix_time ~time_zone_of_tm:`Local x
     |> (fun tm -> { tm with tm_mday = tm.tm_mday + days })
     |> unix_time_of_tm ~time_zone_of_tm:`Local
-end
-
-module Check = struct
-  let check_unix_time (x : int64) = x >= 0L
 end
 
 module Serialize = struct

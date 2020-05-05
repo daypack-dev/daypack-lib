@@ -462,7 +462,7 @@ module Matching_months = struct
       in
       List.map Time.tm_int_of_month l
       |> List.sort_uniq compare
-      |> Time.Month_ranges.Of_list.range_seq_of_list
+      |> Time.Month_tm_int_ranges.Of_list.range_seq_of_list
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 

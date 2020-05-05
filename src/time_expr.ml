@@ -295,10 +295,34 @@ module Interpret_string = struct
         (Time_expr_ast.Year_month_day_hour_minute_second
            { year; month; month_day; hour_minute_second })
 
+    let tp_ymond_hour_minute_second =
+      nat_zero
+      >>= fun year ->
+      space *> Month.direct_pick_month_expr
+      >>= fun month ->
+      space *> nat_zero
+      >>= fun month_day ->
+      space *> Hour_minute_second.hour_minute_second_expr
+      >>= fun hour_minute_second ->
+      return
+        (Time_expr_ast.Year_month_day_hour_minute_second
+           { year; month; month_day; hour_minute_second })
+
     let tp_md_hour_minute_second =
       Month.month_expr
       >>= fun month ->
       hyphen *> nat_zero
+      >>= fun month_day ->
+      space *> Hour_minute_second.hour_minute_second_expr
+      >>= fun hour_minute_second ->
+      return
+        (Time_expr_ast.Month_day_hour_minute_second
+           { month; month_day; hour_minute_second })
+
+    let tp_mond_hour_minute_second =
+      Month.direct_pick_month_expr
+      >>= fun month ->
+      space *> nat_zero
       >>= fun month_day ->
       space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
@@ -332,7 +356,9 @@ module Interpret_string = struct
         [
           tp_name;
           tp_ymd_hour_minute_second;
+          tp_ymond_hour_minute_second;
           tp_md_hour_minute_second;
+          tp_mond_hour_minute_second;
           tp_d_hour_minute_second;
           tp_hour_minute_second;
           tp_minute_second;
@@ -481,7 +507,7 @@ module To_time_pattern_lossy = struct
   module Second = struct
     let update_time_pattern_using_second_expr (e : Time_expr_ast.second_expr)
         (base : Time_pattern.t) : Time_pattern.t =
-      if Time.check_second ~second:e then { base with seconds = [ e ] }
+      if Time.Check.check_second ~second:e then { base with seconds = [ e ] }
       else raise (Invalid_time_expr (Printf.sprintf "Invalid second: ::%d" e))
 
     let time_range_pattern_of_second_range_expr_and_base_time_pattern
@@ -510,7 +536,7 @@ module To_time_pattern_lossy = struct
     let update_time_pattern_using_minute_second_expr
         (e : Time_expr_ast.minute_second_expr) (base : Time_pattern.t) :
       Time_pattern.t =
-      if Time.check_minute_second ~minute:e.minute ~second:e.second then
+      if Time.Check.check_minute_second ~minute:e.minute ~second:e.second then
         { base with minutes = [ e.minute ] }
       else
         raise
@@ -544,7 +570,7 @@ module To_time_pattern_lossy = struct
         (e : Time_expr_ast.hour_minute_second_expr) (base : Time_pattern.t) :
       Time_pattern.t =
       if
-        Time.check_hour_minute_second ~hour:e.hour ~minute:e.minute
+        Time.Check.check_hour_minute_second ~hour:e.hour ~minute:e.minute
           ~second:e.second
       then { base with hours = [ e.hour ]; minutes = [ e.minute ] }
       else
@@ -733,7 +759,9 @@ module To_time_pattern_lossy = struct
             | Month_days_and_hour_minute_second_ranges
                 { month_days; hour_minute_second_ranges } ->
               (* check_hour_minute_second_ranges hour_minute_second_ranges; *)
-              Time.flatten_month_day_ranges month_days
+              month_days
+              |> List.to_seq
+              |> Time.Month_day_ranges.Flatten.flatten
               |> Seq.map Month_day.time_pattern_of_month_day_expr
               |> Seq.flat_map
                 (Hour_minute_second
@@ -754,9 +782,11 @@ module To_time_pattern_lossy = struct
             | Months_and_month_days_and_hour_minute_second_ranges
                 { months; month_days; hour_minute_second_ranges } ->
               let month_days =
-                Time.flatten_month_day_ranges month_days |> List.of_seq
+                Time.Month_tm_int_ranges.Flatten.flatten_list month_days
               in
-              Time.flatten_month_ranges months
+              months
+              |> List.to_seq
+              |> Time.Month_ranges.Flatten.flatten
               |> Seq.map Month.time_pattern_of_month_expr
               |> Seq.flat_map
                 (Month_day
@@ -772,7 +802,9 @@ module To_time_pattern_lossy = struct
               let weekdays =
                 Time.Weekday_ranges.Flatten.flatten_list weekdays
               in
-              Time.flatten_month_ranges months
+              months
+              |> List.to_seq
+              |> Time.Month_ranges.Flatten.flatten
               |> Seq.map Month.time_pattern_of_month_expr
               |> Seq.flat_map
                 (Weekday.time_patterns_of_weekdays_and_base_time_pattern
@@ -789,7 +821,9 @@ module To_time_pattern_lossy = struct
                   hour_minute_second_ranges;
                   month_weekday_mode = _;
                 } ->
-              Time.flatten_month_ranges months
+              months
+              |> List.to_seq
+              |> Time.Month_ranges.Flatten.flatten
               |> Seq.map Month.time_pattern_of_month_expr
               |> Seq.map
                 (Weekday.update_time_pattern_using_weekday_expr weekday)
@@ -800,11 +834,13 @@ module To_time_pattern_lossy = struct
               |> List.of_seq
             | Years_and_months_and_month_days_and_hour_minute_second_ranges
                 { years; months; month_days; hour_minute_second_ranges } ->
-              let months = Time.flatten_month_ranges months |> List.of_seq in
+              let months = Time.Month_ranges.Flatten.flatten_list months in
               let month_days =
-                Time.flatten_month_day_ranges month_days |> List.of_seq
+                Time.Month_day_ranges.Flatten.flatten_list month_days
               in
-              Time.flatten_year_ranges years
+              years
+              |> List.to_seq
+              |> Time.Year_ranges.Flatten.flatten
               |> Seq.map Year.time_pattern_of_year_expr
               |> Seq.flat_map
                 (Month.time_patterns_of_months_and_base_time_pattern
