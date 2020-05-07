@@ -1,5 +1,7 @@
 type t = int64 * int64
 
+val compare : t -> t -> int
+
 val to_string : t -> string
 
 val join : t -> t -> t option

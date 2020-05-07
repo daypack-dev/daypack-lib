@@ -1,3 +1,23 @@
+module Filter : sig
+  val filter_invalid : Time_slot.t Seq.t -> Time_slot.t Seq.t
+
+  val filter_invalid_list : Time_slot.t list -> Time_slot.t list
+
+  val filter_empty : Time_slot.t Seq.t -> Time_slot.t Seq.t
+
+  val filter_empty_list : Time_slot.t list -> Time_slot.t list
+end
+
+module Sort : sig
+  val sort_time_slots_list : Time_slot.t list -> Time_slot.t list
+
+  val sort_time_slots : Time_slot.t Seq.t -> Time_slot.t Seq.t
+
+  val sort_uniq_time_slots_list : Time_slot.t list -> Time_slot.t list
+
+  val sort_uniq_time_slots : Time_slot.t Seq.t -> Time_slot.t Seq.t
+end
+
 module Normalize : sig
   val normalize :
     ?skip_filter_invalid:bool ->

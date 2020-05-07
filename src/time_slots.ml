@@ -1,6 +1,6 @@
 open Int64_utils
 
-module Normalize = struct
+module Filter = struct
   let filter_invalid (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     Seq.filter (fun (x, y) -> x <= y) time_slots
 
@@ -12,25 +12,19 @@ module Normalize = struct
 
   let filter_empty_list (time_slots : Time_slot.t list) : Time_slot.t list =
     List.filter (fun (x, y) -> x <> y) time_slots
+end
 
+module Sort = struct
   let sort_time_slots_list (time_slots : Time_slot.t list) :
     Time_slot.t list =
     List.sort
-      (fun (x1, y1) (x2, y2) ->
-         (* lexicographic product *)
-         if x1 < x2 || (x1 = x2 && y1 < y2) then -1
-         else if x1 = x2 && y1 = y2 then 0
-         else 1)
+      Time_slot.compare
       time_slots
 
   let sort_uniq_time_slots_list (time_slots : Time_slot.t list) :
     Time_slot.t list =
     List.sort_uniq
-      (fun (x1, y1) (x2, y2) ->
-         (* lexicographic product *)
-         if x1 < x2 || (x1 = x2 && y1 < y2) then -1
-         else if x1 = x2 && y1 = y2 then 0
-         else 1)
+      Time_slot.compare
       time_slots
 
   let sort_uniq_time_slots (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t
@@ -41,6 +35,9 @@ module Normalize = struct
     =
     time_slots |> List.of_seq |> sort_time_slots_list |> List.to_seq
 
+end
+
+module Normalize = struct
   let join (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     let rec aux last_start_and_last_end_exc time_slots =
       match time_slots () with
@@ -69,9 +66,9 @@ module Normalize = struct
   let normalize ?(skip_filter_invalid = false) ?(skip_filter_empty = false)
       ?(skip_sort = false) time_slots =
     time_slots
-    |> (fun s -> if skip_filter_invalid then s else filter_invalid s)
-    |> (fun s -> if skip_filter_empty then s else filter_empty s)
-    |> (fun s -> if skip_sort then s else sort_uniq_time_slots s)
+    |> (fun s -> if skip_filter_invalid then s else Filter.filter_invalid s)
+    |> (fun s -> if skip_filter_empty then s else Filter.filter_empty s)
+    |> (fun s -> if skip_sort then s else Sort.sort_uniq_time_slots s)
     |> join
 
   let normalize_list_in_seq_out ?(skip_filter_invalid = false)
@@ -483,7 +480,7 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
         (* ) *)
   in
   time_slots
-  |> (fun s -> if skip_sort then s else Normalize.sort_time_slots s)
+  |> (fun s -> if skip_sort then s else Sort.sort_time_slots s)
   |> aux None []
 
 module Serialize = struct
