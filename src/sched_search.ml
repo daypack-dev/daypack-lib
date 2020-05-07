@@ -11,12 +11,18 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     |> Time_slots.Normalize.normalize_list_in_seq_out
     |> Time_slots.intersect free_time_slots
   in
+  let get_parallelizability ((task_seg_id, _data) : Task.task_seg) : int =
+    let task_id = Task.Id.task_id_of_task_seg_id task_seg_id in
+    let task = Sched.Task.Find.find_task_any_opt task_id base |> Option.get in
+    task.parallelizability
+  in
   Seq.flat_map
     (fun sched_req_record_data ->
        match sched_req_record_data with
        | Sched_req_data_unit_skeleton.Fixed
            { task_seg_related_data = task_seg; start } ->
          let _, size = task_seg in
+         let parallelizability = get_parallelizability task_seg in
          let usable_time_slots =
            get_usable_time_slots [ (start, start +^ size) ]
          in

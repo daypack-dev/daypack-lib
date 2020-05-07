@@ -2065,6 +2065,22 @@ module Agenda = struct
       get_occupied_time_slots ~start ~end_exc sched
       |> Time_slots.invert ~start ~end_exc
 
+    (* let get_time_slots_with_task_seg_place_count ~start ~end_exc (sched : sched) : ((int64 * int64) * int) Seq.t =
+     *   let rec aux (cur : (int64 * int64) option) (buffer : int64 list) (task_seg_places : Task_.task_seg_place Seq.t) =
+     *     match task_seg_places () with
+     *     | Seq.Nil -> (match cur with
+     *         | None -> Seq.empty
+     *         | Some x -> Seq.return x)
+     *     | Seq.Cons ((_id, start', end_exc'), rest) ->
+     *       match cur with
+     *       | None -> 
+     *   in
+     *   Range.task_seg_place_set
+     *     ~start ~end_exc ~include_task_seg_place_starting_within_time_slot:true
+     *     ~include_task_seg_place_ending_within_time_slot:true sched
+     *   |> Task_seg_place_set.to_seq
+     *   |> aux None [] *)
+
     let task_seg_place_count_in_time_slot ~start ~end_exc (sched : sched) : int =
       let start = Some start in
       let end_exc = Some end_exc in
