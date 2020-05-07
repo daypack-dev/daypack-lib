@@ -627,6 +627,9 @@ module Agenda : sig
 
     val get_free_time_slots :
       start:int64 -> end_exc:int64 -> sched -> (int64 * int64) Seq.t
+
+    val task_seg_place_count_in_time_slot :
+      start:int64 -> end_exc:int64 -> sched -> int
   end
 end
 
