@@ -6,8 +6,7 @@ val to_string : t -> string
 
 val join : t -> t -> t option
 
-val overlap_of_a_over_b :
-  a:t -> b:t -> t option * t option * t option
+val overlap_of_a_over_b : a:t -> b:t -> t option * t option * t option
 
 module Check : sig
   val check_time_slot : t -> bool

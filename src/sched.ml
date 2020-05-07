@@ -2081,16 +2081,16 @@ module Agenda = struct
      *   |> Task_seg_place_set.to_seq
      *   |> aux None [] *)
 
-    let task_seg_place_count_in_time_slot ~start ~end_exc (sched : sched) : int =
+    let task_seg_place_count_in_time_slot ~start ~end_exc (sched : sched) : int
+      =
       let start = Some start in
       let end_exc = Some end_exc in
       let task_seg_places_in_range =
-        Range.task_seg_place_set
-          ~start ~end_exc ~include_task_seg_place_starting_within_time_slot:true
+        Range.task_seg_place_set ~start ~end_exc
+          ~include_task_seg_place_starting_within_time_slot:true
           ~include_task_seg_place_ending_within_time_slot:true sched
       in
-      Task_seg_place_set.cardinal
-        task_seg_places_in_range
+      Task_seg_place_set.cardinal task_seg_places_in_range
   end
 end
 
