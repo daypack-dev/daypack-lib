@@ -17,6 +17,8 @@ let overlap_of_a_over_b ~(a : t) ~(b : t) : t option * t option * t option =
     None, None, None
   else if a_end_exc <= b_start then
     Some a, None, None
+  else if b_end_exc <= a_start then
+    None, None, Some a
   else if a_start < b_start then (
     if a_end_exc <= b_end_exc then
       Some (a_start, b_start), Some (b_start, a_end_exc), None
