@@ -22,7 +22,7 @@ type task = (task_id * task_data)
 
 type task_data = {
   splittable : bool;
-  parallelizability : int option;
+  parallelizability : int;
   task_type : task_type;
   name : string;
 }

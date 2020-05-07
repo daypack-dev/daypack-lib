@@ -18,7 +18,7 @@ type task = task_id * task_data
 
 and task_data = {
   splittable : bool;
-  parallelizability : int option;
+  parallelizability : int;
   task_type : task_type;
   name : string;
 }
@@ -437,7 +437,7 @@ module To_string = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "splittable : %b\n" data.splittable;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
-      "parallelizability : %s\n" (match data.parallelizability with None -> "None" | Some x -> "Some " ^ string_of_int x);
+      "parallelizability : %d\n" data.parallelizability;
     ( match data.task_type with
       | One_off ->
         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
