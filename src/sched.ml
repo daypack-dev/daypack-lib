@@ -431,7 +431,7 @@ end
 
 module Task_seg = struct
   module To_seq = struct
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_seg_to_seq ();
     *)
@@ -456,7 +456,7 @@ module Task_seg = struct
   end
 
   module Find = struct
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_seg_find ();
       print_task_seg_ids_find_by_task_inst_id ();
@@ -584,7 +584,7 @@ module Task_seg = struct
   end
 
   module Remove = struct
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_seg_remove ();
       (* print_task_seg_remove_strict (); *)
@@ -683,7 +683,7 @@ module Task_seg = struct
               };
           } ) )
 
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_seg_add ()
     *)
@@ -840,7 +840,7 @@ module Task_inst = struct
         ([], sched) data_list
       |> fun (l, t) -> (List.rev l, t)
 
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_inst_add ();
     *)
@@ -892,7 +892,7 @@ module Task_inst = struct
   end
 
   module To_seq = struct
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_inst_to_seq ();
     *)
@@ -917,7 +917,7 @@ module Task_inst = struct
   end
 
   module Find = struct
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_inst_find ();
       print_task_inst_ids_find_by_task_id ();
@@ -1006,7 +1006,7 @@ module Task_inst = struct
   end
 
   module Remove = struct
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_inst_remove ();
       (* print_task_inst_remove_strict (); *)
@@ -1198,7 +1198,7 @@ module Task = struct
       in
       ((parent_task_id, data), inst_list, (sid, sd))
 
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_add ();
     *)
@@ -1249,7 +1249,7 @@ module Task = struct
   end
 
   module To_seq = struct
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_to_seq ()
     *)
@@ -1274,7 +1274,7 @@ module Task = struct
   end
 
   module Find = struct
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_find ()
     *)
@@ -1319,7 +1319,7 @@ module Task = struct
   end
 
   module Remove = struct
-    (*$ #use "lib/sched.cinaps";;
+    (*$ #use "src/sched.cinaps";;
 
       print_task_remove ();
       (* print_task_remove_strict (); *)
@@ -3128,7 +3128,7 @@ module Overdue = struct
 end
 
 module Serialize = struct
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     Store.print_pack_related_functions ()
   *)
@@ -3358,7 +3358,7 @@ module Serialize = struct
 
   (*$*)
 
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     Bucket_store.print_pack_related_functions ()
   *)
@@ -3448,7 +3448,7 @@ module Serialize = struct
 
   (*$*)
 
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     Set_store.print_pack_related_functions ()
   *)
@@ -3468,7 +3468,7 @@ module Serialize = struct
 
   (*$*)
 
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     print_pack_store ();
     print_pack_store_diff ()
@@ -3556,7 +3556,7 @@ module Serialize = struct
 
   (*$*)
 
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     print_pack_agenda ();
 
@@ -3603,7 +3603,7 @@ module Serialize = struct
 end
 
 module Deserialize = struct
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     Store.print_unpack_related_functions ()
   *)
@@ -3861,7 +3861,7 @@ module Deserialize = struct
 
   (*$*)
 
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     Bucket_store.print_unpack_related_functions ()
   *)
@@ -3960,7 +3960,7 @@ module Deserialize = struct
 
   (*$*)
 
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     Set_store.print_unpack_related_functions ()
   *)
@@ -3980,7 +3980,7 @@ module Deserialize = struct
 
   (*$*)
 
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     print_unpack_store ();
     print_unpack_store_diff ();
@@ -4070,7 +4070,7 @@ module Deserialize = struct
 
   (*$*)
 
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     print_unpack_agenda ();
     print_unpack_agenda_diff ();
@@ -4116,7 +4116,7 @@ module Deserialize = struct
 end
 
 module Equal = struct
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     print_store_equal ();
     print_agenda_equal ();
@@ -4194,7 +4194,7 @@ module Equal = struct
 end
 
 module Diff = struct
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     print_diff_store ();
     print_add_diff_store ();
@@ -4380,7 +4380,7 @@ module Diff = struct
 
   (*$*)
 
-  (*$ #use "lib/sched.cinaps";;
+  (*$ #use "src/sched.cinaps";;
 
     print_diff_agenda ();
     print_add_diff_agenda ();
