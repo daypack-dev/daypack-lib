@@ -1,6 +1,6 @@
 open Int64_utils
 
-module Normalize = struct
+module Filter = struct
   let filter_invalid (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     Seq.filter (fun (x, y) -> x <= y) time_slots
 
@@ -12,21 +12,25 @@ module Normalize = struct
 
   let filter_empty_list (time_slots : Time_slot.t list) : Time_slot.t list =
     List.filter (fun (x, y) -> x <> y) time_slots
+end
+
+module Sort = struct
+  let sort_time_slots_list (time_slots : Time_slot.t list) : Time_slot.t list =
+    List.sort Time_slot.compare time_slots
 
   let sort_uniq_time_slots_list (time_slots : Time_slot.t list) :
     Time_slot.t list =
-    List.sort_uniq
-      (fun (x1, y1) (x2, y2) ->
-         (* lexicographic product *)
-         if x1 < x2 || (x1 = x2 && y1 < y2) then -1
-         else if x1 = x2 && y1 = y2 then 0
-         else 1)
-      time_slots
+    List.sort_uniq Time_slot.compare time_slots
 
   let sort_uniq_time_slots (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t
     =
     time_slots |> List.of_seq |> sort_uniq_time_slots_list |> List.to_seq
 
+  let sort_time_slots (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    time_slots |> List.of_seq |> sort_time_slots_list |> List.to_seq
+end
+
+module Normalize = struct
   let join (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     let rec aux last_start_and_last_end_exc time_slots =
       match time_slots () with
@@ -55,9 +59,9 @@ module Normalize = struct
   let normalize ?(skip_filter_invalid = false) ?(skip_filter_empty = false)
       ?(skip_sort = false) time_slots =
     time_slots
-    |> (fun s -> if skip_filter_invalid then s else filter_invalid s)
-    |> (fun s -> if skip_filter_empty then s else filter_empty s)
-    |> (fun s -> if skip_sort then s else sort_uniq_time_slots s)
+    |> (fun s -> if skip_filter_invalid then s else Filter.filter_invalid s)
+    |> (fun s -> if skip_filter_empty then s else Filter.filter_empty s)
+    |> (fun s -> if skip_sort then s else Sort.sort_uniq_time_slots s)
     |> join
 
   let normalize_list_in_seq_out ?(skip_filter_invalid = false)
@@ -389,6 +393,97 @@ let a_is_subset_of_b ~(a : Time_slot.t Seq.t) ~(b : Time_slot.t Seq.t) : bool =
   let inter = intersect a b |> List.of_seq in
   let a = List.of_seq a in
   a = inter
+
+let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
+  (Time_slot.t * int) Seq.t =
+  let rec aux (cur : ((int64 * int64) * int) option)
+      (buffer : (int64 * int64) list) (time_slots : Time_slot.t Seq.t) :
+    (Time_slot.t * int) Seq.t =
+    match time_slots () with
+    | Seq.Nil -> (
+        match (cur, buffer) with
+        | None, [] -> Seq.empty
+        | None, buffer -> aux None [] (buffer |> List.rev |> List.to_seq)
+        | Some x, [] -> Seq.return x
+        | Some x, buffer ->
+          fun () ->
+            Seq.Cons (x, aux None [] (buffer |> List.rev |> List.to_seq)) )
+    | Seq.Cons (x, rest) as s -> (
+        match (cur, buffer) with
+        | None, [] ->
+          (* let (start, end_exc) = x in
+           * Printf.printf "cur: None, x: (%Ld, %Ld), buffer: %s\n" start end_exc (String.concat ", " (List.map (fun (x, y) ->
+           *   Printf.sprintf "%Ld, %Ld" x y) buffer)); *)
+          aux (Some (x, 1)) [] rest
+        | None, buffer ->
+          (* let (start, end_exc) = x in
+           * Printf.printf "cur: None, x: (%Ld, %Ld), buffer: %s\n" start end_exc(String.concat ", " (List.map (fun (x, y) ->
+           *   Printf.sprintf "%Ld, %Ld" x y) buffer)); *)
+          aux None [] (OSeq.append (List.to_seq buffer) (fun () -> s))
+        | Some ((cur_start, cur_end_exc), cur_count), buffer -> (
+            (* let (start, end_exc) = x in
+             * Printf.printf "cur: (%Ld, %Ld), x: (%Ld, %Ld), buffer: %s\n" cur_start cur_end_exc start end_exc(String.concat ", " (List.map (fun (x, y) ->
+             *   Printf.sprintf "%Ld, %Ld" x y) buffer)); *)
+            match
+              Time_slot.overlap_of_a_over_b ~a:x ~b:(cur_start, cur_end_exc)
+            with
+            | None, None, None -> failwith "Unexpected case"
+            | Some _, _, _ ->
+              raise (Invalid_argument "Time slots are not sorted1")
+            | None, Some (start, end_exc), None ->
+              if end_exc < cur_end_exc then
+                raise (Invalid_argument "Time slots are not sorted2")
+              else if start = cur_start then
+                aux
+                  (Some ((cur_start, cur_end_exc), succ cur_count))
+                  buffer rest
+              else
+                aux
+                  (Some ((cur_start, cur_end_exc), succ cur_count))
+                  ((cur_end_exc, end_exc) :: buffer)
+                  rest
+            | None, Some (start, _), Some (_, end_exc) ->
+              if start = cur_start then
+                aux
+                  (Some ((cur_start, cur_end_exc), succ cur_count))
+                  ((cur_end_exc, end_exc) :: buffer)
+                  rest
+              else fun () ->
+                Seq.Cons
+                  ( ((cur_start, start), cur_count),
+                    aux
+                      (Some ((start, cur_end_exc), succ cur_count))
+                      ((cur_end_exc, end_exc) :: buffer)
+                      rest )
+            | None, None, Some _ ->
+              fun () ->
+                Seq.Cons
+                  ( ((cur_start, cur_end_exc), cur_count),
+                    aux None buffer (fun () -> s) ) ) )
+    (* else if start = cur_start then (
+     *   if end_exc < cur_end_exc then
+     *     raise (Invalid_argument "Time slots are not sorted")
+     *   else if end_exc = cur_end_exc then
+     *     aux (Some ((cur_start, cur_end_exc), succ cur_count)) buffer rest
+     *   else
+     *     aux (Some ((cur_start, cur_end_exc), succ cur_count)) ((cur_end_exc, end_exc) :: buffer) rest
+     * ) else (
+     *   fun () ->
+     *     Seq.Cons (
+     *       ((cur_start, start), succ cur_count),
+     *       aux (Some ((start, cur_end_exc), cur_count)) [] (OSeq.append (List.to_seq buffer) (fun () -> s))
+     *     ) *)
+
+  (* if end_exc < cur_end_exc then
+   *   aux (Some ((cur_start, end_exc), succ cur_count)) ((end_exc, cur_end_exc) :: buffer) rest
+   * else if end_exc = cur_end_exc then
+   *   aux (Some ()) *)
+  (* ) *)
+  in
+
+  time_slots
+  |> (fun s -> if skip_sort then s else Sort.sort_time_slots s)
+  |> aux None []
 
 module Serialize = struct
   let pack_time_slots time_slots =

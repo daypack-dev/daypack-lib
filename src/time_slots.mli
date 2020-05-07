@@ -1,3 +1,23 @@
+module Filter : sig
+  val filter_invalid : Time_slot.t Seq.t -> Time_slot.t Seq.t
+
+  val filter_invalid_list : Time_slot.t list -> Time_slot.t list
+
+  val filter_empty : Time_slot.t Seq.t -> Time_slot.t Seq.t
+
+  val filter_empty_list : Time_slot.t list -> Time_slot.t list
+end
+
+module Sort : sig
+  val sort_time_slots_list : Time_slot.t list -> Time_slot.t list
+
+  val sort_time_slots : Time_slot.t Seq.t -> Time_slot.t Seq.t
+
+  val sort_uniq_time_slots_list : Time_slot.t list -> Time_slot.t list
+
+  val sort_uniq_time_slots : Time_slot.t Seq.t -> Time_slot.t Seq.t
+end
+
 module Normalize : sig
   val normalize :
     ?skip_filter_invalid:bool ->
@@ -81,6 +101,9 @@ val shift_list : offset:int64 -> Time_slot.t list -> Time_slot.t list
 val equal : Time_slot.t list -> Time_slot.t list -> bool
 
 val a_is_subset_of_b : a:Time_slot.t Seq.t -> b:Time_slot.t Seq.t -> bool
+
+val count_overlap :
+  ?skip_sort:bool -> Time_slot.t Seq.t -> (Time_slot.t * int) Seq.t
 
 module Serialize : sig
   val pack_time_slots :
