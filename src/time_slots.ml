@@ -428,12 +428,12 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
             with
             | None, None, None -> aux cur buffer rest
             | Some _, _, _ ->
-              raise (Invalid_argument "Time slots are not sorted1")
+              raise (Invalid_argument "Time slots are not sorted")
             | None, Some (start, end_exc), None
             | None, Some (start, _), Some (_, end_exc) ->
               if start = cur_start then
                 if end_exc < cur_end_exc then
-                  raise (Invalid_argument "Time slots are not sorted2")
+                  raise (Invalid_argument "Time slots are not sorted")
                 else if end_exc = cur_end_exc then
                   aux
                     (Some ((cur_start, cur_end_exc), succ cur_count))
