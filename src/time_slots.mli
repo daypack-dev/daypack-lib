@@ -102,8 +102,7 @@ val equal : Time_slot.t list -> Time_slot.t list -> bool
 
 val a_is_subset_of_b : a:Time_slot.t Seq.t -> b:Time_slot.t Seq.t -> bool
 
-val count_overlap :
-  Time_slot.t Seq.t -> (Time_slot.t * int) Seq.t
+val count_overlap : Time_slot.t Seq.t -> (Time_slot.t * int) Seq.t
 
 module Serialize : sig
   val pack_time_slots :
