@@ -435,13 +435,6 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
         let s = fun () -> Seq.Cons (x, rest) in
         match cur with
         | None -> (
-            let start, end_exc = x in
-            Printf.printf "cur: None, x: (%Ld, %Ld), buffer: [%s]\n"
-              start end_exc
-              (String.concat "; "
-                 (List.map
-                    (fun ((x, y), count) -> Printf.sprintf "((%Ld, %Ld), %d)" x y count)
-                    buffer));
             match buffer with
             | [] ->
               aux (Some (x, 1)) [] rest
@@ -449,13 +442,6 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
               aux None [] (flush_buffer_to_input buffer s)
           )
         | Some ((cur_start, cur_end_exc), cur_count) ->
-          let start, end_exc = x in
-          Printf.printf "cur: (%Ld, %Ld), x: (%Ld, %Ld), buffer: [%s]\n"
-            cur_start cur_end_exc start end_exc
-            (String.concat "; "
-               (List.map
-                  (fun ((x, y), count) -> Printf.sprintf "((%Ld, %Ld), %d)" x y count)
-                  buffer));
           match
               Time_slot.overlap_of_a_over_b ~a:x ~b:(cur_start, cur_end_exc)
           with
