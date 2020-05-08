@@ -426,7 +426,10 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
               aux None [] (flush_buffer buffer)
           )
         | Some cur ->
-          aux (Some cur) [] (flush_buffer buffer)
+          match buffer with
+          | [] -> Seq.return cur
+          | buffer ->
+            aux (Some cur) [] (flush_buffer buffer)
           (* fun () -> Seq.Cons (cur, aux None buffer Seq.empty) *)
       )
     | Seq.Cons (x, rest) -> (
