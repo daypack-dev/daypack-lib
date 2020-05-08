@@ -176,41 +176,67 @@ let relative_complement ~(mem_of : Time_slot.t Seq.t)
     match (mem_of (), not_mem_of ()) with
     | Seq.Nil, _ -> Seq.empty
     | _, Seq.Nil -> mem_of
-    | ( Seq.Cons ((mem_of_start, mem_of_end_exc), mem_of_rest),
-        Seq.Cons ((not_mem_of_start, not_mem_of_end_exc), not_mem_of_rest) )
+    | ( Seq.Cons (mem_of_ts, mem_of_rest),
+        Seq.Cons (not_mem_of_ts, not_mem_of_rest) )
       -> (
-          if mem_of_end_exc < not_mem_of_start then
+          let mem_of = fun () -> Seq.Cons (mem_of_ts, mem_of_rest) in
+          let not_mem_of = fun () -> Seq.Cons (not_mem_of_ts, not_mem_of_rest) in
+          match Time_slot.overlap_of_a_over_b ~a:mem_of_ts ~b:not_mem_of_ts with
+          | None, None, None ->
+            aux mem_of_rest not_mem_of
+          | Some _, None, None ->
             (* mem_of is before not_mem_of entirely, output mem_of *)
             fun () ->
-              Seq.Cons ((mem_of_start, mem_of_end_exc), aux mem_of_rest not_mem_of)
-          else if not_mem_of_end_exc < mem_of_start then
+              Seq.Cons (mem_of_ts, aux mem_of_rest not_mem_of)
+          | None, None, Some _ ->
             (* not_mem_of is before mem_of entirely, drop not_mem_of *)
             aux mem_of not_mem_of_rest
-          else
-            (* there is an overlap or touching *)
-            let overlap_start = max mem_of_start not_mem_of_start in
-            let overlap_end_exc = min mem_of_end_exc not_mem_of_end_exc in
-            let mem_of_split1 =
-              if mem_of_start < overlap_start then
-                Some (mem_of_start, overlap_start)
-              else None
-            in
-            let mem_of_split2 =
-              if overlap_end_exc < mem_of_end_exc then
-                Some (overlap_end_exc, mem_of_end_exc)
-              else None
-            in
-            match (mem_of_split1, mem_of_split2) with
-            | None, None -> aux mem_of_rest not_mem_of
-            | Some s1, None -> fun () -> Seq.Cons (s1, aux mem_of_rest not_mem_of)
-            | None, Some s2 ->
-              aux (fun () -> Seq.Cons (s2, mem_of_rest)) not_mem_of_rest
-            | Some s1, Some s2 ->
-              fun () ->
-                Seq.Cons
-                  ( s1,
-                    aux (fun () -> Seq.Cons (s2, mem_of_rest)) not_mem_of_rest
-                  ) )
+          | Some (start, end_exc), Some _, None ->
+            fun () ->
+              Seq.Cons ((start, end_exc), aux mem_of_rest not_mem_of)
+          | None, Some _, None ->
+            aux mem_of_rest not_mem_of
+          | None, Some _, Some (start, end_exc) ->
+            fun () ->
+              Seq.Cons ((start, end_exc), aux mem_of_rest not_mem_of_rest)
+          | Some (start1, end_exc1), _, Some (start2, end_exc2) ->
+            fun () ->
+              Seq.Cons ((start1, end_exc1),
+                        fun () ->
+                          Seq.Cons ((start2, end_exc2), aux mem_of_rest not_mem_of_rest))
+          (* if mem_of_end_exc < not_mem_of_start then
+           *   (\* mem_of is before not_mem_of entirely, output mem_of *\)
+           *   fun () ->
+           *     Seq.Cons ((mem_of_start, mem_of_end_exc), aux mem_of_rest not_mem_of)
+           * else if not_mem_of_end_exc < mem_of_start then
+           *   (\* not_mem_of is before mem_of entirely, drop not_mem_of *\)
+           *   aux mem_of not_mem_of_rest
+           * else
+           *   (\* there is an overlap or touching *\)
+           *   let overlap_start = max mem_of_start not_mem_of_start in
+           *   let overlap_end_exc = min mem_of_end_exc not_mem_of_end_exc in
+           *   let mem_of_split1 =
+           *     if mem_of_start < overlap_start then
+           *       Some (mem_of_start, overlap_start)
+           *     else None
+           *   in
+           *   let mem_of_split2 =
+           *     if overlap_end_exc < mem_of_end_exc then
+           *       Some (overlap_end_exc, mem_of_end_exc)
+           *     else None
+           *   in
+           *   match (mem_of_split1, mem_of_split2) with
+           *   | None, None -> aux mem_of_rest not_mem_of
+           *   | Some s1, None -> fun () -> Seq.Cons (s1, aux mem_of_rest not_mem_of)
+           *   | None, Some s2 ->
+           *     aux (fun () -> Seq.Cons (s2, mem_of_rest)) not_mem_of_rest
+           *   | Some s1, Some s2 ->
+           *     fun () ->
+           *       Seq.Cons
+           *         ( s1,
+           *           aux (fun () -> Seq.Cons (s2, mem_of_rest)) not_mem_of_rest
+           *         ) *)
+        )
   in
   aux mem_of not_mem_of
 
