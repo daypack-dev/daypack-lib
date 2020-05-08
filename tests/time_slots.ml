@@ -284,7 +284,7 @@ let qc_merge =
          |> List.of_seq
        in
        let res2 =
-         List.sort Daypack_lib.Time_slot.compare (l1 @ l2)
+         Daypack_lib.Time_slots.Sort.sort_time_slots_list (l1 @ l2)
        in
        res1 = res2
     )
