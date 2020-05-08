@@ -629,13 +629,21 @@ module Agenda : sig
       ?start:int64 -> ?end_exc:int64 -> sched -> ((int64 * int64) * int) Seq.t
 
     val get_occupied_time_slots_up_to_task_seg_place_count :
-      ?start:int64 -> ?end_exc:int64 -> up_to_task_seg_place_count_inc:int -> sched -> (int64 * int64) Seq.t
+      ?start:int64 ->
+      ?end_exc:int64 ->
+      up_to_task_seg_place_count_inc:int ->
+      sched ->
+      (int64 * int64) Seq.t
 
     val get_free_time_slots :
       start:int64 -> end_exc:int64 -> sched -> (int64 * int64) Seq.t
 
     val get_free_or_occupied_time_slots_up_to_task_seg_place_count :
-      start:int64 -> end_exc:int64 -> up_to_task_seg_place_count_inc:int -> sched -> (int64 * int64) Seq.t
+      start:int64 ->
+      end_exc:int64 ->
+      up_to_task_seg_place_count_inc:int ->
+      sched ->
+      (int64 * int64) Seq.t
 
     val task_seg_place_count_in_time_slot :
       start:int64 -> end_exc:int64 -> sched -> int
