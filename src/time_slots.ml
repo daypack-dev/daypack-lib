@@ -183,13 +183,14 @@ let relative_complement ~(mem_of : Time_slot.t Seq.t)
           let not_mem_of = fun () -> Seq.Cons (not_mem_of_ts, not_mem_of_rest) in
           match Time_slot.overlap_of_a_over_b ~a:mem_of_ts ~b:not_mem_of_ts with
           | None, None, None ->
+            (* mem_of_ts is empty, drop mem_of_ts *)
             aux mem_of_rest not_mem_of
           | Some _, None, None ->
-            (* mem_of is before not_mem_of entirely, output mem_of *)
+            (* mem_of_ts is before not_mem_of_ts entirely, output mem_of *)
             fun () ->
               Seq.Cons (mem_of_ts, aux mem_of_rest not_mem_of)
           | None, None, Some _ ->
-            (* not_mem_of is before mem_of entirely, drop not_mem_of *)
+            (* not_mem_of_ts is before mem_of entirely, drop not_mem_of_ts *)
             aux mem_of not_mem_of_rest
           | Some (start, end_exc), Some _, None ->
             fun () ->
@@ -197,13 +198,24 @@ let relative_complement ~(mem_of : Time_slot.t Seq.t)
           | None, Some _, None ->
             aux mem_of_rest not_mem_of
           | None, Some _, Some (start, end_exc) ->
-            fun () ->
-              Seq.Cons ((start, end_exc), aux mem_of_rest not_mem_of_rest)
+            let mem_of () =
+              Seq.Cons (
+                (start, end_exc),
+                mem_of_rest
+              )
+            in
+            aux mem_of not_mem_of_rest
           | Some (start1, end_exc1), _, Some (start2, end_exc2) ->
+            let mem_of () =
+              Seq.Cons (
+                (start2, end_exc2),
+                mem_of_rest
+              )
+            in
             fun () ->
               Seq.Cons ((start1, end_exc1),
-                        fun () ->
-                          Seq.Cons ((start2, end_exc2), aux mem_of_rest not_mem_of_rest))
+                        aux mem_of not_mem_of_rest
+                        )
           (* if mem_of_end_exc < not_mem_of_start then
            *   (\* mem_of is before not_mem_of entirely, output mem_of *\)
            *   fun () ->
