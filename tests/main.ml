@@ -1,7 +1,8 @@
 let () =
   let alco_suites = [ ("Range", Range.alco_suite) ] in
   let qc_suites =
-    [ (* ("Misc_utils", Misc_utils.suite);
+    [
+      (* ("Misc_utils", Misc_utils.suite);
        * ("Map_utils", Map_utils.suite);
        * ("Set_utils", Set_utils.suite); *)
       ("Time_slots", Time_slots.suite);
@@ -11,7 +12,8 @@ let () =
        * ("Task_seg_place_gens", Task_seg_place_gens.suite);
        * ("Task", Task.suite);
        * ("Sched", Sched.suite);
-       * ("Sched_ver_history", Sched_ver_history.suite); *) ]
+       * ("Sched_ver_history", Sched_ver_history.suite); *)
+    ]
     |> List.map (fun (name, suite) ->
         (name, List.map QCheck_alcotest.to_alcotest suite))
   in
