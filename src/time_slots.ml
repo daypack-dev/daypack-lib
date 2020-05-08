@@ -450,31 +450,52 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
                 aux
                   (Some ((cur_start, cur_end_exc), succ cur_count))
                   buffer rest
-            else if end_exc < cur_end_exc then
-              aux
-                (Some ((cur_start, start), cur_count))
-                (((start, end_exc), cur_count + 1)
-                 :: ((end_exc, cur_end_exc), cur_count)
-                 :: buffer)
-                rest
             else
-              aux
-                (Some ((cur_start, start), cur_count))
-                (((start, end_exc), cur_count + 1) :: buffer)
-                rest
+              fun () ->
+                Seq.Cons (
+                  ((cur_start, start), cur_count),
+                  if end_exc < cur_end_exc then
+                    aux (Some ((start, end_exc), succ cur_count))
+                      (((end_exc, cur_end_exc), cur_count) :: buffer)
+                      rest
+                  else
+                    aux (Some ((start, end_exc), succ cur_count))
+                      buffer
+                      rest
+                )
+
+            (* else if end_exc < cur_end_exc then
+             *   aux
+             *     (Some ((cur_start, start), cur_count))
+             *     (((start, end_exc), cur_count + 1)
+             *      :: ((end_exc, cur_end_exc), cur_count)
+             *      :: buffer)
+             *     rest
+             * else
+             *   aux
+             *     (Some ((cur_start, start), cur_count))
+             *     (((start, end_exc), cur_count + 1) :: buffer)
+             *     rest *)
           | None, Some (start, _), Some (_, end_exc) ->
             if start = cur_start then
               aux
                 (Some ((cur_start, cur_end_exc), succ cur_count))
-                (((cur_end_exc, end_exc), cur_count) :: buffer)
+                (((cur_end_exc, end_exc), 1) :: buffer)
                 rest
             else
-              aux
-                (Some ((cur_start, start), cur_count))
-                (((start, cur_end_exc), cur_count + 1)
-                 :: ((cur_end_exc, end_exc), 1)
-                 :: buffer)
-                rest
+              fun () ->
+                Seq.Cons (
+                  ((cur_start, start), cur_count),
+                  aux (Some ((start, cur_end_exc), succ cur_count))
+                    (((cur_end_exc, end_exc), 1) :: buffer)
+                    rest
+                )
+              (* aux
+               *   (Some ((cur_start, start), cur_count))
+               *   (((start, cur_end_exc), cur_count + 1)
+               *    :: ((cur_end_exc, end_exc), 1)
+               *    :: buffer)
+               *   rest *)
           | None, None, Some _ ->
             fun () ->
               Seq.Cons (
