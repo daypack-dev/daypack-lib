@@ -401,29 +401,40 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
     (Time_slot.t * int) Seq.t =
     match time_slots () with
     | Seq.Nil -> (
-        match (cur, buffer) with
-        | None, [] -> Seq.empty
-        | None, buffer -> aux None [] (buffer |> List.rev |> List.to_seq)
-        | Some x, [] -> Seq.return x
-        | Some x, buffer ->
+        match cur with
+        | None -> (
+            match buffer with
+            | [] ->
+              Seq.empty
+            | buffer ->
+              aux None [] (buffer |> Sort.sort_time_slots_list |> List.to_seq)
+          )
+        | Some x ->
           fun () ->
-            Seq.Cons (x, aux None [] (buffer |> List.rev |> List.to_seq)) )
+            Seq.Cons (x, aux None buffer Seq.empty)
+        (* | Some x, [] -> Seq.return x
+         * | Some x, buffer ->
+         *   fun () ->
+         *     Seq.Cons (x, aux None [] (buffer |> List.rev |> List.to_seq)) *)
+      )
     | Seq.Cons (x, rest) as s -> (
-        match (cur, buffer) with
-        | None, [] ->
-          (* let (start, end_exc) = x in
-           * Printf.printf "cur: None, x: (%Ld, %Ld), buffer: %s\n" start end_exc (String.concat ", " (List.map (fun (x, y) ->
-           *   Printf.sprintf "%Ld, %Ld" x y) buffer)); *)
-          aux (Some (x, 1)) [] rest
-        | None, buffer ->
-          (* let (start, end_exc) = x in
-           * Printf.printf "cur: None, x: (%Ld, %Ld), buffer: %s\n" start end_exc(String.concat ", " (List.map (fun (x, y) ->
-           *   Printf.sprintf "%Ld, %Ld" x y) buffer)); *)
-          aux None [] (OSeq.append (List.to_seq buffer) (fun () -> s))
-        | Some ((cur_start, cur_end_exc), cur_count), buffer -> (
-            (* let (start, end_exc) = x in
-             * Printf.printf "cur: (%Ld, %Ld), x: (%Ld, %Ld), buffer: %s\n" cur_start cur_end_exc start end_exc(String.concat ", " (List.map (fun (x, y) ->
-             *   Printf.sprintf "%Ld, %Ld" x y) buffer)); *)
+        match cur with
+        | None -> (match buffer with
+            | [] ->
+              let (start, end_exc) = x in
+              Printf.printf "cur: None, x: (%Ld, %Ld), buffer: [%s]\n" start end_exc (String.concat "; " (List.map (fun (x, y) ->
+                  Printf.sprintf "(%Ld, %Ld)" x y) buffer));
+              aux (Some (x, 1)) [] rest
+            | buffer ->
+              let (start, end_exc) = x in
+              Printf.printf "cur: None, x: (%Ld, %Ld), buffer: [%s]\n" start end_exc(String.concat "; " (List.map (fun (x, y) ->
+                  Printf.sprintf "(%Ld, %Ld)" x y) buffer));
+              aux None [] (OSeq.append (List.to_seq buffer) (fun () -> s))
+          )
+        | Some ((cur_start, cur_end_exc), cur_count) -> (
+            let (start, end_exc) = x in
+            Printf.printf "cur: (%Ld, %Ld), x: (%Ld, %Ld), buffer: [%s]\n" cur_start cur_end_exc start end_exc(String.concat "; " (List.map (fun (x, y) ->
+              Printf.sprintf "(%Ld, %Ld)" x y) buffer));
             match
               Time_slot.overlap_of_a_over_b ~a:x ~b:(cur_start, cur_end_exc)
             with
@@ -431,17 +442,34 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
             | Some _, _, _ ->
               raise (Invalid_argument "Time slots are not sorted1")
             | None, Some (start, end_exc), None ->
-              if end_exc < cur_end_exc then
-                raise (Invalid_argument "Time slots are not sorted2")
-              else if start = cur_start then
-                aux
-                  (Some ((cur_start, cur_end_exc), succ cur_count))
-                  buffer rest
-              else
-                aux
-                  (Some ((cur_start, cur_end_exc), succ cur_count))
-                  ((cur_end_exc, end_exc) :: buffer)
-                  rest
+              if start = cur_start then (
+                if end_exc < cur_end_exc then
+                  raise (Invalid_argument "Time slots are not sorted2")
+                else
+                  aux
+                    (Some ((cur_start, cur_end_exc), succ cur_count))
+                    buffer rest
+              )
+              else (
+                if end_exc < cur_end_exc then
+                  aux (Some ((cur_start, start), succ cur_count))
+                    ((end_exc, cur_end_exc) :: (start, end_exc) :: (start, end_exc) :: buffer) rest
+                else
+                  aux (Some ((cur_start, start), succ cur_count))
+                    ((start, end_exc) :: (start, end_exc) :: buffer) rest
+              )
+
+              (* if end_exc < cur_end_exc then
+               *   raise (Invalid_argument "Time slots are not sorted2")
+               * else if start = cur_start then
+               *   aux
+               *     (Some ((cur_start, cur_end_exc), succ cur_count))
+               *     buffer rest
+               * else
+               *   aux
+               *     (Some ((cur_start, cur_end_exc), succ cur_count))
+               *     ((cur_end_exc, end_exc) :: buffer)
+               *     rest *)
             | None, Some (start, _), Some (_, end_exc) ->
               if start = cur_start then
                 aux
