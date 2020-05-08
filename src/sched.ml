@@ -1964,7 +1964,7 @@ module Agenda = struct
         ~include_task_seg_place_starting_within_time_slot:(Some true)
         ~include_task_seg_place_ending_within_time_slot:(Some true) sched
       |> time_slots_of_task_seg_places ~start ~end_exc
-      |> Time_slots.count_overlap ~skip_sort:true
+      |> Time_slots.count_overlap
   end
 
   module Filter = struct

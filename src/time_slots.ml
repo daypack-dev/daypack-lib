@@ -383,7 +383,7 @@ let a_is_subset_of_b ~(a : Time_slot.t Seq.t) ~(b : Time_slot.t Seq.t) : bool =
   let a = List.of_seq a in
   a = inter
 
-let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
+let count_overlap (time_slots : Time_slot.t Seq.t) :
   (Time_slot.t * int) Seq.t =
   let flatten_buffer buffer =
     buffer
@@ -455,7 +455,6 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
       )
   in
   time_slots
-  |> (fun s -> if skip_sort then s else Sort.sort_time_slots s)
   |> aux None []
 
 module Serialize = struct
