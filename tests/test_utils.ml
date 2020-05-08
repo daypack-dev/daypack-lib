@@ -187,6 +187,28 @@ let sorted_time_slots_with_gaps_gen =
 let sorted_time_slots_with_gaps =
   QCheck.make ~print:Print_utils.time_slots sorted_time_slots_with_gaps_gen
 
+let sorted_time_slots_with_overlaps_gen =
+  let open QCheck.Gen in
+  map
+    (fun (start, sizes_and_gaps) ->
+       sizes_and_gaps
+       |> List.fold_left
+         (fun (last_start, acc) (size, gap) ->
+            let start =
+              match last_start with
+              | None -> start
+              | Some x -> Int64.add x (Int64.of_int gap)
+            in
+            let end_exc = Int64.add start (Int64.of_int size) in
+            (Some start, (start, end_exc) :: acc))
+         (None, [])
+       |> fun (_, l) -> List.rev l)
+    (pair pos_int64_gen
+       (list_size (int_bound 1000) (pair nz_small_nat_gen nz_small_nat_gen)))
+
+let sorted_time_slots_with_overlaps =
+  QCheck.make ~print:Print_utils.time_slots sorted_time_slots_with_overlaps_gen
+
 let tiny_time_slots_gen =
   let open QCheck.Gen in
   map

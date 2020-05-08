@@ -269,8 +269,25 @@ let qc_intersect_union_distributive2 =
          Daypack_lib.Time_slots.(Union.union (intersect s1 s2) (intersect s1 s3))
          |> List.of_seq
        in
-
        res1 = res2)
+
+let qc_merge =
+  QCheck.Test.make ~count:10_000 ~name:"qc_merge"
+    QCheck.(
+      pair sorted_time_slots_with_overlaps sorted_time_slots_with_overlaps
+    )
+    (fun (l1, l2) ->
+       let s1 = l1 |> List.to_seq in
+       let s2 = l2 |> List.to_seq in
+       let res1 =
+         Daypack_lib.Time_slots.Merge.merge s1 s2
+         |> List.of_seq
+       in
+       let res2 =
+         List.sort Daypack_lib.Time_slot.compare (l1 @ l2)
+       in
+       res1 = res2
+    )
 
 let suite =
   [
@@ -294,4 +311,5 @@ let suite =
     qc_union_associative;
     qc_intersect_union_distributive1;
     qc_intersect_union_distributive2;
+    qc_merge;
   ]
