@@ -1,5 +1,13 @@
 type t = int64 * int64
 
+val lt : t -> t -> bool
+
+val le : t -> t -> bool
+
+val gt : t -> t -> bool
+
+val ge : t -> t -> bool
+
 val compare : t -> t -> int
 
 val to_string : t -> string

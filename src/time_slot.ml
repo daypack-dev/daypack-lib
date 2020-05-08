@@ -1,9 +1,21 @@
 type t = int64 * int64
 
-let compare (x1, y1) (x2, y2) =
+let lt (x1, y1) (x2, y2) =
   (* lexicographical order *)
-  if x1 < x2 || (x1 = x2 && y1 < y2) then -1
-  else if x1 = x2 && y1 = y2 then 0
+  x1 < x2 || (x1 = x2 && y1 < y2)
+
+let le x y =
+  x = y || lt x y
+
+let gt x y =
+  lt y x
+
+let ge x y =
+  le y x
+
+let compare x y =
+  if lt x y then -1
+  else if x = y then 0
   else 1
 
 let to_string ((start, end_exc) : t) : string =
