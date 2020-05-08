@@ -253,14 +253,11 @@ module Merge = struct
     let rec aux time_slots1 time_slots2 =
       match (time_slots1 (), time_slots2 ()) with
       | Seq.Nil, s | s, Seq.Nil -> fun () -> s
-      | ( (Seq.Cons (x1, rest1)),
-          (Seq.Cons (x2, rest2)) ) ->
-        let ts1 = fun () -> Seq.Cons (x1, rest1) in
-        let ts2 = fun () -> Seq.Cons (x2, rest2) in
-        if Time_slot.le x1 x2 then
-          fun () -> Seq.Cons (x1, aux rest1 ts2)
-        else
-          fun () -> Seq.Cons (x2, aux rest2 ts1)
+      | Seq.Cons (x1, rest1), Seq.Cons (x2, rest2) ->
+        let ts1 () = Seq.Cons (x1, rest1) in
+        let ts2 () = Seq.Cons (x2, rest2) in
+        if Time_slot.le x1 x2 then fun () -> Seq.Cons (x1, aux rest1 ts2)
+        else fun () -> Seq.Cons (x2, aux rest2 ts1)
     in
     aux time_slots1 time_slots2
 
@@ -401,14 +398,10 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
   (Time_slot.t * int) Seq.t =
   let flush_buffer buffer =
     buffer
-    |> List.sort (fun (x, _count) (y, _count) ->
-        Time_slot.compare x y
-      )
+    |> List.sort (fun (x, _count) (y, _count) -> Time_slot.compare x y)
     |> List.to_seq
     |> Seq.flat_map (fun (x, count) ->
-        OSeq.(0 --^ count)
-        |> Seq.map (fun _ -> x)
-      )
+        OSeq.(0 --^ count) |> Seq.map (fun _ -> x))
   in
   let flush_buffer_to_input buffer time_slots =
     Merge.merge (flush_buffer buffer) time_slots
@@ -419,74 +412,57 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
     match time_slots () with
     | Seq.Nil -> (
         match buffer with
-        | [] -> (match cur with
-            | None -> Seq.empty
-            | Some cur -> Seq.return cur)
-        | buffer ->
-          aux cur [] (flush_buffer buffer)
-      )
+        | [] -> (
+            match cur with None -> Seq.empty | Some cur -> Seq.return cur )
+        | buffer -> aux cur [] (flush_buffer buffer) )
     | Seq.Cons (x, rest) -> (
-        let s = fun () -> Seq.Cons (x, rest) in
+        let s () = Seq.Cons (x, rest) in
         match cur with
         | None -> (
             match buffer with
-            | [] ->
-              aux (Some (x, 1)) [] rest
-            | buffer ->
-              aux None [] (flush_buffer_to_input buffer s)
-          )
-        | Some ((cur_start, cur_end_exc), cur_count) ->
-          match
+            | [] -> aux (Some (x, 1)) [] rest
+            | buffer -> aux None [] (flush_buffer_to_input buffer s) )
+        | Some ((cur_start, cur_end_exc), cur_count) -> (
+            match
               Time_slot.overlap_of_a_over_b ~a:x ~b:(cur_start, cur_end_exc)
-          with
-          | None, None, None ->
-            aux cur
-              buffer rest
-          | Some _, _, _ ->
-            raise (Invalid_argument "Time slots are not sorted1")
-          | None, Some (start, end_exc), None
-          | None, Some (start, _), Some (_, end_exc) ->
-            if start = cur_start then (
-              if end_exc < cur_end_exc then
-                raise (Invalid_argument "Time slots are not sorted2")
-              else if end_exc = cur_end_exc then
-                aux
-                  (Some ((cur_start, cur_end_exc), succ cur_count))
-                  buffer rest
-              else
-                aux
-                  (Some ((cur_start, cur_end_exc), succ cur_count))
-                  (((cur_end_exc, end_exc), 1) :: buffer) rest
-            )
-            else
-              fun () ->
+            with
+            | None, None, None -> aux cur buffer rest
+            | Some _, _, _ ->
+              raise (Invalid_argument "Time slots are not sorted1")
+            | None, Some (start, end_exc), None
+            | None, Some (start, _), Some (_, end_exc) ->
+              if start = cur_start then
+                if end_exc < cur_end_exc then
+                  raise (Invalid_argument "Time slots are not sorted2")
+                else if end_exc = cur_end_exc then
+                  aux
+                    (Some ((cur_start, cur_end_exc), succ cur_count))
+                    buffer rest
+                else
+                  aux
+                    (Some ((cur_start, cur_end_exc), succ cur_count))
+                    (((cur_end_exc, end_exc), 1) :: buffer)
+                    rest
+              else fun () ->
                 Seq.Cons
-                  (
-                    ((cur_start, start), cur_count),
+                  ( ((cur_start, start), cur_count),
                     let buffer =
                       if end_exc < cur_end_exc then
                         ((start, end_exc), succ cur_count)
-                         :: ((end_exc, cur_end_exc), cur_count)
-                         :: buffer
-                      else if end_exc = cur_end_exc then
-                        ((start, cur_end_exc), succ cur_count)
+                        :: ((end_exc, cur_end_exc), cur_count)
                         :: buffer
+                      else if end_exc = cur_end_exc then
+                        ((start, cur_end_exc), succ cur_count) :: buffer
                       else
                         ((start, cur_end_exc), succ cur_count)
                         :: ((cur_end_exc, end_exc), 1)
                         :: buffer
                     in
-                    aux
-                      None
-                      buffer
-                      rest
-                  )
-          | None, None, Some _ ->
-            fun () ->
-              Seq.Cons (
-                ((cur_start, cur_end_exc), cur_count),
-                aux None buffer s
-              )
+                    aux None buffer rest )
+            | None, None, Some _ ->
+              fun () ->
+                Seq.Cons
+                  (((cur_start, cur_end_exc), cur_count), aux None buffer s) )
       )
   in
   time_slots

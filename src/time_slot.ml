@@ -4,19 +4,13 @@ let lt (x1, y1) (x2, y2) =
   (* lexicographical order *)
   x1 < x2 || (x1 = x2 && y1 < y2)
 
-let le x y =
-  lt x y || x = y
+let le x y = lt x y || x = y
 
-let gt x y =
-  lt y x
+let gt x y = lt y x
 
-let ge x y =
-  le y x
+let ge x y = le y x
 
-let compare x y =
-  if lt x y then -1
-  else if x = y then 0
-  else 1
+let compare x y = if lt x y then -1 else if x = y then 0 else 1
 
 let to_string ((start, end_exc) : t) : string =
   Printf.sprintf "[%Ld, %Ld)" start end_exc
