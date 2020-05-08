@@ -418,18 +418,12 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
     (Time_slot.t * int) Seq.t =
     match time_slots () with
     | Seq.Nil -> (
-        match cur with
-        | None -> (
-            match buffer with
-            | [] -> Seq.empty
-            | buffer ->
-              aux None [] (flush_buffer buffer)
-          )
-        | Some cur ->
-          match buffer with
-          | [] -> Seq.return cur
-          | buffer ->
-            aux (Some cur) [] (flush_buffer buffer)
+        match buffer with
+        | [] -> (match cur with
+            | None -> Seq.empty
+            | Some cur -> Seq.return cur)
+        | buffer ->
+          aux cur [] (flush_buffer buffer)
       )
     | Seq.Cons (x, rest) -> (
         let s = fun () -> Seq.Cons (x, rest) in
@@ -446,7 +440,7 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
               Time_slot.overlap_of_a_over_b ~a:x ~b:(cur_start, cur_end_exc)
           with
           | None, None, None ->
-            aux (Some ((cur_start, cur_end_exc), cur_count))
+            aux cur
               buffer rest
           | Some _, _, _ ->
             raise (Invalid_argument "Time slots are not sorted1")
@@ -469,28 +463,23 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
                 Seq.Cons
                   (
                     ((cur_start, start), cur_count),
-                    if end_exc < cur_end_exc then
-                      aux
-                        None
-                        (((start, end_exc), succ cur_count)
+                    let buffer =
+                      if end_exc < cur_end_exc then
+                        ((start, end_exc), succ cur_count)
                          :: ((end_exc, cur_end_exc), cur_count)
                          :: buffer
-                        )
-                        rest
-                    else if end_exc = cur_end_exc then
-                      aux
-                        None
-                        (((start, cur_end_exc), succ cur_count)
-                         :: buffer)
-                        rest
-                    else
-                      aux
-                        None
-                        (((start, cur_end_exc), succ cur_count)
-                         :: ((cur_end_exc, end_exc), 1)
-                         :: buffer
-                        )
-                        rest
+                      else if end_exc = cur_end_exc then
+                        ((start, cur_end_exc), succ cur_count)
+                        :: buffer
+                      else
+                        ((start, cur_end_exc), succ cur_count)
+                        :: ((cur_end_exc, end_exc), 1)
+                        :: buffer
+                    in
+                    aux
+                      None
+                      buffer
+                      rest
                   )
           | None, None, Some _ ->
             fun () ->
