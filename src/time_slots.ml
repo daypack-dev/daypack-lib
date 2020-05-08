@@ -385,7 +385,7 @@ let a_is_subset_of_b ~(a : Time_slot.t Seq.t) ~(b : Time_slot.t Seq.t) : bool =
 
 let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
   (Time_slot.t * int) Seq.t =
-  let flush_buffer buffer =
+  let flatten_buffer buffer =
     buffer
     |> List.sort (fun (x, _count) (y, _count) -> Time_slot.compare x y)
     |> List.to_seq
@@ -393,7 +393,7 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
         OSeq.(0 --^ count) |> Seq.map (fun _ -> x))
   in
   let flush_buffer_to_input buffer time_slots =
-    Merge.merge (flush_buffer buffer) time_slots
+    Merge.merge (flatten_buffer buffer) time_slots
   in
   let rec aux (cur : ((int64 * int64) * int) option)
       (buffer : ((int64 * int64) * int) list) (time_slots : Time_slot.t Seq.t) :
@@ -403,7 +403,7 @@ let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
         match buffer with
         | [] -> (
             match cur with None -> Seq.empty | Some cur -> Seq.return cur )
-        | buffer -> aux cur [] (flush_buffer buffer) )
+        | buffer -> aux cur [] (flatten_buffer buffer) )
     | Seq.Cons (x, rest) -> (
         let s () = Seq.Cons (x, rest) in
         match cur with
