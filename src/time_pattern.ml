@@ -705,8 +705,7 @@ module Single_pattern = struct
       match search_param with
       | Time_slots { time_slots; _ } ->
         let time_slots =
-          time_slots
-          |> Time_slots.Normalize.normalize_list_in_seq_out
+          time_slots |> Time_slots.Normalize.normalize_list_in_seq_out
         in
         Some time_slots
       | _ -> None

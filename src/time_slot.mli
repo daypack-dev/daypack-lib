@@ -1,4 +1,5 @@
 exception Time_slot_is_invalid
+
 exception Time_slot_is_empty
 
 type t = int64 * int64

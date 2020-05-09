@@ -1,6 +1,7 @@
 open Int64_utils
 
 exception Time_slots_are_not_sorted
+
 exception Time_slots_are_not_disjoint
 
 module Check = struct
@@ -11,40 +12,35 @@ module Check = struct
     Seq.map Time_slot.Check.check_if_not_empty time_slots
 
   let check_if_sorted (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    let rec aux (last : Time_slot.t option) (s : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    let rec aux (last : Time_slot.t option) (s : Time_slot.t Seq.t) :
+      Time_slot.t Seq.t =
       match s () with
-      | Seq.Nil -> (match last with
-          | None -> Seq.empty
-          | Some x -> Seq.return x)
-      | Seq.Cons (x, rest) ->
-        match last with
-        | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
-        | Some last ->
-          if Time_slot.le last x then
-            fun () -> Seq.Cons (x, aux (Some x) rest)
-          else
-            raise Time_slots_are_not_sorted
+      | Seq.Nil -> (
+          match last with None -> Seq.empty | Some x -> Seq.return x )
+      | Seq.Cons (x, rest) -> (
+          match last with
+          | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
+          | Some last ->
+            if Time_slot.le last x then fun () ->
+              Seq.Cons (x, aux (Some x) rest)
+            else raise Time_slots_are_not_sorted )
     in
     aux None time_slots
 
   let check_if_disjoint (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    let rec aux (last : Time_slot.t option) (s : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    let rec aux (last : Time_slot.t option) (s : Time_slot.t Seq.t) :
+      Time_slot.t Seq.t =
       match s () with
-      | Seq.Nil -> (match last with
-          | None -> Seq.empty
-          | Some x -> Seq.return x)
-      | Seq.Cons (x, rest) ->
-        match last with
-        | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
-        | Some last ->
-          match Time_slot.overlap_of_a_over_b ~a:x ~b:last with
-          | None, None, None
-          | Some _, None, None
-          | None, None, Some _
-            ->
-            fun () -> Seq.Cons (x, aux (Some x) rest)
-          | _ ->
-            raise Time_slots_are_not_disjoint
+      | Seq.Nil -> (
+          match last with None -> Seq.empty | Some x -> Seq.return x )
+      | Seq.Cons (x, rest) -> (
+          match last with
+          | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
+          | Some last -> (
+              match Time_slot.overlap_of_a_over_b ~a:x ~b:last with
+              | None, None, None | Some _, None, None | None, None, Some _ ->
+                fun () -> Seq.Cons (x, aux (Some x) rest)
+              | _ -> raise Time_slots_are_not_disjoint ) )
     in
     aux None time_slots
 
@@ -107,27 +103,18 @@ module Join_internal = struct
     let rec aux cur time_slots =
       match time_slots () with
       | Seq.Nil -> (
-          match cur with
-          | None -> Seq.empty
-          | Some x ->
-            Seq.return x )
+          match cur with None -> Seq.empty | Some x -> Seq.return x )
       | Seq.Cons ((start, end_exc), rest) -> (
           match cur with
           | None -> aux (Some (start, end_exc)) rest
           | Some cur -> (
-              match
-                Time_slot.join cur (start, end_exc)
-              with
+              match Time_slot.join cur (start, end_exc) with
               | Some x -> aux (Some x) rest
               | None ->
                 (* cannot be merged, add time slot being carried to the sequence *)
-                fun () ->
-                  Seq.Cons
-                    ( cur,
-                      aux (Some (start, end_exc)) rest ) ) )
+                fun () -> Seq.Cons (cur, aux (Some (start, end_exc)) rest) ) )
     in
     aux None time_slots
-
 end
 
 let join time_slots =
@@ -360,14 +347,10 @@ module Merge = struct
         else fun () -> Seq.Cons (x2, aux rest2 ts1)
     in
     let time_slots1 =
-      time_slots1
-      |> Check.check_if_valid
-      |> Check.check_if_sorted
+      time_slots1 |> Check.check_if_valid |> Check.check_if_sorted
     in
     let time_slots2 =
-      time_slots2
-      |> Check.check_if_valid
-      |> Check.check_if_sorted
+      time_slots2 |> Check.check_if_valid |> Check.check_if_sorted
     in
     aux time_slots1 time_slots2
 
@@ -445,9 +428,7 @@ module Sum = struct
   let sum_length (time_slots : Time_slot.t Seq.t) : int64 =
     time_slots
     |> Check.check_if_valid
-    |> Seq.fold_left
-      (fun acc (start, end_exc) -> acc +^ (end_exc -^ start))
-      0L
+    |> Seq.fold_left (fun acc (start, end_exc) -> acc +^ (end_exc -^ start)) 0L
 
   let sum_length_list (time_slots : Time_slot.t list) : int64 =
     time_slots |> List.to_seq |> sum_length
@@ -525,7 +506,7 @@ let count_overlap (time_slots : Time_slot.t Seq.t) : (Time_slot.t * int) Seq.t =
             | None, None, None -> aux cur buffer rest
             | Some _, _, _ ->
               failwith "Unexpected case, time slots are not sorted"
-              (* raise (Invalid_argument "Time slots are not sorted") *)
+            (* raise (Invalid_argument "Time slots are not sorted") *)
             | None, Some (start, end_exc), None
             | None, Some (start, _), Some (_, end_exc) ->
               if start = cur_start then
@@ -563,10 +544,7 @@ let count_overlap (time_slots : Time_slot.t Seq.t) : (Time_slot.t * int) Seq.t =
                   (((cur_start, cur_end_exc), cur_count), aux None buffer s) )
       )
   in
-  time_slots
-  |> Check.check_if_valid
-  |> Check.check_if_sorted
-  |> aux None []
+  time_slots |> Check.check_if_valid |> Check.check_if_sorted |> aux None []
 
 module Serialize = struct
   let pack_time_slots time_slots =
