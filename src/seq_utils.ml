@@ -51,3 +51,33 @@ let mod_int n =
  *     | Seq.Cons (x, rest) -> fun () -> Seq.Cons (f i x, aux f rest (i ^+ 1L))
  *   in
  *   aux f s 0L *)
+
+let collect_round_robin_non_decreasing (type a) (compare : a -> a -> int)
+    (batches : a Seq.t list) : a option list Seq.t =
+  let rec get_usable_part compare (cur : a) (seq : a Seq.t) : a Seq.t =
+    match seq () with
+    | Seq.Nil -> Seq.empty
+    | Seq.Cons (x, rest) as s ->
+      let cmp_res = compare cur x in
+      if cmp_res <= 0 then fun () -> s else get_usable_part compare cur rest
+  in
+  let rec aux compare (cur : a option) (batches : a Seq.t list) :
+    a option list Seq.t =
+    let cur, acc, new_batches =
+      List.fold_left
+        (fun (cur, acc, new_batches) seq ->
+           let usable =
+             match cur with
+             | None -> seq
+             | Some cur_start -> get_usable_part compare cur_start seq
+           in
+           match usable () with
+           | Seq.Nil -> (cur, None :: acc, new_batches)
+           | Seq.Cons (x, rest) -> (Some x, Some x :: acc, rest :: new_batches))
+        (cur, [], []) batches
+    in
+    let acc = List.rev acc in
+    let new_batches = List.rev new_batches in
+    fun () -> Seq.Cons (acc, aux compare cur new_batches)
+  in
+  aux compare None batches
