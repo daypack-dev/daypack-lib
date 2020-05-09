@@ -1,17 +1,69 @@
 open Int64_utils
 
+exception Time_slots_are_not_sorted
+exception Time_slots_are_not_disjoint
+
+module Check = struct
+  let check_if_valid (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    Seq.map Time_slot.Check.check_if_valid time_slots
+
+  let check_if_not_empty (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    Seq.map Time_slot.Check.check_if_not_empty time_slots
+
+  let check_if_sorted (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    let rec aux (last : Time_slot.t option) (s : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+      match s () with
+      | Seq.Nil -> (match last with
+          | None -> Seq.empty
+          | Some x -> Seq.return x)
+      | Seq.Cons (x, rest) ->
+        match last with
+        | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
+        | Some last ->
+          if Time_slot.le last x then
+            fun () -> Seq.Cons (x, aux (Some x) rest)
+          else
+            raise Time_slots_are_not_sorted
+    in
+    aux None time_slots
+
+  let check_if_disjoint (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    let rec aux (last : Time_slot.t option) (s : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+      match s () with
+      | Seq.Nil -> (match last with
+          | None -> Seq.empty
+          | Some x -> Seq.return x)
+      | Seq.Cons (x, rest) ->
+        match last with
+        | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
+        | Some last ->
+          match Time_slot.join last x with
+          | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
+          | Some _ ->
+            raise Time_slots_are_not_disjoint
+    in
+    aux None time_slots
+
+  let check_if_normalized (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    time_slots
+    |> check_if_valid
+    |> check_if_not_empty
+    |> check_if_sorted
+    |> check_if_disjoint
+end
+
 module Filter = struct
   let filter_invalid (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    Seq.filter (fun (x, y) -> x <= y) time_slots
+    Seq.filter Time_slot.Check.is_valid time_slots
 
   let filter_invalid_list (time_slots : Time_slot.t list) : Time_slot.t list =
-    List.filter (fun (x, y) -> x <= y) time_slots
+    List.filter Time_slot.Check.is_valid time_slots
 
   let filter_empty (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    Seq.filter (fun (x, y) -> x <> y) time_slots
+    Seq.filter Time_slot.Check.is_not_empty time_slots
 
   let filter_empty_list (time_slots : Time_slot.t list) : Time_slot.t list =
-    List.filter (fun (x, y) -> x <> y) time_slots
+    List.filter Time_slot.Check.is_not_empty time_slots
 end
 
 module Sort = struct

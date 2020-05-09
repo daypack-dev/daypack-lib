@@ -1,3 +1,14 @@
+exception Time_slots_are_not_sorted
+exception Time_slots_are_not_disjoint
+
+module Check : sig
+  val check_if_valid : Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val check_if_not_empty : Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val check_if_sorted : Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val check_if_disjoint : Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val check_if_normalized : Time_slot.t Seq.t -> Time_slot.t Seq.t
+end
+
 module Filter : sig
   val filter_invalid : Time_slot.t Seq.t -> Time_slot.t Seq.t
 
