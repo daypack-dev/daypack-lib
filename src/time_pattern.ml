@@ -703,7 +703,12 @@ module Single_pattern = struct
     Time_slot.t Seq.t =
     let time_slots =
       match search_param with
-      | Time_slots { time_slots; _ } -> Some time_slots
+      | Time_slots { time_slots; _ } ->
+        let time_slots =
+          time_slots
+          |> Time_slots.Normalize.normalize_list_in_seq_out
+        in
+        Some time_slots
       | _ -> None
     in
     let search_in_time_zone =
@@ -723,7 +728,7 @@ module Single_pattern = struct
     match time_slots with
     | None -> l
     | Some time_slots ->
-      Time_slots.intersect (List.to_seq time_slots) l
+      Time_slots.intersect time_slots l
       |> Time_slots.Normalize.normalize ~skip_sort:true
 
   let matching_time_slots_round_robin_non_decreasing
