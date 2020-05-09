@@ -264,36 +264,7 @@ end
 module Round_robin = struct
   let collect_round_robin_non_decreasing (batches : Time_slot.t Seq.t list) :
     Time_slot.t option list Seq.t =
-    let rec get_usable_part (cur_start : int64) (seq : Time_slot.t Seq.t) :
-      Time_slot.t Seq.t =
-      match seq () with
-      | Seq.Nil -> Seq.empty
-      | Seq.Cons ((start, end_exc), rest) as s ->
-        if cur_start <= start then fun () -> s
-        else if end_exc <= cur_start then get_usable_part cur_start rest
-        else fun () -> Seq.Cons ((cur_start, end_exc), rest)
-    in
-    let rec aux (cur_start : int64 option) (batches : Time_slot.t Seq.t list) :
-      Time_slot.t option list Seq.t =
-      let cur_start, acc, new_batches =
-        List.fold_left
-          (fun (cur_start, acc, new_batches) seq ->
-             let usable =
-               match cur_start with
-               | None -> seq
-               | Some cur_start -> get_usable_part cur_start seq
-             in
-             match usable () with
-             | Seq.Nil -> (cur_start, None :: acc, new_batches)
-             | Seq.Cons ((start, end_exc), rest) ->
-               (Some start, Some (start, end_exc) :: acc, rest :: new_batches))
-          (cur_start, [], []) batches
-      in
-      let acc = List.rev acc in
-      let new_batches = List.rev new_batches in
-      fun () -> Seq.Cons (acc, aux cur_start new_batches)
-    in
-    aux None batches
+    Seq_utils.collect_round_robin Time_slot.le batches
 
   let merge_multi_list_round_robin_non_decreasing
       (batches : Time_slot.t Seq.t list) : Time_slot.t Seq.t =
