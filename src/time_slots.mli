@@ -29,6 +29,8 @@ module Sort : sig
   val sort_uniq_time_slots : Time_slot.t Seq.t -> Time_slot.t Seq.t
 end
 
+val join : Time_slot.t Seq.t -> Time_slot.t Seq.t
+
 module Normalize : sig
   val normalize :
     ?skip_filter_invalid:bool ->

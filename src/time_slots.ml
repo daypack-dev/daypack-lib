@@ -98,8 +98,8 @@ module Sort = struct
     |> List.to_seq
 end
 
-module Normalize = struct
-  let join_internal (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+module Join_internal = struct
+  let join (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     let rec aux cur time_slots =
       match time_slots () with
       | Seq.Nil -> (
@@ -124,13 +124,22 @@ module Normalize = struct
     in
     aux None time_slots
 
+end
+
+let join time_slots =
+  time_slots
+  |> Check.check_if_valid
+  |> Check.check_if_sorted
+  |> Join_internal.join
+
+module Normalize = struct
   let normalize ?(skip_filter_invalid = false) ?(skip_filter_empty = false)
       ?(skip_sort = false) time_slots =
     time_slots
     |> (fun s -> if skip_filter_invalid then s else Filter.filter_invalid s)
     |> (fun s -> if skip_filter_empty then s else Filter.filter_empty s)
     |> (fun s -> if skip_sort then s else Sort.sort_uniq_time_slots s)
-    |> join_internal
+    |> Join_internal.join
 
   let normalize_list_in_seq_out ?(skip_filter_invalid = false)
       ?(skip_filter_empty = false) ?(skip_sort = false) time_slots =
