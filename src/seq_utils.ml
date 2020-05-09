@@ -75,8 +75,10 @@ let collect_round_robin (type a) (f : a -> a -> bool) (batches : a Seq.t list) :
            | Seq.Cons (x, rest) -> (Some x, Some x :: acc, rest :: new_batches))
         (cur, [], []) batches
     in
-    let acc = List.rev acc in
-    let new_batches = List.rev new_batches in
-    fun () -> Seq.Cons (acc, aux compare cur new_batches)
+    if List.exists Option.is_some acc then
+      let acc = List.rev acc in
+      let new_batches = List.rev new_batches in
+      fun () -> Seq.Cons (acc, aux compare cur new_batches)
+    else Seq.empty
   in
   aux compare None batches
