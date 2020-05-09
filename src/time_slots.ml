@@ -84,26 +84,26 @@ end
 
 module Normalize = struct
   let join (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    let rec aux last_start_and_last_end_exc time_slots =
+    let rec aux cur time_slots =
       match time_slots () with
       | Seq.Nil -> (
-          match last_start_and_last_end_exc with
+          match cur with
           | None -> Seq.empty
-          | Some (last_start, last_end_exc) ->
-            Seq.return (last_start, last_end_exc) )
+          | Some x ->
+            Seq.return x )
       | Seq.Cons ((start, end_exc), rest) -> (
-          match last_start_and_last_end_exc with
+          match cur with
           | None -> aux (Some (start, end_exc)) rest
-          | Some (last_start, last_end_exc) -> (
+          | Some cur -> (
               match
-                Time_slot.join (start, end_exc) (last_start, last_end_exc)
+                Time_slot.join cur (start, end_exc)
               with
               | Some x -> aux (Some x) rest
               | None ->
                 (* cannot be merged, add time slot being carried to the sequence *)
                 fun () ->
                   Seq.Cons
-                    ( (last_start, last_end_exc),
+                    ( cur,
                       aux (Some (start, end_exc)) rest ) ) )
     in
     aux None time_slots
