@@ -1,3 +1,6 @@
+exception Time_slot_is_invalid
+exception Time_slot_is_empty
+
 type t = int64 * int64
 
 val lt : t -> t -> bool
@@ -17,7 +20,13 @@ val join : t -> t -> t option
 val overlap_of_a_over_b : a:t -> b:t -> t option * t option * t option
 
 module Check : sig
-  val check_time_slot : t -> bool
+  val is_valid : t -> bool
+
+  val is_not_empty : t -> bool
+
+  val check_if_valid : t -> t
+
+  val check_if_not_empty : t -> t
 end
 
 module Serialize : sig

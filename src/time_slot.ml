@@ -1,3 +1,6 @@
+exception Time_slot_is_invalid
+exception Time_slot_is_empty
+
 type t = int64 * int64
 
 let lt (x1, y1) (x2, y2) =
@@ -36,8 +39,23 @@ let overlap_of_a_over_b ~(a : t) ~(b : t) : t option * t option * t option =
   else (None, Some (a_start, a_end_exc), Some (b_end_exc, a_end_exc))
 
 module Check = struct
-  let check_time_slot ((start, end_exc) : t) : bool =
+  let is_valid ((start, end_exc) : t) : bool =
     0L <= start && start <= end_exc
+
+  let is_not_empty ((start, end_exc) : t) : bool =
+    start <> end_exc
+
+  let check_if_valid (x : t) : t =
+    if is_valid x then
+      x
+    else
+      raise Time_slot_is_invalid
+
+  let check_if_not_empty (x : t) : t =
+    if is_not_empty x then
+      x
+    else
+      raise Time_slot_is_empty
 end
 
 module Serialize = struct
