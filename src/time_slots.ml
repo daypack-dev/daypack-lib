@@ -37,9 +37,13 @@ module Check = struct
         match last with
         | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
         | Some last ->
-          match Time_slot.join last x with
-          | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
-          | Some _ ->
+          match Time_slot.overlap_of_a_over_b ~a:x ~b:last with
+          | None, None, None
+          | Some _, None, None
+          | None, None, Some _
+            ->
+            fun () -> Seq.Cons (x, aux (Some x) rest)
+          | _ ->
             raise Time_slots_are_not_disjoint
     in
     aux None time_slots
