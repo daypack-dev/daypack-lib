@@ -15,8 +15,7 @@ module Check = struct
     let rec aux (last : Time_slot.t option) (s : Time_slot.t Seq.t) :
       Time_slot.t Seq.t =
       match s () with
-      | Seq.Nil -> (
-          match last with None -> Seq.empty | Some x -> Seq.return x )
+      | Seq.Nil -> Seq.empty
       | Seq.Cons (x, rest) -> (
           match last with
           | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
@@ -31,8 +30,7 @@ module Check = struct
     let rec aux (last : Time_slot.t option) (s : Time_slot.t Seq.t) :
       Time_slot.t Seq.t =
       match s () with
-      | Seq.Nil -> (
-          match last with None -> Seq.empty | Some x -> Seq.return x )
+      | Seq.Nil -> Seq.empty
       | Seq.Cons (x, rest) -> (
           match last with
           | None -> fun () -> Seq.Cons (x, aux (Some x) rest)
