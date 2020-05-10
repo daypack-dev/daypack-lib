@@ -82,3 +82,17 @@ let collect_round_robin (type a) (f : a -> a -> bool) (batches : a Seq.t list) :
     else Seq.empty
   in
   aux compare None batches
+
+let check_if_f_holds_for_immediate_neighbors (type a) ~(f : a -> a -> bool)
+    ~(f_exn : a -> a -> exn) (s : a Seq.t) : a Seq.t =
+  let rec aux f f_exn (cur : a option) (s : a Seq.t) : a Seq.t =
+    match s () with
+    | Seq.Nil -> ( match cur with None -> Seq.empty | Some x -> Seq.return x )
+    | Seq.Cons (x, rest) -> (
+        match cur with
+        | None -> aux f f_exn (Some x) rest
+        | Some cur ->
+          if f cur x then fun () -> Seq.Cons (cur, aux f f_exn (Some x) rest)
+          else raise (f_exn cur x) )
+  in
+  aux f f_exn None s

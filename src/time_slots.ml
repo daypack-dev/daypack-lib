@@ -11,33 +11,19 @@ module Check = struct
   let check_if_not_empty (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     Seq.map Time_slot.Check.check_if_not_empty time_slots
 
-  let check_if_f_holds_for_immediate_neighbors
-      (f : Time_slot.t -> Time_slot.t -> bool) (exn : exn)
-      (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    let rec aux f exn (last : Time_slot.t option) (s : Time_slot.t Seq.t) :
-      Time_slot.t Seq.t =
-      match s () with
-      | Seq.Nil -> Seq.empty
-      | Seq.Cons (x, rest) -> (
-          match last with
-          | None -> fun () -> Seq.Cons (x, aux f exn (Some x) rest)
-          | Some last ->
-            if f last x then fun () -> Seq.Cons (x, aux f exn (Some x) rest)
-            else raise exn )
-    in
-    aux f exn None time_slots
-
   let check_if_sorted (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    check_if_f_holds_for_immediate_neighbors Time_slot.le
-      Time_slots_are_not_sorted time_slots
+    Seq_utils.check_if_f_holds_for_immediate_neighbors ~f:Time_slot.le
+      ~f_exn:(fun _ _ -> Time_slots_are_not_sorted)
+      time_slots
 
   let check_if_disjoint (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    check_if_f_holds_for_immediate_neighbors
-      (fun x y ->
-         match Time_slot.overlap_of_a_over_b ~a:y ~b:x with
-         | None, None, None | Some _, None, None | None, None, Some _ -> true
-         | _ -> false)
-      Time_slots_are_not_disjoint time_slots
+    Seq_utils.check_if_f_holds_for_immediate_neighbors
+      ~f:(fun x y ->
+          match Time_slot.overlap_of_a_over_b ~a:y ~b:x with
+          | None, None, None | Some _, None, None | None, None, Some _ -> true
+          | _ -> false)
+      ~f_exn:(fun _ _ -> Time_slots_are_not_disjoint)
+      time_slots
 
   let check_if_normalized (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     time_slots

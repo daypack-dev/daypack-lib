@@ -7,12 +7,6 @@ module Check : sig
 
   val check_if_not_empty : Time_slot.t Seq.t -> Time_slot.t Seq.t
 
-  val check_if_f_holds_for_immediate_neighbors :
-    (Time_slot.t -> Time_slot.t -> bool) ->
-    exn ->
-    Time_slot.t Seq.t ->
-    Time_slot.t Seq.t
-
   val check_if_sorted : Time_slot.t Seq.t -> Time_slot.t Seq.t
 
   val check_if_disjoint : Time_slot.t Seq.t -> Time_slot.t Seq.t
