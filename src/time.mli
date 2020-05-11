@@ -1,8 +1,6 @@
-type time_zone =
-  [ `Local
-  | `UTC
-  | `UTC_plus_sec of int
-  ]
+type tz_offset_s = int
+
+val tz_offset_s_utc : tz_offset_s
 
 type weekday =
   [ `Sun
@@ -36,7 +34,7 @@ type date_time = {
   hour : int;
   minute : int;
   second : int;
-  tz_offset_sec : int;
+  tz_offset_s : int;
 }
 
 type weekday_range = weekday Range.range
@@ -107,14 +105,14 @@ val weekday_ge : weekday -> weekday -> bool
 
 val zero_tm_sec : Unix.tm -> Unix.tm
 
-val tm_of_unix_time : time_zone_of_tm:time_zone -> int64 -> Unix.tm
+(* val tm_of_unix_time : time_zone_of_tm:time_zone -> int64 -> Unix.tm
 
 val unix_time_of_tm : time_zone_of_tm:time_zone -> Unix.tm -> int64
 
 val normalize_tm : Unix.tm -> Unix.tm
 
 val tm_change_time_zone :
-  from_time_zone:time_zone -> to_time_zone:time_zone -> Unix.tm -> Unix.tm
+  from_time_zone:time_zone -> to_time_zone:time_zone -> Unix.tm -> Unix.tm *)
 
 val is_leap_year : year:int -> bool
 
@@ -122,9 +120,9 @@ val day_count_of_year : year:int -> int
 
 val day_count_of_month : year:int -> month:month -> int
 
-val weekday_of_month_day : year:int -> month:month -> mday:int -> weekday
+val weekday_of_month_day : year:int -> month:month -> mday:int -> (weekday, unit) result
 
-val local_tm_to_utc_tm : Unix.tm -> Unix.tm
+(* val local_tm_to_utc_tm : Unix.tm -> Unix.tm *)
 
 module Second_ranges : Ranges.S with type t := int
 
@@ -158,9 +156,9 @@ module Interpret_string : sig
   val month_of_string : string -> (month, unit) result
 end
 
-module Add : sig
+(* module Add : sig
   val add_days_unix_time : days:int -> int64 -> int64
-end
+end *)
 
 module Serialize : sig
   val pack_weekday : weekday -> Time_t.weekday
@@ -177,28 +175,32 @@ module To_string : sig
 
   val string_of_month : month -> string
 
-  val yyyymondd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result
+  (* val yyyymondd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result *)
+  val yyyymondd_hhmmss_string_of_date_time : date_time -> string
 
   val yyyymondd_hhmmss_string_of_unix_time :
-    display_in_time_zone:time_zone -> int64 -> string
+    display_using_tz_offset_s:tz_offset_s -> int64 -> (string, unit) result
 
-  val yyyymmdd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result
+  (* val yyyymmdd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result *)
+  val yyyymmdd_hhmmss_string_of_date_time : date_time -> string
 
   val yyyymmdd_hhmmss_string_of_unix_time :
-    display_in_time_zone:time_zone -> int64 -> string
+    display_using_tz_offset_s:tz_offset_s -> int64 -> (string, unit) result
 
-  val yyyymondd_hhmm_string_of_tm : Unix.tm -> (string, unit) result
+  (* val yyyymondd_hhmm_string_of_tm : Unix.tm -> (string, unit) result *)
+  val yyyymondd_hhmm_string_of_date_time : date_time -> string
 
   val yyyymondd_hhmm_string_of_unix_time :
-    display_in_time_zone:time_zone -> int64 -> string
+    display_using_tz_offset_s:tz_offset_s -> int64 -> (string, unit) result
 
-  val yyyymmdd_hhmm_string_of_tm : Unix.tm -> (string, unit) result
+  (* val yyyymmdd_hhmm_string_of_tm : Unix.tm -> (string, unit) result *)
+  val yyyymmdd_hhmm_string_of_date_time : date_time -> string
 
   val yyyymmdd_hhmm_string_of_unix_time :
-    display_in_time_zone:time_zone -> int64 -> string
+    display_using_tz_offset_s:tz_offset_s -> int64 -> (string, unit) result
 end
 
 module Print : sig
   val debug_print_time :
-    ?indent_level:int -> display_in_time_zone:time_zone -> int64 -> unit
+    ?indent_level:int -> display_using_tz_offset_s:tz_offset_s -> int64 -> unit
 end
