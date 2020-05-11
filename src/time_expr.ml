@@ -973,16 +973,20 @@ end
 module Time_slots_expr = struct
   let get_first_or_last_n_matches_of_same_month_date_time_pair_seq
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
-      (s : (Time.date_time * Time.date_time) Seq.t) : (Time.date_time * Time.date_time) Seq.t =
-    let flush_acc first_or_last (n : int) (acc : (Time.date_time * Time.date_time) list) :
+      (s : (Time.date_time * Time.date_time) Seq.t) :
+    (Time.date_time * Time.date_time) Seq.t =
+    let flush_acc first_or_last (n : int)
+        (acc : (Time.date_time * Time.date_time) list) :
       (Time.date_time * Time.date_time) Seq.t =
       ( match first_or_last with
         | `First -> acc |> List.rev |> Misc_utils.take_first_n_list n
         | `Last -> acc |> List.rev |> Misc_utils.take_last_n_list n )
       |> List.to_seq
     in
-    let rec aux first_or_last (n : int) (acc : (Time.date_time * Time.date_time) list)
-        (s : (Time.date_time * Time.date_time) Seq.t) : (Time.date_time * Time.date_time) Seq.t =
+    let rec aux first_or_last (n : int)
+        (acc : (Time.date_time * Time.date_time) list)
+        (s : (Time.date_time * Time.date_time) Seq.t) :
+      (Time.date_time * Time.date_time) Seq.t =
       match s () with
       | Seq.Nil -> flush_acc first_or_last n acc
       | Seq.Cons ((start, end_exc), rest) -> (
@@ -1007,11 +1011,14 @@ module Time_slots_expr = struct
     in
     s
     |> Seq.map (fun (x, y) ->
-        ( Time.date_time_of_unix_time ~tz_offset_s_of_date_time x |> Result.get_ok,
-          Time.date_time_of_unix_time ~tz_offset_s_of_date_time y |> Result.get_ok ))
-    |> get_first_or_last_n_matches_of_same_month_date_time_pair_seq ~first_or_last ~n
+        ( Time.date_time_of_unix_time ~tz_offset_s_of_date_time x
+          |> Result.get_ok,
+          Time.date_time_of_unix_time ~tz_offset_s_of_date_time y
+          |> Result.get_ok ))
+    |> get_first_or_last_n_matches_of_same_month_date_time_pair_seq
+      ~first_or_last ~n
     |> Seq.map (fun (x, y) ->
-        ( Time.unix_time_of_date_time x |> Result.get_ok ,
+        ( Time.unix_time_of_date_time x |> Result.get_ok,
           Time.unix_time_of_date_time y |> Result.get_ok ))
 
   let matching_time_slots ?(force_bound : Time_expr_ast.bound option)

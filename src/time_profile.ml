@@ -26,7 +26,7 @@ let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
   |> List.to_seq
   |> Seq.map (fun (start_pat, end_exc_pat) ->
       let search_using_tz_offset_s =
-Ptime_clock.current_tz_offset_s () |> Option.get
+        Ptime_clock.current_tz_offset_s () |> Option.get
       in
       let start_seq =
         Time_pattern.Single_pattern.matching_time_slots
