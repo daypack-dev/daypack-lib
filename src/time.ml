@@ -1,7 +1,7 @@
 type time_zone =
   [ `Local
   | `UTC
-  | `UTC_plus of int
+  | `UTC_plus_sec of int
   ]
 
 type weekday =
@@ -36,6 +36,7 @@ type date_time = {
   hour : int;
   minute : int;
   second : int;
+  tz_offset_sec : int;
 }
 
 type weekday_range = weekday Range.range
@@ -68,9 +69,9 @@ module Check = struct
     bool =
     (0 <= hour && hour < 24) && check_minute_second ~minute ~second
 
-  let check_date_time (t : date_time) : bool =
-    1 <= t.day && t.day <= 31
-    && check_hour_minute_second ~hour:t.hour ~minute:t.minute ~second:t.second
+  let check_date_time (x : date_time) : bool =
+    1 <= x.day && x.day <= 31
+    && check_hour_minute_second ~hour:x.hour ~minute:x.minute ~second:x.second
 end
 
 let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
@@ -109,26 +110,6 @@ let weekday_of_tm_int (x : int) : weekday =
   | 6 -> `Sat
   | _ -> failwith "Invalid wday int"
 
-let cal_weekday_of_weekday (weekday : weekday) : CalendarLib.Calendar.day =
-  match weekday with
-  | `Sun -> Sun
-  | `Mon -> Mon
-  | `Tue -> Tue
-  | `Wed -> Wed
-  | `Thu -> Thu
-  | `Fri -> Fri
-  | `Sat -> Sat
-
-let weekday_of_cal_weekday (weekday : CalendarLib.Calendar.day) : weekday =
-  match weekday with
-  | Sun -> `Sun
-  | Mon -> `Mon
-  | Tue -> `Tue
-  | Wed -> `Wed
-  | Thu -> `Thu
-  | Fri -> `Fri
-  | Sat -> `Sat
-
 let tm_int_of_month (month : month) : int =
   match month with
   | `Jan -> 0
@@ -164,36 +145,6 @@ let human_int_of_month (month : month) : int = tm_int_of_month month + 1
 
 let month_of_human_int (x : int) : (month, unit) result = month_of_tm_int (x - 1)
 
-let cal_month_of_month (month : month) : CalendarLib.Calendar.month =
-  match month with
-  | `Jan -> Jan
-  | `Feb -> Feb
-  | `Mar -> Mar
-  | `Apr -> Apr
-  | `May -> May
-  | `Jun -> Jun
-  | `Jul -> Jul
-  | `Aug -> Aug
-  | `Sep -> Sep
-  | `Oct -> Oct
-  | `Nov -> Nov
-  | `Dec -> Dec
-
-let month_of_cal_month (month : CalendarLib.Calendar.month) : month =
-  match month with
-  | Jan -> `Jan
-  | Feb -> `Feb
-  | Mar -> `Mar
-  | Apr -> `Apr
-  | May -> `May
-  | Jun -> `Jun
-  | Jul -> `Jul
-  | Aug -> `Aug
-  | Sep -> `Sep
-  | Oct -> `Oct
-  | Nov -> `Nov
-  | Dec -> `Dec
-
 let month_compare (m1 : month) (m2 : month) : int =
   compare (tm_int_of_month m1) (tm_int_of_month m2)
 
@@ -218,25 +169,44 @@ let weekday_ge d1 d2 = tm_int_of_weekday d1 >= tm_int_of_weekday d2
 
 let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
 
-let cal_time_zone_of_time_zone (tz : time_zone) : CalendarLib.Time_Zone.t =
-  match tz with
-  | `Local -> CalendarLib.Time_Zone.Local
-  | `UTC -> CalendarLib.Time_Zone.UTC
-  | `UTC_plus x -> CalendarLib.Time_Zone.UTC_Plus x
+let ptime_date_time_of_date_time (x : date_time) : Ptime.date * Ptime.time =
+  (x.year, human_int_of_month x.month, x.day),
+  ((x.hour, x.minute, x.second), x.tz_offset_sec)
 
-let time_zone_of_cal_time_zone (tz : CalendarLib.Time_Zone.t) : time_zone =
-  match tz with
-  | CalendarLib.Time_Zone.Local -> `Local
-  | UTC -> `UTC
-  | UTC_Plus x -> `UTC_plus x
+let date_time_of_ptime_date_time (((year, month, day), ((hour, minute, second), tz_offset_sec)) : Ptime.date * Ptime.time)
+: (date_time, unit) result =
+  match month_of_human_int month with
+  | Ok month ->
+      Ok { year; month; day; hour; minute; second; tz_offset_sec }
+  | Error () -> Error ()
 
-let tm_of_unix_time ~(time_zone_of_tm : time_zone) (time : int64) : Unix.tm =
+(* let tm_of_date_time (x : date_time) : Unix.tm =
+  {
+    tm_sec = x.second;
+    tm_min = x.minute;
+    tm_hour = x.hour;
+    tm_mday = x.day;
+    tm_mon = tm_int_of_month x.month;
+    tm_year = x.year;
+    tm_wday = 0;
+    tm_yday = 0;
+    tm_isdst = false;
+  } *)
+
+let tm_of_unix_time ~(time_zone_of_tm : time_zone) (time : int64) : (Unix.tm, unit) result =
   let time = Int64.to_float time in
   match time_zone_of_tm with
-  | `Local -> Unix.localtime time
-  | `UTC -> Unix.gmtime time
-  | `UTC_plus x ->
-    let date_time = CalendarLib.Calendar.from_unixfloat time in
+  | `Local -> Ok (Unix.localtime time)
+  | `UTC -> Ok (Unix.gmtime time)
+  | `UTC_plus_sec tz_offset_s ->
+      match Ptime.of_float_s time with
+      | None -> Error ()
+      | Ok x ->
+          x
+      |> Ptime.to_date_time ~tz_offset_s
+      |> date_time_of_ptime_date_time
+
+    let date_time = Ptime.of_float_s time in
     CalendarLib.Calendar.convert date_time CalendarLib.Time_Zone.UTC
       CalendarLib.Time_Zone.(UTC_Plus x)
     |> CalendarLib.Calendar.to_unixtm

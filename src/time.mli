@@ -1,7 +1,7 @@
 type time_zone =
   [ `Local
   | `UTC
-  | `UTC_plus of int
+  | `UTC_plus_sec of int
   ]
 
 type weekday =
@@ -36,6 +36,7 @@ type date_time = {
   hour : int;
   minute : int;
   second : int;
+  tz_offset_sec : int;
 }
 
 type weekday_range = weekday Range.range
@@ -76,10 +77,6 @@ val tm_int_of_weekday : weekday -> int
 
 val weekday_of_tm_int : int -> weekday
 
-val cal_weekday_of_weekday : weekday -> CalendarLib.Calendar.day
-
-val weekday_of_cal_weekday : CalendarLib.Calendar.day -> weekday
-
 val tm_int_of_month : month -> int
 
 val month_of_tm_int : int -> (month, unit) result
@@ -87,10 +84,6 @@ val month_of_tm_int : int -> (month, unit) result
 val human_int_of_month : month -> int
 
 val month_of_human_int : int -> (month, unit) result
-
-val cal_month_of_month : month -> CalendarLib.Calendar.month
-
-val month_of_cal_month : CalendarLib.Calendar.month -> month
 
 val month_compare : month -> month -> int
 
@@ -113,10 +106,6 @@ val weekday_gt : weekday -> weekday -> bool
 val weekday_ge : weekday -> weekday -> bool
 
 val zero_tm_sec : Unix.tm -> Unix.tm
-
-val cal_time_zone_of_time_zone : time_zone -> CalendarLib.Time_Zone.t
-
-val time_zone_of_cal_time_zone : CalendarLib.Time_Zone.t -> time_zone
 
 val tm_of_unix_time : time_zone_of_tm:time_zone -> int64 -> Unix.tm
 
