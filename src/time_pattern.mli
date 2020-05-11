@@ -1,16 +1,15 @@
 type search_param =
   | Time_slots of {
-      search_in_time_zone : Time.time_zone;
+      search_using_tz_offset_s : Time.tz_offset_s;
       time_slots : Time_slot.t list;
     }
   | Years_ahead_start_unix_time of {
-      search_in_time_zone : Time.time_zone;
+      search_using_tz_offset_s : Time.tz_offset_s;
       start : int64;
       search_years_ahead : int;
     }
   | Years_ahead_start_tm of {
-      search_in_time_zone : Time.time_zone;
-      time_zone_of_tm : Time.time_zone;
+      search_using_tz_offset_s : Time.tz_offset_s;
       start : Unix.tm;
       search_years_ahead : int;
     }
@@ -32,7 +31,7 @@ type single_or_ranges =
   | Single_time_pattern of t
   | Time_range_patterns of time_range_pattern list
 
-val search_in_time_zone_of_search_param : search_param -> Time.time_zone
+val search_using_tz_offset_s_of_search_param : search_param -> Time.tz_offset_s
 
 val empty : t
 
