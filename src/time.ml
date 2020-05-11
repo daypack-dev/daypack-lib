@@ -178,6 +178,15 @@ let date_time_of_ptime_date_time (((year, month, day), ((hour, minute, second), 
       Ok { year; month; day; hour; minute; second; tz_offset_s }
   | Error () -> Error ()
 
+let unix_time_of_date_time (x : date_time) : (int64, unit) result =
+   match Ptime.of_date_time (ptime_date_time_of_date_time x) with
+   | None -> Error ()
+   | Some x ->
+       x
+  |> Ptime.to_float_s
+  |> Int64.of_float
+  |> Result.ok
+
 let date_time_of_unix_time ~(tz_offset_s_of_date_time : tz_offset_s) (x : int64) : (date_time, unit) result =
   match Ptime.of_float_s (Int64.to_float x) with
   | None -> Error ()

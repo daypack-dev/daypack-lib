@@ -55,6 +55,14 @@ val hour_to_second_multiplier : int64
 
 val day_to_second_multiplier : int64
 
+val date_time_of_ptime_date_time : Ptime.date * Ptime.time -> (date_time, unit) result
+
+val ptime_date_time_of_date_time : date_time -> Ptime.date * Ptime.time
+
+val unix_time_of_date_time : date_time -> (int64, unit) result
+
+val date_time_of_unix_time : tz_offset_s_of_date_time:tz_offset_s -> int64 -> (date_time, unit) result
+
 module Check : sig
   val check_unix_time : int64 -> bool
 
