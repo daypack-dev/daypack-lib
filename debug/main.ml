@@ -700,24 +700,8 @@ let debug_sched_usage_simulation () =
    *   | Error () -> print_endline "Scheduling failed" ); *)
   print_newline ()
 
-let debug_time_pattern_matching_tm_seq () =
-  print_endline "Debug print for Time_pattern.matching_tm_seq";
-  let tm =
-    (* (Some
-     *    Unix.
-     *      {
-     *        tm_sec = 0;
-     *        tm_min = 0;
-     *        tm_hour = 0;
-     *        tm_mday = 1;
-     *        tm_mon = 0;
-     *        tm_year = 0;
-     *        tm_wday = 0;
-     *        tm_yday = 0;
-     *        tm_isdst = false;
-     *      }) *)
-    Unix.time () |> Unix.localtime
-  in
+let debug_time_pattern_matching_date_time_seq () =
+  print_endline "Debug print for Time_pattern.matching_date_time_seq";
   let pattern =
     let open Daypack_lib.Time_pattern in
     {
@@ -734,12 +718,11 @@ let debug_time_pattern_matching_tm_seq () =
   let search_years_ahead = 100 in
   Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
   let s =
-    Daypack_lib.Time_pattern.Single_pattern.matching_tm_seq
-      (Years_ahead_start_tm
+    Daypack_lib.Time_pattern.Single_pattern.matching_date_time_seq
+      (Years_ahead_start_unix_time
          {
-           search_in_time_zone = `Local;
-           time_zone_of_tm = `Local;
-           start = tm;
+           search_using_tz_offset_s = Ptime_clock.current_tz_offset_s () |> Option.get;
+           start = Time.Current.cur_unix_time ();
            search_years_ahead;
          })
       pattern
@@ -750,37 +733,20 @@ let debug_time_pattern_matching_tm_seq () =
       let open Unix in
       Printf.printf "iter : %d\n" i;
       print_endline "  =====";
-      Printf.printf "  tm_sec : %d\n" x.tm_sec;
-      Printf.printf "  tm_min : %d\n" x.tm_min;
-      Printf.printf "  tm_hour : %d\n" x.tm_hour;
-      Printf.printf "  tm_mday : %d\n" x.tm_mday;
-      Printf.printf "  tm_mon : %d\n" x.tm_mon;
-      Printf.printf "  tm_year : %d\n" x.tm_year;
-      Printf.printf "  tm_wday : %d\n" x.tm_wday;
-      Printf.printf "  tm_yday : %d\n" x.tm_yday)
+      Printf.printf "  %s\n" (Time.To_string.yyyymondd_hhmmss_string_of_date_time x);
+  )
 
 let debug_time_pattern_matching_time_slots () =
   print_endline "Debug print for Time_pattern.matching_time_slots";
-  let tm =
-    (* (Some
-     *    Unix.
-     *      {
-     *        tm_sec = 0;
-     *        tm_min = 0;
-     *        tm_hour = 0;
-     *        tm_mday = 1;
-     *        tm_mon = 0;
-     *        tm_year = 0;
-     *        tm_wday = 0;
-     *        tm_yday = 0;
-     *        tm_isdst = false;
-     *      }) *)
-    Unix.time () |> Unix.localtime
+  let date_time = Time.Current.cur_date_time ~tz_offset_s_of_date_time:(Ptime_clock.current_tz_offset_s () |> Option.get) |>  Result.get_ok in
+  let start =
+    Time.unix_time_of_date_time date_time
+  |> Result.get_ok
   in
-  let start = Time.unix_time_of_tm ~time_zone_of_tm:`Local tm in
   let end_exc =
-    Time.unix_time_of_tm ~time_zone_of_tm:`Local
-      { tm with tm_year = tm.tm_year + 1 }
+    Time.unix_time_of_date_time
+      { date_time with year = date_time.year + 1 }
+  |> Result.get_ok
   in
   let time_slots = [ (start, end_exc) ] in
   let pattern =
@@ -799,7 +765,7 @@ let debug_time_pattern_matching_time_slots () =
   Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
   let s =
     Daypack_lib.Time_pattern.Single_pattern.matching_time_slots
-      (Time_slots { search_in_time_zone = `Local; time_slots })
+      (Time_slots { search_using_tz_offset_s = Ptime_clock.current_tz_offset_s () |> Option.get; time_slots })
       pattern
   in
   s
@@ -808,33 +774,23 @@ let debug_time_pattern_matching_time_slots () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
         (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-           ~display_in_time_zone:`Local start)
+           ~display_using_tz_offset_s:(Ptime_clock.current_tz_offset_s () |> Option.get) start |> Result.get_ok)
         (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-           ~display_in_time_zone:`Local end_exc))
+           ~display_using_tz_offset_s:(Ptime_clock.current_tz_offset_s () |> Option.get) end_exc |> Result.get_ok))
 
 let debug_time_range_pattern_matching_time_slots () =
   print_endline
     "Debug print for Time_pattern.matching_time_slots_time_range_pattern";
-  let tm =
-    (* (Some
-     *    Unix.
-     *      {
-     *        tm_sec = 0;
-     *        tm_min = 0;
-     *        tm_hour = 0;
-     *        tm_mday = 1;
-     *        tm_mon = 0;
-     *        tm_year = 0;
-     *        tm_wday = 0;
-     *        tm_yday = 0;
-     *        tm_isdst = false;
-     *      }) *)
-    Unix.time () |> Unix.localtime
+  let date_time = Time.Current.cur_date_time ~tz_offset_s_of_date_time:(Ptime_clock.current_tz_offset_s () |> Option.get) |>  Result.get_ok in
+  let start = Time.Current.cur_unix_time () in
+  let start =
+    Time.unix_time_of_date_time date_time
+  |> Result.get_ok
   in
-  let start = Time.unix_time_of_tm ~time_zone_of_tm:`Local tm in
   let end_exc =
-    Time.unix_time_of_tm ~time_zone_of_tm:`Local
-      { tm with tm_year = tm.tm_year + 1 }
+    Time.unix_time_of_date_time
+      { date_time with year = date_time.year + 1 }
+  |> Result.get_ok
   in
   let time_slots = [ (start, end_exc) ] in
   let pattern =
@@ -864,7 +820,7 @@ let debug_time_range_pattern_matching_time_slots () =
   Daypack_lib.Time_pattern.Print.debug_print_time_range_pattern pattern;
   let s =
     Daypack_lib.Time_pattern.Range_pattern.matching_time_slots
-      (Time_slots { search_in_time_zone = `Local; time_slots })
+      (Time_slots { search_using_tz_offset_s = Ptime_clock.current_tz_offset_s () |> Option.get; time_slots })
       pattern
   in
   s
@@ -873,9 +829,9 @@ let debug_time_range_pattern_matching_time_slots () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
         (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-           ~display_in_time_zone:`Local start)
+           ~display_using_tz_offset_s:(Ptime_clock.current_tz_offset_s () |> Option.get) start |> Result.get_ok)
         (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-           ~display_in_time_zone:`Local end_exc))
+           ~display_using_tz_offset_s:(Ptime_clock.current_tz_offset_s () |> Option.get) end_exc |> Result.get_ok))
 
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
@@ -913,9 +869,9 @@ let debug_time_profile_matching_time_slots_of_periods () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
         (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-           ~display_in_time_zone:`Local start)
+           ~display_using_tz_offset_s:(Ptime_clock.current_tz_offset_s () |> Option.get) start |> Result.get_ok)
         (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-           ~display_in_time_zone:`Local end_exc))
+           ~display_using_tz_offset_s:(Ptime_clock.current_tz_offset_s () |> Option.get) end_exc |> Result.get_ok))
 
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";

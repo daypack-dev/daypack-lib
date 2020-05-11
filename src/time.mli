@@ -156,6 +156,8 @@ module Year_ranges : Ranges.S with type t := int
 module Current : sig
   val cur_unix_time : unit -> int64
 
+  val cur_date_time : tz_offset_s_of_date_time:tz_offset_s -> (date_time, unit) result
+
   val cur_tm_local : unit -> Unix.tm
 
   val cur_tm_utc : unit -> Unix.tm

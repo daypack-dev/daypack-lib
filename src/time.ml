@@ -384,6 +384,10 @@ module Year_ranges = Ranges_small.Make (struct
 module Current = struct
   let cur_unix_time () : int64 = Unix.time () |> Int64.of_float
 
+  let cur_date_time ~tz_offset_s_of_date_time : (date_time, unit) result =
+    cur_unix_time ()
+  |> date_time_of_unix_time ~tz_offset_s_of_date_time
+
   let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
 
   let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.gmtime
