@@ -68,7 +68,7 @@ let of_unix_time ~(tz_offset_s_of_time_pattern : Time.tz_offset_s) (x : int64) :
   | Years_ahead_start_tm { search_in_time_zone; _ } -> search_in_time_zone
   *)
 
-let search_in_time_zone_of_search_param (param : search_param) : Time.tz_offset_s
+let search_using_tz_offset_s_of_search_param (param : search_param) : Time.tz_offset_s
   =
   match param with
   | Time_slots { search_using_tz_offset_s; _ } -> search_using_tz_offset_s
@@ -119,19 +119,19 @@ match Time.unix_time_of_date_time start' with
 module Matching_seconds = struct
   let get_start ~(start : Time.date_time) ~(acc : Time.date_time) : int =
     if
-      acc.tm_year = start.tm_year
-      && acc.tm_mon = start.tm_mon
-      && acc.tm_mday = start.tm_mday
-      && acc.tm_hour = start.tm_hour
-      && acc.tm_min = start.tm_min
-    then start.tm_min
+      acc.year = start.year
+      && acc.month = start.month
+      && acc.day = start.day
+      && acc.hour = start.hour
+      && acc.minute = start.minute
+    then start.minute
     else 0
 
   let matching_seconds (t : t) (start : Time.date_time) (acc : Time.date_time) : Time.date_time Seq.t
     =
     let start_sec = get_start ~start ~acc in
     match t.seconds with
-    | [] -> Seq.map (fun tm_sec -> { acc with tm_sec }) OSeq.(start_sec --^ 60)
+    | [] -> Seq.map (fun second -> { acc with second }) OSeq.(start_sec --^ 60)
     | pat_sec_list ->
       pat_sec_list
       |> List.to_seq
@@ -152,57 +152,57 @@ module Matching_seconds = struct
       |> Seq.map
         (Range.map
            ~f_inc:(fun (x, y) ->
-               ({ acc with tm_sec = x }, { acc with tm_sec = y }))
+               ({ acc with second = x }, { acc with second = y }))
            ~f_exc:(fun (x, y) ->
-               ({ acc with tm_sec = x }, { acc with tm_sec = y })))
+               ({ acc with second = x }, { acc with second = y })))
 end
 
 module Matching_minutes = struct
-  let get_start_min_sec ~(start : Unix.tm) ~(acc : Unix.tm) : int * int =
+  let get_start_min_sec ~(start : Time.date_time) ~(acc : Time.date_time) : int * int =
     if
-      acc.tm_year = start.tm_year
-      && acc.tm_mon = start.tm_mon
-      && acc.tm_mday = start.tm_mday
-      && acc.tm_hour = start.tm_hour
-    then (start.tm_min, start.tm_sec)
+      acc.year = start.year
+      && acc.month = start.month
+      && acc.day = start.day
+      && acc.hour = start.hour
+    then (start.minute, start.second)
     else (0, 0)
 
-  let matching_minutes (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t
+  let matching_minutes (t : t) (start : Time.date_time) (acc : Time.date_time) : Time.date_time Seq.t
     =
     let start_min, _start_sec = get_start_min_sec ~start ~acc in
     match t.minutes with
-    | [] -> Seq.map (fun tm_min -> { acc with tm_min }) OSeq.(start_min --^ 60)
+    | [] -> Seq.map (fun minute -> { acc with minute }) OSeq.(start_min --^ 60)
     | pat_min_list ->
       pat_min_list
       |> List.to_seq
       |> Seq.filter (fun pat_min -> start_min <= pat_min)
-      |> Seq.map (fun pat_min -> { acc with tm_min = pat_min })
+      |> Seq.map (fun pat_min -> { acc with minute = pat_min })
 
-  let matching_minute_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) :
-    Unix.tm Range.range Seq.t =
+  let matching_minute_ranges (t : t) (start : Time.date_time) (acc : Time.date_time) :
+    Time.date_time Range.range Seq.t =
     let start_min, start_sec = get_start_min_sec ~start ~acc in
     match t.minutes with
     | [] ->
       Seq.return
         (`Range_exc
-           ( { acc with tm_min = start_min; tm_sec = start_sec },
-             { acc with tm_min = 60; tm_sec = 0 } ))
+           ( { acc with minute = start_min; second = start_sec },
+             { acc with minute = 60; second = 0 } ))
     | l ->
       let f_inc (x, y) =
         if x = start_min then
-          ( { acc with tm_min = x; tm_sec = start_sec },
-            { acc with tm_min = y; tm_sec = 59 } )
+          ( { acc with minute = x; second = start_sec },
+            { acc with minute = y; second = 59 } )
         else
-          ( { acc with tm_min = x; tm_sec = 0 },
-            { acc with tm_min = y; tm_sec = 59 } )
+          ( { acc with minute = x; second = 0 },
+            { acc with minute = y; second = 59 } )
       in
       let f_exc (x, y) =
         if x = start_min then
-          ( { acc with tm_min = x; tm_sec = start_sec },
-            { acc with tm_min = y; tm_sec = 0 } )
+          ( { acc with minute = x; second = start_sec },
+            { acc with minute = y; second = 0 } )
         else
-          ( { acc with tm_min = x; tm_sec = 0 },
-            { acc with tm_min = y; tm_sec = 0 } )
+          ( { acc with minute = x; second = 0 },
+            { acc with minute = y; second = 0 } )
       in
       List.filter (fun pat_min -> start_min <= pat_min) l
       |> List.sort_uniq compare
@@ -211,53 +211,53 @@ module Matching_minutes = struct
 end
 
 module Matching_hours = struct
-  let get_start_hour_min_sec ~(start : Unix.tm) ~(acc : Unix.tm) :
+  let get_start_hour_min_sec ~(start : Time.date_time) ~(acc : Time.date_time) :
     int * int * int =
     if
-      acc.tm_year = start.tm_year
-      && acc.tm_mon = start.tm_mon
-      && acc.tm_mday = start.tm_mday
-    then (start.tm_hour, start.tm_min, start.tm_sec)
+      acc.year = start.year
+      && acc.month = start.month
+      && acc.day = start.day
+    then (start.hour, start.minute, start.second)
     else (0, 0, 0)
 
-  let matching_hours (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+  let matching_hours (t : t) (start : Time.date_time) (acc : Time.date_time) : Time.date_time Seq.t =
     let start_hour, _start_min, _start_sec =
       get_start_hour_min_sec ~start ~acc
     in
     match t.hours with
     | [] ->
-      Seq.map (fun tm_hour -> { acc with tm_hour }) OSeq.(start_hour --^ 24)
+      Seq.map (fun hour -> { acc with hour }) OSeq.(start_hour --^ 24)
     | pat_hour_list ->
       pat_hour_list
       |> List.to_seq
       |> Seq.filter (fun pat_hour -> start_hour <= pat_hour)
-      |> Seq.map (fun pat_hour -> { acc with tm_hour = pat_hour })
+      |> Seq.map (fun pat_hour -> { acc with hour = pat_hour })
 
-  let matching_hour_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) :
-    Unix.tm Range.range Seq.t =
+  let matching_hour_ranges (t : t) (start : Time.date_time) (acc : Time.date_time) :
+    Time.date_time Range.range Seq.t =
     let start_hour, start_min, start_sec = get_start_hour_min_sec ~start ~acc in
     let start_tm =
-      { acc with tm_hour = start_hour; tm_min = start_min; tm_sec = start_sec }
+      { acc with hour = start_hour; minute = start_min; second = start_sec }
     in
     match t.hours with
     | [] ->
       Seq.return
         (`Range_exc
-           (start_tm, { acc with tm_hour = 23; tm_min = 0; tm_sec = 0 }))
+           (start_tm, { acc with hour = 23; minute = 0; second = 0 }))
     | l ->
       let f_inc (x, y) =
         if x = start_hour then
-          (start_tm, { acc with tm_hour = y; tm_min = 59; tm_sec = 59 })
+          (start_tm, { acc with hour = y; minute = 59; second = 59 })
         else
-          ( { acc with tm_hour = x; tm_min = 0; tm_sec = 0 },
-            { acc with tm_hour = y; tm_min = 59; tm_sec = 59 } )
+          ( { acc with hour = x; minute = 0; second = 0 },
+            { acc with hour = y; minute = 59; second = 59 } )
       in
       let f_exc (x, y) =
         if x = start_hour then
-          (start_tm, { acc with tm_hour = y; tm_min = 0; tm_sec = 0 })
+          (start_tm, { acc with hour = y; minute = 0; second = 0 })
         else
-          ( { acc with tm_hour = x; tm_min = 0; tm_sec = 0 },
-            { acc with tm_hour = y; tm_min = 0; tm_sec = 0 } )
+          ( { acc with hour = x; minute = 0; second = 0 },
+            { acc with hour = y; minute = 0; second = 0 } )
       in
       List.filter (fun hour -> start_hour <= hour) l
       |> List.sort_uniq compare
@@ -266,16 +266,16 @@ module Matching_hours = struct
 end
 
 module Matching_days = struct
-  let get_start_mday_hour_min_sec ~(start : Unix.tm) ~(acc : Unix.tm) :
+  let get_start_mday_hour_min_sec ~(start : Time.date_time) ~(acc : Time.date_time) :
     int * int * int * int =
-    if acc.tm_year = start.tm_year && acc.tm_mon = start.tm_mon then
-      (start.tm_mday, start.tm_hour, start.tm_min, start.tm_sec)
+    if acc.year = start.year && acc.month = start.month then
+      (start.day, start.hour, start.minute, start.second)
     else (1, 0, 0, 0)
 
-  let month_days_of_matching_weekdays (t : t) (start : Unix.tm) (acc : Unix.tm)
+  let month_days_of_matching_weekdays (t : t) (start : Time.date_time) (acc : Time.date_time)
     : int Seq.t =
-    let year = acc.tm_year + Time.tm_year_offset in
-    let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
+    let year = acc.year in
+    let month = acc.month in
     let day_count = Time.day_count_of_month ~year ~month in
     let start_mday, _start_hour, _start_min, _start_sec =
       get_start_mday_hour_min_sec ~start ~acc
@@ -288,10 +288,10 @@ module Matching_days = struct
           let wday = Time.weekday_of_month_day ~year ~month ~mday |> Result.get_ok in
           List.mem wday l)
 
-  let matching_month_days (t : t) (start : Unix.tm) (acc : Unix.tm) : int Seq.t
+  let matching_month_days (t : t) (start : Time.date_time) (acc : Time.date_time) : int Seq.t
     =
-    let year = acc.tm_year + Time.tm_year_offset in
-    let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
+    let year = acc.year in
+    let month = acc.month in
     let day_count = Time.day_count_of_month ~year ~month in
     let start_mday, _start_hour, _start_min, _start_sec =
       get_start_mday_hour_min_sec ~start ~acc
@@ -303,7 +303,7 @@ module Matching_days = struct
       |> List.sort_uniq compare
       |> List.to_seq
 
-  let matching_int_days (t : t) (start : Unix.tm) (acc : Unix.tm) : int Seq.t =
+  let matching_int_days (t : t) (start : Time.date_time) (acc : Time.date_time) : int Seq.t =
     let month_days_of_matching_weekdays =
       month_days_of_matching_weekdays t start acc |> List.of_seq
     in
@@ -313,42 +313,42 @@ module Matching_days = struct
         List.mem mday month_days_of_matching_weekdays
         && List.mem mday matching_month_days)
 
-  let matching_days (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t =
+  let matching_days (t : t) (start : Time.date_time) (acc : Time.date_time) : Time.date_time Seq.t =
     matching_int_days t start acc
-    |> Seq.map (fun mday -> { acc with tm_mday = mday })
+    |> Seq.map (fun mday -> { acc with day = mday })
 
-  let matching_day_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) :
-    Unix.tm Range.range Seq.t =
+  let matching_day_ranges (t : t) (start : Time.date_time) (acc : Time.date_time) :
+    Time.date_time Range.range Seq.t =
     let start_mday, start_hour, start_min, start_sec =
       get_start_mday_hour_min_sec ~start ~acc
     in
-    let year = acc.tm_year + Time.tm_year_offset in
-    let month = Time.month_of_tm_int acc.tm_mon |> Result.get_ok in
+    let year = acc.year in
+    let month = acc.month in
     let day_count = Time.day_count_of_month ~year ~month in
     let start_tm =
       {
         acc with
-        tm_mday = start_mday;
-        tm_hour = start_hour;
-        tm_min = start_min;
-        tm_sec = start_sec;
+        day = start_mday;
+        hour = start_hour;
+        minute = start_min;
+        second = start_sec;
       }
     in
     let f_inc (x, y) =
       let end_tm =
-        { acc with tm_mday = y; tm_hour = 23; tm_min = 59; tm_sec = 59 }
+        { acc with day = y; hour = 23; minute = 59; second = 59 }
       in
       if x = start_mday then (start_tm, end_tm)
       else
-        ({ acc with tm_mday = x; tm_hour = 0; tm_min = 0; tm_sec = 0 }, end_tm)
+        ({ acc with day = x; hour = 0; minute = 0; second = 0 }, end_tm)
     in
     let f_exc (x, y) =
       let end_tm =
-        { acc with tm_mday = y; tm_hour = 0; tm_min = 0; tm_sec = 0 }
+        { acc with day = y; hour = 0; minute = 0; second = 0 }
       in
       if x = start_mday then (start_tm, end_tm)
       else
-        ({ acc with tm_mday = x; tm_hour = 0; tm_min = 0; tm_sec = 0 }, end_tm)
+        ({ acc with day = x; hour = 0; minute = 0; second = 0 }, end_tm)
     in
     match (t.month_days, t.weekdays) with
     | [], [] ->
@@ -357,10 +357,10 @@ module Matching_days = struct
            ( start_tm,
              {
                acc with
-               tm_mday = day_count;
-               tm_hour = 0;
-               tm_min = 0;
-               tm_sec = 0;
+               day = day_count;
+               hour = 0;
+               minute = 0;
+               second = 0;
              } ))
     | [], _weekdays ->
       month_days_of_matching_weekdays t start acc
@@ -377,156 +377,160 @@ module Matching_days = struct
 end
 
 module Matching_months = struct
-  let get_start_mon_mday_hour_min_sec ~(start : Unix.tm) ~(acc : Unix.tm) :
+  let get_start_mon_mday_hour_min_sec ~(start : Time.date_time) ~(acc : Time.date_time) :
     int * int * int * int * int =
-    if acc.tm_year = start.tm_year then
-      (start.tm_mon, start.tm_mday, start.tm_hour, start.tm_min, start.tm_sec)
-    else (Time.tm_int_of_month `Jan, 0, 0, 0, 0)
+    if acc.year = start.year then
+      (Time.human_int_of_month start.month, start.day, start.hour, start.minute, start.second)
+    else (Time.human_int_of_month `Jan, 0, 0, 0, 0)
 
-  let matching_months (t : t) (start : Unix.tm) (acc : Unix.tm) : Unix.tm Seq.t
+  let matching_months (t : t) (start : Time.date_time) (acc : Time.date_time) : Time.date_time Seq.t
     =
     let start_mon, _start_mday, _start_hour, _start_min, _start_sec =
       get_start_mon_mday_hour_min_sec ~start ~acc
     in
     match t.months with
-    | [] -> Seq.map (fun tm_mon -> { acc with tm_mon }) OSeq.(start_mon --^ 12)
+    | [] ->
+OSeq.(start_mon -- 12)
+    |> Seq.map (fun month -> Time.month_of_human_int month |> Result.get_ok)
+    |> Seq.map (fun month -> { acc with month }) 
     | pat_mon_list ->
       pat_mon_list
       |> List.to_seq
-      |> Seq.filter (fun pat_mon -> start_mon <= Time.tm_int_of_month pat_mon)
-      |> Seq.map (fun pat_mon ->
-          { acc with tm_mon = Time.tm_int_of_month pat_mon })
+      |> Seq.map Time.human_int_of_month
+      |> Seq.filter (fun pat_mon -> start_mon <= pat_mon)
+      |> Seq.map (fun month -> Time.month_of_human_int month |> Result.get_ok)
+      |> Seq.map (fun month ->
+          { acc with month })
 
-  let matching_month_ranges (t : t) (start : Unix.tm) (acc : Unix.tm) :
-    Unix.tm Range.range Seq.t =
+  let matching_month_ranges (t : t) (start : Time.date_time) (acc : Time.date_time) :
+    Time.date_time Range.range Seq.t =
     let start_mon, start_mday, start_hour, start_min, start_sec =
       get_start_mon_mday_hour_min_sec ~start ~acc
     in
-    let start_tm =
+    let start =
       {
         acc with
-        tm_mon = start_mon;
-        tm_mday = start_mday;
-        tm_hour = start_hour;
-        tm_min = start_min;
-        tm_sec = start_sec;
+        month = Time.month_of_human_int start_mon |> Result.get_ok;
+        day = start_mday;
+        hour = start_hour;
+        minute = start_min;
+        second = start_sec;
       }
     in
     match t.months with
     | [] ->
       Seq.return
         (`Range_inc
-           ( start_tm,
+           ( start,
              {
                acc with
-               tm_mon = Time.tm_int_of_month `Dec;
-               tm_mday = 31;
-               tm_hour = 23;
-               tm_min = 59;
-               tm_sec = 59;
+               month = `Dec;
+               day = 31;
+               hour = 23;
+               minute = 59;
+               second = 59;
              } ))
     | l ->
       let f_inc (x, y) =
-        let end_tm =
-          let year = acc.tm_year + Time.tm_year_offset in
-          let month = Time.month_of_tm_int y |> Result.get_ok in
-          let day_count = Time.day_count_of_month ~year ~month in
+        let end_inc =
+          let year = acc.year in
+          (* let month = Time.month_of_human_int y |> Result.get_ok in *)
+          let day_count = Time.day_count_of_month ~year ~month:y in
           {
             acc with
-            tm_mon = y;
-            tm_mday = day_count;
-            tm_hour = 23;
-            tm_min = 59;
-            tm_sec = 59;
+            month = y;
+            day = day_count;
+            hour = 23;
+            minute = 59;
+            second = 59;
           }
         in
-        if x = start_mon then (start_tm, end_tm)
+        if Time.human_int_of_month x = start_mon then (start, end_inc)
         else
           ( {
             acc with
-            tm_mon = x;
-            tm_mday = 1;
-            tm_hour = 0;
-            tm_min = 0;
-            tm_sec = 0;
+            month = x;
+            day = 1;
+            hour = 0;
+            minute = 0;
+            second = 0;
           },
-            end_tm )
+            end_inc )
       in
       let f_exc (x, y) =
-        let end_tm =
+        let end_exc =
           {
             acc with
-            tm_mon = y;
-            tm_mday = 1;
-            tm_hour = 0;
-            tm_min = 0;
-            tm_sec = 0;
+            month = y;
+            day = 1;
+            hour = 0;
+            minute = 0;
+            second = 0;
           }
         in
-        if x = start_mon then (start_tm, end_tm)
+        if Time.human_int_of_month x = start_mon then (start, end_exc)
         else
           ( {
             acc with
-            tm_mon = x;
-            tm_mday = 1;
-            tm_hour = 0;
-            tm_min = 0;
-            tm_sec = 0;
+            month = x;
+            day = 1;
+            hour = 0;
+            minute = 0;
+            second = 0;
           },
-            end_tm )
+            end_exc )
       in
-      List.map Time.tm_int_of_month l
-      |> List.sort_uniq compare
-      |> Time.Month_tm_int_ranges.Of_list.range_seq_of_list
+      l
+      |> List.sort_uniq Time.compare_month
+      |> Time.Month_ranges.Of_list.range_seq_of_list
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
 module Matching_years = struct
-  let matching_years ~search_years_ahead (t : t) (start : Unix.tm)
-      (acc : Unix.tm) : Unix.tm Seq.t =
+  let matching_years ~search_years_ahead (t : t) (start : Time.date_time)
+      (acc : Time.date_time) : Time.date_time Seq.t =
     match t.years with
     | [] ->
       Seq.map
-        (fun tm_year -> { acc with tm_year })
-        OSeq.(start.tm_year --^ (start.tm_year + search_years_ahead))
+        (fun year -> { acc with year })
+        OSeq.(start.year --^ (start.year + search_years_ahead))
     | pat_year_list ->
       pat_year_list
       |> List.to_seq
-      |> Seq.filter (fun pat_year -> start.tm_year <= pat_year)
-      |> Seq.map (fun pat_year ->
-          { acc with tm_year = pat_year - Time.tm_year_offset })
+      |> Seq.filter (fun pat_year -> start.year <= pat_year)
+      |> Seq.map (fun year ->
+          { acc with year })
 
-  let matching_year_ranges ~search_years_ahead (t : t) (start : Unix.tm)
-      (acc : Unix.tm) : Unix.tm Range.range Seq.t =
-    let start_tm = start in
+  let matching_year_ranges ~search_years_ahead (t : t) (start : Time.date_time)
+      (acc : Time.date_time) : Time.date_time Range.range Seq.t =
     match t.years with
     | [] ->
       Seq.return
         (`Range_exc
-           (start_tm, { acc with tm_year = start.tm_year + search_years_ahead }))
+           (start, { acc with year = start.year + search_years_ahead }))
     | l ->
       let f_inc (x, y) =
         let end_tm =
           {
             acc with
-            tm_year = y;
-            tm_mon = Time.tm_int_of_month `Dec;
-            tm_mday = 31;
-            tm_hour = 23;
-            tm_min = 59;
-            tm_sec = 59;
+            year = y;
+            month = `Dec;
+            day = 31;
+            hour = 23;
+            minute = 59;
+            second = 59;
           }
         in
-        if x = start.tm_year then (start_tm, end_tm)
+        if x = start.year then (start_tm, end_tm)
         else
           ( {
             acc with
-            tm_year = y;
-            tm_mon = Time.tm_int_of_month `Jan;
-            tm_mday = 1;
-            tm_hour = 0;
-            tm_min = 0;
-            tm_sec = 0;
+            year = y;
+            month = `Jan;
+            day = 1;
+            hour = 0;
+            minute = 0;
+            second = 0;
           },
             end_tm )
       in
@@ -534,24 +538,24 @@ module Matching_years = struct
         let end_tm =
           {
             acc with
-            tm_year = y;
-            tm_mon = Time.tm_int_of_month `Jan;
-            tm_mday = 1;
-            tm_hour = 0;
-            tm_min = 0;
-            tm_sec = 0;
+            year = y;
+            month = Time.tm_int_of_month `Jan;
+            day = 1;
+            hour = 0;
+            minute = 0;
+            second = 0;
           }
         in
-        if x = start.tm_year then (start_tm, end_tm)
+        if x = start.year then (start_tm, end_tm)
         else
           ( {
             acc with
-            tm_year = y;
-            tm_mon = Time.tm_int_of_month `Jan;
-            tm_mday = 1;
-            tm_hour = 0;
-            tm_min = 0;
-            tm_sec = 0;
+            year = y;
+            month = Time.tm_int_of_month `Jan;
+            day = 1;
+            hour = 0;
+            minute = 0;
+            second = 0;
           },
             end_tm )
       in
@@ -561,63 +565,63 @@ module Matching_years = struct
 end
 
 module Matching_unix_times = struct
-  let matching_unix_times ~(search_in_time_zone : Time.time_zone) (t : t)
-      (start : Unix.tm) : Unix_tm_set.t =
+  let matching_unix_times ~(search_using_tz_offset_s : Time.tz_offset_s) (t : t)
+      (start : Time.date_time) : Time.Date_time_set.t =
     let start =
-      Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone start
+      Time.unix_time_of_tm ~tz_offset_s_of_date_time:search_using_tz_offset_s start
     in
     t.unix_times
     |> List.sort_uniq compare
     |> List.to_seq
     |> OSeq.filter (fun x -> x >= start)
-    |> Seq.map (Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone)
-    |> Unix_tm_set.of_seq
+    |> Seq.map (Time.tm_of_unix_time ~tz_offset_s_of_date_time:search_using_tz_offset_s)
+    |> Time.date_time_set.of_seq
 end
 
 let start_tm_and_search_years_ahead_of_search_param
-    (search_param : search_param) : (Unix.tm * int) option =
+    (search_param : search_param) : (Time.date_time * int) option =
   match search_param with
-  | Time_slots { search_in_time_zone; time_slots } -> (
+  | Time_slots { search_using_tz_offset_s; time_slots } -> (
       match Time_slots.Bound.min_start_and_max_end_exc_list time_slots with
       | None -> None
       | Some (start, end_exc) ->
         let start_tm =
-          Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone start
+          Time.tm_of_unix_time ~tz_offset_s_of_date_time:search_using_tz_offset_s start
         in
         let end_exc_tm =
-          Time.tm_of_unix_time ~time_zone_of_tm:`Local end_exc
+          Time.tm_of_unix_time ~tz_offset_s_of_date_time:`Local end_exc
         in
-        let search_years_ahead = end_exc_tm.tm_year - start_tm.tm_year + 1 in
+        let search_years_ahead = end_exc_tm.year - start_tm.year + 1 in
         Some (start_tm, search_years_ahead) )
   | Years_ahead_start_unix_time
-      { search_in_time_zone; start; search_years_ahead } ->
+      { search_using_tz_offset_s; start; search_years_ahead } ->
     let start_tm =
-      Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone start
+      Time.tm_of_unix_time ~tz_offset_s_of_date_time:search_using_tz_offset_s start
     in
     Some (start_tm, search_years_ahead)
   | Years_ahead_start_tm
-      { search_in_time_zone; time_zone_of_tm; start; search_years_ahead } ->
+      { search_using_tz_offset_s; tz_offset_s_of_date_time; start; search_years_ahead } ->
     let start =
       start
-      |> Time.unix_time_of_tm ~time_zone_of_tm
-      |> Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone
+      |> Time.unix_time_of_tm ~tz_offset_s_of_date_time
+      |> Time.tm_of_unix_time ~tz_offset_s_of_date_time:search_using_tz_offset_s
     in
     Some (start, search_years_ahead)
 
 module Single_pattern = struct
-  let filter_using_matching_unix_times ~search_in_time_zone (t : t) start
-      (s : Unix.tm Seq.t) : Unix.tm Seq.t =
+  let filter_using_matching_unix_times ~search_using_tz_offset_s (t : t) start
+      (s : Time.date_time Seq.t) : Time.date_time Seq.t =
     let matching_unix_times =
-      Matching_unix_times.matching_unix_times ~search_in_time_zone t start
+      Matching_unix_times.matching_unix_times ~search_using_tz_offset_s t start
     in
-    if Unix_tm_set.is_empty matching_unix_times then s
-    else Seq.filter (fun x -> Unix_tm_set.mem x matching_unix_times) s
+    if Time.date_time_set.is_empty matching_unix_times then s
+    else Seq.filter (fun x -> Time.date_time_set.mem x matching_unix_times) s
 
-  let tm_range_seq_of_unix_times ~search_in_time_zone (s : int64 Seq.t) :
-    Unix.tm Range.range Seq.t =
+  let tm_range_seq_of_unix_times ~search_using_tz_offset_s (s : int64 Seq.t) :
+    Time.date_time Range.range Seq.t =
     let f (x, y) =
-      ( Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone x,
-        Time.tm_of_unix_time ~time_zone_of_tm:search_in_time_zone y )
+      ( Time.tm_of_unix_time ~tz_offset_s_of_date_time:search_using_tz_offset_s x,
+        Time.tm_of_unix_time ~tz_offset_s_of_date_time:search_using_tz_offset_s y )
     in
     s
     |> Ranges.Of_seq.range_seq_of_seq ~modulo:None
@@ -625,12 +629,12 @@ module Single_pattern = struct
       ~of_int64:(fun x -> x)
     |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
 
-  let matching_tm_seq (search_param : search_param) (t : t) : Unix.tm Seq.t =
+  let matching_tm_seq (search_param : search_param) (t : t) : Time.date_time Seq.t =
     match start_tm_and_search_years_ahead_of_search_param search_param with
     | None -> Seq.empty
     | Some (start, search_years_ahead) ->
-      let search_in_time_zone =
-        search_in_time_zone_of_search_param search_param
+      let search_using_tz_offset_s =
+        search_using_tz_offset_s_of_search_param search_param
       in
       Matching_years.matching_years ~search_years_ahead t start start
       |> Seq.flat_map (Matching_months.matching_months t start)
@@ -638,15 +642,15 @@ module Single_pattern = struct
       |> Seq.flat_map (Matching_hours.matching_hours t start)
       |> Seq.flat_map (Matching_minutes.matching_minutes t start)
       |> Seq.flat_map (Matching_seconds.matching_seconds t start)
-      |> filter_using_matching_unix_times ~search_in_time_zone t start
+      |> filter_using_matching_unix_times ~search_using_tz_offset_s t start
 
   let matching_tm_range_seq (search_param : search_param) (t : t) :
-    Unix.tm Range.range Seq.t =
+    Time.date_time Range.range Seq.t =
     match start_tm_and_search_years_ahead_of_search_param search_param with
     | None -> Seq.empty
     | Some (start, search_years_ahead) -> (
-        let search_in_time_zone =
-          search_in_time_zone_of_search_param search_param
+        let search_using_tz_offset_s =
+          search_using_tz_offset_s_of_search_param search_param
         in
         match
           ( t.years,
@@ -661,7 +665,7 @@ module Single_pattern = struct
         | [], [], [], [], [], [], [], unix_times ->
           unix_times
           |> List.to_seq
-          |> tm_range_seq_of_unix_times ~search_in_time_zone
+          |> tm_range_seq_of_unix_times ~search_using_tz_offset_s
         | _years, [], [], [], [], [], [], [] ->
           Matching_years.matching_year_ranges ~search_years_ahead t start
             start
@@ -711,7 +715,7 @@ module Single_pattern = struct
           |> Seq.flat_map (Matching_hours.matching_hours t start)
           |> Seq.flat_map (Matching_minutes.matching_minutes t start)
           |> Seq.flat_map (Matching_seconds.matching_seconds t start)
-          |> filter_using_matching_unix_times ~search_in_time_zone t start
+          |> filter_using_matching_unix_times ~search_using_tz_offset_s t start
           |> Seq.map (fun x -> `Range_inc (x, x)) )
 
   let matching_time_slots (search_param : search_param) (t : t) :
@@ -725,12 +729,12 @@ module Single_pattern = struct
         Some time_slots
       | _ -> None
     in
-    let search_in_time_zone =
-      search_in_time_zone_of_search_param search_param
+    let search_using_tz_offset_s =
+      search_using_tz_offset_s_of_search_param search_param
     in
     let f (x, y) =
-      ( Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone x,
-        Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone y )
+      ( Time.unix_time_of_tm ~tz_offset_s_of_date_time:search_using_tz_offset_s x,
+        Time.unix_time_of_tm ~tz_offset_s_of_date_time:search_using_tz_offset_s y )
     in
     matching_tm_range_seq search_param t
     |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
@@ -758,18 +762,18 @@ module Single_pattern = struct
     matching_time_slots_round_robin_non_decreasing search_param l
     |> Seq.flat_map List.to_seq
 
-  let next_match_tm (search_param : search_param) (t : t) : Unix.tm option =
+  let next_match_date_time (search_param : search_param) (t : t) : Time.date_time option =
     match (matching_tm_seq search_param t) () with
     | Seq.Nil -> None
     | Seq.Cons (x, _) -> Some x
 
   let next_match_unix_time (search_param : search_param) (t : t) : int64 option
     =
-    let search_in_time_zone =
-      search_in_time_zone_of_search_param search_param
+    let search_using_tz_offset_s =
+      search_using_tz_offset_s_of_search_param search_param
     in
     next_match_tm search_param t
-    |> Option.map (Time.unix_time_of_tm ~time_zone_of_tm:search_in_time_zone)
+    |> Option.map (Time.unix_time_of_tm ~tz_offset_s_of_date_time:search_using_tz_offset_s)
 
   let next_match_time_slot (search_param : search_param) (t : t) :
     (int64 * int64) option =

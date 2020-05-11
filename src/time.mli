@@ -91,7 +91,7 @@ val human_int_of_month : month -> int
 
 val month_of_human_int : int -> (month, unit) result
 
-val month_compare : month -> month -> int
+val compare_month : month -> month -> int
 
 val month_lt : month -> month -> bool
 
@@ -101,7 +101,7 @@ val month_gt : month -> month -> bool
 
 val month_ge : month -> month -> bool
 
-val weekday_compare : weekday -> weekday -> int
+val compare_weekday : weekday -> weekday -> int
 
 val weekday_lt : weekday -> weekday -> bool
 
@@ -212,3 +212,5 @@ module Print : sig
   val debug_print_time :
     ?indent_level:int -> display_using_tz_offset_s:tz_offset_s -> int64 -> unit
 end
+
+module Date_time_set : Set.S

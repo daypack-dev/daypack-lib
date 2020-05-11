@@ -143,7 +143,7 @@ let human_int_of_month (month : month) : int = tm_int_of_month month + 1
 
 let month_of_human_int (x : int) : (month, unit) result = month_of_tm_int (x - 1)
 
-let month_compare (m1 : month) (m2 : month) : int =
+let compare_month (m1 : month) (m2 : month) : int =
   compare (tm_int_of_month m1) (tm_int_of_month m2)
 
 let month_lt m1 m2 = tm_int_of_month m1 < tm_int_of_month m2
@@ -154,7 +154,7 @@ let month_gt m1 m2 = tm_int_of_month m1 > tm_int_of_month m2
 
 let month_ge m1 m2 = tm_int_of_month m1 >= tm_int_of_month m2
 
-let weekday_compare (d1 : weekday) (d2 : weekday) : int =
+let compare_weekday (d1 : weekday) (d2 : weekday) : int =
   compare (tm_int_of_weekday d1) (tm_int_of_weekday d2)
 
 let weekday_lt d1 d2 = tm_int_of_weekday d1 < tm_int_of_weekday d2
@@ -369,9 +369,9 @@ module Month_ranges = Ranges_small.Make (struct
 
     let modulo = None
 
-    let to_int = tm_int_of_month
+    let to_int = human_int_of_month
 
-    let of_int x = x |> month_of_tm_int |> Result.get_ok
+    let of_int x = x |> month_of_human_int |> Result.get_ok
   end)
 
 module Year_ranges = Ranges_small.Make (struct
@@ -430,6 +430,23 @@ module Interpret_string = struct
     | [ (_, x) ] -> Ok x
     | _ -> Error ()
 end
+
+let compare_date_time (x : date_time) (y : date_time) : int =
+  match compare x.year y.year with
+  | 0 -> (match compare (human_int_of_month x.month) (human_int_of_month y.month) with
+  | 0 -> (match compare x.day y.day with
+  | 0 -> (match compare x.hour y.hour with
+    | 0 -> (match compare x.minute y.minute with
+      | 0 -> compare x.second y.second
+      | n -> n
+    )
+      | n -> n
+    )
+    | n -> n
+  )
+  | n -> n
+  )
+  | n -> n
 
 (* module Add = struct
   let add_days_unix_time ~(days : int) (x : int64) : int64 =
@@ -577,3 +594,9 @@ module Print = struct
     print_string
       (To_string.debug_string_of_time ~indent_level ~display_using_tz_offset_s time)
 end
+
+module Date_time_set = Set.Make (struct
+  type t = date_time
+
+  let compare = compare_date_time
+end)
