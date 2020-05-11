@@ -8,9 +8,9 @@ type search_param =
       start : int64;
       search_years_ahead : int;
     }
-  | Years_ahead_start_tm of {
+  | Years_ahead_start_date_time of {
       search_using_tz_offset_s : Time.tz_offset_s;
-      start : Unix.tm;
+      start : Time.date_time;
       search_years_ahead : int;
     }
 
@@ -36,7 +36,7 @@ val search_using_tz_offset_s_of_search_param : search_param -> Time.tz_offset_s
 val empty : t
 
 module Single_pattern : sig
-  val matching_tm_seq : search_param -> t -> Unix.tm Seq.t
+  val matching_date_time_seq : search_param -> t -> Time.date_time Seq.t
 
   val matching_time_slots : search_param -> t -> Time_slot.t Seq.t
 
@@ -46,7 +46,7 @@ module Single_pattern : sig
   val matching_time_slots_round_robin_non_decreasing_flat :
     search_param -> t list -> Time_slot.t Seq.t
 
-  val next_match_tm : search_param -> t -> Unix.tm option
+  val next_match_date_time : search_param -> t -> Time.date_time option
 
   val next_match_unix_time : search_param -> t -> int64 option
 

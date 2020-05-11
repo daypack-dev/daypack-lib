@@ -213,4 +213,4 @@ module Print : sig
     ?indent_level:int -> display_using_tz_offset_s:tz_offset_s -> int64 -> unit
 end
 
-module Date_time_set : Set.S
+module Date_time_set : Set.S with type elt = date_time
