@@ -29,6 +29,15 @@ type month =
   | `Dec
   ]
 
+type date_time = {
+  year : int;
+  month : month;
+  day : int;
+  hour : int;
+  minute : int;
+  second : int;
+}
+
 type weekday_range = weekday Range.range
 
 type month_day_range = int Range.range
@@ -55,6 +64,8 @@ module Check : sig
   val check_minute_second : minute:int -> second:int -> bool
 
   val check_hour_minute_second : hour:int -> minute:int -> second:int -> bool
+
+  val check_date_time : date_time -> bool
 end
 
 val next_hour_minute : hour:int -> minute:int -> (int * int, unit) result

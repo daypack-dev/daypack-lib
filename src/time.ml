@@ -29,6 +29,15 @@ type month =
   | `Dec
   ]
 
+type date_time = {
+  year : int;
+  month : month;
+  day : int;
+  hour : int;
+  minute : int;
+  second : int;
+}
+
 type weekday_range = weekday Range.range
 
 type month_day_range = int Range.range
@@ -58,6 +67,10 @@ module Check = struct
   let check_hour_minute_second ~(hour : int) ~(minute : int) ~(second : int) :
     bool =
     (0 <= hour && hour < 24) && check_minute_second ~minute ~second
+
+  let check_date_time (t : date_time) : bool =
+    1 <= t.day && t.day <= 31
+    && check_hour_minute_second ~hour:t.hour ~minute:t.minute ~second:t.second
 end
 
 let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
