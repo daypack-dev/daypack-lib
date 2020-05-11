@@ -55,13 +55,15 @@ val hour_to_second_multiplier : int64
 
 val day_to_second_multiplier : int64
 
-val date_time_of_ptime_date_time : Ptime.date * Ptime.time -> (date_time, unit) result
+val date_time_of_ptime_date_time :
+  Ptime.date * Ptime.time -> (date_time, unit) result
 
 val ptime_date_time_of_date_time : date_time -> Ptime.date * Ptime.time
 
 val unix_time_of_date_time : date_time -> (int64, unit) result
 
-val date_time_of_unix_time : tz_offset_s_of_date_time:tz_offset_s -> int64 -> (date_time, unit) result
+val date_time_of_unix_time :
+  tz_offset_s_of_date_time:tz_offset_s -> int64 -> (date_time, unit) result
 
 module Check : sig
   val check_unix_time : int64 -> bool
@@ -115,12 +117,12 @@ val zero_tm_sec : Unix.tm -> Unix.tm
 
 (* val tm_of_unix_time : time_zone_of_tm:time_zone -> int64 -> Unix.tm
 
-val unix_time_of_tm : time_zone_of_tm:time_zone -> Unix.tm -> int64
+   val unix_time_of_tm : time_zone_of_tm:time_zone -> Unix.tm -> int64
 
-val normalize_tm : Unix.tm -> Unix.tm
+   val normalize_tm : Unix.tm -> Unix.tm
 
-val tm_change_time_zone :
-  from_time_zone:time_zone -> to_time_zone:time_zone -> Unix.tm -> Unix.tm *)
+   val tm_change_time_zone :
+   from_time_zone:time_zone -> to_time_zone:time_zone -> Unix.tm -> Unix.tm *)
 
 val is_leap_year : year:int -> bool
 
@@ -128,7 +130,8 @@ val day_count_of_year : year:int -> int
 
 val day_count_of_month : year:int -> month:month -> int
 
-val weekday_of_month_day : year:int -> month:month -> mday:int -> (weekday, unit) result
+val weekday_of_month_day :
+  year:int -> month:month -> mday:int -> (weekday, unit) result
 
 (* val local_tm_to_utc_tm : Unix.tm -> Unix.tm *)
 
@@ -165,8 +168,8 @@ module Interpret_string : sig
 end
 
 (* module Add : sig
-  val add_days_unix_time : days:int -> int64 -> int64
-end *)
+   val add_days_unix_time : days:int -> int64 -> int64
+   end *)
 
 module Serialize : sig
   val pack_weekday : weekday -> Time_t.weekday
