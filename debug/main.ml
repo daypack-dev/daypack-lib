@@ -738,9 +738,7 @@ let debug_time_pattern_matching_date_time_seq () =
 let debug_time_pattern_matching_time_slots () =
   print_endline "Debug print for Time_pattern.matching_time_slots";
   let date_time =
-    Time.Current.cur_date_time
-      ~tz_offset_s_of_date_time:None
-    |> Result.get_ok
+    Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
   in
   let start = Time.unix_time_of_date_time date_time |> Result.get_ok in
   let end_exc =
@@ -764,11 +762,7 @@ let debug_time_pattern_matching_time_slots () =
   Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
   let s =
     Daypack_lib.Time_pattern.Single_pattern.matching_time_slots
-      (Time_slots
-         {
-           search_using_tz_offset_s = None;
-           time_slots;
-         })
+      (Time_slots { search_using_tz_offset_s = None; time_slots })
       pattern
   in
   s
@@ -777,21 +771,17 @@ let debug_time_pattern_matching_time_slots () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:None
-            start
+            ~display_using_tz_offset_s:None start
           |> Result.get_ok )
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:None
-            end_exc
+            ~display_using_tz_offset_s:None end_exc
           |> Result.get_ok ))
 
 let debug_time_range_pattern_matching_time_slots () =
   print_endline
     "Debug print for Time_pattern.matching_time_slots_time_range_pattern";
   let date_time =
-    Time.Current.cur_date_time
-      ~tz_offset_s_of_date_time:None
-    |> Result.get_ok
+    Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
   in
   let start = Time.unix_time_of_date_time date_time |> Result.get_ok in
   let end_exc =
@@ -826,11 +816,7 @@ let debug_time_range_pattern_matching_time_slots () =
   Daypack_lib.Time_pattern.Print.debug_print_time_range_pattern pattern;
   let s =
     Daypack_lib.Time_pattern.Range_pattern.matching_time_slots
-      (Time_slots
-         {
-           search_using_tz_offset_s = None;
-           time_slots;
-         })
+      (Time_slots { search_using_tz_offset_s = None; time_slots })
       pattern
   in
   s
@@ -839,12 +825,10 @@ let debug_time_range_pattern_matching_time_slots () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:None
-            start
+            ~display_using_tz_offset_s:None start
           |> Result.get_ok )
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:None
-            end_exc
+            ~display_using_tz_offset_s:None end_exc
           |> Result.get_ok ))
 
 let debug_time_profile_matching_time_slots_of_periods () =
@@ -883,12 +867,10 @@ let debug_time_profile_matching_time_slots_of_periods () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:None
-            start
+            ~display_using_tz_offset_s:None start
           |> Result.get_ok )
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:None
-            end_exc
+            ~display_using_tz_offset_s:None end_exc
           |> Result.get_ok ))
 
 (* let debug_time_pattern_next_match_tm () =

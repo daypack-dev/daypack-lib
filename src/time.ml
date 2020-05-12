@@ -60,10 +60,10 @@ let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
 let resolve_current_tz_offset_s (x : tz_offset_s option) : tz_offset_s =
   match x with
   | Some x -> x
-  | None ->
-    match Ptime_clock.current_tz_offset_s () with
-    | Some x -> x
-    | None -> raise Failed_to_get_current_tz_offset_s
+  | None -> (
+      match Ptime_clock.current_tz_offset_s () with
+      | Some x -> x
+      | None -> raise Failed_to_get_current_tz_offset_s )
 
 module Check = struct
   let check_unix_time (x : int64) = x >= 0L
@@ -194,15 +194,13 @@ let unix_time_of_date_time (x : date_time) : (int64, unit) result =
   | None -> Error ()
   | Some x -> x |> Ptime.to_float_s |> Int64.of_float |> Result.ok
 
-let date_time_of_unix_time ~(tz_offset_s_of_date_time : tz_offset_s option) (x : int64)
-  : (date_time, unit) result =
+let date_time_of_unix_time ~(tz_offset_s_of_date_time : tz_offset_s option)
+    (x : int64) : (date_time, unit) result =
   match Ptime.of_float_s (Int64.to_float x) with
   | None -> Error ()
   | Some x ->
     let tz_offset_s = resolve_current_tz_offset_s tz_offset_s_of_date_time in
-    x
-    |> Ptime.to_date_time ~tz_offset_s
-    |> date_time_of_ptime_date_time
+    x |> Ptime.to_date_time ~tz_offset_s |> date_time_of_ptime_date_time
 
 (* let tm_of_date_time (x : date_time) : Unix.tm =
    {
@@ -594,7 +592,8 @@ module To_string = struct
     |> Result.map yyyymmdd_hhmm_string_of_date_time
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
-      ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string =
+      ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string
+    =
     ( match
         yyyymondd_hhmmss_string_of_unix_time ~display_using_tz_offset_s time
       with

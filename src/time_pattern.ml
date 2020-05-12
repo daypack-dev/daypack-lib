@@ -43,8 +43,8 @@ let empty =
     unix_times = [];
   }
 
-let of_unix_time ~(tz_offset_s_of_time_pattern : Time.tz_offset_s option) (x : int64) :
-  (t, unit) result =
+let of_unix_time ~(tz_offset_s_of_time_pattern : Time.tz_offset_s option)
+    (x : int64) : (t, unit) result =
   Time.date_time_of_unix_time
     ~tz_offset_s_of_date_time:tz_offset_s_of_time_pattern x
   |> Result.map (fun x ->
@@ -531,8 +531,8 @@ module Matching_years = struct
 end
 
 module Matching_unix_times = struct
-  let matching_unix_times ~(search_using_tz_offset_s : Time.tz_offset_s option) (t : t)
-      (start : Time.date_time) : Time.Date_time_set.t =
+  let matching_unix_times ~(search_using_tz_offset_s : Time.tz_offset_s option)
+      (t : t) (start : Time.date_time) : Time.Date_time_set.t =
     let start = Time.unix_time_of_date_time start |> Result.get_ok in
     t.unix_times
     |> List.sort_uniq compare

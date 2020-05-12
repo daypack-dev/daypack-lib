@@ -31,7 +31,8 @@ type single_or_ranges =
   | Single_time_pattern of t
   | Time_range_patterns of time_range_pattern list
 
-val search_using_tz_offset_s_of_search_param : search_param -> Time.tz_offset_s option
+val search_using_tz_offset_s_of_search_param :
+  search_param -> Time.tz_offset_s option
 
 val empty : t
 
