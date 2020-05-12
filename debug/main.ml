@@ -721,8 +721,7 @@ let debug_time_pattern_matching_date_time_seq () =
     Daypack_lib.Time_pattern.Single_pattern.matching_date_time_seq
       (Years_ahead_start_unix_time
          {
-           search_using_tz_offset_s =
-             Ptime_clock.current_tz_offset_s () |> Option.get;
+           search_using_tz_offset_s = None;
            start = Time.Current.cur_unix_time ();
            search_years_ahead;
          })
@@ -731,7 +730,6 @@ let debug_time_pattern_matching_date_time_seq () =
   s
   |> OSeq.take 10
   |> OSeq.iteri (fun i x ->
-      let open Unix in
       Printf.printf "iter : %d\n" i;
       print_endline "  =====";
       Printf.printf "  %s\n"
@@ -741,8 +739,7 @@ let debug_time_pattern_matching_time_slots () =
   print_endline "Debug print for Time_pattern.matching_time_slots";
   let date_time =
     Time.Current.cur_date_time
-      ~tz_offset_s_of_date_time:
-        (Ptime_clock.current_tz_offset_s () |> Option.get)
+      ~tz_offset_s_of_date_time:None
     |> Result.get_ok
   in
   let start = Time.unix_time_of_date_time date_time |> Result.get_ok in
@@ -769,8 +766,7 @@ let debug_time_pattern_matching_time_slots () =
     Daypack_lib.Time_pattern.Single_pattern.matching_time_slots
       (Time_slots
          {
-           search_using_tz_offset_s =
-             Ptime_clock.current_tz_offset_s () |> Option.get;
+           search_using_tz_offset_s = None;
            time_slots;
          })
       pattern
@@ -781,13 +777,11 @@ let debug_time_pattern_matching_time_slots () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:
-              (Ptime_clock.current_tz_offset_s () |> Option.get)
+            ~display_using_tz_offset_s:None
             start
           |> Result.get_ok )
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:
-              (Ptime_clock.current_tz_offset_s () |> Option.get)
+            ~display_using_tz_offset_s:None
             end_exc
           |> Result.get_ok ))
 
@@ -796,11 +790,9 @@ let debug_time_range_pattern_matching_time_slots () =
     "Debug print for Time_pattern.matching_time_slots_time_range_pattern";
   let date_time =
     Time.Current.cur_date_time
-      ~tz_offset_s_of_date_time:
-        (Ptime_clock.current_tz_offset_s () |> Option.get)
+      ~tz_offset_s_of_date_time:None
     |> Result.get_ok
   in
-  let start = Time.Current.cur_unix_time () in
   let start = Time.unix_time_of_date_time date_time |> Result.get_ok in
   let end_exc =
     Time.unix_time_of_date_time { date_time with year = date_time.year + 1 }
@@ -836,8 +828,7 @@ let debug_time_range_pattern_matching_time_slots () =
     Daypack_lib.Time_pattern.Range_pattern.matching_time_slots
       (Time_slots
          {
-           search_using_tz_offset_s =
-             Ptime_clock.current_tz_offset_s () |> Option.get;
+           search_using_tz_offset_s = None;
            time_slots;
          })
       pattern
@@ -848,13 +839,11 @@ let debug_time_range_pattern_matching_time_slots () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:
-              (Ptime_clock.current_tz_offset_s () |> Option.get)
+            ~display_using_tz_offset_s:None
             start
           |> Result.get_ok )
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:
-              (Ptime_clock.current_tz_offset_s () |> Option.get)
+            ~display_using_tz_offset_s:None
             end_exc
           |> Result.get_ok ))
 
@@ -894,13 +883,11 @@ let debug_time_profile_matching_time_slots_of_periods () =
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:
-              (Ptime_clock.current_tz_offset_s () |> Option.get)
+            ~display_using_tz_offset_s:None
             start
           |> Result.get_ok )
         ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-            ~display_using_tz_offset_s:
-              (Ptime_clock.current_tz_offset_s () |> Option.get)
+            ~display_using_tz_offset_s:None
             end_exc
           |> Result.get_ok ))
 

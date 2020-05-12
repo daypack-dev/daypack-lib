@@ -3043,8 +3043,7 @@ module Recur = struct
           Time_pattern.Single_pattern.matching_time_slots
             (Time_slots
                {
-                 search_using_tz_offset_s =
-                   Ptime_clock.current_tz_offset_s () |> Option.get;
+                 search_using_tz_offset_s = None;
                  time_slots = usable_time_slot_list;
                })
             pattern
@@ -4623,18 +4622,15 @@ module To_string = struct
          |> ignore)
       sd.store.task_seg_discarded_store;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "agenda :\n";
-    let display_using_tz_offset_s =
-      Ptime_clock.current_tz_offset_s () |> Option.get
-    in
     Seq.iter
       (fun (id, start, end_exc) ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
            "%s - %s | %s\n"
            ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-               ~display_using_tz_offset_s start
+               ~display_using_tz_offset_s:None start
              |> Result.get_ok )
            ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-               ~display_using_tz_offset_s end_exc
+               ~display_using_tz_offset_s:None end_exc
              |> Result.get_ok )
            (Task_.Id.string_of_task_seg_id id))
       (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));

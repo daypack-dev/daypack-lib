@@ -1,15 +1,15 @@
 type search_param =
   | Time_slots of {
-      search_using_tz_offset_s : Time.tz_offset_s;
+      search_using_tz_offset_s : Time.tz_offset_s option;
       time_slots : Time_slot.t list;
     }
   | Years_ahead_start_unix_time of {
-      search_using_tz_offset_s : Time.tz_offset_s;
+      search_using_tz_offset_s : Time.tz_offset_s option;
       start : int64;
       search_years_ahead : int;
     }
   | Years_ahead_start_date_time of {
-      search_using_tz_offset_s : Time.tz_offset_s;
+      search_using_tz_offset_s : Time.tz_offset_s option;
       start : Time.date_time;
       search_years_ahead : int;
     }
@@ -43,7 +43,7 @@ let empty =
     unix_times = [];
   }
 
-let of_unix_time ~(tz_offset_s_of_time_pattern : Time.tz_offset_s) (x : int64) :
+let of_unix_time ~(tz_offset_s_of_time_pattern : Time.tz_offset_s option) (x : int64) :
   (t, unit) result =
   Time.date_time_of_unix_time
     ~tz_offset_s_of_date_time:tz_offset_s_of_time_pattern x
@@ -70,7 +70,7 @@ let of_unix_time ~(tz_offset_s_of_time_pattern : Time.tz_offset_s) (x : int64) :
 *)
 
 let search_using_tz_offset_s_of_search_param (param : search_param) :
-  Time.tz_offset_s =
+  Time.tz_offset_s option =
   match param with
   | Time_slots { search_using_tz_offset_s; _ } -> search_using_tz_offset_s
   | Years_ahead_start_unix_time { search_using_tz_offset_s; _ } ->
@@ -531,7 +531,7 @@ module Matching_years = struct
 end
 
 module Matching_unix_times = struct
-  let matching_unix_times ~(search_using_tz_offset_s : Time.tz_offset_s) (t : t)
+  let matching_unix_times ~(search_using_tz_offset_s : Time.tz_offset_s option) (t : t)
       (start : Time.date_time) : Time.Date_time_set.t =
     let start = Time.unix_time_of_date_time start |> Result.get_ok in
     t.unix_times
