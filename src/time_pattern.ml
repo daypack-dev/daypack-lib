@@ -14,6 +14,12 @@ type search_param =
       search_years_ahead : int;
     }
 
+type search_param_error = [
+  | `Invalid_start
+  | `Invalid_time_slots
+  | `Invalid_search_years_ahead
+]
+
 type t = {
   years : int list;
   months : Time.month list;
@@ -25,11 +31,51 @@ type t = {
   unix_times : int64 list;
 }
 
+type pattern_error = [
+  | `Invalid_years of int list
+  | `Invalid_month_days of int list
+  | `Invalid_hours of int list
+  | `Invalid_minutes of int list
+  | `Invalid_seconds of int list
+  | `Invalid_unix_times of int64 list
+]
+
 type time_range_pattern = t Range.range
 
 type single_or_ranges =
   | Single_time_pattern of t
   | Time_range_patterns of time_range_pattern list
+
+module Check = struct
+  let check_search_param (x : search_param) : (unit, search_param_error) result =
+    match x with
+    | Time_slots { search_using_tz_offset_s = _; time_slots } ->
+      if List.for_all (fun (x, y) ->
+          Time_slot.Check.is_valid (x, y)
+          && Time.date_time_of_unix_time ~tz_offset_s_of_date_time:None x |> Result.is_ok
+          && Time.date_time_of_unix_time ~tz_offset_s_of_date_time:None y |> Result.is_ok
+        ) time_slots then
+        Ok ()
+      else
+        Error Invalid_time_slots
+    | Years_ahead_start_unix_time {search_using_tz_offset_s; start; search_years_ahead} -> (
+        match Time.date_time_of_unix_time ~tz_offset_s_of_date_time:search_using_tz_offset_s start with
+        | Error () -> Error Invalid_start
+        | Ok _ ->
+          if search_years_ahead > 0 then
+            Ok ()
+          else
+            Error Invalid_search_years_ahead
+      )
+    | Years_ahead_start_date_time {search_using_tz_offset_s = _; start; search_years_ahead} ->
+      if Time.Check.check_date_time start then
+        if search_years_ahead > 0 then
+          Ok ()
+        else
+          Error Invalid_search_years_ahead
+      else
+        Error Invalid_start
+end
 
 let empty =
   {
@@ -552,7 +598,7 @@ module Matching_unix_times = struct
       |> Time.Date_time_set.of_seq
 end
 
-let start_tm_and_search_years_ahead_of_search_param
+let start_date_time_and_search_years_ahead_of_search_param
     (search_param : search_param) : ((Time.date_time * int) option, unit) result
   =
   match search_param with
