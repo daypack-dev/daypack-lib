@@ -3047,6 +3047,7 @@ module Recur = struct
                  time_slots = usable_time_slot_list;
                })
             pattern
+          |> Result.get_ok
           |> Seq.map (fun (start', _end_exc) ->
               ( task_inst_data,
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:start'

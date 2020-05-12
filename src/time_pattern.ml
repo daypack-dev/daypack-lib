@@ -1059,6 +1059,11 @@ module Equal = struct
 end
 
 module To_string = struct
+  let string_of_error (e : error) : string =
+    match e with
+    | Invalid_search_param _ -> "Invalid search param"
+    | Invalid_time_pattern _ -> "Invalid time pattern"
+
   let debug_string_of_weekdays (days : Time.weekday list) : string =
     let aux l =
       String.concat "," (List.map Time.To_string.string_of_weekday l)

@@ -935,7 +935,8 @@ module Time_points_expr = struct
     with
     | Error msg -> Error msg
     | Ok pat ->
-      Ok (Time_pattern.Single_pattern.next_match_unix_time search_param pat)
+      Time_pattern.Single_pattern.next_match_unix_time search_param pat
+      |> Result.map_error Time_pattern.To_string.string_of_error
 
   let matching_unix_times ?(force_bound : Time_expr_ast.bound option)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
@@ -964,10 +965,15 @@ module Time_points_expr = struct
                 | `Next -> OSeq.take 1
                 | `Every -> fun x -> x )
           in
-          Time_pattern.Single_pattern.matching_time_slots search_param pat
-          |> Seq.map (fun (x, _) -> x)
-          |> selector
-          |> Result.ok )
+          match Time_pattern.Single_pattern.matching_time_slots search_param pat with
+          | Error e ->
+            Error (Time_pattern.To_string.string_of_error e)
+          | Ok s ->
+              s
+              |> Seq.map (fun (x, _) -> x)
+              |> selector
+              |> Result.ok
+      )
 end
 
 module Time_slots_expr = struct
@@ -1076,12 +1082,15 @@ module Time_slots_expr = struct
         with
         | Error msg -> Error msg
         | Ok l ->
-          Time_pattern.Range_pattern
-          .matching_time_slots_round_robin_non_decreasing search_param l
-          |> list_selector
-          |> Seq.flat_map List.to_seq
-          |> flat_selector
-          |> Result.ok )
+          match Time_pattern.Range_pattern
+                .matching_time_slots_round_robin_non_decreasing search_param l with
+          | Error e -> Error (Time_pattern.To_string.string_of_error e)
+          | Ok s ->
+            s
+            |> list_selector
+            |> Seq.flat_map List.to_seq
+            |> flat_selector
+            |> Result.ok )
 
   let next_match_time_slot ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)

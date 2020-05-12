@@ -726,6 +726,7 @@ let debug_time_pattern_matching_date_time_seq () =
            search_years_ahead;
          })
       pattern
+    |> Result.get_ok
   in
   s
   |> OSeq.take 10
@@ -764,6 +765,7 @@ let debug_time_pattern_matching_time_slots () =
     Daypack_lib.Time_pattern.Single_pattern.matching_time_slots
       (Time_slots { search_using_tz_offset_s = None; time_slots })
       pattern
+    |> Result.get_ok
   in
   s
   |> OSeq.take 30
@@ -818,6 +820,7 @@ let debug_time_range_pattern_matching_time_slots () =
     Daypack_lib.Time_pattern.Range_pattern.matching_time_slots
       (Time_slots { search_using_tz_offset_s = None; time_slots })
       pattern
+    |> Result.get_ok
   in
   s
   |> OSeq.take 30

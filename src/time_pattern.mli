@@ -118,6 +118,8 @@ module Equal : sig
 end
 
 module To_string : sig
+  val string_of_error : error -> string
+
   val debug_string_of_weekdays : Time.weekday list -> string
 
   val debug_string_of_month_days : int list -> string
