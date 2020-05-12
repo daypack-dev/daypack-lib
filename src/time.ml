@@ -58,29 +58,6 @@ let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
 let resolve_current_tz_offset_s (x : tz_offset_s option) : tz_offset_s =
   Option.value ~default:0 x
 
-module Check = struct
-  let check_unix_time (x : int64) = x >= 0L
-
-  let check_second ~(second : int) : bool = 0 <= second && second < 60
-
-  let check_minute_second ~(minute : int) ~(second : int) : bool =
-    0 <= minute && minute < 60 && check_second ~second
-
-  let check_hour_minute_second ~(hour : int) ~(minute : int) ~(second : int) :
-    bool =
-    (0 <= hour && hour < 24) && check_minute_second ~minute ~second
-
-  let check_date_time (x : date_time) : bool =
-    1 <= x.day
-    && x.day <= 31
-    && check_hour_minute_second ~hour:x.hour ~minute:x.minute ~second:x.second
-end
-
-let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
-  if Check.check_hour_minute_second ~hour ~minute ~second:0 then
-    if minute < 59 then Ok (hour, succ minute) else Ok (succ hour mod 24, 0)
-  else Error ()
-
 let next_weekday (wday : weekday) : weekday =
   match wday with
   | `Sun -> `Mon
@@ -194,6 +171,32 @@ let date_time_of_unix_time ~(tz_offset_s_of_date_time : tz_offset_s option)
   | Some x ->
     let tz_offset_s = resolve_current_tz_offset_s tz_offset_s_of_date_time in
     x |> Ptime.to_date_time ~tz_offset_s |> date_time_of_ptime_date_time
+
+module Check = struct
+  let check_unix_time (x : int64) : bool =
+    match date_time_of_unix_time ~tz_offset_s_of_date_time:None x with
+    | Ok _ -> true
+    | Error () -> false
+
+  let check_second ~(second : int) : bool = 0 <= second && second < 60
+
+  let check_minute_second ~(minute : int) ~(second : int) : bool =
+    0 <= minute && minute < 60 && check_second ~second
+
+  let check_hour_minute_second ~(hour : int) ~(minute : int) ~(second : int) :
+    bool =
+    (0 <= hour && hour < 24) && check_minute_second ~minute ~second
+
+  let check_date_time (x : date_time) : bool =
+    match unix_time_of_date_time x with
+    | Ok _ -> true
+    | Error () -> false
+end
+
+let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
+  if Check.check_hour_minute_second ~hour ~minute ~second:0 then
+    if minute < 59 then Ok (hour, succ minute) else Ok (succ hour mod 24, 0)
+  else Error ()
 
 (* let tm_of_date_time (x : date_time) : Unix.tm =
    {
