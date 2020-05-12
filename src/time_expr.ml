@@ -953,26 +953,23 @@ module Time_points_expr = struct
           Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e
         with
         | Error msg -> Error msg
-        | Ok e ->
-          let selector =
-            match e with
-            | Tpe_name _ -> failwith "Unexpected case"
-            | Tpe_unix_times l -> OSeq.take (List.length l)
-            | Year_month_day_hour_minute_second _
-            | Month_day_hour_minute_second _ | Day_hour_minute_second _
-            | Hour_minute_second _ | Minute_second _ | Second _ -> (
-                match Option.value ~default:bound force_bound with
-                | `Next -> OSeq.take 1
-                | `Every -> fun x -> x )
-          in
-          match Time_pattern.Single_pattern.matching_time_slots search_param pat with
-          | Error e ->
-            Error (Time_pattern.To_string.string_of_error e)
-          | Ok s ->
-              s
-              |> Seq.map (fun (x, _) -> x)
-              |> selector
-              |> Result.ok
+        | Ok e -> (
+            let selector =
+              match e with
+              | Tpe_name _ -> failwith "Unexpected case"
+              | Tpe_unix_times l -> OSeq.take (List.length l)
+              | Year_month_day_hour_minute_second _
+              | Month_day_hour_minute_second _ | Day_hour_minute_second _
+              | Hour_minute_second _ | Minute_second _ | Second _ -> (
+                  match Option.value ~default:bound force_bound with
+                  | `Next -> OSeq.take 1
+                  | `Every -> fun x -> x )
+            in
+            match
+              Time_pattern.Single_pattern.matching_time_slots search_param pat
+            with
+            | Error e -> Error (Time_pattern.To_string.string_of_error e)
+            | Ok s -> s |> Seq.map (fun (x, _) -> x) |> selector |> Result.ok )
       )
 end
 
@@ -1081,16 +1078,18 @@ module Time_slots_expr = struct
             ~f_resolve_tse_name ~f_resolve_tpe_name e
         with
         | Error msg -> Error msg
-        | Ok l ->
-          match Time_pattern.Range_pattern
-                .matching_time_slots_round_robin_non_decreasing search_param l with
-          | Error e -> Error (Time_pattern.To_string.string_of_error e)
-          | Ok s ->
-            s
-            |> list_selector
-            |> Seq.flat_map List.to_seq
-            |> flat_selector
-            |> Result.ok )
+        | Ok l -> (
+            match
+              Time_pattern.Range_pattern
+              .matching_time_slots_round_robin_non_decreasing search_param l
+            with
+            | Error e -> Error (Time_pattern.To_string.string_of_error e)
+            | Ok s ->
+              s
+              |> list_selector
+              |> Seq.flat_map List.to_seq
+              |> flat_selector
+              |> Result.ok ) )
 
   let next_match_time_slot ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)

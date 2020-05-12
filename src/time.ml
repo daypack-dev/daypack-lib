@@ -188,9 +188,7 @@ module Check = struct
     (0 <= hour && hour < 24) && check_minute_second ~minute ~second
 
   let check_date_time (x : date_time) : bool =
-    match unix_time_of_date_time x with
-    | Ok _ -> true
-    | Error () -> false
+    match unix_time_of_date_time x with Ok _ -> true | Error () -> false
 end
 
 let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
