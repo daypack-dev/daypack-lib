@@ -1,7 +1,5 @@
 type tz_offset_s = int
 
-exception Failed_to_get_current_tz_offset_s
-
 let tz_offset_s_utc = 0
 
 type weekday =
@@ -58,12 +56,7 @@ let hour_to_second_multiplier = Int64.mul 60L minute_to_second_multiplier
 let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
 
 let resolve_current_tz_offset_s (x : tz_offset_s option) : tz_offset_s =
-  match x with
-  | Some x -> x
-  | None -> (
-      match Ptime_clock.current_tz_offset_s () with
-      | Some x -> x
-      | None -> raise Failed_to_get_current_tz_offset_s )
+  Option.value ~default:0 x
 
 module Check = struct
   let check_unix_time (x : int64) = x >= 0L

@@ -1,7 +1,5 @@
 type tz_offset_s = int
 
-exception Failed_to_get_current_tz_offset_s
-
 val tz_offset_s_utc : tz_offset_s
 
 type weekday =

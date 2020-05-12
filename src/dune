@@ -14,7 +14,6 @@ let () = Jbuild_plugin.V1.send @@ {|
  (libraries unix
             str
             ptime
-            ptime.clock.os
             oseq
             biniou
             yojson
