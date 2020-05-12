@@ -1,5 +1,7 @@
 type tz_offset_s = int
 
+exception Failed_to_get_current_tz_offset_s
+
 val tz_offset_s_utc : tz_offset_s
 
 type weekday =
@@ -63,7 +65,7 @@ val ptime_date_time_of_date_time : date_time -> Ptime.date * Ptime.time
 val unix_time_of_date_time : date_time -> (int64, unit) result
 
 val date_time_of_unix_time :
-  tz_offset_s_of_date_time:tz_offset_s -> int64 -> (date_time, unit) result
+  tz_offset_s_of_date_time:tz_offset_s option -> int64 -> (date_time, unit) result
 
 module Check : sig
   val check_unix_time : int64 -> bool
@@ -157,7 +159,7 @@ module Current : sig
   val cur_unix_time : unit -> int64
 
   val cur_date_time :
-    tz_offset_s_of_date_time:tz_offset_s -> (date_time, unit) result
+    tz_offset_s_of_date_time:tz_offset_s option -> (date_time, unit) result
 
   val cur_tm_local : unit -> Unix.tm
 
@@ -193,30 +195,30 @@ module To_string : sig
   val yyyymondd_hhmmss_string_of_date_time : date_time -> string
 
   val yyyymondd_hhmmss_string_of_unix_time :
-    display_using_tz_offset_s:tz_offset_s -> int64 -> (string, unit) result
+    display_using_tz_offset_s:tz_offset_s option -> int64 -> (string, unit) result
 
   (* val yyyymmdd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result *)
   val yyyymmdd_hhmmss_string_of_date_time : date_time -> string
 
   val yyyymmdd_hhmmss_string_of_unix_time :
-    display_using_tz_offset_s:tz_offset_s -> int64 -> (string, unit) result
+    display_using_tz_offset_s:tz_offset_s option -> int64 -> (string, unit) result
 
   (* val yyyymondd_hhmm_string_of_tm : Unix.tm -> (string, unit) result *)
   val yyyymondd_hhmm_string_of_date_time : date_time -> string
 
   val yyyymondd_hhmm_string_of_unix_time :
-    display_using_tz_offset_s:tz_offset_s -> int64 -> (string, unit) result
+    display_using_tz_offset_s:tz_offset_s option -> int64 -> (string, unit) result
 
   (* val yyyymmdd_hhmm_string_of_tm : Unix.tm -> (string, unit) result *)
   val yyyymmdd_hhmm_string_of_date_time : date_time -> string
 
   val yyyymmdd_hhmm_string_of_unix_time :
-    display_using_tz_offset_s:tz_offset_s -> int64 -> (string, unit) result
+    display_using_tz_offset_s:tz_offset_s option -> int64 -> (string, unit) result
 end
 
 module Print : sig
   val debug_print_time :
-    ?indent_level:int -> display_using_tz_offset_s:tz_offset_s -> int64 -> unit
+    ?indent_level:int -> display_using_tz_offset_s:tz_offset_s option -> int64 -> unit
 end
 
 module Date_time_set : Set.S with type elt = date_time
