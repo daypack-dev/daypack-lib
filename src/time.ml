@@ -455,8 +455,7 @@ let compare_date_time (x : date_time) (y : date_time) : int =
 
 module Add = struct
   let add_days_unix_time ~(days : int) (x : int64) : int64 =
-    Int64.add (Int64.mul (Int64.of_int days) day_to_second_multiplier)
-      x
+    Int64.add (Int64.mul (Int64.of_int days) day_to_second_multiplier) x
 end
 
 module Serialize = struct
