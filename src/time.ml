@@ -453,12 +453,11 @@ let compare_date_time (x : date_time) (y : date_time) : int =
       | n -> n )
   | n -> n
 
-(* module Add = struct
-   let add_days_unix_time ~(days : int) (x : int64) : int64 =
-    tm_of_unix_time ~time_zone_of_tm:`Local x
-    |> (fun tm -> { tm with tm_mday = tm.tm_mday + days })
-    |> unix_time_of_tm ~time_zone_of_tm:`Local
-   end *)
+module Add = struct
+  let add_days_unix_time ~(days : int) (x : int64) : int64 =
+    Int64.add (Int64.mul (Int64.of_int days) day_to_second_multiplier)
+      x
+end
 
 module Serialize = struct
   let pack_weekday (x : weekday) : Time_t.weekday = x

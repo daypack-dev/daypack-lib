@@ -172,9 +172,9 @@ module Interpret_string : sig
   val month_of_string : string -> (month, unit) result
 end
 
-(* module Add : sig
-   val add_days_unix_time : days:int -> int64 -> int64
-   end *)
+module Add : sig
+  val add_days_unix_time : days:int -> int64 -> int64
+end
 
 module Serialize : sig
   val pack_weekday : weekday -> Time_t.weekday
