@@ -101,13 +101,13 @@ end
 
 module Round_robin : sig
   val collect_round_robin_non_decreasing :
-    Time_slot.t Seq.t list -> Time_slot.t option list Seq.t
+    ?skip_check:bool -> Time_slot.t Seq.t list -> Time_slot.t option list Seq.t
 
   val merge_multi_seq_round_robin_non_decreasing :
-    Time_slot.t Seq.t Seq.t -> Time_slot.t Seq.t
+    ?skip_check:bool -> Time_slot.t Seq.t Seq.t -> Time_slot.t Seq.t
 
   val merge_multi_list_round_robin_non_decreasing :
-    Time_slot.t Seq.t list -> Time_slot.t Seq.t
+    ?skip_check:bool -> Time_slot.t Seq.t list -> Time_slot.t Seq.t
 end
 
 val intersect :

@@ -367,18 +367,24 @@ module Merge = struct
 end
 
 module Round_robin = struct
-  let collect_round_robin_non_decreasing (batches : Time_slot.t Seq.t list) :
-    Time_slot.t option list Seq.t =
-    Seq_utils.collect_round_robin Time_slot.le batches
+  let collect_round_robin_non_decreasing ?(skip_check = false)
+      (batches : Time_slot.t Seq.t list) : Time_slot.t option list Seq.t =
+    batches
+    |> List.map (fun s ->
+        if skip_check then s
+        else s |> Check.check_if_valid |> Check.check_if_sorted)
+    |> Seq_utils.collect_round_robin Time_slot.le
 
-  let merge_multi_list_round_robin_non_decreasing
+  let merge_multi_list_round_robin_non_decreasing ?(skip_check = false)
       (batches : Time_slot.t Seq.t list) : Time_slot.t Seq.t =
-    collect_round_robin_non_decreasing batches
+    collect_round_robin_non_decreasing ~skip_check batches
     |> Seq.flat_map (fun l -> List.to_seq l |> Seq.filter_map (fun x -> x))
 
-  let merge_multi_seq_round_robin_non_decreasing
+  let merge_multi_seq_round_robin_non_decreasing ?(skip_check = false)
       (batches : Time_slot.t Seq.t Seq.t) : Time_slot.t Seq.t =
-    batches |> List.of_seq |> merge_multi_list_round_robin_non_decreasing
+    batches
+    |> List.of_seq
+    |> merge_multi_list_round_robin_non_decreasing ~skip_check
 end
 
 module Union = struct
