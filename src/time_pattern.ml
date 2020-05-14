@@ -851,7 +851,8 @@ module Single_pattern = struct
         | None -> l
         | Some time_slots ->
           Time_slots.intersect time_slots l
-          |> Time_slots.Normalize.normalize ~skip_sort:true)
+          |> Time_slots.Normalize.normalize ~skip_filter_invalid:true
+            ~skip_sort:true)
 
   let matching_time_slots_round_robin_non_decreasing
       (search_param : search_param) (l : t list) :
