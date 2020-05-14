@@ -850,7 +850,7 @@ module Single_pattern = struct
         match time_slots with
         | None -> l
         | Some time_slots ->
-          Time_slots.intersect time_slots l
+          Time_slots.intersect time_slots ~skip_check:true l
           |> Time_slots.Normalize.normalize ~skip_filter_invalid:true
             ~skip_sort:true)
 
@@ -864,6 +864,7 @@ module Single_pattern = struct
       l
       |> List.map Result.get_ok
       |> Time_slots.Round_robin.collect_round_robin_non_decreasing
+        ~skip_check:true
       |> OSeq.take_while (List.for_all Option.is_some)
       |> Seq.map (List.map Option.get)
       |> Result.ok
@@ -954,7 +955,7 @@ module Range_pattern = struct
     | None ->
       l
       |> List.map Result.get_ok
-      |> Time_slots.Merge.merge_multi_list
+      |> Time_slots.Merge.merge_multi_list ~skip_check:true
       |> Result.ok
 
   let next_match_time_slot_multi (search_param : search_param)
@@ -975,6 +976,7 @@ module Range_pattern = struct
       l
       |> List.map Result.get_ok
       |> Time_slots.Round_robin.collect_round_robin_non_decreasing
+        ~skip_check:true
       |> OSeq.take_while (List.for_all Option.is_some)
       |> Seq.map (List.map Option.get)
       |> Result.ok
