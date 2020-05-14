@@ -25,16 +25,20 @@ module Filter : sig
 end
 
 module Sort : sig
-  val sort_time_slots_list : Time_slot.t list -> Time_slot.t list
+  val sort_time_slots_list :
+    ?skip_check:bool -> Time_slot.t list -> Time_slot.t list
 
-  val sort_time_slots : Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val sort_time_slots :
+    ?skip_check:bool -> Time_slot.t Seq.t -> Time_slot.t Seq.t
 
-  val sort_uniq_time_slots_list : Time_slot.t list -> Time_slot.t list
+  val sort_uniq_time_slots_list :
+    ?skip_check:bool -> Time_slot.t list -> Time_slot.t list
 
-  val sort_uniq_time_slots : Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val sort_uniq_time_slots :
+    ?skip_check:bool -> Time_slot.t Seq.t -> Time_slot.t Seq.t
 end
 
-val join : Time_slot.t Seq.t -> Time_slot.t Seq.t
+val join : ?skip_check:bool -> Time_slot.t Seq.t -> Time_slot.t Seq.t
 
 module Normalize : sig
   val normalize :
@@ -54,24 +58,45 @@ end
 
 module Slice : sig
   val slice :
-    ?start:int64 -> ?end_exc:int64 -> Time_slot.t Seq.t -> Time_slot.t Seq.t
+    ?skip_check:bool ->
+    ?start:int64 ->
+    ?end_exc:int64 ->
+    Time_slot.t Seq.t ->
+    Time_slot.t Seq.t
 
   val slice_rev :
-    ?start:int64 -> ?end_exc:int64 -> Time_slot.t Seq.t -> Time_slot.t Seq.t
+    ?skip_check:bool ->
+    ?start:int64 ->
+    ?end_exc:int64 ->
+    Time_slot.t Seq.t ->
+    Time_slot.t Seq.t
 end
 
 val invert :
-  start:int64 -> end_exc:int64 -> Time_slot.t Seq.t -> Time_slot.t Seq.t
+  ?skip_check:bool ->
+  start:int64 ->
+  end_exc:int64 ->
+  Time_slot.t Seq.t ->
+  Time_slot.t Seq.t
 
 val relative_complement :
-  mem_of:Time_slot.t Seq.t -> not_mem_of:Time_slot.t Seq.t -> Time_slot.t Seq.t
+  ?skip_check:bool ->
+  not_mem_of:Time_slot.t Seq.t ->
+  Time_slot.t Seq.t ->
+  Time_slot.t Seq.t
 
 module Merge : sig
-  val merge : Time_slot.t Seq.t -> Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val merge :
+    ?skip_check:bool ->
+    Time_slot.t Seq.t ->
+    Time_slot.t Seq.t ->
+    Time_slot.t Seq.t
 
-  val merge_multi_seq : Time_slot.t Seq.t Seq.t -> Time_slot.t Seq.t
+  val merge_multi_seq :
+    ?skip_check:bool -> Time_slot.t Seq.t Seq.t -> Time_slot.t Seq.t
 
-  val merge_multi_list : Time_slot.t Seq.t list -> Time_slot.t Seq.t
+  val merge_multi_list :
+    ?skip_check:bool -> Time_slot.t Seq.t list -> Time_slot.t Seq.t
 end
 
 module Round_robin : sig
@@ -85,33 +110,45 @@ module Round_robin : sig
     Time_slot.t Seq.t list -> Time_slot.t Seq.t
 end
 
-val intersect : Time_slot.t Seq.t -> Time_slot.t Seq.t -> Time_slot.t Seq.t
+val intersect :
+  ?skip_check:bool ->
+  Time_slot.t Seq.t ->
+  Time_slot.t Seq.t ->
+  Time_slot.t Seq.t
 
 module Union : sig
-  val union : Time_slot.t Seq.t -> Time_slot.t Seq.t -> Time_slot.t Seq.t
+  val union :
+    ?skip_check:bool ->
+    Time_slot.t Seq.t ->
+    Time_slot.t Seq.t ->
+    Time_slot.t Seq.t
 
-  val union_multi_seq : Time_slot.t Seq.t Seq.t -> Time_slot.t Seq.t
+  val union_multi_seq :
+    ?skip_check:bool -> Time_slot.t Seq.t Seq.t -> Time_slot.t Seq.t
 
-  val union_multi_list : Time_slot.t Seq.t list -> Time_slot.t Seq.t
+  val union_multi_list :
+    ?skip_check:bool -> Time_slot.t Seq.t list -> Time_slot.t Seq.t
 end
 
 val chunk :
-  chunk_size:int64 ->
+  ?skip_check:bool ->
   ?drop_partial:bool ->
+  chunk_size:int64 ->
   Time_slot.t Seq.t ->
   Time_slot.t Seq.t
 
 module Sum : sig
-  val sum_length : Time_slot.t Seq.t -> int64
+  val sum_length : ?skip_check:bool -> Time_slot.t Seq.t -> int64
 
-  val sum_length_list : Time_slot.t list -> int64
+  val sum_length_list : ?skip_check:bool -> Time_slot.t list -> int64
 end
 
 module Bound : sig
-  val min_start_and_max_end_exc : Time_slot.t Seq.t -> (int64 * int64) option
+  val min_start_and_max_end_exc :
+    ?skip_check:bool -> Time_slot.t Seq.t -> (int64 * int64) option
 
   val min_start_and_max_end_exc_list :
-    Time_slot.t list -> (int64 * int64) option
+    ?skip_check:bool -> Time_slot.t list -> (int64 * int64) option
 end
 
 val shift_list : offset:int64 -> Time_slot.t list -> Time_slot.t list
@@ -120,7 +157,8 @@ val equal : Time_slot.t list -> Time_slot.t list -> bool
 
 val a_is_subset_of_b : a:Time_slot.t Seq.t -> b:Time_slot.t Seq.t -> bool
 
-val count_overlap : Time_slot.t Seq.t -> (Time_slot.t * int) Seq.t
+val count_overlap :
+  ?skip_check:bool -> Time_slot.t Seq.t -> (Time_slot.t * int) Seq.t
 
 module Serialize : sig
   val pack_time_slots :

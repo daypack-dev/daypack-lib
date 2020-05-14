@@ -310,8 +310,8 @@ let debug_relative_complement_time_slots () =
   let not_mem_of_time_slots = [ (0L, 5L); (6L, 15L); (25L, 30L) ] in
   let mem_of_time_slots = List.to_seq mem_of_time_slots in
   let not_mem_of_time_slots = List.to_seq not_mem_of_time_slots in
-  Time_slots.relative_complement ~mem_of:mem_of_time_slots
-    ~not_mem_of:not_mem_of_time_slots
+  Time_slots.relative_complement ~not_mem_of:not_mem_of_time_slots
+    mem_of_time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
