@@ -146,7 +146,7 @@ module Check = struct
          Sched_req_data_unit_skeleton.Check.check
            ~f_data:Task.Check.check_task_seg_alloc_req
            ~f_time:Time.Check.check_unix_time
-           ~f_time_slot:Time_slot.Check.check_time_slot x)
+           ~f_time_slot:Time_slot.Check.is_valid x)
       data
 
   let check_sched_req_data_list (l : sched_req_data list) : bool =
@@ -160,7 +160,7 @@ module Check = struct
       (fun x ->
          Sched_req_data_unit_skeleton.Check.check
            ~f_data:Task.Check.check_task_seg ~f_time:Time.Check.check_unix_time
-           ~f_time_slot:Time_slot.Check.check_time_slot x)
+           ~f_time_slot:Time_slot.Check.is_valid x)
       data
 
   let check_sched_req_record_data_list (l : sched_req_record_data list) : bool =

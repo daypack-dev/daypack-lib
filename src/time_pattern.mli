@@ -1,19 +1,23 @@
 type search_param =
   | Time_slots of {
-      search_in_time_zone : Time.time_zone;
+      search_using_tz_offset_s : Time.tz_offset_s option;
       time_slots : Time_slot.t list;
     }
   | Years_ahead_start_unix_time of {
-      search_in_time_zone : Time.time_zone;
+      search_using_tz_offset_s : Time.tz_offset_s option;
       start : int64;
       search_years_ahead : int;
     }
-  | Years_ahead_start_tm of {
-      search_in_time_zone : Time.time_zone;
-      time_zone_of_tm : Time.time_zone;
-      start : Unix.tm;
+  | Years_ahead_start_date_time of {
+      search_using_tz_offset_s : Time.tz_offset_s option;
+      start : Time.date_time;
       search_years_ahead : int;
     }
+
+type search_param_error =
+  | Invalid_start
+  | Invalid_time_slots
+  | Invalid_search_years_ahead
 
 type t = {
   years : int list;
@@ -26,66 +30,96 @@ type t = {
   unix_times : int64 list;
 }
 
+type time_pattern_error =
+  | Invalid_years of int list
+  | Invalid_month_days of int list
+  | Invalid_hours of int list
+  | Invalid_minutes of int list
+  | Invalid_seconds of int list
+  | Invalid_unix_times of int64 list
+
+type error =
+  | Invalid_search_param of search_param_error
+  | Invalid_time_pattern of time_pattern_error
+
 type time_range_pattern = t Range.range
 
 type single_or_ranges =
   | Single_time_pattern of t
   | Time_range_patterns of time_range_pattern list
 
-val search_in_time_zone_of_search_param : search_param -> Time.time_zone
+val search_using_tz_offset_s_of_search_param :
+  search_param -> Time.tz_offset_s option
 
 val empty : t
 
-module Single_pattern : sig
-  val matching_tm_seq : search_param -> t -> Unix.tm Seq.t
+module Check : sig
+  val check_search_param : search_param -> (unit, search_param_error) result
 
-  val matching_time_slots : search_param -> t -> Time_slot.t Seq.t
+  val check_time_pattern : t -> (unit, time_pattern_error) result
+
+  val check_time_range_pattern :
+    time_range_pattern -> (unit, time_pattern_error) result
+end
+
+module Single_pattern : sig
+  val matching_date_time_seq :
+    search_param -> t -> (Time.date_time Seq.t, error) result
+
+  val matching_time_slots :
+    search_param -> t -> (Time_slot.t Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing :
-    search_param -> t list -> Time_slot.t list Seq.t
+    search_param -> t list -> (Time_slot.t list Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing_flat :
-    search_param -> t list -> Time_slot.t Seq.t
+    search_param -> t list -> (Time_slot.t Seq.t, error) result
 
-  val next_match_tm : search_param -> t -> Unix.tm option
+  val next_match_date_time :
+    search_param -> t -> (Time.date_time option, error) result
 
-  val next_match_unix_time : search_param -> t -> int64 option
+  val next_match_unix_time : search_param -> t -> (int64 option, error) result
 
-  val next_match_time_slot : search_param -> t -> (int64 * int64) option
+  val next_match_time_slot :
+    search_param -> t -> ((int64 * int64) option, error) result
 end
 
 module Range_pattern : sig
   val matching_time_slots :
-    search_param -> time_range_pattern -> Time_slot.t Seq.t
+    search_param -> time_range_pattern -> (Time_slot.t Seq.t, error) result
 
   val next_match_time_slot :
-    search_param -> time_range_pattern -> (int64 * int64) option
+    search_param -> time_range_pattern -> ((int64 * int64) option, error) result
 
   val matching_time_slots_multi :
-    search_param -> time_range_pattern list -> Time_slot.t Seq.t
+    search_param -> time_range_pattern list -> (Time_slot.t Seq.t, error) result
 
   val next_match_time_slot_multi :
-    search_param -> time_range_pattern list -> (int64 * int64) option
+    search_param ->
+    time_range_pattern list ->
+    ((int64 * int64) option, error) result
 
   val matching_time_slots_round_robin_non_decreasing :
-    search_param -> time_range_pattern list -> Time_slot.t list Seq.t
+    search_param ->
+    time_range_pattern list ->
+    (Time_slot.t list Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing_flat :
-    search_param -> time_range_pattern list -> Time_slot.t Seq.t
+    search_param -> time_range_pattern list -> (Time_slot.t Seq.t, error) result
 end
 
 module Single_or_ranges : sig
   val matching_time_slots :
-    search_param -> single_or_ranges -> Time_slot.t Seq.t
+    search_param -> single_or_ranges -> (Time_slot.t Seq.t, error) result
 
   val next_match_time_slot :
-    search_param -> single_or_ranges -> Time_slot.t option
+    search_param -> single_or_ranges -> (Time_slot.t option, error) result
 
   val matching_time_slots_round_robin_non_decreasing :
-    search_param -> single_or_ranges -> Time_slot.t list Seq.t
+    search_param -> single_or_ranges -> (Time_slot.t list Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing_flat :
-    search_param -> single_or_ranges -> Time_slot.t Seq.t
+    search_param -> single_or_ranges -> (Time_slot.t Seq.t, error) result
 end
 
 module Equal : sig
@@ -93,6 +127,8 @@ module Equal : sig
 end
 
 module To_string : sig
+  val string_of_error : error -> string
+
   val debug_string_of_weekdays : Time.weekday list -> string
 
   val debug_string_of_month_days : int list -> string

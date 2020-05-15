@@ -12,7 +12,8 @@ let () = Jbuild_plugin.V1.send @@ {|
  (name daypack_lib)
  (public_name daypack-lib)
  (libraries unix
-            calendar
+            str
+            ptime
             oseq
             biniou
             yojson

@@ -935,7 +935,8 @@ module Time_points_expr = struct
     with
     | Error msg -> Error msg
     | Ok pat ->
-      Ok (Time_pattern.Single_pattern.next_match_unix_time search_param pat)
+      Time_pattern.Single_pattern.next_match_unix_time search_param pat
+      |> Result.map_error Time_pattern.To_string.string_of_error
 
   let matching_unix_times ?(force_bound : Time_expr_ast.bound option)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
@@ -952,44 +953,50 @@ module Time_points_expr = struct
           Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e
         with
         | Error msg -> Error msg
-        | Ok e ->
-          let selector =
-            match e with
-            | Tpe_name _ -> failwith "Unexpected case"
-            | Tpe_unix_times l -> OSeq.take (List.length l)
-            | Year_month_day_hour_minute_second _
-            | Month_day_hour_minute_second _ | Day_hour_minute_second _
-            | Hour_minute_second _ | Minute_second _ | Second _ -> (
-                match Option.value ~default:bound force_bound with
-                | `Next -> OSeq.take 1
-                | `Every -> fun x -> x )
-          in
-          Time_pattern.Single_pattern.matching_time_slots search_param pat
-          |> Seq.map (fun (x, _) -> x)
-          |> selector
-          |> Result.ok )
+        | Ok e -> (
+            let selector =
+              match e with
+              | Tpe_name _ -> failwith "Unexpected case"
+              | Tpe_unix_times l -> OSeq.take (List.length l)
+              | Year_month_day_hour_minute_second _
+              | Month_day_hour_minute_second _ | Day_hour_minute_second _
+              | Hour_minute_second _ | Minute_second _ | Second _ -> (
+                  match Option.value ~default:bound force_bound with
+                  | `Next -> OSeq.take 1
+                  | `Every -> fun x -> x )
+            in
+            match
+              Time_pattern.Single_pattern.matching_time_slots search_param pat
+            with
+            | Error e -> Error (Time_pattern.To_string.string_of_error e)
+            | Ok s -> s |> Seq.map (fun (x, _) -> x) |> selector |> Result.ok )
+      )
 end
 
 module Time_slots_expr = struct
-  let get_first_or_last_n_matches_of_same_month_tm_pair_seq
+  let get_first_or_last_n_matches_of_same_month_date_time_pair_seq
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
-      (s : (Unix.tm * Unix.tm) Seq.t) : (Unix.tm * Unix.tm) Seq.t =
-    let flush_acc first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list) :
-      (Unix.tm * Unix.tm) Seq.t =
+      (s : (Time.date_time * Time.date_time) Seq.t) :
+    (Time.date_time * Time.date_time) Seq.t =
+    let flush_acc first_or_last (n : int)
+        (acc : (Time.date_time * Time.date_time) list) :
+      (Time.date_time * Time.date_time) Seq.t =
       ( match first_or_last with
         | `First -> acc |> List.rev |> Misc_utils.take_first_n_list n
         | `Last -> acc |> List.rev |> Misc_utils.take_last_n_list n )
       |> List.to_seq
     in
-    let rec aux first_or_last (n : int) (acc : (Unix.tm * Unix.tm) list)
-        (s : (Unix.tm * Unix.tm) Seq.t) : (Unix.tm * Unix.tm) Seq.t =
+    let rec aux first_or_last (n : int)
+        (acc : (Time.date_time * Time.date_time) list)
+        (s : (Time.date_time * Time.date_time) Seq.t) :
+      (Time.date_time * Time.date_time) Seq.t =
       match s () with
       | Seq.Nil -> flush_acc first_or_last n acc
       | Seq.Cons ((start, end_exc), rest) -> (
           match acc with
           | [] -> aux first_or_last n [ (start, end_exc) ] rest
-          | (tm, _) :: _ ->
-            if tm.tm_mon = start.tm_mon then
+          | (x, _) :: _ ->
+            if x.month = start.month then
               aux first_or_last n ((start, end_exc) :: acc) rest
             else
               OSeq.append
@@ -1002,17 +1009,20 @@ module Time_slots_expr = struct
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
       (search_param : search_param) (s : Time_slot.t Seq.t) : Time_slot.t Seq.t
     =
-    let time_zone_of_tm =
-      Time_pattern.search_in_time_zone_of_search_param search_param
+    let tz_offset_s_of_date_time =
+      Time_pattern.search_using_tz_offset_s_of_search_param search_param
     in
     s
     |> Seq.map (fun (x, y) ->
-        ( Time.tm_of_unix_time ~time_zone_of_tm x,
-          Time.tm_of_unix_time ~time_zone_of_tm y ))
-    |> get_first_or_last_n_matches_of_same_month_tm_pair_seq ~first_or_last ~n
+        ( Time.date_time_of_unix_time ~tz_offset_s_of_date_time x
+          |> Result.get_ok,
+          Time.date_time_of_unix_time ~tz_offset_s_of_date_time y
+          |> Result.get_ok ))
+    |> get_first_or_last_n_matches_of_same_month_date_time_pair_seq
+      ~first_or_last ~n
     |> Seq.map (fun (x, y) ->
-        ( Time.unix_time_of_tm ~time_zone_of_tm x,
-          Time.unix_time_of_tm ~time_zone_of_tm y ))
+        ( Time.unix_time_of_date_time x |> Result.get_ok,
+          Time.unix_time_of_date_time y |> Result.get_ok ))
 
   let matching_time_slots ?(force_bound : Time_expr_ast.bound option)
       ?(f_resolve_tse_name = default_f_resolve_tse_name)
@@ -1068,13 +1078,18 @@ module Time_slots_expr = struct
             ~f_resolve_tse_name ~f_resolve_tpe_name e
         with
         | Error msg -> Error msg
-        | Ok l ->
-          Time_pattern.Range_pattern
-          .matching_time_slots_round_robin_non_decreasing search_param l
-          |> list_selector
-          |> Seq.flat_map List.to_seq
-          |> flat_selector
-          |> Result.ok )
+        | Ok l -> (
+            match
+              Time_pattern.Range_pattern
+              .matching_time_slots_round_robin_non_decreasing search_param l
+            with
+            | Error e -> Error (Time_pattern.To_string.string_of_error e)
+            | Ok s ->
+              s
+              |> list_selector
+              |> Seq.flat_map List.to_seq
+              |> flat_selector
+              |> Result.ok ) )
 
   let next_match_time_slot ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)

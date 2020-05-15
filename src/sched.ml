@@ -1849,7 +1849,7 @@ module Agenda = struct
       |> Task_seg_place_set.of_seq
   end
 
-  module To_seq_internal = struct
+  module Internal = struct
     let task_seg_ids ~(start : int64 option) ~(end_exc : int64 option)
         ~(include_task_seg_place_starting_within_time_slot : bool option)
         ~(include_task_seg_place_ending_within_time_slot : bool option)
@@ -1887,19 +1887,84 @@ module Agenda = struct
         ~include_task_seg_place_starting_within_time_slot
         ~include_task_seg_place_ending_within_time_slot sched
       |> Task_seg_place_set.to_seq
-  end
 
-  module Filter_internal = struct
     let filter_task_seg_place_seq ~(start : int64 option)
         ~(end_exc : int64 option)
         ~(include_task_seg_place_starting_within_time_slot : bool option)
         ~(include_task_seg_place_ending_within_time_slot : bool option)
         (f : Task_.task_seg_place -> bool) (sched : sched) :
       Task_.task_seg_place Seq.t =
-      To_seq_internal.task_seg_places ~start ~end_exc
+      task_seg_places ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
         ~include_task_seg_place_ending_within_time_slot sched
       |> Seq.filter f
+
+    let task_seg_place_is (sched : sched) (status : task_related_status)
+        ((task_seg_id, _, _) : Task_.task_seg_place) : bool =
+      Task_seg.Status.get_task_seg_status task_seg_id sched = Some status
+
+    let task_seg_place_uncompleted ~(start : int64 option)
+        ~(end_exc : int64 option)
+        ~(include_task_seg_place_starting_within_time_slot : bool option)
+        ~(include_task_seg_place_ending_within_time_slot : bool option)
+        (sched : sched) : Task_.task_seg_place Seq.t =
+      filter_task_seg_place_seq ~start ~end_exc
+        ~include_task_seg_place_starting_within_time_slot
+        ~include_task_seg_place_ending_within_time_slot
+        (task_seg_place_is sched `Uncompleted)
+        sched
+
+    let task_seg_place_completed ~(start : int64 option)
+        ~(end_exc : int64 option)
+        ~(include_task_seg_place_starting_within_time_slot : bool option)
+        ~(include_task_seg_place_ending_within_time_slot : bool option)
+        (sched : sched) : Task_.task_seg_place Seq.t =
+      filter_task_seg_place_seq ~start ~end_exc
+        ~include_task_seg_place_starting_within_time_slot
+        ~include_task_seg_place_ending_within_time_slot
+        (task_seg_place_is sched `Completed)
+        sched
+
+    let task_seg_place_discarded ~(start : int64 option)
+        ~(end_exc : int64 option)
+        ~(include_task_seg_place_starting_within_time_slot : bool option)
+        ~(include_task_seg_place_ending_within_time_slot : bool option)
+        (sched : sched) : Task_.task_seg_place Seq.t =
+      filter_task_seg_place_seq ~start ~end_exc
+        ~include_task_seg_place_starting_within_time_slot
+        ~include_task_seg_place_ending_within_time_slot
+        (task_seg_place_is sched `Discarded)
+        sched
+
+    let task_seg_place_all ~(start : int64 option) ~(end_exc : int64 option)
+        ~(include_task_seg_place_starting_within_time_slot : bool option)
+        ~(include_task_seg_place_ending_within_time_slot : bool option)
+        (sched : sched) : Task_.task_seg_place Seq.t =
+      task_seg_places ~start ~end_exc
+        ~include_task_seg_place_starting_within_time_slot
+        ~include_task_seg_place_ending_within_time_slot sched
+
+    let time_slots_of_task_seg_places ~(start : int64 option)
+        ~(end_exc : int64 option) (task_seg_places : Task_.task_seg_place Seq.t)
+      : Time_slot.t Seq.t =
+      task_seg_places
+      |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
+      |> (fun l ->
+          Option.fold ~none:l
+            ~some:(fun start -> Time_slots.Slice.slice ~start l)
+            start)
+      |> fun l ->
+      Option.fold ~none:l
+        ~some:(fun end_exc -> Time_slots.Slice.slice ~end_exc l)
+        end_exc
+
+    let get_occupied_time_slots_with_task_seg_place_count ~start ~end_exc
+        (sched : sched) : ((int64 * int64) * int) Seq.t =
+      task_seg_place_uncompleted ~start ~end_exc
+        ~include_task_seg_place_starting_within_time_slot:(Some true)
+        ~include_task_seg_place_ending_within_time_slot:(Some true) sched
+      |> time_slots_of_task_seg_places ~start ~end_exc
+      |> Time_slots.count_overlap
   end
 
   module Filter = struct
@@ -1909,7 +1974,7 @@ module Agenda = struct
         ?(include_task_seg_place_ending_within_time_slot : bool option)
         (f : Task_.task_seg_place -> bool) (sched : sched) :
       Task_.task_seg_place Seq.t =
-      Filter_internal.filter_task_seg_place_seq ~start ~end_exc
+      Internal.filter_task_seg_place_seq ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
         ~include_task_seg_place_ending_within_time_slot f sched
   end
@@ -1924,39 +1989,33 @@ module Agenda = struct
         ?(include_task_seg_place_starting_within_time_slot : bool option)
         ?(include_task_seg_place_ending_within_time_slot : bool option)
         (sched : sched) : Task_.task_seg_place Seq.t =
-      Filter_internal.filter_task_seg_place_seq ~start ~end_exc
+      Internal.task_seg_place_uncompleted ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
-        ~include_task_seg_place_ending_within_time_slot
-        (task_seg_place_is sched `Uncompleted)
-        sched
+        ~include_task_seg_place_ending_within_time_slot sched
 
     let task_seg_place_completed ?(start : int64 option)
         ?(end_exc : int64 option)
         ?(include_task_seg_place_starting_within_time_slot : bool option)
         ?(include_task_seg_place_ending_within_time_slot : bool option)
         (sched : sched) : Task_.task_seg_place Seq.t =
-      Filter_internal.filter_task_seg_place_seq ~start ~end_exc
+      Internal.task_seg_place_completed ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
-        ~include_task_seg_place_ending_within_time_slot
-        (task_seg_place_is sched `Completed)
-        sched
+        ~include_task_seg_place_ending_within_time_slot sched
 
     let task_seg_place_discarded ?(start : int64 option)
         ?(end_exc : int64 option)
         ?(include_task_seg_place_starting_within_time_slot : bool option)
         ?(include_task_seg_place_ending_within_time_slot : bool option)
         (sched : sched) : Task_.task_seg_place Seq.t =
-      Filter_internal.filter_task_seg_place_seq ~start ~end_exc
+      Internal.task_seg_place_discarded ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
-        ~include_task_seg_place_ending_within_time_slot
-        (task_seg_place_is sched `Discarded)
-        sched
+        ~include_task_seg_place_ending_within_time_slot sched
 
     let task_seg_place_all ?(start : int64 option) ?(end_exc : int64 option)
         ?(include_task_seg_place_starting_within_time_slot : bool option)
         ?(include_task_seg_place_ending_within_time_slot : bool option)
         (sched : sched) : Task_.task_seg_place Seq.t =
-      To_seq_internal.task_seg_places ~start ~end_exc
+      Internal.task_seg_places ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot
         ~include_task_seg_place_ending_within_time_slot sched
   end
@@ -2048,38 +2107,38 @@ module Agenda = struct
   module Time_slot = struct
     let get_occupied_time_slots ?start ?end_exc (sched : sched) :
       (int64 * int64) Seq.t =
-      To_seq.task_seg_place_uncompleted sched
-      |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
-      |> (fun l ->
-          Option.fold ~none:l
-            ~some:(fun start -> Time_slots.Slice.slice ~start l)
-            start)
-      |> (fun l ->
-          Option.fold ~none:l
-            ~some:(fun end_exc -> Time_slots.Slice.slice ~end_exc l)
-            end_exc)
+      Internal.task_seg_place_uncompleted ~start ~end_exc
+        ~include_task_seg_place_starting_within_time_slot:(Some true)
+        ~include_task_seg_place_ending_within_time_slot:(Some true) sched
+      |> Internal.time_slots_of_task_seg_places ~start ~end_exc
       |> Time_slots.Normalize.normalize ~skip_sort:true
+
+    let get_occupied_time_slots_with_task_seg_place_count ?start ?end_exc
+        (sched : sched) : ((int64 * int64) * int) Seq.t =
+      Internal.get_occupied_time_slots_with_task_seg_place_count ~start ~end_exc
+        sched
+
+    let get_occupied_time_slots_up_to_task_seg_place_count ?start ?end_exc
+        ~(up_to_task_seg_place_count_inc : int) (sched : sched) =
+      Internal.get_occupied_time_slots_with_task_seg_place_count ~start ~end_exc
+        sched
+      |> Seq.filter (fun (_time_slot, count) ->
+          count <= up_to_task_seg_place_count_inc)
+      |> Seq.map (fun (time_slot, _) -> time_slot)
 
     let get_free_time_slots ~start ~end_exc (sched : sched) :
       (int64 * int64) Seq.t =
       get_occupied_time_slots ~start ~end_exc sched
       |> Time_slots.invert ~start ~end_exc
 
-    (* let get_time_slots_with_task_seg_place_count ~start ~end_exc (sched : sched) : ((int64 * int64) * int) Seq.t =
-     *   let rec aux (cur : (int64 * int64) option) (buffer : int64 list) (task_seg_places : Task_.task_seg_place Seq.t) =
-     *     match task_seg_places () with
-     *     | Seq.Nil -> (match cur with
-     *         | None -> Seq.empty
-     *         | Some x -> Seq.return x)
-     *     | Seq.Cons ((_id, start', end_exc'), rest) ->
-     *       match cur with
-     *       | None -> 
-     *   in
-     *   Range.task_seg_place_set
-     *     ~start ~end_exc ~include_task_seg_place_starting_within_time_slot:true
-     *     ~include_task_seg_place_ending_within_time_slot:true sched
-     *   |> Task_seg_place_set.to_seq
-     *   |> aux None [] *)
+    let get_free_or_occupied_time_slots_up_to_task_seg_place_count ~start
+        ~end_exc ~(up_to_task_seg_place_count_inc : int) (sched : sched) =
+      Internal.get_occupied_time_slots_with_task_seg_place_count
+        ~start:(Some start) ~end_exc:(Some end_exc) sched
+      |> Seq.filter (fun (_time_slot, count) ->
+          count <= up_to_task_seg_place_count_inc)
+      |> Seq.map (fun (time_slot, _) -> time_slot)
+      |> Time_slots.Union.union (get_free_time_slots ~start ~end_exc sched)
 
     let task_seg_place_count_in_time_slot ~start ~end_exc (sched : sched) : int
       =
@@ -2984,10 +3043,11 @@ module Recur = struct
           Time_pattern.Single_pattern.matching_time_slots
             (Time_slots
                {
-                 search_in_time_zone = `Local;
+                 search_using_tz_offset_s = None;
                  time_slots = usable_time_slot_list;
                })
             pattern
+          |> Result.get_ok
           |> Seq.map (fun (start', _end_exc) ->
               ( task_inst_data,
                 Sched_req_data_unit_skeleton.shift_time_list ~offset:start'
@@ -4567,10 +4627,12 @@ module To_string = struct
       (fun (id, start, end_exc) ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
            "%s - %s | %s\n"
-           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-              ~display_in_time_zone:`Local start)
-           (Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
-              ~display_in_time_zone:`Local end_exc)
+           ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+               ~display_using_tz_offset_s:None start
+             |> Result.get_ok )
+           ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+               ~display_using_tz_offset_s:None end_exc
+             |> Result.get_ok )
            (Task_.Id.string_of_task_seg_id id))
       (Agenda.To_seq.task_seg_place_uncompleted (sid, sd));
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer

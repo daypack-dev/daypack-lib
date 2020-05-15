@@ -1,68 +1,120 @@
 open Int64_utils
 
+exception Time_slots_are_not_sorted
+
+exception Time_slots_are_not_disjoint
+
+module Check = struct
+  let check_if_valid (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    Seq.map Time_slot.Check.check_if_valid time_slots
+
+  let check_if_not_empty (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    Seq.map Time_slot.Check.check_if_not_empty time_slots
+
+  let check_if_sorted (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    Seq_utils.check_if_f_holds_for_immediate_neighbors ~f:Time_slot.le
+      ~f_exn:(fun _ _ -> Time_slots_are_not_sorted)
+      time_slots
+
+  let check_if_disjoint (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    Seq_utils.check_if_f_holds_for_immediate_neighbors
+      ~f:(fun x y ->
+          match Time_slot.overlap_of_a_over_b ~a:y ~b:x with
+          | None, None, None | Some _, None, None | None, None, Some _ -> true
+          | _ -> false)
+      ~f_exn:(fun _ _ -> Time_slots_are_not_disjoint)
+      time_slots
+
+  let check_if_normalized (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    time_slots
+    |> check_if_valid
+    |> check_if_not_empty
+    |> check_if_sorted
+    |> check_if_disjoint
+end
+
 module Filter = struct
   let filter_invalid (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    Seq.filter (fun (x, y) -> x <= y) time_slots
+    Seq.filter Time_slot.Check.is_valid time_slots
 
   let filter_invalid_list (time_slots : Time_slot.t list) : Time_slot.t list =
-    List.filter (fun (x, y) -> x <= y) time_slots
+    List.filter Time_slot.Check.is_valid time_slots
 
   let filter_empty (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    Seq.filter (fun (x, y) -> x <> y) time_slots
+    Seq.filter Time_slot.Check.is_not_empty time_slots
 
   let filter_empty_list (time_slots : Time_slot.t list) : Time_slot.t list =
-    List.filter (fun (x, y) -> x <> y) time_slots
+    List.filter Time_slot.Check.is_not_empty time_slots
 end
 
 module Sort = struct
-  let sort_time_slots_list (time_slots : Time_slot.t list) : Time_slot.t list =
-    List.sort Time_slot.compare time_slots
+  let sort_time_slots_list ?(skip_check = false) (time_slots : Time_slot.t list)
+    : Time_slot.t list =
+    time_slots
+    |> (fun l ->
+        if skip_check then l
+        else l |> List.to_seq |> Check.check_if_valid |> List.of_seq)
+    |> List.sort Time_slot.compare
 
-  let sort_uniq_time_slots_list (time_slots : Time_slot.t list) :
-    Time_slot.t list =
-    List.sort_uniq Time_slot.compare time_slots
+  let sort_uniq_time_slots_list ?(skip_check = false)
+      (time_slots : Time_slot.t list) : Time_slot.t list =
+    time_slots
+    |> (fun l ->
+        if skip_check then l
+        else l |> List.to_seq |> Check.check_if_valid |> List.of_seq)
+    |> List.sort_uniq Time_slot.compare
 
-  let sort_uniq_time_slots (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t
-    =
-    time_slots |> List.of_seq |> sort_uniq_time_slots_list |> List.to_seq
+  let sort_uniq_time_slots ?(skip_check = false)
+      (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    time_slots
+    |> (fun s -> if skip_check then s else Check.check_if_valid s)
+    |> List.of_seq
+    |> List.sort_uniq Time_slot.compare
+    |> List.to_seq
 
-  let sort_time_slots (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    time_slots |> List.of_seq |> sort_time_slots_list |> List.to_seq
+  let sort_time_slots ?(skip_check = false) (time_slots : Time_slot.t Seq.t) :
+    Time_slot.t Seq.t =
+    time_slots
+    |> (fun s -> if skip_check then s else Check.check_if_valid s)
+    |> List.of_seq
+    |> List.sort Time_slot.compare
+    |> List.to_seq
 end
 
-module Normalize = struct
+module Join_internal = struct
   let join (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
-    let rec aux last_start_and_last_end_exc time_slots =
+    let rec aux cur time_slots =
       match time_slots () with
       | Seq.Nil -> (
-          match last_start_and_last_end_exc with
-          | None -> Seq.empty
-          | Some (last_start, last_end_exc) ->
-            Seq.return (last_start, last_end_exc) )
+          match cur with None -> Seq.empty | Some x -> Seq.return x )
       | Seq.Cons ((start, end_exc), rest) -> (
-          match last_start_and_last_end_exc with
+          match cur with
           | None -> aux (Some (start, end_exc)) rest
-          | Some (last_start, last_end_exc) -> (
-              match
-                Time_slot.join (start, end_exc) (last_start, last_end_exc)
-              with
+          | Some cur -> (
+              match Time_slot.join cur (start, end_exc) with
               | Some x -> aux (Some x) rest
               | None ->
                 (* cannot be merged, add time slot being carried to the sequence *)
-                fun () ->
-                  Seq.Cons
-                    ( (last_start, last_end_exc),
-                      aux (Some (start, end_exc)) rest ) ) )
+                fun () -> Seq.Cons (cur, aux (Some (start, end_exc)) rest) ) )
     in
     aux None time_slots
+end
 
+let join ?(skip_check = false) time_slots =
+  time_slots
+  |> (fun s ->
+      if skip_check then s
+      else s |> Check.check_if_valid |> Check.check_if_sorted)
+  |> Join_internal.join
+
+module Normalize = struct
   let normalize ?(skip_filter_invalid = false) ?(skip_filter_empty = false)
       ?(skip_sort = false) time_slots =
     time_slots
     |> (fun s -> if skip_filter_invalid then s else Filter.filter_invalid s)
     |> (fun s -> if skip_filter_empty then s else Filter.filter_empty s)
     |> (fun s -> if skip_sort then s else Sort.sort_uniq_time_slots s)
-    |> join
+    |> Join_internal.join
 
   let normalize_list_in_seq_out ?(skip_filter_invalid = false)
       ?(skip_filter_empty = false) ?(skip_sort = false) time_slots =
@@ -147,80 +199,98 @@ module Slice_rev_internal = struct
 end
 
 module Slice = struct
-  let slice ?start ?end_exc time_slots =
+  let slice ?(skip_check = false) ?start ?end_exc time_slots =
     time_slots
-    |> (fun l ->
+    |> (fun s ->
+        if skip_check then s
+        else
+          s
+          |> Check.check_if_valid
+          |> Check.check_if_disjoint
+          |> Check.check_if_sorted)
+    |> (fun s ->
         match start with
-        | None -> l
-        | Some start -> Slice_internal.slice_start ~start l)
-    |> fun l ->
+        | None -> s
+        | Some start -> Slice_internal.slice_start ~start s)
+    |> fun s ->
     match end_exc with
-    | None -> l
-    | Some end_exc -> Slice_internal.slice_end_exc ~end_exc l
+    | None -> s
+    | Some end_exc -> Slice_internal.slice_end_exc ~end_exc s
 
-  let slice_rev ?start ?end_exc time_slots =
+  let slice_rev ?(skip_check = false) ?start ?end_exc time_slots =
     time_slots
-    |> (fun l ->
+    |> (fun s ->
+        if skip_check then s
+        else
+          s
+          |> Check.check_if_valid
+          |> Check.check_if_disjoint
+          |> Check.check_if_sorted)
+    |> (fun s ->
         match start with
-        | None -> l
-        | Some start -> Slice_rev_internal.slice_start ~start l)
-    |> fun l ->
+        | None -> s
+        | Some start -> Slice_rev_internal.slice_start ~start s)
+    |> fun s ->
     match end_exc with
-    | None -> l
-    | Some end_exc -> Slice_rev_internal.slice_end_exc ~end_exc l
+    | None -> s
+    | Some end_exc -> Slice_rev_internal.slice_end_exc ~end_exc s
 end
 
-let relative_complement ~(mem_of : Time_slot.t Seq.t)
-    ~(not_mem_of : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+let relative_complement ?(skip_check = false) ~(not_mem_of : Time_slot.t Seq.t)
+    (mem_of : Time_slot.t Seq.t) : Time_slot.t Seq.t =
   let rec aux mem_of not_mem_of =
     match (mem_of (), not_mem_of ()) with
     | Seq.Nil, _ -> Seq.empty
     | _, Seq.Nil -> mem_of
-    | ( Seq.Cons ((mem_of_start, mem_of_end_exc), mem_of_rest),
-        Seq.Cons ((not_mem_of_start, not_mem_of_end_exc), not_mem_of_rest) )
-      -> (
-          if mem_of_end_exc < not_mem_of_start then
-            (* mem_of is before not_mem_of entirely, output mem_of *)
-            fun () ->
-              Seq.Cons ((mem_of_start, mem_of_end_exc), aux mem_of_rest not_mem_of)
-          else if not_mem_of_end_exc < mem_of_start then
-            (* not_mem_of is before mem_of entirely, drop not_mem_of *)
-            aux mem_of not_mem_of_rest
-          else
-            (* there is an overlap or touching *)
-            let overlap_start = max mem_of_start not_mem_of_start in
-            let overlap_end_exc = min mem_of_end_exc not_mem_of_end_exc in
-            let mem_of_split1 =
-              if mem_of_start < overlap_start then
-                Some (mem_of_start, overlap_start)
-              else None
-            in
-            let mem_of_split2 =
-              if overlap_end_exc < mem_of_end_exc then
-                Some (overlap_end_exc, mem_of_end_exc)
-              else None
-            in
-            match (mem_of_split1, mem_of_split2) with
-            | None, None -> aux mem_of_rest not_mem_of
-            | Some s1, None -> fun () -> Seq.Cons (s1, aux mem_of_rest not_mem_of)
-            | None, Some s2 ->
-              aux (fun () -> Seq.Cons (s2, mem_of_rest)) not_mem_of_rest
-            | Some s1, Some s2 ->
-              fun () ->
-                Seq.Cons
-                  ( s1,
-                    aux (fun () -> Seq.Cons (s2, mem_of_rest)) not_mem_of_rest
-                  ) )
+    | ( Seq.Cons (mem_of_ts, mem_of_rest),
+        Seq.Cons (not_mem_of_ts, not_mem_of_rest) ) -> (
+        let mem_of () = Seq.Cons (mem_of_ts, mem_of_rest) in
+        let not_mem_of () = Seq.Cons (not_mem_of_ts, not_mem_of_rest) in
+        match Time_slot.overlap_of_a_over_b ~a:mem_of_ts ~b:not_mem_of_ts with
+        | None, None, None ->
+          (* mem_of_ts is empty, drop mem_of_ts *)
+          aux mem_of_rest not_mem_of
+        | Some _, None, None ->
+          (* mem_of_ts is before not_mem_of_ts entirely, output mem_of *)
+          fun () -> Seq.Cons (mem_of_ts, aux mem_of_rest not_mem_of)
+        | None, None, Some _ ->
+          (* not_mem_of_ts is before mem_of entirely, drop not_mem_of_ts *)
+          aux mem_of not_mem_of_rest
+        | Some (start, end_exc), Some _, None ->
+          fun () -> Seq.Cons ((start, end_exc), aux mem_of_rest not_mem_of)
+        | None, Some _, None -> aux mem_of_rest not_mem_of
+        | None, Some _, Some (start, end_exc) ->
+          let mem_of () = Seq.Cons ((start, end_exc), mem_of_rest) in
+          aux mem_of not_mem_of_rest
+        | Some (start1, end_exc1), _, Some (start2, end_exc2) ->
+          let mem_of () = Seq.Cons ((start2, end_exc2), mem_of_rest) in
+          fun () -> Seq.Cons ((start1, end_exc1), aux mem_of not_mem_of_rest)
+      )
+  in
+  let mem_of =
+    if skip_check then mem_of
+    else
+      mem_of
+      |> Check.check_if_valid
+      |> Check.check_if_disjoint
+      |> Check.check_if_sorted
+  in
+  let not_mem_of =
+    if skip_check then not_mem_of
+    else
+      not_mem_of
+      |> Check.check_if_valid
+      |> Check.check_if_disjoint
+      |> Check.check_if_sorted
   in
   aux mem_of not_mem_of
 
-let invert ~start ~end_exc (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t
-  =
-  relative_complement
-    ~mem_of:(Seq.return (start, end_exc))
-    ~not_mem_of:time_slots
+let invert ?(skip_check = false) ~start ~end_exc
+    (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+  relative_complement ~skip_check ~not_mem_of:time_slots
+    (Seq.return (start, end_exc))
 
-let intersect (time_slots1 : Time_slot.t Seq.t)
+let intersect ?(skip_check = false) (time_slots1 : Time_slot.t Seq.t)
     (time_slots2 : Time_slot.t Seq.t) : Time_slot.t Seq.t =
   let rec aux time_slots1 time_slots2 : Time_slot.t Seq.t =
     match (time_slots1 (), time_slots2 ()) with
@@ -245,96 +315,113 @@ let intersect (time_slots1 : Time_slot.t Seq.t)
           fun () -> Seq.Cons ((overlap_start, overlap_end_exc), aux s1 s2)
         else aux s1 s2
   in
+  let time_slots1 =
+    if skip_check then time_slots1
+    else
+      time_slots1
+      |> Check.check_if_valid
+      |> Check.check_if_disjoint
+      |> Check.check_if_sorted
+  in
+  let time_slots2 =
+    if skip_check then time_slots2
+    else
+      time_slots2
+      |> Check.check_if_valid
+      |> Check.check_if_disjoint
+      |> Check.check_if_sorted
+  in
   aux time_slots1 time_slots2
 
 module Merge = struct
-  let merge (time_slots1 : Time_slot.t Seq.t) (time_slots2 : Time_slot.t Seq.t)
-    : Time_slot.t Seq.t =
+  let merge ?(skip_check = false) (time_slots1 : Time_slot.t Seq.t)
+      (time_slots2 : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     let rec aux time_slots1 time_slots2 =
       match (time_slots1 (), time_slots2 ()) with
       | Seq.Nil, s | s, Seq.Nil -> fun () -> s
-      | ( (Seq.Cons ((start1, end_exc1), rest1) as ts1),
-          (Seq.Cons ((start2, end_exc2), rest2) as ts2) ) ->
-        if start1 <= start2 then fun () ->
-          Seq.Cons ((start1, end_exc1), aux rest1 (fun () -> ts2))
-        else fun () -> Seq.Cons ((start2, end_exc2), aux (fun () -> ts1) rest2)
+      | Seq.Cons (x1, rest1), Seq.Cons (x2, rest2) ->
+        let ts1 () = Seq.Cons (x1, rest1) in
+        let ts2 () = Seq.Cons (x2, rest2) in
+        if Time_slot.le x1 x2 then fun () -> Seq.Cons (x1, aux rest1 ts2)
+        else fun () -> Seq.Cons (x2, aux rest2 ts1)
+    in
+    let time_slots1 =
+      if skip_check then time_slots1
+      else time_slots1 |> Check.check_if_valid |> Check.check_if_sorted
+    in
+    let time_slots2 =
+      if skip_check then time_slots2
+      else time_slots2 |> Check.check_if_valid |> Check.check_if_sorted
     in
     aux time_slots1 time_slots2
 
-  let merge_multi_seq (time_slot_batches : Time_slot.t Seq.t Seq.t) :
-    Time_slot.t Seq.t =
+  let merge_multi_seq ?(skip_check = false)
+      (time_slot_batches : Time_slot.t Seq.t Seq.t) : Time_slot.t Seq.t =
     Seq.fold_left
-      (fun acc time_slots -> merge acc time_slots)
+      (fun acc time_slots -> merge ~skip_check acc time_slots)
       Seq.empty time_slot_batches
 
-  let merge_multi_list (time_slot_batches : Time_slot.t Seq.t list) :
-    Time_slot.t Seq.t =
-    List.to_seq time_slot_batches |> merge_multi_seq
+  let merge_multi_list ?(skip_check = false)
+      (time_slot_batches : Time_slot.t Seq.t list) : Time_slot.t Seq.t =
+    List.to_seq time_slot_batches |> merge_multi_seq ~skip_check
 end
 
 module Round_robin = struct
-  let collect_round_robin_non_decreasing (batches : Time_slot.t Seq.t list) :
-    Time_slot.t option list Seq.t =
-    let rec get_usable_part (cur_start : int64) (seq : Time_slot.t Seq.t) :
-      Time_slot.t Seq.t =
-      match seq () with
-      | Seq.Nil -> Seq.empty
-      | Seq.Cons ((start, end_exc), rest) as s ->
-        if cur_start <= start then fun () -> s
-        else if end_exc <= cur_start then get_usable_part cur_start rest
-        else fun () -> Seq.Cons ((cur_start, end_exc), rest)
-    in
-    let rec aux (cur_start : int64 option) (batches : Time_slot.t Seq.t list) :
-      Time_slot.t option list Seq.t =
-      let cur_start, acc, new_batches =
-        List.fold_left
-          (fun (cur_start, acc, new_batches) seq ->
-             let usable =
-               match cur_start with
-               | None -> seq
-               | Some cur_start -> get_usable_part cur_start seq
-             in
-             match usable () with
-             | Seq.Nil -> (cur_start, None :: acc, new_batches)
-             | Seq.Cons ((start, end_exc), rest) ->
-               (Some start, Some (start, end_exc) :: acc, rest :: new_batches))
-          (cur_start, [], []) batches
-      in
-      let acc = List.rev acc in
-      let new_batches = List.rev new_batches in
-      fun () -> Seq.Cons (acc, aux cur_start new_batches)
-    in
-    aux None batches
+  let collect_round_robin_non_decreasing ?(skip_check = false)
+      (batches : Time_slot.t Seq.t list) : Time_slot.t option list Seq.t =
+    batches
+    |> List.map (fun s ->
+        if skip_check then s
+        else s |> Check.check_if_valid |> Check.check_if_sorted)
+    |> Seq_utils.collect_round_robin Time_slot.le
 
-  let merge_multi_list_round_robin_non_decreasing
+  let merge_multi_list_round_robin_non_decreasing ?(skip_check = false)
       (batches : Time_slot.t Seq.t list) : Time_slot.t Seq.t =
-    collect_round_robin_non_decreasing batches
+    collect_round_robin_non_decreasing ~skip_check batches
     |> Seq.flat_map (fun l -> List.to_seq l |> Seq.filter_map (fun x -> x))
 
-  let merge_multi_seq_round_robin_non_decreasing
+  let merge_multi_seq_round_robin_non_decreasing ?(skip_check = false)
       (batches : Time_slot.t Seq.t Seq.t) : Time_slot.t Seq.t =
-    batches |> List.of_seq |> merge_multi_list_round_robin_non_decreasing
+    batches
+    |> List.of_seq
+    |> merge_multi_list_round_robin_non_decreasing ~skip_check
 end
 
 module Union = struct
-  let union time_slots1 time_slots2 =
+  let union ?(skip_check = false) time_slots1 time_slots2 =
+    let time_slots1 =
+      if skip_check then time_slots1
+      else
+        time_slots1
+        |> Check.check_if_valid
+        |> Check.check_if_disjoint
+        |> Check.check_if_sorted
+    in
+    let time_slots2 =
+      if skip_check then time_slots2
+      else
+        time_slots2
+        |> Check.check_if_valid
+        |> Check.check_if_disjoint
+        |> Check.check_if_sorted
+    in
     Merge.merge time_slots1 time_slots2
     |> Normalize.normalize ~skip_filter_invalid:true ~skip_filter_empty:true
       ~skip_sort:true
 
-  let union_multi_seq (time_slot_batches : Time_slot.t Seq.t Seq.t) :
-    Time_slot.t Seq.t =
+  let union_multi_seq ?(skip_check = false)
+      (time_slot_batches : Time_slot.t Seq.t Seq.t) : Time_slot.t Seq.t =
     Seq.fold_left
-      (fun acc time_slots -> union acc time_slots)
+      (fun acc time_slots -> union ~skip_check acc time_slots)
       Seq.empty time_slot_batches
 
-  let union_multi_list (time_slot_batches : Time_slot.t Seq.t list) :
-    Time_slot.t Seq.t =
-    List.to_seq time_slot_batches |> union_multi_seq
+  let union_multi_list ?(skip_check = false)
+      (time_slot_batches : Time_slot.t Seq.t list) : Time_slot.t Seq.t =
+    List.to_seq time_slot_batches |> union_multi_seq ~skip_check
 end
 
-let chunk ~chunk_size ?(drop_partial = false) (time_slots : Time_slot.t Seq.t) :
-  Time_slot.t Seq.t =
+let chunk ?(skip_check = false) ?(drop_partial = false) ~chunk_size
+    (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
   let rec aux time_slots =
     match time_slots () with
     | Seq.Nil -> Seq.empty
@@ -346,32 +433,38 @@ let chunk ~chunk_size ?(drop_partial = false) (time_slots : Time_slot.t Seq.t) :
         let rest () = Seq.Cons ((chunk_end_exc, end_exc), rest) in
         fun () -> Seq.Cons ((start, chunk_end_exc), aux rest)
   in
-  aux time_slots
+  time_slots
+  |> (fun s -> if skip_check then s else s |> Check.check_if_valid)
+  |> aux
 
 module Sum = struct
-  let sum_length (time_slots : Time_slot.t Seq.t) : int64 =
-    Seq.fold_left
-      (fun acc (start, end_exc) -> acc +^ (end_exc -^ start))
-      0L time_slots
+  let sum_length ?(skip_check = false) (time_slots : Time_slot.t Seq.t) : int64
+    =
+    time_slots
+    |> (fun s -> if skip_check then s else Check.check_if_valid s)
+    |> Seq.fold_left (fun acc (start, end_exc) -> acc +^ (end_exc -^ start)) 0L
 
-  let sum_length_list (time_slots : Time_slot.t list) : int64 =
-    time_slots |> List.to_seq |> sum_length
+  let sum_length_list ?(skip_check = false) (time_slots : Time_slot.t list) :
+    int64 =
+    time_slots |> List.to_seq |> sum_length ~skip_check
 end
 
 module Bound = struct
-  let min_start_and_max_end_exc (time_slots : Time_slot.t Seq.t) :
-    (int64 * int64) option =
-    Seq.fold_left
+  let min_start_and_max_end_exc ?(skip_check = false)
+      (time_slots : Time_slot.t Seq.t) : (int64 * int64) option =
+    time_slots
+    |> (fun s -> if skip_check then s else Check.check_if_valid s)
+    |> Seq.fold_left
       (fun acc (start, end_exc) ->
          match acc with
          | None -> Some (start, end_exc)
          | Some (min_start, max_end_exc) ->
            Some (min min_start start, max max_end_exc end_exc))
-      None time_slots
+      None
 
-  let min_start_and_max_end_exc_list (time_slots : Time_slot.t list) :
-    (int64 * int64) option =
-    time_slots |> List.to_seq |> min_start_and_max_end_exc
+  let min_start_and_max_end_exc_list ?(skip_check = false)
+      (time_slots : Time_slot.t list) : (int64 * int64) option =
+    time_slots |> List.to_seq |> min_start_and_max_end_exc ~skip_check
 end
 
 let shift_list ~offset (time_slots : Time_slot.t list) : Time_slot.t list =
@@ -394,95 +487,83 @@ let a_is_subset_of_b ~(a : Time_slot.t Seq.t) ~(b : Time_slot.t Seq.t) : bool =
   let a = List.of_seq a in
   a = inter
 
-let count_overlap ?(skip_sort : bool = false) (time_slots : Time_slot.t Seq.t) :
+let count_overlap ?(skip_check = false) (time_slots : Time_slot.t Seq.t) :
   (Time_slot.t * int) Seq.t =
+  let flatten_buffer buffer =
+    buffer
+    |> List.sort (fun (x, _count) (y, _count) -> Time_slot.compare x y)
+    |> List.to_seq
+    |> Seq.flat_map (fun (x, count) ->
+        OSeq.(0 --^ count) |> Seq.map (fun _ -> x))
+  in
+  let flush_buffer_to_input buffer time_slots =
+    Merge.merge (flatten_buffer buffer) time_slots
+  in
   let rec aux (cur : ((int64 * int64) * int) option)
-      (buffer : (int64 * int64) list) (time_slots : Time_slot.t Seq.t) :
+      (buffer : ((int64 * int64) * int) list) (time_slots : Time_slot.t Seq.t) :
     (Time_slot.t * int) Seq.t =
     match time_slots () with
     | Seq.Nil -> (
-        match (cur, buffer) with
-        | None, [] -> Seq.empty
-        | None, buffer -> aux None [] (buffer |> List.rev |> List.to_seq)
-        | Some x, [] -> Seq.return x
-        | Some x, buffer ->
-          fun () ->
-            Seq.Cons (x, aux None [] (buffer |> List.rev |> List.to_seq)) )
-    | Seq.Cons (x, rest) as s -> (
-        match (cur, buffer) with
-        | None, [] ->
-          (* let (start, end_exc) = x in
-           * Printf.printf "cur: None, x: (%Ld, %Ld), buffer: %s\n" start end_exc (String.concat ", " (List.map (fun (x, y) ->
-           *   Printf.sprintf "%Ld, %Ld" x y) buffer)); *)
-          aux (Some (x, 1)) [] rest
-        | None, buffer ->
-          (* let (start, end_exc) = x in
-           * Printf.printf "cur: None, x: (%Ld, %Ld), buffer: %s\n" start end_exc(String.concat ", " (List.map (fun (x, y) ->
-           *   Printf.sprintf "%Ld, %Ld" x y) buffer)); *)
-          aux None [] (OSeq.append (List.to_seq buffer) (fun () -> s))
-        | Some ((cur_start, cur_end_exc), cur_count), buffer -> (
-            (* let (start, end_exc) = x in
-             * Printf.printf "cur: (%Ld, %Ld), x: (%Ld, %Ld), buffer: %s\n" cur_start cur_end_exc start end_exc(String.concat ", " (List.map (fun (x, y) ->
-             *   Printf.sprintf "%Ld, %Ld" x y) buffer)); *)
+        match buffer with
+        | [] -> (
+            match cur with None -> Seq.empty | Some cur -> Seq.return cur )
+        | buffer -> aux cur [] (flatten_buffer buffer) )
+    | Seq.Cons (x, rest) -> (
+        let s () = Seq.Cons (x, rest) in
+        match cur with
+        | None -> (
+            match buffer with
+            | [] -> aux (Some (x, 1)) [] rest
+            | buffer -> aux None [] (flush_buffer_to_input buffer s) )
+        | Some ((cur_start, cur_end_exc), cur_count) -> (
             match
               Time_slot.overlap_of_a_over_b ~a:x ~b:(cur_start, cur_end_exc)
             with
-            | None, None, None -> failwith "Unexpected case"
+            | None, None, None -> aux cur buffer rest
             | Some _, _, _ ->
-              raise (Invalid_argument "Time slots are not sorted1")
-            | None, Some (start, end_exc), None ->
-              if end_exc < cur_end_exc then
-                raise (Invalid_argument "Time slots are not sorted2")
-              else if start = cur_start then
-                aux
-                  (Some ((cur_start, cur_end_exc), succ cur_count))
-                  buffer rest
-              else
-                aux
-                  (Some ((cur_start, cur_end_exc), succ cur_count))
-                  ((cur_end_exc, end_exc) :: buffer)
-                  rest
+              failwith "Unexpected case, time slots are not sorted"
+            (* raise (Invalid_argument "Time slots are not sorted") *)
+            | None, Some (start, end_exc), None
             | None, Some (start, _), Some (_, end_exc) ->
               if start = cur_start then
-                aux
-                  (Some ((cur_start, cur_end_exc), succ cur_count))
-                  ((cur_end_exc, end_exc) :: buffer)
-                  rest
+                if end_exc < cur_end_exc then
+                  failwith "Unexpected case, time slots are not sorted"
+                  (* raise (Invalid_argument "Time slots are not sorted") *)
+                else if end_exc = cur_end_exc then
+                  aux
+                    (Some ((cur_start, cur_end_exc), succ cur_count))
+                    buffer rest
+                else
+                  aux
+                    (Some ((cur_start, cur_end_exc), succ cur_count))
+                    (((cur_end_exc, end_exc), 1) :: buffer)
+                    rest
               else fun () ->
                 Seq.Cons
                   ( ((cur_start, start), cur_count),
-                    aux
-                      (Some ((start, cur_end_exc), succ cur_count))
-                      ((cur_end_exc, end_exc) :: buffer)
-                      rest )
+                    let buffer =
+                      if end_exc < cur_end_exc then
+                        ((start, end_exc), succ cur_count)
+                        :: ((end_exc, cur_end_exc), cur_count)
+                        :: buffer
+                      else if end_exc = cur_end_exc then
+                        ((start, cur_end_exc), succ cur_count) :: buffer
+                      else
+                        ((start, cur_end_exc), succ cur_count)
+                        :: ((cur_end_exc, end_exc), 1)
+                        :: buffer
+                    in
+                    aux None buffer rest )
             | None, None, Some _ ->
               fun () ->
                 Seq.Cons
-                  ( ((cur_start, cur_end_exc), cur_count),
-                    aux None buffer (fun () -> s) ) ) )
-    (* else if start = cur_start then (
-     *   if end_exc < cur_end_exc then
-     *     raise (Invalid_argument "Time slots are not sorted")
-     *   else if end_exc = cur_end_exc then
-     *     aux (Some ((cur_start, cur_end_exc), succ cur_count)) buffer rest
-     *   else
-     *     aux (Some ((cur_start, cur_end_exc), succ cur_count)) ((cur_end_exc, end_exc) :: buffer) rest
-     * ) else (
-     *   fun () ->
-     *     Seq.Cons (
-     *       ((cur_start, start), succ cur_count),
-     *       aux (Some ((start, cur_end_exc), cur_count)) [] (OSeq.append (List.to_seq buffer) (fun () -> s))
-     *     ) *)
-
-  (* if end_exc < cur_end_exc then
-   *   aux (Some ((cur_start, end_exc), succ cur_count)) ((end_exc, cur_end_exc) :: buffer) rest
-   * else if end_exc = cur_end_exc then
-   *   aux (Some ()) *)
-  (* ) *)
+                  (((cur_start, cur_end_exc), cur_count), aux None buffer s) )
+      )
   in
-
   time_slots
-  |> (fun s -> if skip_sort then s else Sort.sort_time_slots s)
+  |> (fun s ->
+      if skip_check then s
+      else s |> Check.check_if_valid |> Check.check_if_sorted)
   |> aux None []
 
 module Serialize = struct

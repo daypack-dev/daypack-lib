@@ -26,6 +26,8 @@ test :
 
 .PHONY: covtest
 covtest :
+	rm -rf _coverage
+	rm -rf bisect*.coverage
 	BISECT_ENABLE=yes OCAMLRUNPARAM=b dune exec ./tests/main.exe
 	bisect-ppx-report html
 

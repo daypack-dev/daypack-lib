@@ -3,11 +3,8 @@ include Set.Make (struct
 
     let compare (task_seg_id1, start1, end_exc1) (task_seg_id2, start2, end_exc2)
       =
-      match compare start1 start2 with
-      | 0 -> (
-          match compare task_seg_id1 task_seg_id2 with
-          | 0 -> compare end_exc1 end_exc2
-          | n -> n )
+      match Time_slot.compare (start1, end_exc1) (start2, end_exc2) with
+      | 0 -> compare task_seg_id1 task_seg_id2
       | n -> n
   end)
 

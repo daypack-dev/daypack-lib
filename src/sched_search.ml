@@ -6,15 +6,30 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
   let free_time_slots =
     Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc base
   in
-  let get_usable_time_slots time_slots =
-    time_slots
-    |> Time_slots.Normalize.normalize_list_in_seq_out
-    |> Time_slots.intersect free_time_slots
-  in
   let get_parallelizability ((task_seg_id, _data) : Task.task_seg) : int =
     let task_id = Task.Id.task_id_of_task_seg_id task_seg_id in
     let task = Sched.Task.Find.find_task_any_opt task_id base |> Option.get in
     task.parallelizability
+  in
+  let get_usable_time_slots (task_segs : Task.task_seg list) time_slots =
+    let up_to_task_seg_place_count_inc =
+      match task_segs with
+      | [] -> 0
+      | l ->
+        l
+        |> List.map get_parallelizability
+        |> List.sort_uniq compare
+        |> List.hd
+    in
+    let time_slot_candidates =
+      Time_slots.Union.union free_time_slots
+        (Sched.Agenda.Time_slot
+         .get_occupied_time_slots_up_to_task_seg_place_count ~start ~end_exc
+           ~up_to_task_seg_place_count_inc base)
+    in
+    time_slots
+    |> Time_slots.Normalize.normalize_list_in_seq_out
+    |> Time_slots.intersect time_slot_candidates
   in
   Seq.flat_map
     (fun sched_req_record_data ->
@@ -22,22 +37,25 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
        | Sched_req_data_unit_skeleton.Fixed
            { task_seg_related_data = task_seg; start } ->
          let _, size = task_seg in
-         let parallelizability = get_parallelizability task_seg in
          let usable_time_slots =
-           get_usable_time_slots [ (start, start +^ size) ]
+           get_usable_time_slots [ task_seg ] [ (start, start +^ size) ]
          in
          Task_seg_place_gens.multi_task_segs_shift ~incre:1L
            ~task_segs:[ task_seg ] usable_time_slots
          |> OSeq.map (fun places ->
              base |> Sched.Agenda.Add.add_task_seg_place_list places)
        | Shift x ->
-         let usable_time_slots = get_usable_time_slots x.time_slots in
+         let usable_time_slots =
+           get_usable_time_slots x.task_seg_related_data_list x.time_slots
+         in
          Task_seg_place_gens.multi_task_segs_shift ~incre:x.incre
            ~task_segs:x.task_seg_related_data_list usable_time_slots
          |> OSeq.map (fun places ->
              base |> Sched.Agenda.Add.add_task_seg_place_list places)
        | Split_and_shift x ->
-         let usable_time_slots = get_usable_time_slots x.time_slots in
+         let usable_time_slots =
+           get_usable_time_slots [ x.task_seg_related_data ] x.time_slots
+         in
          ( match x.split_count with
            | Max_split split_count ->
              Task_seg_place_gens.single_task_seg_multi_splits_max_shift
@@ -52,14 +70,18 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
          |> OSeq.map (fun places ->
              base |> Sched.Agenda.Add.add_task_seg_place_list places)
        | Split_even x ->
-         let usable_time_slots = get_usable_time_slots x.time_slots in
+         let usable_time_slots =
+           get_usable_time_slots [ x.task_seg_related_data ] x.time_slots
+         in
          Task_seg_place_gens.single_task_seg_multi_even_splits ~incre:x.incre
            ~task_seg:x.task_seg_related_data ~buckets:x.buckets
            ~usable_time_slots
          |> OSeq.map (fun places ->
              base |> Sched.Agenda.Add.add_task_seg_place_list places)
        | Time_share x ->
-         let usable_time_slots = get_usable_time_slots x.time_slots in
+         let usable_time_slots =
+           get_usable_time_slots x.task_seg_related_data_list x.time_slots
+         in
          let s =
            Task_seg_place_gens.multi_task_segs_interleave
              ~interval_size:x.interval_size
@@ -67,7 +89,9 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
          in
          Seq.return (base |> Sched.Agenda.Add.add_task_seg_place_seq s)
        | Push_toward x ->
-         let usable_time_slots = get_usable_time_slots x.time_slots in
+         let usable_time_slots =
+           get_usable_time_slots [ x.task_seg_related_data ] x.time_slots
+         in
          let s1 =
            Task_seg_place_gens.single_task_seg_shift ~cur_pos:x.target
              ~incre:x.incre ~task_seg:x.task_seg_related_data usable_time_slots
