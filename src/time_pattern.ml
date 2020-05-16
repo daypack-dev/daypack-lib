@@ -742,13 +742,12 @@ module Single_pattern = struct
     (int64 Seq.t, error) result =
     matching_date_times search_param t
     |> Result.map (fun s ->
-        Seq.filter_map (fun x ->
-            match Time.unix_time_of_date_time x with
-            | Ok x -> Some x
-            | Error () -> None
-          )
-          s
-      )
+        Seq.filter_map
+          (fun x ->
+             match Time.unix_time_of_date_time x with
+             | Ok x -> Some x
+             | Error () -> None)
+          s)
 
   let matching_date_time_ranges (search_param : search_param) (t : t) :
     (Time.date_time Range.range Seq.t, error) result =

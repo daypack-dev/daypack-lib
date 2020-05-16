@@ -63,8 +63,7 @@ module Check : sig
 end
 
 module Single_pattern : sig
-  val matching_unix_times :
-    search_param -> t -> (int64 Seq.t, error) result
+  val matching_unix_times : search_param -> t -> (int64 Seq.t, error) result
 
   val matching_time_slots :
     search_param -> t -> (Time_slot.t Seq.t, error) result
