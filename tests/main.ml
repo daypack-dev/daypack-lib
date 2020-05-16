@@ -1,11 +1,14 @@
 let () =
-  let alco_suites = [ ("Range", Range.Alco.suite) ] in
+  let alco_suites = [
+    ("Range.Alco", Range.Alco.suite);
+    ("Time_slots.Alco", Time_slots.Alco.suite);
+  ] in
   let qc_suites =
     [
       (* ("Misc_utils", Misc_utils.suite);
        * ("Map_utils", Map_utils.suite);
        * ("Set_utils", Set_utils.suite); *)
-      ("Time_slots", Time_slots.Qc.suite);
+      ("Time_slots.Qc", Time_slots.Qc.suite);
       (* ("Time_pattern", Time_pattern.suite);
        * ("Time_profile", Time_profile.suite);
        * ("Time_profile_store", Time_profile_store.suite);

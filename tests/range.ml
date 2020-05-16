@@ -35,7 +35,7 @@ module Alco = struct
 
   let suite =
     [
-      Alcotest.test_case "Alco.int64_range_flatten1" `Quick int64_range_flatten1;
-      Alcotest.test_case "Alco.int64_range_flatten2" `Quick int64_range_flatten2;
+      Alcotest.test_case "int64_range_flatten1" `Quick int64_range_flatten1;
+      Alcotest.test_case "int64_range_flatten2" `Quick int64_range_flatten2;
     ]
 end

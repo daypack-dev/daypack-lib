@@ -1,8 +1,34 @@
 open Test_utils
 
+module Alco = struct
+  let count_overlap1 () =
+    Alcotest.(check (list (pair (pair int64 int64) int)))
+      "same list"
+      [((0L, 1L), 2);
+       ((1L, 3L), 4);
+       ((3L, 4L), 3);
+       ((4L, 5L), 2);
+       ((5L, 6L), 1);
+      ]
+      (Daypack_lib.Time_slots.count_overlap
+         (List.to_seq
+            [(0L, 5L);
+             (0L, 6L);
+             (1L, 3L);
+             (1L, 4L);
+            ])
+       |> List.of_seq
+      )
+
+  let suite =
+    [
+      Alcotest.test_case "count_overlap1" `Quick count_overlap1;
+    ]
+end
+
 module Qc = struct
   let slice_start =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.slice_start"
+    QCheck.Test.make ~count:10_000 ~name:"slice_start"
       QCheck.(pair pos_int64 sorted_time_slots_maybe_gaps)
       (fun (start, l) ->
          l
@@ -12,7 +38,7 @@ module Qc = struct
          |> List.for_all (fun (x, _) -> start <= x))
 
   let slice_end_exc =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.slice_end_exc"
+    QCheck.Test.make ~count:10_000 ~name:"slice_end_exc"
       QCheck.(pair pos_int64 sorted_time_slots_maybe_gaps)
       (fun (end_exc, l) ->
          l
@@ -22,7 +48,7 @@ module Qc = struct
          |> List.for_all (fun (_, y) -> y <= end_exc))
 
   let normalize_pairs_are_fine =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.normalize_pairs_are_fine"
+    QCheck.Test.make ~count:10_000 ~name:"normalize_pairs_are_fine"
       time_slots (fun l ->
           l
           |> List.to_seq
@@ -31,7 +57,7 @@ module Qc = struct
           |> List.for_all (fun (x, y) -> x <= y))
 
   let normalize_time_slots_are_sorted =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.normalize_time_slots_are_sorted"
+    QCheck.Test.make ~count:10_000 ~name:"normalize_time_slots_are_sorted"
       time_slots (fun l ->
           l
           |> List.to_seq
@@ -49,7 +75,7 @@ module Qc = struct
           |> fun (x, _) -> x)
 
   let normalize_time_slots_are_unique =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.normalize_time_slots_are_unique"
+    QCheck.Test.make ~count:10_000 ~name:"normalize_time_slots_are_unique"
       time_slots (fun l ->
           let l =
             l
@@ -61,7 +87,7 @@ module Qc = struct
 
   let normalize_time_slots_are_disjoint_with_gaps =
     QCheck.Test.make ~count:10_000
-      ~name:"Qc.normalize_time_slots_are_disjoint_with_gaps" time_slots
+      ~name:"normalize_time_slots_are_disjoint_with_gaps" time_slots
       (fun l ->
          l
          |> List.to_seq
@@ -78,7 +104,7 @@ module Qc = struct
 
   let normalize_idempotent_wrt_normalized_time_slots =
     QCheck.Test.make ~count:10_000
-      ~name:"Qc.normalize_idempotent_wrt_normalized_time_slots"
+      ~name:"normalize_idempotent_wrt_normalized_time_slots"
       sorted_time_slots_with_gaps (fun l ->
           l
           |> List.to_seq
@@ -87,7 +113,7 @@ module Qc = struct
              = l)
 
   let invert_disjoint_from_original =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.invert_disjoint_from_original"
+    QCheck.Test.make ~count:10_000 ~name:"invert_disjoint_from_original"
       QCheck.(triple pos_int64 pos_int64 sorted_time_slots_maybe_gaps)
       (fun (start, end_exc, l) ->
          QCheck.assume (start <= end_exc);
@@ -109,7 +135,7 @@ module Qc = struct
          = sliced_count + inverted_count)
 
   let invert_fit_gaps =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.invert_fit_gaps"
+    QCheck.Test.make ~count:10_000 ~name:"invert_fit_gaps"
       QCheck.(triple pos_int64 pos_int64 sorted_time_slots_maybe_gaps)
       (fun (start, end_exc, l) ->
          QCheck.assume (start < end_exc);
@@ -132,7 +158,7 @@ module Qc = struct
 
   let relatvie_complement_result_disjoint_from_not_mem_of =
     QCheck.Test.make ~count:10_000
-      ~name:"Qc.relative_complement_disjoint_from_not_mem_of"
+      ~name:"relative_complement_disjoint_from_not_mem_of"
       QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
       (fun (mem_of, not_mem_of) ->
          let res =
@@ -147,7 +173,7 @@ module Qc = struct
 
   let relatvie_complement_result_subset_of_mem_of =
     QCheck.Test.make ~count:10_000
-      ~name:"Qc.relatvie_complement_result_subset_of_mem_of"
+      ~name:"relatvie_complement_result_subset_of_mem_of"
       QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
       (fun (mem_of, not_mem_of) ->
          let res_s =
@@ -160,7 +186,7 @@ module Qc = struct
             = res)
 
   let relatvie_complement_self =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.relatvie_complement_self"
+    QCheck.Test.make ~count:10_000 ~name:"relatvie_complement_self"
       sorted_time_slots_maybe_gaps (fun l ->
           let s = List.to_seq l in
           Daypack_lib.Time_slots.relative_complement ~not_mem_of:s s
@@ -168,14 +194,14 @@ module Qc = struct
              = [])
 
   let intersect_with_self =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.intersect_with_self"
+    QCheck.Test.make ~count:10_000 ~name:"intersect_with_self"
       sorted_time_slots_maybe_gaps (fun l ->
           let s = l |> List.to_seq in
           let res = Daypack_lib.Time_slots.intersect s s |> List.of_seq in
           l = res)
 
   let intersect_commutative =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.intersect_commutative"
+    QCheck.Test.make ~count:10_000 ~name:"intersect_commutative"
       QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
       (fun (l1, l2) ->
          let s1 = l1 |> List.to_seq in
@@ -185,7 +211,7 @@ module Qc = struct
          inter1 = inter2)
 
   let intersect_associative =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.intersect_associative"
+    QCheck.Test.make ~count:10_000 ~name:"intersect_associative"
       QCheck.(
         triple sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps
           sorted_time_slots_maybe_gaps)
@@ -202,14 +228,14 @@ module Qc = struct
          inter1 = inter2)
 
   let union_with_self =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.union_with_self"
+    QCheck.Test.make ~count:10_000 ~name:"union_with_self"
       sorted_time_slots_with_gaps (fun l ->
           let s = l |> List.to_seq in
           let res = Daypack_lib.Time_slots.Union.union s s |> List.of_seq in
           l = res)
 
   let union_commutative =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.union_commutative"
+    QCheck.Test.make ~count:10_000 ~name:"union_commutative"
       QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
       (fun (l1, l2) ->
          let s1 = l1 |> List.to_seq in
@@ -219,7 +245,7 @@ module Qc = struct
          inter1 = inter2)
 
   let union_associative =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.union_associative"
+    QCheck.Test.make ~count:10_000 ~name:"union_associative"
       QCheck.(
         triple sorted_time_slots_with_gaps sorted_time_slots_with_gaps
           sorted_time_slots_with_gaps)
@@ -238,7 +264,7 @@ module Qc = struct
          res1 = res2)
 
   let intersect_union_distributive1 =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.intersect_union_distributive1"
+    QCheck.Test.make ~count:10_000 ~name:"intersect_union_distributive1"
       QCheck.(
         triple sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps
           sorted_time_slots_maybe_gaps)
@@ -258,7 +284,7 @@ module Qc = struct
          res1 = res2)
 
   let intersect_union_distributive2 =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.intersect_union_distributive2"
+    QCheck.Test.make ~count:10_000 ~name:"intersect_union_distributive2"
       QCheck.(
         triple sorted_time_slots_with_gaps sorted_time_slots_maybe_gaps
           sorted_time_slots_maybe_gaps)
@@ -278,7 +304,7 @@ module Qc = struct
          res1 = res2)
 
   let merge =
-    QCheck.Test.make ~count:10_000 ~name:"Qc.merge"
+    QCheck.Test.make ~count:10_000 ~name:"merge"
       QCheck.(
         pair sorted_time_slots_with_overlaps sorted_time_slots_with_overlaps)
       (fun (l1, l2) ->
