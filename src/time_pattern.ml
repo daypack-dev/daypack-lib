@@ -717,7 +717,7 @@ module Single_pattern = struct
     |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
     |> Seq.filter_map Range_utils.result_range_get
 
-  let matching_date_time_seq (search_param : search_param) (t : t) :
+  let matching_date_times (search_param : search_param) (t : t) :
     (Time.date_time Seq.t, error) result =
     Check.check_search_param_and_time_pattern search_param t
     |> Result.map (fun () ->
@@ -738,9 +738,9 @@ module Single_pattern = struct
           |> filter_using_matching_unix_times ~search_using_tz_offset_s t
             start)
 
-  let matching_unix_time_seq (search_param : search_param) (t : t) :
+  let matching_unix_times (search_param : search_param) (t : t) :
     (int64 Seq.t, error) result =
-    matching_date_time_seq search_param t
+    matching_date_times search_param t
     |> Result.map (fun s ->
         Seq.filter_map (fun x ->
             match Time.unix_time_of_date_time x with
@@ -750,7 +750,7 @@ module Single_pattern = struct
           s
       )
 
-  let matching_date_time_range_seq (search_param : search_param) (t : t) :
+  let matching_date_time_ranges (search_param : search_param) (t : t) :
     (Time.date_time Range.range Seq.t, error) result =
     match
       start_date_time_and_search_years_ahead_of_search_param search_param
@@ -840,7 +840,7 @@ module Single_pattern = struct
     let f (x, y) =
       (Time.unix_time_of_date_time x, Time.unix_time_of_date_time y)
     in
-    matching_date_time_range_seq search_param t
+    matching_date_time_ranges search_param t
     |> Result.map (fun s ->
         s
         |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
@@ -889,7 +889,7 @@ module Single_pattern = struct
 
   let next_match_date_time (search_param : search_param) (t : t) :
     (Time.date_time option, error) result =
-    matching_date_time_seq search_param t
+    matching_date_times search_param t
     |> Result.map (fun s ->
         match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x)
 
@@ -903,12 +903,6 @@ module Single_pattern = struct
             match Time.unix_time_of_date_time x with
             | Error () -> None
             | Ok x -> Some x ))
-
-  let next_match_date_time_range (search_param : search_param) (t : t) :
-    (Time.date_time Range.range option, error) result =
-    matching_date_time_range_seq search_param t
-    |> Result.map (fun s ->
-        match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x)
 
   let next_match_time_slot (search_param : search_param) (t : t) :
     (Time_slot.t option, error) result =

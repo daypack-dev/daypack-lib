@@ -700,41 +700,41 @@ let debug_sched_usage_simulation () =
    *   | Error () -> print_endline "Scheduling failed" ); *)
   print_newline ()
 
-let debug_time_pattern_matching_date_time_seq () =
-  print_endline "Debug print for Time_pattern.matching_date_time_seq";
-  let pattern =
-    let open Daypack_lib.Time_pattern in
-    {
-      years = [];
-      months = [ `Jun ];
-      month_days = [];
-      weekdays = [];
-      hours = [ 11 ];
-      minutes = [ 0 ];
-      seconds = [];
-      unix_times = [];
-    }
-  in
-  let search_years_ahead = 100 in
-  Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
-  let s =
-    Daypack_lib.Time_pattern.Single_pattern.matching_date_time_seq
-      (Years_ahead_start_unix_time
-         {
-           search_using_tz_offset_s = None;
-           start = Time.Current.cur_unix_time ();
-           search_years_ahead;
-         })
-      pattern
-    |> Result.get_ok
-  in
-  s
-  |> OSeq.take 10
-  |> OSeq.iteri (fun i x ->
-      Printf.printf "iter : %d\n" i;
-      print_endline "  =====";
-      Printf.printf "  %s\n"
-        (Time.To_string.yyyymondd_hhmmss_string_of_date_time x))
+(* let debug_time_pattern_matching_date_time_seq () =
+ *   print_endline "Debug print for Time_pattern.matching_date_time_seq";
+ *   let pattern =
+ *     let open Daypack_lib.Time_pattern in
+ *     {
+ *       years = [];
+ *       months = [ `Jun ];
+ *       month_days = [];
+ *       weekdays = [];
+ *       hours = [ 11 ];
+ *       minutes = [ 0 ];
+ *       seconds = [];
+ *       unix_times = [];
+ *     }
+ *   in
+ *   let search_years_ahead = 100 in
+ *   Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
+ *   let s =
+ *     Daypack_lib.Time_pattern.Single_pattern.matching_date_time_seq
+ *       (Years_ahead_start_unix_time
+ *          {
+ *            search_using_tz_offset_s = None;
+ *            start = Time.Current.cur_unix_time ();
+ *            search_years_ahead;
+ *          })
+ *       pattern
+ *     |> Result.get_ok
+ *   in
+ *   s
+ *   |> OSeq.take 10
+ *   |> OSeq.iteri (fun i x ->
+ *       Printf.printf "iter : %d\n" i;
+ *       print_endline "  =====";
+ *       Printf.printf "  %s\n"
+ *         (Time.To_string.yyyymondd_hhmmss_string_of_date_time x)) *)
 
 let debug_time_pattern_matching_time_slots () =
   print_endline "Debug print for Time_pattern.matching_time_slots";
