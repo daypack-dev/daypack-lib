@@ -56,7 +56,7 @@ module To_string : sig
     Time_expr_ast.hour_minute_second_expr -> string
 end
 
-module Interpret_string : sig
+module Of_string : sig
   val of_string : string -> (Time_expr_ast.t, string) result
 
   val time_points_expr_of_string :
