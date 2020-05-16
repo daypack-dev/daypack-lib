@@ -20,9 +20,34 @@ module Alco = struct
        |> List.of_seq
       )
 
+  let count_overlap2 () =
+    Alcotest.(check (list (pair (pair int64 int64) int)))
+      "same list"
+      [((0L, 1L), 2);
+       ((1L, 2L), 5);
+       ((2L, 3L), 7);
+       ((3L, 4L), 6);
+       ((4L, 5L), 5);
+       ((5L, 6L), 2);
+       ((6L, 7L), 1);
+      ]
+      (Daypack_lib.Time_slots.count_overlap
+         (List.to_seq
+            [(0L, 5L);
+             (0L, 6L);
+             (1L, 4L);
+             (1L, 5L);
+             (1L, 7L);
+             (2L, 3L);
+             (2L, 5L);
+            ])
+       |> List.of_seq
+      )
+
   let suite =
     [
       Alcotest.test_case "count_overlap1" `Quick count_overlap1;
+      Alcotest.test_case "count_overlap2" `Quick count_overlap2;
     ]
 end
 
