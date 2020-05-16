@@ -71,12 +71,7 @@ module Alco = struct
   let count_overlap4 () =
     Alcotest.(check (list (pair (pair int64 int64) int)))
       "same list"
-      [
-        ((1L, 2L), 3);
-        ((2L, 3L), 5);
-        ((3L, 4L), 7);
-        ((4L, 5L), 9);
-      ]
+      [ ((1L, 2L), 3); ((2L, 3L), 5); ((3L, 4L), 7); ((4L, 5L), 9) ]
       ( Daypack_lib.Time_slots.count_overlap
           (List.to_seq
              [
@@ -96,21 +91,10 @@ module Alco = struct
     Alcotest.(check (list (pair (pair int64 int64) int)))
       "same list"
       [
-        ((1L, 2L), 1);
-        ((2L, 3L), 2);
-        ((3L, 4L), 3);
-        ((4L, 5L), 5);
-        ((5L, 6L), 2);
+        ((1L, 2L), 1); ((2L, 3L), 2); ((3L, 4L), 3); ((4L, 5L), 5); ((5L, 6L), 2);
       ]
       ( Daypack_lib.Time_slots.count_overlap
-          (List.to_seq
-             [
-               (1L, 5L);
-               (2L, 5L);
-               (3L, 5L);
-               (4L, 6L);
-               (4L, 6L);
-             ])
+          (List.to_seq [ (1L, 5L); (2L, 5L); (3L, 5L); (4L, 6L); (4L, 6L) ])
         |> List.of_seq )
 
   let suite =
@@ -210,7 +194,8 @@ module Qc = struct
 
   let join_time_slots_are_disjoint_with_gaps =
     QCheck.Test.make ~count:10_000
-      ~name:"join_time_slots_are_disjoint_with_gaps" sorted_time_slots_maybe_gaps (fun l ->
+      ~name:"join_time_slots_are_disjoint_with_gaps"
+      sorted_time_slots_maybe_gaps (fun l ->
           l
           |> List.to_seq
           |> Daypack_lib.Time_slots.join
@@ -225,14 +210,9 @@ module Qc = struct
           |> fun (x, _) -> x)
 
   let join_idempotent_wrt_joined_time_slots =
-    QCheck.Test.make ~count:10_000
-      ~name:"join_idempotent_wrt_joined_time_slots"
+    QCheck.Test.make ~count:10_000 ~name:"join_idempotent_wrt_joined_time_slots"
       sorted_time_slots_with_gaps (fun l ->
-          l
-          |> List.to_seq
-          |> Daypack_lib.Time_slots.join
-          |> List.of_seq
-             = l)
+          l |> List.to_seq |> Daypack_lib.Time_slots.join |> List.of_seq = l)
 
   let invert_disjoint_from_original =
     QCheck.Test.make ~count:10_000 ~name:"invert_disjoint_from_original"

@@ -1,5 +1,5 @@
 let unpack_is_inverse_of_pack_test_name suffix =
-  Printf.sprintf "qc_unpack_is_inverse_of_pack_%s" suffix
+  Printf.sprintf "unpack_is_inverse_of_pack_%s" suffix
 
 let print_unpack_is_inverse_of_pack_test ~typ ~f_pack ~f_unpack =
   let name = unpack_is_inverse_of_pack_test_name typ in
