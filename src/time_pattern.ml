@@ -18,6 +18,7 @@ type search_param_error =
   | Invalid_start
   | Invalid_time_slots
   | Invalid_search_years_ahead
+  | Too_far_into_future
 
 type t = {
   years : int list;
@@ -71,14 +72,18 @@ module Check = struct
             ~tz_offset_s_of_date_time:search_using_tz_offset_s start
         with
         | Error () -> Error Invalid_start
-        | Ok _ ->
-          if search_years_ahead > 0 then Ok ()
-          else Error Invalid_search_years_ahead )
+        | Ok start ->
+          if search_years_ahead <= 0 then Error Invalid_search_years_ahead
+          else if start.year + search_years_ahead > Time.max.year then
+            Error Too_far_into_future
+          else Ok () )
     | Years_ahead_start_date_time
         { search_using_tz_offset_s = _; start; search_years_ahead } ->
       if Time.Check.check_date_time start then
-        if search_years_ahead > 0 then Ok ()
-        else Error Invalid_search_years_ahead
+        if search_years_ahead <= 0 then Error Invalid_search_years_ahead
+        else if start.year + search_years_ahead > Time.max.year then
+          Error Too_far_into_future
+        else Ok ()
       else Error Invalid_start
 
   let check_time_pattern (x : t) : (unit, time_pattern_error) result =

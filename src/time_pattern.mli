@@ -18,6 +18,7 @@ type search_param_error =
   | Invalid_start
   | Invalid_time_slots
   | Invalid_search_years_ahead
+  | Too_far_into_future
 
 type t = {
   years : int list;
