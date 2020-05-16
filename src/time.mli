@@ -45,6 +45,10 @@ type day_range =
   | Weekday_range of weekday_range
   | Month_day_range of month_day_range
 
+val min : date_time
+
+val max : date_time
+
 val first_mday : int
 
 val tm_year_offset : int

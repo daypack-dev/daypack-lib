@@ -172,6 +172,18 @@ let date_time_of_unix_time ~(tz_offset_s_of_date_time : tz_offset_s option)
     let tz_offset_s = resolve_current_tz_offset_s tz_offset_s_of_date_time in
     x |> Ptime.to_date_time ~tz_offset_s |> date_time_of_ptime_date_time
 
+let min =
+  Ptime.min
+  |> Ptime.to_date_time
+  |> date_time_of_ptime_date_time
+  |> Result.get_ok
+
+let max =
+  Ptime.max
+  |> Ptime.to_date_time
+  |> date_time_of_ptime_date_time
+  |> Result.get_ok
+
 module Check = struct
   let check_unix_time (x : int64) : bool =
     match date_time_of_unix_time ~tz_offset_s_of_date_time:None x with
