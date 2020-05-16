@@ -97,7 +97,7 @@ module Resolve = struct
     aux f_resolve_tse_name f_resolve_tpe_name max_resolve_depth None e
 end
 
-module Interpret_string = struct
+module Of_string = struct
   open Angstrom
   open Parser_components
 
@@ -220,7 +220,7 @@ module Interpret_string = struct
     let weekday_expr : Time.weekday t =
       alpha_string
       >>= fun x ->
-      match Time.Interpret_string.weekday_of_string x with
+      match Time.Of_string.weekday_of_string x with
       | Ok x -> return x
       | Error _ -> fail "Failed to interpret weekday string"
 
@@ -253,7 +253,7 @@ module Interpret_string = struct
     let direct_pick_month_expr : Time_expr_ast.month_expr t =
       alpha_string
       >>= fun x ->
-      match Time.Interpret_string.month_of_string x with
+      match Time.Of_string.month_of_string x with
       | Ok x -> return x
       | Error _ ->
         fail (Printf.sprintf "Failed to interpret month string: %s" x)

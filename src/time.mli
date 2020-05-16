@@ -166,7 +166,7 @@ module Current : sig
   val cur_tm_utc : unit -> Unix.tm
 end
 
-module Interpret_string : sig
+module Of_string : sig
   val weekday_of_string : string -> (weekday, unit) result
 
   val month_of_string : string -> (month, unit) result

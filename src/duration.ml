@@ -34,7 +34,7 @@ let to_seconds (t : t) : int64 =
 
 let normalize (t : t) : t = t |> to_seconds |> of_seconds
 
-module Interpret_string = struct
+module Of_string = struct
   type duration = t
 
   open Angstrom

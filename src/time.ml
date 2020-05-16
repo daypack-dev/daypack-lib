@@ -395,7 +395,7 @@ module Current = struct
   let cur_tm_utc () : Unix.tm = Unix.time () |> Unix.gmtime
 end
 
-module Interpret_string = struct
+module Of_string = struct
   let weekdays : (string * weekday) list =
     [
       ("sunday", `Sun);
