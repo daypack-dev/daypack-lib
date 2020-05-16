@@ -7,17 +7,17 @@ let () =
   in
   let qc_suites =
     [
-      ("Misc_utils", Misc_utils.Qc.suite);
-      ("Map_utils", Map_utils.Qc.suite);
-      ("Set_utils", Set_utils.Qc.suite);
+      ("Misc_utils.Qc", Misc_utils.Qc.suite);
+      ("Map_utils.Qc", Map_utils.Qc.suite);
+      ("Set_utils.Qc", Set_utils.Qc.suite);
       ("Time_slots.Qc", Time_slots.Qc.suite);
-      ("Time_pattern", Time_pattern.Qc.suite);
-      ("Time_profile", Time_profile.Qc.suite);
-      ("Time_profile_store", Time_profile_store.Qc.suite);
-      ("Task_seg_place_gens", Task_seg_place_gens.Qc.suite);
-      ("Task", Task.Qc.suite);
-      ("Sched", Sched.Qc.suite);
-      ("Sched_ver_history", Sched_ver_history.Qc.suite);
+      ("Time_pattern.Qc", Time_pattern.Qc.suite);
+      ("Time_profile.Qc", Time_profile.Qc.suite);
+      ("Time_profile_store.Qc", Time_profile_store.Qc.suite);
+      ("Task_seg_place_gens.Qc", Task_seg_place_gens.Qc.suite);
+      ("Task.Qc", Task.Qc.suite);
+      ("Sched.Qc", Sched.Qc.suite);
+      ("Sched_ver_history.Qc", Sched_ver_history.Qc.suite);
     ]
     |> List.map (fun (name, suite) ->
         (name, List.map QCheck_alcotest.to_alcotest suite))
