@@ -208,6 +208,32 @@ module Qc = struct
           |> List.of_seq
              = l)
 
+  let join_time_slots_are_disjoint_with_gaps =
+    QCheck.Test.make ~count:10_000
+      ~name:"join_time_slots_are_disjoint_with_gaps" sorted_time_slots_maybe_gaps (fun l ->
+          l
+          |> List.to_seq
+          |> Daypack_lib.Time_slots.join
+          |> Seq.fold_left
+            (fun (res, last) (x, y) ->
+               if res then
+                 match last with
+                 | None -> (true, Some (x, y))
+                 | Some (_, last_end_exc) -> (last_end_exc < x, Some (x, y))
+               else (false, None))
+            (true, None)
+          |> fun (x, _) -> x)
+
+  let join_idempotent_wrt_joined_time_slots =
+    QCheck.Test.make ~count:10_000
+      ~name:"join_idempotent_wrt_joined_time_slots"
+      sorted_time_slots_with_gaps (fun l ->
+          l
+          |> List.to_seq
+          |> Daypack_lib.Time_slots.join
+          |> List.of_seq
+             = l)
+
   let invert_disjoint_from_original =
     QCheck.Test.make ~count:10_000 ~name:"invert_disjoint_from_original"
       QCheck.(triple pos_int64 pos_int64 sorted_time_slots_maybe_gaps)
@@ -419,6 +445,8 @@ module Qc = struct
       normalize_time_slots_are_unique;
       normalize_time_slots_are_disjoint_with_gaps;
       normalize_idempotent_wrt_normalized_time_slots;
+      join_time_slots_are_disjoint_with_gaps;
+      join_idempotent_wrt_joined_time_slots;
       invert_disjoint_from_original;
       invert_fit_gaps;
       relatvie_complement_result_disjoint_from_not_mem_of;
