@@ -20,20 +20,22 @@ module Int_range = Daypack_lib.Range_small.Make (struct
     let of_int x = x
   end)
 
-let int64_range_flatten1 () =
-  Alcotest.(check (list int64))
-    "same list"
-    [ 1L; 2L; 3L; 4L; 5L; 6L; 7L ]
-    (Int64_range.Flatten.flatten_into_list (`Range_exc (1L, 8L)))
+module Alco = struct
+  let int64_range_flatten1 () =
+    Alcotest.(check (list int64))
+      "same list"
+      [ 1L; 2L; 3L; 4L; 5L; 6L; 7L ]
+      (Int64_range.Flatten.flatten_into_list (`Range_exc (1L, 8L)))
 
-let int64_range_flatten2 () =
-  Alcotest.(check (list int64))
-    "same list"
-    [ 1L; 2L; 3L; 4L; 5L; 6L; 7L ]
-    (Int64_range.Flatten.flatten_into_list (`Range_inc (1L, 7L)))
+  let int64_range_flatten2 () =
+    Alcotest.(check (list int64))
+      "same list"
+      [ 1L; 2L; 3L; 4L; 5L; 6L; 7L ]
+      (Int64_range.Flatten.flatten_into_list (`Range_inc (1L, 7L)))
 
-let alco_suite =
-  [
-    Alcotest.test_case "int64_range_flatten1" `Quick int64_range_flatten1;
-    Alcotest.test_case "int64_range_flatten2" `Quick int64_range_flatten2;
-  ]
+  let suite =
+    [
+      Alcotest.test_case "Alco.int64_range_flatten1" `Quick int64_range_flatten1;
+      Alcotest.test_case "Alco.int64_range_flatten2" `Quick int64_range_flatten2;
+    ]
+end

@@ -1,5 +1,5 @@
 let () =
-  let alco_suites = [ ("Range", Range.alco_suite) ] in
+  let alco_suites = [ ("Range", Range.Alco.suite) ] in
   let qc_suites =
     [
       (* ("Misc_utils", Misc_utils.suite);
