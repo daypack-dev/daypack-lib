@@ -1017,3 +1017,11 @@ let sched_ver_history =
     ~print:
       Daypack_lib.Sched_ver_history.To_string.debug_string_of_sched_ver_history
     sched_ver_history_gen
+
+let date_time_testable : (module Alcotest.TESTABLE) = (module struct
+  type t = Daypack_lib.Time.date_time
+
+  let pp = Fmt.using Daypack_lib.Time.To_string.yyyymondd_hhmmss_string_of_date_time Fmt.string
+
+  let equal = (=)
+end)
