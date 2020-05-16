@@ -4,45 +4,37 @@ module Alco = struct
   let count_overlap1 () =
     Alcotest.(check (list (pair (pair int64 int64) int)))
       "same list"
-      [((0L, 1L), 2);
-       ((1L, 3L), 4);
-       ((3L, 4L), 3);
-       ((4L, 5L), 2);
-       ((5L, 6L), 1);
+      [
+        ((0L, 1L), 2); ((1L, 3L), 4); ((3L, 4L), 3); ((4L, 5L), 2); ((5L, 6L), 1);
       ]
-      (Daypack_lib.Time_slots.count_overlap
-         (List.to_seq
-            [(0L, 5L);
-             (0L, 6L);
-             (1L, 3L);
-             (1L, 4L);
-            ])
-       |> List.of_seq
-      )
+      ( Daypack_lib.Time_slots.count_overlap
+          (List.to_seq [ (0L, 5L); (0L, 6L); (1L, 3L); (1L, 4L) ])
+        |> List.of_seq )
 
   let count_overlap2 () =
     Alcotest.(check (list (pair (pair int64 int64) int)))
       "same list"
-      [((0L, 1L), 2);
-       ((1L, 2L), 5);
-       ((2L, 3L), 7);
-       ((3L, 4L), 6);
-       ((4L, 5L), 5);
-       ((5L, 6L), 2);
-       ((6L, 7L), 1);
+      [
+        ((0L, 1L), 2);
+        ((1L, 2L), 5);
+        ((2L, 3L), 7);
+        ((3L, 4L), 6);
+        ((4L, 5L), 5);
+        ((5L, 6L), 2);
+        ((6L, 7L), 1);
       ]
-      (Daypack_lib.Time_slots.count_overlap
-         (List.to_seq
-            [(0L, 5L);
-             (0L, 6L);
-             (1L, 4L);
-             (1L, 5L);
-             (1L, 7L);
-             (2L, 3L);
-             (2L, 5L);
-            ])
-       |> List.of_seq
-      )
+      ( Daypack_lib.Time_slots.count_overlap
+          (List.to_seq
+             [
+               (0L, 5L);
+               (0L, 6L);
+               (1L, 4L);
+               (1L, 5L);
+               (1L, 7L);
+               (2L, 3L);
+               (2L, 5L);
+             ])
+        |> List.of_seq )
 
   let suite =
     [
@@ -73,13 +65,13 @@ module Qc = struct
          |> List.for_all (fun (_, y) -> y <= end_exc))
 
   let normalize_pairs_are_fine =
-    QCheck.Test.make ~count:10_000 ~name:"normalize_pairs_are_fine"
-      time_slots (fun l ->
-          l
-          |> List.to_seq
-          |> Daypack_lib.Time_slots.Normalize.normalize
-          |> List.of_seq
-          |> List.for_all (fun (x, y) -> x <= y))
+    QCheck.Test.make ~count:10_000 ~name:"normalize_pairs_are_fine" time_slots
+      (fun l ->
+         l
+         |> List.to_seq
+         |> Daypack_lib.Time_slots.Normalize.normalize
+         |> List.of_seq
+         |> List.for_all (fun (x, y) -> x <= y))
 
   let normalize_time_slots_are_sorted =
     QCheck.Test.make ~count:10_000 ~name:"normalize_time_slots_are_sorted"
@@ -112,20 +104,19 @@ module Qc = struct
 
   let normalize_time_slots_are_disjoint_with_gaps =
     QCheck.Test.make ~count:10_000
-      ~name:"normalize_time_slots_are_disjoint_with_gaps" time_slots
-      (fun l ->
-         l
-         |> List.to_seq
-         |> Daypack_lib.Time_slots.Normalize.normalize
-         |> Seq.fold_left
-           (fun (res, last) (x, y) ->
-              if res then
-                match last with
-                | None -> (true, Some (x, y))
-                | Some (_, last_end_exc) -> (last_end_exc < x, Some (x, y))
-              else (false, None))
-           (true, None)
-         |> fun (x, _) -> x)
+      ~name:"normalize_time_slots_are_disjoint_with_gaps" time_slots (fun l ->
+          l
+          |> List.to_seq
+          |> Daypack_lib.Time_slots.Normalize.normalize
+          |> Seq.fold_left
+            (fun (res, last) (x, y) ->
+               if res then
+                 match last with
+                 | None -> (true, Some (x, y))
+                 | Some (_, last_end_exc) -> (last_end_exc < x, Some (x, y))
+               else (false, None))
+            (true, None)
+          |> fun (x, _) -> x)
 
   let normalize_idempotent_wrt_normalized_time_slots =
     QCheck.Test.make ~count:10_000
