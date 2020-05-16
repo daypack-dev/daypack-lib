@@ -738,6 +738,18 @@ module Single_pattern = struct
           |> filter_using_matching_unix_times ~search_using_tz_offset_s t
             start)
 
+  let matching_unix_time_seq (search_param : search_param) (t : t) :
+    (int64 Seq.t, error) result =
+    matching_date_time_seq search_param t
+    |> Result.map (fun s ->
+        Seq.filter_map (fun x ->
+            match Time.unix_time_of_date_time x with
+            | Ok x -> Some x
+            | Error () -> None
+          )
+          s
+      )
+
   let matching_date_time_range_seq (search_param : search_param) (t : t) :
     (Time.date_time Range.range Seq.t, error) result =
     match
@@ -892,8 +904,14 @@ module Single_pattern = struct
             | Error () -> None
             | Ok x -> Some x ))
 
+  let next_match_date_time_range (search_param : search_param) (t : t) :
+    (Time.date_time Range.range option, error) result =
+    matching_date_time_range_seq search_param t
+    |> Result.map (fun s ->
+        match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x)
+
   let next_match_time_slot (search_param : search_param) (t : t) :
-    ((int64 * int64) option, error) result =
+    (Time_slot.t option, error) result =
     matching_time_slots search_param t
     |> Result.map (fun s ->
         match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x)
