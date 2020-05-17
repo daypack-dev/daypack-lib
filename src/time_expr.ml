@@ -511,8 +511,8 @@ module To_time_pattern_lossy = struct
       else raise (Invalid_time_expr (Printf.sprintf "Invalid second: ::%d" e))
 
     let time_range_pattern_of_second_range_expr_and_base_time_pattern
-        (e : Time_expr_ast.second_range_expr) (base : Time_pattern.time_pattern) :
-      Time_pattern.time_range_pattern =
+        (e : Time_expr_ast.second_range_expr) (base : Time_pattern.time_pattern)
+      : Time_pattern.time_range_pattern =
       match e with
       | `Range_inc (x, y) ->
         `Range_inc
@@ -524,7 +524,8 @@ module To_time_pattern_lossy = struct
             update_time_pattern_using_second_expr y base )
 
     let time_range_patterns_of_second_ranges_and_base_time_pattern
-        (l : Time_expr_ast.second_range_expr list) (base : Time_pattern.time_pattern) :
+        (l : Time_expr_ast.second_range_expr list)
+        (base : Time_pattern.time_pattern) :
       Time_pattern.time_range_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e ->
@@ -534,8 +535,8 @@ module To_time_pattern_lossy = struct
 
   module Minute_second = struct
     let update_time_pattern_using_minute_second_expr
-        (e : Time_expr_ast.minute_second_expr) (base : Time_pattern.time_pattern) :
-      Time_pattern.time_pattern =
+        (e : Time_expr_ast.minute_second_expr)
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       if Time.Check.check_minute_second ~minute:e.minute ~second:e.second then
         { base with minutes = [ e.minute ] }
       else
@@ -544,8 +545,8 @@ module To_time_pattern_lossy = struct
              (Printf.sprintf "Invalid minute second: :%d:%d" e.minute e.second))
 
     let time_range_pattern_of_minute_second_range_expr_and_base_time_pattern
-        (e : Time_expr_ast.minute_second_range_expr) (base : Time_pattern.time_pattern) :
-      Time_pattern.time_range_pattern =
+        (e : Time_expr_ast.minute_second_range_expr)
+        (base : Time_pattern.time_pattern) : Time_pattern.time_range_pattern =
       match e with
       | `Range_inc (x, y) ->
         `Range_inc
@@ -558,7 +559,8 @@ module To_time_pattern_lossy = struct
 
     let time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
         (l : Time_expr_ast.minute_second_range_expr list)
-        (base : Time_pattern.time_pattern) : Time_pattern.time_range_pattern Seq.t =
+        (base : Time_pattern.time_pattern) :
+      Time_pattern.time_range_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e ->
           time_range_pattern_of_minute_second_range_expr_and_base_time_pattern
@@ -567,8 +569,8 @@ module To_time_pattern_lossy = struct
 
   module Hour_minute_second = struct
     let update_time_pattern_using_hour_minute_second_expr
-        (e : Time_expr_ast.hour_minute_second_expr) (base : Time_pattern.time_pattern) :
-      Time_pattern.time_pattern =
+        (e : Time_expr_ast.hour_minute_second_expr)
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       if
         Time.Check.check_hour_minute_second ~hour:e.hour ~minute:e.minute
           ~second:e.second
@@ -593,7 +595,8 @@ module To_time_pattern_lossy = struct
 
     let time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
         (l : Time_expr_ast.hour_minute_second_range_expr list)
-        (base : Time_pattern.time_pattern) : Time_pattern.time_range_pattern Seq.t =
+        (base : Time_pattern.time_pattern) :
+      Time_pattern.time_range_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e ->
           time_range_pattern_of_hour_minute_second_range_expr_and_base_time_pattern

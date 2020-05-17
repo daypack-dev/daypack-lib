@@ -64,7 +64,8 @@ module Check : sig
 end
 
 module Single_pattern : sig
-  val matching_unix_times : search_param -> time_pattern -> (int64 Seq.t, error) result
+  val matching_unix_times :
+    search_param -> time_pattern -> (int64 Seq.t, error) result
 
   val matching_time_slots :
     search_param -> time_pattern -> (Time_slot.t Seq.t, error) result
@@ -78,7 +79,8 @@ module Single_pattern : sig
   val next_match_date_time :
     search_param -> time_pattern -> (Time.date_time option, error) result
 
-  val next_match_unix_time : search_param -> time_pattern -> (int64 option, error) result
+  val next_match_unix_time :
+    search_param -> time_pattern -> (int64 option, error) result
 
   val next_match_time_slot :
     search_param -> time_pattern -> ((int64 * int64) option, error) result
