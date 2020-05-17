@@ -64,15 +64,15 @@ val date_time_of_ptime_date_time :
 
 val ptime_date_time_of_date_time : date_time -> Ptime.date * Ptime.time
 
-val unix_time_of_date_time : date_time -> (int64, unit) result
+val unix_second_of_date_time : date_time -> (int64, unit) result
 
-val date_time_of_unix_time :
+val date_time_of_unix_second :
   tz_offset_s_of_date_time:tz_offset_s option ->
   int64 ->
   (date_time, unit) result
 
 module Check : sig
-  val check_unix_time : int64 -> bool
+  val check_unix_second : int64 -> bool
 
   val check_second : second:int -> bool
 
@@ -121,9 +121,9 @@ val weekday_ge : weekday -> weekday -> bool
 
 val zero_tm_sec : Unix.tm -> Unix.tm
 
-(* val tm_of_unix_time : time_zone_of_tm:time_zone -> int64 -> Unix.tm
+(* val tm_of_unix_second : time_zone_of_tm:time_zone -> int64 -> Unix.tm
 
-   val unix_time_of_tm : time_zone_of_tm:time_zone -> Unix.tm -> int64
+   val unix_second_of_tm : time_zone_of_tm:time_zone -> Unix.tm -> int64
 
    val normalize_tm : Unix.tm -> Unix.tm
 
@@ -160,7 +160,7 @@ module Month_ranges : Ranges.S with type t := month
 module Year_ranges : Ranges.S with type t := int
 
 module Current : sig
-  val cur_unix_time : unit -> int64
+  val cur_unix_second : unit -> int64
 
   val cur_date_time :
     tz_offset_s_of_date_time:tz_offset_s option -> (date_time, unit) result
@@ -177,7 +177,7 @@ module Of_string : sig
 end
 
 module Add : sig
-  val add_days_unix_time : days:int -> int64 -> int64
+  val add_days_unix_second : days:int -> int64 -> int64
 end
 
 module Serialize : sig
@@ -198,7 +198,7 @@ module To_string : sig
   (* val yyyymondd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result *)
   val yyyymondd_hhmmss_string_of_date_time : date_time -> string
 
-  val yyyymondd_hhmmss_string_of_unix_time :
+  val yyyymondd_hhmmss_string_of_unix_second :
     display_using_tz_offset_s:tz_offset_s option ->
     int64 ->
     (string, unit) result
@@ -206,7 +206,7 @@ module To_string : sig
   (* val yyyymmdd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result *)
   val yyyymmdd_hhmmss_string_of_date_time : date_time -> string
 
-  val yyyymmdd_hhmmss_string_of_unix_time :
+  val yyyymmdd_hhmmss_string_of_unix_second :
     display_using_tz_offset_s:tz_offset_s option ->
     int64 ->
     (string, unit) result
@@ -214,7 +214,7 @@ module To_string : sig
   (* val yyyymondd_hhmm_string_of_tm : Unix.tm -> (string, unit) result *)
   val yyyymondd_hhmm_string_of_date_time : date_time -> string
 
-  val yyyymondd_hhmm_string_of_unix_time :
+  val yyyymondd_hhmm_string_of_unix_second :
     display_using_tz_offset_s:tz_offset_s option ->
     int64 ->
     (string, unit) result
@@ -222,7 +222,7 @@ module To_string : sig
   (* val yyyymmdd_hhmm_string_of_tm : Unix.tm -> (string, unit) result *)
   val yyyymmdd_hhmm_string_of_date_time : date_time -> string
 
-  val yyyymmdd_hhmm_string_of_unix_time :
+  val yyyymmdd_hhmm_string_of_unix_second :
     display_using_tz_offset_s:tz_offset_s option ->
     int64 ->
     (string, unit) result

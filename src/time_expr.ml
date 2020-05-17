@@ -665,12 +665,12 @@ module To_time_pattern_lossy = struct
   end
 
   module Unix_times = struct
-    let update_time_pattern_using_unix_times (unix_times : int64 list)
+    let update_time_pattern_using_unix_seconds (unix_seconds : int64 list)
         (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
-      { base with unix_times }
+      { base with unix_seconds }
 
-    let time_pattern_of_unix_times l =
-      update_time_pattern_using_unix_times l Time_pattern.empty
+    let time_pattern_of_unix_seconds l =
+      update_time_pattern_using_unix_seconds l Time_pattern.empty
   end
 
   let time_pattern_of_unbounded_time_points_expr
@@ -686,7 +686,7 @@ module To_time_pattern_lossy = struct
         Ok
           ( match e with
             | Tpe_name _ -> failwith "Unexpected case"
-            | Tpe_unix_times l -> Unix_times.time_pattern_of_unix_times l
+            | Tpe_unix_seconds l -> Unix_times.time_pattern_of_unix_seconds l
             | Year_month_day_hour_minute_second
                 { year; month; month_day; hour_minute_second } ->
               Time_pattern.empty
@@ -929,7 +929,7 @@ module To_time_pattern_lossy = struct
 end
 
 module Time_points_expr = struct
-  let next_match_unix_time ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+  let next_match_unix_second ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (search_param : search_param) (e : Time_expr_ast.time_points_expr) :
     (int64 option, string) result =
     match
@@ -938,10 +938,10 @@ module Time_points_expr = struct
     with
     | Error msg -> Error msg
     | Ok pat ->
-      Time_pattern.Single_pattern.next_match_unix_time search_param pat
+      Time_pattern.Single_pattern.next_match_unix_second search_param pat
       |> Result.map_error Time_pattern.To_string.string_of_error
 
-  let matching_unix_times ?(force_bound : Time_expr_ast.bound option)
+  let matching_unix_seconds ?(force_bound : Time_expr_ast.bound option)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (search_param : search_param)
       ((bound, e) : Time_expr_ast.time_points_expr) :
@@ -960,7 +960,7 @@ module Time_points_expr = struct
             let selector =
               match e with
               | Tpe_name _ -> failwith "Unexpected case"
-              | Tpe_unix_times l -> OSeq.take (List.length l)
+              | Tpe_unix_seconds l -> OSeq.take (List.length l)
               | Year_month_day_hour_minute_second _
               | Month_day_hour_minute_second _ | Day_hour_minute_second _
               | Hour_minute_second _ | Minute_second _ | Second _ -> (
@@ -1017,15 +1017,15 @@ module Time_slots_expr = struct
     in
     s
     |> Seq.map (fun (x, y) ->
-        ( Time.date_time_of_unix_time ~tz_offset_s_of_date_time x
+        ( Time.date_time_of_unix_second ~tz_offset_s_of_date_time x
           |> Result.get_ok,
-          Time.date_time_of_unix_time ~tz_offset_s_of_date_time y
+          Time.date_time_of_unix_second ~tz_offset_s_of_date_time y
           |> Result.get_ok ))
     |> get_first_or_last_n_matches_of_same_month_date_time_pair_seq
       ~first_or_last ~n
     |> Seq.map (fun (x, y) ->
-        ( Time.unix_time_of_date_time x |> Result.get_ok,
-          Time.unix_time_of_date_time y |> Result.get_ok ))
+        ( Time.unix_second_of_date_time x |> Result.get_ok,
+          Time.unix_second_of_date_time y |> Result.get_ok ))
 
   let matching_time_slots ?(force_bound : Time_expr_ast.bound option)
       ?(f_resolve_tse_name = default_f_resolve_tse_name)

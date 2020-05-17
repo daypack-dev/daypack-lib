@@ -3,7 +3,7 @@ type search_param =
       search_using_tz_offset_s : Time.tz_offset_s option;
       time_slots : Time_slot.t list;
     }
-  | Years_ahead_start_unix_time of {
+  | Years_ahead_start_unix_second of {
       search_using_tz_offset_s : Time.tz_offset_s option;
       start : int64;
       search_years_ahead : int;
@@ -28,7 +28,7 @@ type time_pattern = {
   hours : int list;
   minutes : int list;
   seconds : int list;
-  unix_times : int64 list;
+  unix_seconds : int64 list;
 }
 
 type time_pattern_error =
@@ -37,7 +37,7 @@ type time_pattern_error =
   | Invalid_hours of int list
   | Invalid_minutes of int list
   | Invalid_seconds of int list
-  | Invalid_unix_times of int64 list
+  | Invalid_unix_seconds of int64 list
 
 type error =
   | Invalid_search_param of search_param_error
@@ -64,7 +64,7 @@ module Check : sig
 end
 
 module Single_pattern : sig
-  val matching_unix_times :
+  val matching_unix_seconds :
     search_param -> time_pattern -> (int64 Seq.t, error) result
 
   val matching_time_slots :
@@ -79,7 +79,7 @@ module Single_pattern : sig
   val next_match_date_time :
     search_param -> time_pattern -> (Time.date_time option, error) result
 
-  val next_match_unix_time :
+  val next_match_unix_second :
     search_param -> time_pattern -> (int64 option, error) result
 
   val next_match_time_slot :

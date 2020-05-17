@@ -159,12 +159,12 @@ let date_time_of_ptime_date_time
   | Ok month -> Ok { year; month; day; hour; minute; second; tz_offset_s }
   | Error () -> Error ()
 
-let unix_time_of_date_time (x : date_time) : (int64, unit) result =
+let unix_second_of_date_time (x : date_time) : (int64, unit) result =
   match Ptime.of_date_time (ptime_date_time_of_date_time x) with
   | None -> Error ()
   | Some x -> x |> Ptime.to_float_s |> Int64.of_float |> Result.ok
 
-let date_time_of_unix_time ~(tz_offset_s_of_date_time : tz_offset_s option)
+let date_time_of_unix_second ~(tz_offset_s_of_date_time : tz_offset_s option)
     (x : int64) : (date_time, unit) result =
   match Ptime.of_float_s (Int64.to_float x) with
   | None -> Error ()
@@ -185,8 +185,8 @@ let max =
   |> Result.get_ok
 
 module Check = struct
-  let check_unix_time (x : int64) : bool =
-    match date_time_of_unix_time ~tz_offset_s_of_date_time:None x with
+  let check_unix_second (x : int64) : bool =
+    match date_time_of_unix_second ~tz_offset_s_of_date_time:None x with
     | Ok _ -> true
     | Error () -> false
 
@@ -200,7 +200,7 @@ module Check = struct
     (0 <= hour && hour < 24) && check_minute_second ~minute ~second
 
   let check_date_time (x : date_time) : bool =
-    match unix_time_of_date_time x with Ok _ -> true | Error () -> false
+    match unix_second_of_date_time x with Ok _ -> true | Error () -> false
 end
 
 let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
@@ -221,7 +221,7 @@ let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
     tm_isdst = false;
    } *)
 
-(* let tm_of_unix_time ~(time_zone_of_tm : time_zone) (time : int64) : (Unix.tm, unit) result =
+(* let tm_of_unix_second ~(time_zone_of_tm : time_zone) (time : int64) : (Unix.tm, unit) result =
    let time = Int64.to_float time in
    match time_zone_of_tm with
    | `Local -> Ok (Unix.localtime time)
@@ -239,7 +239,7 @@ let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
       CalendarLib.Time_Zone.(UTC_Plus x)
     |> CalendarLib.Calendar.to_unixtm
 
-   let unix_time_of_tm ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
+   let unix_second_of_tm ~(time_zone_of_tm : time_zone) (tm : Unix.tm) : int64 =
    tm
    |> (fun x ->
       match time_zone_of_tm with
@@ -268,8 +268,8 @@ let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
     ~(to_time_zone : time_zone) (tm : Unix.tm) : Unix.tm =
    if from_time_zone = to_time_zone then tm
    else
-    let time = unix_time_of_tm ~time_zone_of_tm:from_time_zone tm in
-    tm_of_unix_time ~time_zone_of_tm:to_time_zone time *)
+    let time = unix_second_of_tm ~time_zone_of_tm:from_time_zone tm in
+    tm_of_unix_second ~time_zone_of_tm:to_time_zone time *)
 
 let is_leap_year ~year =
   assert (year > 0);
@@ -397,10 +397,10 @@ module Year_ranges = Ranges_small.Make (struct
   end)
 
 module Current = struct
-  let cur_unix_time () : int64 = Unix.time () |> Int64.of_float
+  let cur_unix_second () : int64 = Unix.time () |> Int64.of_float
 
   let cur_date_time ~tz_offset_s_of_date_time : (date_time, unit) result =
-    cur_unix_time () |> date_time_of_unix_time ~tz_offset_s_of_date_time
+    cur_unix_second () |> date_time_of_unix_second ~tz_offset_s_of_date_time
 
   let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
 
@@ -466,7 +466,7 @@ let compare_date_time (x : date_time) (y : date_time) : int =
   | n -> n
 
 module Add = struct
-  let add_days_unix_time ~(days : int) (x : int64) : int64 =
+  let add_days_unix_second ~(days : int) (x : int64) : int64 =
     Int64.add (Int64.mul (Int64.of_int days) day_to_second_multiplier) x
 end
 
@@ -523,10 +523,10 @@ module To_string = struct
     Printf.sprintf "%04d %s %02d %02d:%02d:%02d" x.year mon x.day x.hour
       x.minute x.second
 
-  let yyyymondd_hhmmss_string_of_unix_time
+  let yyyymondd_hhmmss_string_of_unix_second
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
     (string, unit) result =
-    date_time_of_unix_time ~tz_offset_s_of_date_time:display_using_tz_offset_s
+    date_time_of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
       time
     |> Result.map yyyymondd_hhmmss_string_of_date_time
 
@@ -545,10 +545,10 @@ module To_string = struct
     Printf.sprintf "%04d-%02d-%02d %02d:%02d:%02d" x.year mon x.day x.hour
       x.minute x.second
 
-  let yyyymmdd_hhmmss_string_of_unix_time
+  let yyyymmdd_hhmmss_string_of_unix_second
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
     (string, unit) result =
-    date_time_of_unix_time ~tz_offset_s_of_date_time:display_using_tz_offset_s
+    date_time_of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
       time
     |> Result.map yyyymmdd_hhmmss_string_of_date_time
 
@@ -567,10 +567,10 @@ module To_string = struct
     let mon = string_of_month x.month in
     Printf.sprintf "%04d %s %02d %02d:%02d" x.year mon x.day x.hour x.minute
 
-  let yyyymondd_hhmm_string_of_unix_time
+  let yyyymondd_hhmm_string_of_unix_second
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
     (string, unit) result =
-    date_time_of_unix_time ~tz_offset_s_of_date_time:display_using_tz_offset_s
+    date_time_of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
       time
     |> Result.map yyyymondd_hhmm_string_of_date_time
 
@@ -588,10 +588,10 @@ module To_string = struct
     let mon = human_int_of_month x.month in
     Printf.sprintf "%04d-%02d-%02d %02d:%02d" x.year mon x.day x.hour x.minute
 
-  let yyyymmdd_hhmm_string_of_unix_time
+  let yyyymmdd_hhmm_string_of_unix_second
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
     (string, unit) result =
-    date_time_of_unix_time ~tz_offset_s_of_date_time:display_using_tz_offset_s
+    date_time_of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
       time
     |> Result.map yyyymmdd_hhmm_string_of_date_time
 
@@ -599,7 +599,7 @@ module To_string = struct
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string
     =
     ( match
-        yyyymondd_hhmmss_string_of_unix_time ~display_using_tz_offset_s time
+        yyyymondd_hhmmss_string_of_unix_second ~display_using_tz_offset_s time
       with
       | Error () -> Debug_print.bprintf ~indent_level buffer "Invalid time\n"
       | Ok s -> Debug_print.bprintf ~indent_level buffer "%s\n" s );

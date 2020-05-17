@@ -271,7 +271,7 @@ let time_pattern_gen : Daypack_lib.Time_pattern.time_pattern QCheck.Gen.t =
          hours;
          minutes;
          seconds;
-         unix_times = [];
+         unix_seconds = [];
        })
     (quad
        (list_size (int_bound 5) (int_range 1980 2100))

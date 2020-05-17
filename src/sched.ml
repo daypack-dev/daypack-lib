@@ -4627,10 +4627,10 @@ module To_string = struct
       (fun (id, start, end_exc) ->
          Debug_print.bprintf ~indent_level:(indent_level + 2) buffer
            "%s - %s | %s\n"
-           ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+           ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_second
                ~display_using_tz_offset_s:None start
              |> Result.get_ok )
-           ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+           ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_second
                ~display_using_tz_offset_s:None end_exc
              |> Result.get_ok )
            (Task_.Id.string_of_task_seg_id id))

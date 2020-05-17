@@ -17,5 +17,5 @@ type time_pattern = {
   hours : int list;
   minutes : int list;
   seconds : int list;
-  unix_times : int64 list;
+  unix_seconds : int64 list;
 }
