@@ -1028,3 +1028,14 @@ let date_time_testable : (module Alcotest.TESTABLE) =
 
     let equal = ( = )
   end )
+
+let time_pattern_testable : (module Alcotest.TESTABLE) =
+  ( module struct
+    type t = Daypack_lib.Time_pattern.t
+
+    let pp =
+      Fmt.using Daypack_lib.Time_pattern.To_string.debug_string_of_time_pattern
+        Fmt.string
+
+    let equal = ( = )
+  end )
