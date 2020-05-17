@@ -29,7 +29,7 @@ and task_type =
 
 and recur_type =
   | Arithemtic_seq of arith_seq * recur_data
-  | Time_pattern_match of Time_pattern.t * recur_data
+  | Time_pattern_match of Time_pattern.time_pattern * recur_data
 
 and recur = {
   excluded_time_slots : Time_slot.t list;

@@ -1,4 +1,4 @@
-type time_pattern <ocaml from="Time_pattern" t="t"> = abstract
+type time_pattern <ocaml from="Time_pattern" t="time_pattern"> = abstract
 
 type period = (time_pattern * time_pattern)
 

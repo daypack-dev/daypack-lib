@@ -9,7 +9,7 @@ type days = [
   | Month_days of int list
 ]
 
-type t = {
+type time_pattern = {
   years : int list;
   months : month list;
   weekdays : weekday list;

@@ -258,7 +258,7 @@ let weekdays =
   QCheck.make ~print:Daypack_lib.Time_pattern.To_string.debug_string_of_weekdays
     weekdays_gen
 
-let time_pattern_gen : Daypack_lib.Time_pattern.t QCheck.Gen.t =
+let time_pattern_gen : Daypack_lib.Time_pattern.time_pattern QCheck.Gen.t =
   let open QCheck.Gen in
   map
     (fun (years, months, month_days, (weekdays, hours, minutes, seconds)) ->
@@ -1031,7 +1031,7 @@ let date_time_testable : (module Alcotest.TESTABLE) =
 
 let time_pattern_testable : (module Alcotest.TESTABLE) =
   ( module struct
-    type t = Daypack_lib.Time_pattern.t
+    type t = Daypack_lib.Time_pattern.time_pattern
 
     let pp =
       Fmt.using Daypack_lib.Time_pattern.To_string.debug_string_of_time_pattern

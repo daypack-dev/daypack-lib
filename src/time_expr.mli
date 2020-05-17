@@ -70,7 +70,7 @@ module To_time_pattern_lossy : sig
   val time_pattern_of_time_points_expr :
     ?f_resolve_tpe_name:f_resolve_tpe_name ->
     Time_expr_ast.time_points_expr ->
-    (Time_pattern.t, string) result
+    (Time_pattern.time_pattern, string) result
 
   val time_range_patterns_of_time_slots_expr :
     ?f_resolve_tse_name:f_resolve_tse_name ->
@@ -88,7 +88,7 @@ module To_time_pattern_lossy : sig
     ?f_resolve_tse_name:f_resolve_tse_name ->
     ?f_resolve_tpe_name:f_resolve_tpe_name ->
     Time_expr_ast.t ->
-    (Time_pattern.t, string) result
+    (Time_pattern.time_pattern, string) result
 
   val time_range_pattern_of_time_expr :
     ?f_resolve_tse_name:f_resolve_tse_name ->
