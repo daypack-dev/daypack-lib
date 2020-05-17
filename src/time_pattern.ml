@@ -650,8 +650,9 @@ module Matching_years = struct
 end
 
 module Matching_unix_seconds = struct
-  let matching_unix_seconds ~(search_using_tz_offset_s : Time.tz_offset_s option)
-      (t : time_pattern) (start : Time.date_time) : Time.Date_time_set.t =
+  let matching_unix_seconds
+      ~(search_using_tz_offset_s : Time.tz_offset_s option) (t : time_pattern)
+      (start : Time.date_time) : Time.Date_time_set.t =
     match Time.unix_second_of_date_time start with
     | Error () -> Time.Date_time_set.empty
     | Ok start ->
@@ -705,7 +706,8 @@ module Single_pattern = struct
       (t : time_pattern) start (s : Time.date_time Seq.t) : Time.date_time Seq.t
     =
     let matching_unix_seconds =
-      Matching_unix_seconds.matching_unix_seconds ~search_using_tz_offset_s t start
+      Matching_unix_seconds.matching_unix_seconds ~search_using_tz_offset_s t
+        start
     in
     if Time.Date_time_set.is_empty matching_unix_seconds then s
     else Seq.filter (fun x -> Time.Date_time_set.mem x matching_unix_seconds) s
