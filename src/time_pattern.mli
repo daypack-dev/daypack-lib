@@ -3,7 +3,7 @@ type search_param =
       search_using_tz_offset_s : Time.tz_offset_s option;
       time_slots : Time_slot.t list;
     }
-  | Years_ahead_start_unix_time of {
+  | Years_ahead_start_unix_second of {
       search_using_tz_offset_s : Time.tz_offset_s option;
       start : int64;
       search_years_ahead : int;
@@ -18,8 +18,9 @@ type search_param_error =
   | Invalid_start
   | Invalid_time_slots
   | Invalid_search_years_ahead
+  | Too_far_into_future
 
-type t = {
+type time_pattern = {
   years : int list;
   months : Time.month list;
   month_days : int list;
@@ -27,7 +28,7 @@ type t = {
   hours : int list;
   minutes : int list;
   seconds : int list;
-  unix_times : int64 list;
+  unix_seconds : int64 list;
 }
 
 type time_pattern_error =
@@ -36,52 +37,53 @@ type time_pattern_error =
   | Invalid_hours of int list
   | Invalid_minutes of int list
   | Invalid_seconds of int list
-  | Invalid_unix_times of int64 list
+  | Invalid_unix_seconds of int64 list
 
 type error =
   | Invalid_search_param of search_param_error
   | Invalid_time_pattern of time_pattern_error
 
-type time_range_pattern = t Range.range
+type time_range_pattern = time_pattern Range.range
 
 type single_or_ranges =
-  | Single_time_pattern of t
+  | Single_time_pattern of time_pattern
   | Time_range_patterns of time_range_pattern list
 
 val search_using_tz_offset_s_of_search_param :
   search_param -> Time.tz_offset_s option
 
-val empty : t
+val empty : time_pattern
 
 module Check : sig
   val check_search_param : search_param -> (unit, search_param_error) result
 
-  val check_time_pattern : t -> (unit, time_pattern_error) result
+  val check_time_pattern : time_pattern -> (unit, time_pattern_error) result
 
   val check_time_range_pattern :
     time_range_pattern -> (unit, time_pattern_error) result
 end
 
 module Single_pattern : sig
-  val matching_date_time_seq :
-    search_param -> t -> (Time.date_time Seq.t, error) result
+  val matching_unix_seconds :
+    search_param -> time_pattern -> (int64 Seq.t, error) result
 
   val matching_time_slots :
-    search_param -> t -> (Time_slot.t Seq.t, error) result
+    search_param -> time_pattern -> (Time_slot.t Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing :
-    search_param -> t list -> (Time_slot.t list Seq.t, error) result
+    search_param -> time_pattern list -> (Time_slot.t list Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing_flat :
-    search_param -> t list -> (Time_slot.t Seq.t, error) result
+    search_param -> time_pattern list -> (Time_slot.t Seq.t, error) result
 
   val next_match_date_time :
-    search_param -> t -> (Time.date_time option, error) result
+    search_param -> time_pattern -> (Time.date_time option, error) result
 
-  val next_match_unix_time : search_param -> t -> (int64 option, error) result
+  val next_match_unix_second :
+    search_param -> time_pattern -> (int64 option, error) result
 
   val next_match_time_slot :
-    search_param -> t -> ((int64 * int64) option, error) result
+    search_param -> time_pattern -> (Time_slot.t option, error) result
 end
 
 module Range_pattern : sig
@@ -89,7 +91,7 @@ module Range_pattern : sig
     search_param -> time_range_pattern -> (Time_slot.t Seq.t, error) result
 
   val next_match_time_slot :
-    search_param -> time_range_pattern -> ((int64 * int64) option, error) result
+    search_param -> time_range_pattern -> (Time_slot.t option, error) result
 
   val matching_time_slots_multi :
     search_param -> time_range_pattern list -> (Time_slot.t Seq.t, error) result
@@ -123,7 +125,7 @@ module Single_or_ranges : sig
 end
 
 module Equal : sig
-  val equal : t -> t -> bool
+  val equal : time_pattern -> time_pattern -> bool
 end
 
 module To_string : sig
@@ -134,7 +136,7 @@ module To_string : sig
   val debug_string_of_month_days : int list -> string
 
   val debug_string_of_time_pattern :
-    ?indent_level:int -> ?buffer:Buffer.t -> t -> string
+    ?indent_level:int -> ?buffer:Buffer.t -> time_pattern -> string
 
   val debug_string_of_time_range_pattern :
     ?indent_level:int -> ?buffer:Buffer.t -> time_range_pattern -> string
@@ -144,7 +146,7 @@ module To_string : sig
 end
 
 module Print : sig
-  val debug_print_time_pattern : ?indent_level:int -> t -> unit
+  val debug_print_time_pattern : ?indent_level:int -> time_pattern -> unit
 
   val debug_print_time_range_pattern :
     ?indent_level:int -> time_range_pattern -> unit
@@ -154,9 +156,9 @@ module Print : sig
 end
 
 module Serialize : sig
-  val pack_pattern : t -> Time_pattern_t.t
+  val pack_pattern : time_pattern -> Time_pattern_t.time_pattern
 end
 
 module Deserialize : sig
-  val unpack_pattern : Time_pattern_t.t -> t
+  val unpack_pattern : Time_pattern_t.time_pattern -> time_pattern
 end

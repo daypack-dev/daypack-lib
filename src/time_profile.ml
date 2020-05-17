@@ -1,4 +1,4 @@
-type period = Time_pattern.t * Time_pattern.t
+type period = Time_pattern.time_pattern * Time_pattern.time_pattern
 
 type data = { periods : period list }
 

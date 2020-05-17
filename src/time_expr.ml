@@ -506,13 +506,13 @@ end
 module To_time_pattern_lossy = struct
   module Second = struct
     let update_time_pattern_using_second_expr (e : Time_expr_ast.second_expr)
-        (base : Time_pattern.t) : Time_pattern.t =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       if Time.Check.check_second ~second:e then { base with seconds = [ e ] }
       else raise (Invalid_time_expr (Printf.sprintf "Invalid second: ::%d" e))
 
     let time_range_pattern_of_second_range_expr_and_base_time_pattern
-        (e : Time_expr_ast.second_range_expr) (base : Time_pattern.t) :
-      Time_pattern.time_range_pattern =
+        (e : Time_expr_ast.second_range_expr) (base : Time_pattern.time_pattern)
+      : Time_pattern.time_range_pattern =
       match e with
       | `Range_inc (x, y) ->
         `Range_inc
@@ -524,7 +524,8 @@ module To_time_pattern_lossy = struct
             update_time_pattern_using_second_expr y base )
 
     let time_range_patterns_of_second_ranges_and_base_time_pattern
-        (l : Time_expr_ast.second_range_expr list) (base : Time_pattern.t) :
+        (l : Time_expr_ast.second_range_expr list)
+        (base : Time_pattern.time_pattern) :
       Time_pattern.time_range_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e ->
@@ -534,8 +535,8 @@ module To_time_pattern_lossy = struct
 
   module Minute_second = struct
     let update_time_pattern_using_minute_second_expr
-        (e : Time_expr_ast.minute_second_expr) (base : Time_pattern.t) :
-      Time_pattern.t =
+        (e : Time_expr_ast.minute_second_expr)
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       if Time.Check.check_minute_second ~minute:e.minute ~second:e.second then
         { base with minutes = [ e.minute ] }
       else
@@ -544,8 +545,8 @@ module To_time_pattern_lossy = struct
              (Printf.sprintf "Invalid minute second: :%d:%d" e.minute e.second))
 
     let time_range_pattern_of_minute_second_range_expr_and_base_time_pattern
-        (e : Time_expr_ast.minute_second_range_expr) (base : Time_pattern.t) :
-      Time_pattern.time_range_pattern =
+        (e : Time_expr_ast.minute_second_range_expr)
+        (base : Time_pattern.time_pattern) : Time_pattern.time_range_pattern =
       match e with
       | `Range_inc (x, y) ->
         `Range_inc
@@ -558,7 +559,8 @@ module To_time_pattern_lossy = struct
 
     let time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
         (l : Time_expr_ast.minute_second_range_expr list)
-        (base : Time_pattern.t) : Time_pattern.time_range_pattern Seq.t =
+        (base : Time_pattern.time_pattern) :
+      Time_pattern.time_range_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e ->
           time_range_pattern_of_minute_second_range_expr_and_base_time_pattern
@@ -567,8 +569,8 @@ module To_time_pattern_lossy = struct
 
   module Hour_minute_second = struct
     let update_time_pattern_using_hour_minute_second_expr
-        (e : Time_expr_ast.hour_minute_second_expr) (base : Time_pattern.t) :
-      Time_pattern.t =
+        (e : Time_expr_ast.hour_minute_second_expr)
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       if
         Time.Check.check_hour_minute_second ~hour:e.hour ~minute:e.minute
           ~second:e.second
@@ -580,7 +582,7 @@ module To_time_pattern_lossy = struct
 
     let time_range_pattern_of_hour_minute_second_range_expr_and_base_time_pattern
         (e : Time_expr_ast.hour_minute_second_range_expr)
-        (base : Time_pattern.t) : Time_pattern.time_range_pattern =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_range_pattern =
       match e with
       | `Range_inc (x, y) ->
         `Range_inc
@@ -593,7 +595,8 @@ module To_time_pattern_lossy = struct
 
     let time_range_patterns_of_hour_minute_second_ranges_and_base_time_pattern
         (l : Time_expr_ast.hour_minute_second_range_expr list)
-        (base : Time_pattern.t) : Time_pattern.time_range_pattern Seq.t =
+        (base : Time_pattern.time_pattern) :
+      Time_pattern.time_range_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e ->
           time_range_pattern_of_hour_minute_second_range_expr_and_base_time_pattern
@@ -602,7 +605,7 @@ module To_time_pattern_lossy = struct
 
   module Month_day = struct
     let update_time_pattern_using_month_day_expr (x : int)
-        (base : Time_pattern.t) : Time_pattern.t =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       if 1 <= x && x <= 31 then { base with month_days = [ x ] }
       else
         raise (Invalid_time_expr (Printf.sprintf "Invalid day of month: %d" x))
@@ -611,28 +614,28 @@ module To_time_pattern_lossy = struct
       update_time_pattern_using_month_day_expr x Time_pattern.empty
 
     let time_patterns_of_month_days_and_base_time_pattern (l : int list)
-        (base : Time_pattern.t) : Time_pattern.t Seq.t =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e -> update_time_pattern_using_month_day_expr e base)
   end
 
   module Weekday = struct
     let update_time_pattern_using_weekday_expr (x : Time.weekday)
-        (base : Time_pattern.t) : Time_pattern.t =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       { base with weekdays = [ x ] }
 
     let time_pattern_of_weekday_expr x =
       update_time_pattern_using_weekday_expr x Time_pattern.empty
 
     let time_patterns_of_weekdays_and_base_time_pattern (l : Time.weekday list)
-        (base : Time_pattern.t) : Time_pattern.t Seq.t =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e -> update_time_pattern_using_weekday_expr e base)
   end
 
   module Day = struct
     let update_time_pattern_using_day_expr (e : Time_expr_ast.day_expr)
-        (base : Time_pattern.t) : Time_pattern.t =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       match e with
       | Month_day e -> Month_day.update_time_pattern_using_month_day_expr e base
       | Weekday e -> Weekday.update_time_pattern_using_weekday_expr e base
@@ -640,21 +643,21 @@ module To_time_pattern_lossy = struct
 
   module Month = struct
     let update_time_pattern_using_month_expr (e : Time_expr_ast.month_expr)
-        (base : Time_pattern.t) : Time_pattern.t =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       { base with months = [ e ] }
 
     let time_pattern_of_month_expr x =
       update_time_pattern_using_month_expr x Time_pattern.empty
 
     let time_patterns_of_months_and_base_time_pattern (l : Time.month list)
-        (base : Time_pattern.t) : Time_pattern.t Seq.t =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern Seq.t =
       List.to_seq l
       |> Seq.map (fun e -> update_time_pattern_using_month_expr e base)
   end
 
   module Year = struct
     let update_time_pattern_using_year_expr (e : Time_expr_ast.year_expr)
-        (base : Time_pattern.t) : Time_pattern.t =
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       { base with years = [ e ] }
 
     let time_pattern_of_year_expr x =
@@ -662,18 +665,18 @@ module To_time_pattern_lossy = struct
   end
 
   module Unix_times = struct
-    let update_time_pattern_using_unix_times (unix_times : int64 list)
-        (base : Time_pattern.t) : Time_pattern.t =
-      { base with unix_times }
+    let update_time_pattern_using_unix_seconds (unix_seconds : int64 list)
+        (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
+      { base with unix_seconds }
 
-    let time_pattern_of_unix_times l =
-      update_time_pattern_using_unix_times l Time_pattern.empty
+    let time_pattern_of_unix_seconds l =
+      update_time_pattern_using_unix_seconds l Time_pattern.empty
   end
 
   let time_pattern_of_unbounded_time_points_expr
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (e : Time_expr_ast.unbounded_time_points_expr) :
-    (Time_pattern.t, string) result =
+    (Time_pattern.time_pattern, string) result =
     try
       match
         Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e
@@ -683,7 +686,7 @@ module To_time_pattern_lossy = struct
         Ok
           ( match e with
             | Tpe_name _ -> failwith "Unexpected case"
-            | Tpe_unix_times l -> Unix_times.time_pattern_of_unix_times l
+            | Tpe_unix_seconds l -> Unix_times.time_pattern_of_unix_seconds l
             | Year_month_day_hour_minute_second
                 { year; month; month_day; hour_minute_second } ->
               Time_pattern.empty
@@ -722,7 +725,7 @@ module To_time_pattern_lossy = struct
   let time_pattern_of_time_points_expr
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       ((_, e) : Time_expr_ast.time_points_expr) :
-    (Time_pattern.t, string) result =
+    (Time_pattern.time_pattern, string) result =
     time_pattern_of_unbounded_time_points_expr ~f_resolve_tpe_name e
 
   let time_range_patterns_of_unbounded_time_slots_expr
@@ -884,7 +887,7 @@ module To_time_pattern_lossy = struct
   let time_pattern_of_time_expr
       ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name) (e : Time_expr_ast.t) :
-    (Time_pattern.t, string) result =
+    (Time_pattern.time_pattern, string) result =
     match
       single_or_ranges_of_time_expr ~f_resolve_tse_name ~f_resolve_tpe_name e
     with
@@ -926,7 +929,7 @@ module To_time_pattern_lossy = struct
 end
 
 module Time_points_expr = struct
-  let next_match_unix_time ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+  let next_match_unix_second ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (search_param : search_param) (e : Time_expr_ast.time_points_expr) :
     (int64 option, string) result =
     match
@@ -935,10 +938,10 @@ module Time_points_expr = struct
     with
     | Error msg -> Error msg
     | Ok pat ->
-      Time_pattern.Single_pattern.next_match_unix_time search_param pat
+      Time_pattern.Single_pattern.next_match_unix_second search_param pat
       |> Result.map_error Time_pattern.To_string.string_of_error
 
-  let matching_unix_times ?(force_bound : Time_expr_ast.bound option)
+  let matching_unix_seconds ?(force_bound : Time_expr_ast.bound option)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (search_param : search_param)
       ((bound, e) : Time_expr_ast.time_points_expr) :
@@ -957,7 +960,7 @@ module Time_points_expr = struct
             let selector =
               match e with
               | Tpe_name _ -> failwith "Unexpected case"
-              | Tpe_unix_times l -> OSeq.take (List.length l)
+              | Tpe_unix_seconds l -> OSeq.take (List.length l)
               | Year_month_day_hour_minute_second _
               | Month_day_hour_minute_second _ | Day_hour_minute_second _
               | Hour_minute_second _ | Minute_second _ | Second _ -> (
@@ -1014,15 +1017,15 @@ module Time_slots_expr = struct
     in
     s
     |> Seq.map (fun (x, y) ->
-        ( Time.date_time_of_unix_time ~tz_offset_s_of_date_time x
+        ( Time.date_time_of_unix_second ~tz_offset_s_of_date_time x
           |> Result.get_ok,
-          Time.date_time_of_unix_time ~tz_offset_s_of_date_time y
+          Time.date_time_of_unix_second ~tz_offset_s_of_date_time y
           |> Result.get_ok ))
     |> get_first_or_last_n_matches_of_same_month_date_time_pair_seq
       ~first_or_last ~n
     |> Seq.map (fun (x, y) ->
-        ( Time.unix_time_of_date_time x |> Result.get_ok,
-          Time.unix_time_of_date_time y |> Result.get_ok ))
+        ( Time.unix_second_of_date_time x |> Result.get_ok,
+          Time.unix_second_of_date_time y |> Result.get_ok ))
 
   let matching_time_slots ?(force_bound : Time_expr_ast.bound option)
       ?(f_resolve_tse_name = default_f_resolve_tse_name)

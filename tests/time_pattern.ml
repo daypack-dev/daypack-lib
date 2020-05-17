@@ -1,5 +1,7 @@
 open Test_utils
 
+module Alco = struct end
+
 module Qc = struct
   let unpack_is_inverse_of_pack_pattern =
     QCheck.Test.make ~count:5000 ~name:"unpack_is_inverse_of_pack_pattern"

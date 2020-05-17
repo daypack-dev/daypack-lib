@@ -700,50 +700,50 @@ let debug_sched_usage_simulation () =
    *   | Error () -> print_endline "Scheduling failed" ); *)
   print_newline ()
 
-let debug_time_pattern_matching_date_time_seq () =
-  print_endline "Debug print for Time_pattern.matching_date_time_seq";
-  let pattern =
-    let open Daypack_lib.Time_pattern in
-    {
-      years = [];
-      months = [ `Jun ];
-      month_days = [];
-      weekdays = [];
-      hours = [ 11 ];
-      minutes = [ 0 ];
-      seconds = [];
-      unix_times = [];
-    }
-  in
-  let search_years_ahead = 100 in
-  Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
-  let s =
-    Daypack_lib.Time_pattern.Single_pattern.matching_date_time_seq
-      (Years_ahead_start_unix_time
-         {
-           search_using_tz_offset_s = None;
-           start = Time.Current.cur_unix_time ();
-           search_years_ahead;
-         })
-      pattern
-    |> Result.get_ok
-  in
-  s
-  |> OSeq.take 10
-  |> OSeq.iteri (fun i x ->
-      Printf.printf "iter : %d\n" i;
-      print_endline "  =====";
-      Printf.printf "  %s\n"
-        (Time.To_string.yyyymondd_hhmmss_string_of_date_time x))
+(* let debug_time_pattern_matching_date_time_seq () =
+ *   print_endline "Debug print for Time_pattern.matching_date_time_seq";
+ *   let pattern =
+ *     let open Daypack_lib.Time_pattern in
+ *     {
+ *       years = [];
+ *       months = [ `Jun ];
+ *       month_days = [];
+ *       weekdays = [];
+ *       hours = [ 11 ];
+ *       minutes = [ 0 ];
+ *       seconds = [];
+ *       unix_seconds = [];
+ *     }
+ *   in
+ *   let search_years_ahead = 100 in
+ *   Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
+ *   let s =
+ *     Daypack_lib.Time_pattern.Single_pattern.matching_date_time_seq
+ *       (Years_ahead_start_unix_second
+ *          {
+ *            search_using_tz_offset_s = None;
+ *            start = Time.Current.cur_unix_second ();
+ *            search_years_ahead;
+ *          })
+ *       pattern
+ *     |> Result.get_ok
+ *   in
+ *   s
+ *   |> OSeq.take 10
+ *   |> OSeq.iteri (fun i x ->
+ *       Printf.printf "iter : %d\n" i;
+ *       print_endline "  =====";
+ *       Printf.printf "  %s\n"
+ *         (Time.To_string.yyyymondd_hhmmss_string_of_date_time x)) *)
 
 let debug_time_pattern_matching_time_slots () =
   print_endline "Debug print for Time_pattern.matching_time_slots";
   let date_time =
     Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
   in
-  let start = Time.unix_time_of_date_time date_time |> Result.get_ok in
+  let start = Time.unix_second_of_date_time date_time |> Result.get_ok in
   let end_exc =
-    Time.unix_time_of_date_time { date_time with year = date_time.year + 1 }
+    Time.unix_second_of_date_time { date_time with year = date_time.year + 1 }
     |> Result.get_ok
   in
   let time_slots = [ (start, end_exc) ] in
@@ -757,7 +757,7 @@ let debug_time_pattern_matching_time_slots () =
       hours = [ 13 ];
       minutes = [];
       seconds = [];
-      unix_times = [];
+      unix_seconds = [];
     }
   in
   Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
@@ -772,10 +772,10 @@ let debug_time_pattern_matching_time_slots () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_second
             ~display_using_tz_offset_s:None start
           |> Result.get_ok )
-        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_second
             ~display_using_tz_offset_s:None end_exc
           |> Result.get_ok ))
 
@@ -785,9 +785,9 @@ let debug_time_range_pattern_matching_time_slots () =
   let date_time =
     Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
   in
-  let start = Time.unix_time_of_date_time date_time |> Result.get_ok in
+  let start = Time.unix_second_of_date_time date_time |> Result.get_ok in
   let end_exc =
-    Time.unix_time_of_date_time { date_time with year = date_time.year + 1 }
+    Time.unix_second_of_date_time { date_time with year = date_time.year + 1 }
     |> Result.get_ok
   in
   let time_slots = [ (start, end_exc) ] in
@@ -802,7 +802,7 @@ let debug_time_range_pattern_matching_time_slots () =
         hours = [ 13 ];
         minutes = [];
         seconds = [];
-        unix_times = [];
+        unix_seconds = [];
       },
         {
           years = [];
@@ -812,7 +812,7 @@ let debug_time_range_pattern_matching_time_slots () =
           hours = [ 13 ];
           minutes = [];
           seconds = [];
-          unix_times = [];
+          unix_seconds = [];
         } )
   in
   Daypack_lib.Time_pattern.Print.debug_print_time_range_pattern pattern;
@@ -827,16 +827,16 @@ let debug_time_range_pattern_matching_time_slots () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_second
             ~display_using_tz_offset_s:None start
           |> Result.get_ok )
-        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_second
             ~display_using_tz_offset_s:None end_exc
           |> Result.get_ok ))
 
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
-  let start = Time.Current.cur_unix_time () in
+  let start = Time.Current.cur_unix_second () in
   let end_exc = Int64.add start (Int64.mul 10_000L 360L) in
   let periods =
     let open Time_pattern in
@@ -849,7 +849,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
         hours = [];
         minutes = [];
         seconds = [];
-        unix_times = [];
+        unix_seconds = [];
       },
         {
           years = [];
@@ -859,7 +859,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
           hours = [];
           minutes = [];
           seconds = [];
-          unix_times = [];
+          unix_seconds = [];
         } );
     ]
   in
@@ -869,10 +869,10 @@ let debug_time_profile_matching_time_slots_of_periods () =
   |> OSeq.iteri (fun i (start, end_exc) ->
       Printf.printf "iter : %d\n" i;
       Printf.printf "  [%s, %s)\n"
-        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_second
             ~display_using_tz_offset_s:None start
           |> Result.get_ok )
-        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_time
+        ( Time.To_string.yyyymmdd_hhmmss_string_of_unix_second
             ~display_using_tz_offset_s:None end_exc
           |> Result.get_ok ))
 
