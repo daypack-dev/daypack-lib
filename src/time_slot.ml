@@ -20,7 +20,7 @@ let to_string ((start, end_exc) : t) : string =
   Printf.sprintf "[%Ld, %Ld)" start end_exc
 
 module Check = struct
-  let is_valid ((start, end_exc) : t) : bool = 0L <= start && start <= end_exc
+  let is_valid ((start, end_exc) : t) : bool = start <= end_exc
 
   let is_not_empty ((start, end_exc) : t) : bool = start <> end_exc
 
