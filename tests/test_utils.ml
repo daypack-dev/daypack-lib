@@ -61,7 +61,11 @@ let nz_small_nat_gen = QCheck.Gen.(map (( + ) 1) small_nat)
 let nz_small_nat = QCheck.make nz_small_nat_gen
 
 let int64_bound_gen bound =
-  QCheck.Gen.(map (fun (pos, x) -> x |> min bound |> (fun x -> if pos then x else Int64.mul (-1L) x)) (pair bool ui64))
+  let open QCheck.Gen in
+  map
+    (fun (pos, x) ->
+       x |> min bound |> fun x -> if pos then x else Int64.mul (-1L) x)
+    (pair bool ui64)
 
 let pos_int64_bound_gen bound =
   QCheck.Gen.(map (fun x -> x |> max 0L |> min bound) ui64)
@@ -140,8 +144,7 @@ let tiny_sorted_time_slots_gen =
             (Some end_exc, (start, end_exc) :: acc))
          (None, [])
        |> fun (_, l) -> List.rev l)
-    (pair
-       (int64_bound_gen 10_000L)
+    (pair (int64_bound_gen 10_000L)
        (list_size (int_bound 5)
           (pair (pos_int64_bound_gen 20L) (pos_int64_bound_gen 20L))))
 
