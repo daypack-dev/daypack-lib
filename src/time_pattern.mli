@@ -83,7 +83,7 @@ module Single_pattern : sig
     search_param -> time_pattern -> (int64 option, error) result
 
   val next_match_time_slot :
-    search_param -> time_pattern -> ((int64 * int64) option, error) result
+    search_param -> time_pattern -> (Time_slot.t option, error) result
 end
 
 module Range_pattern : sig
