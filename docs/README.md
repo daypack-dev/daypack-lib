@@ -28,5 +28,10 @@ Refer to the library documentation for information on individual types and funct
 
 - [Schedule](sched.md)
 
-  - Schedule implementation providing general bookkeeping of task, task instances,
-    task segments
+  - Schedule implementation which provides:
+  
+    - General bookkeeping of task, task instances, task segments, progress tracking
+    
+    - Scheduling requests (essentially time constraints)
+    
+    - Time based indexing of scheduled items, allowing efficient viewing of a "slice" of the agenda
