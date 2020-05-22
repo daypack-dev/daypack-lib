@@ -31,9 +31,9 @@ module Check : sig
 end
 
 module Serialize : sig
-  val pack_time_slot : int64 * int64 -> (int32 * int32) * (int32 * int32)
+  val pack_time_seg : int64 * int64 -> (int32 * int32) * (int32 * int32)
 end
 
 module Deserialize : sig
-  val unpack_time_slot : (int32 * int32) * (int32 * int32) -> int64 * int64
+  val unpack_time_seg : (int32 * int32) * (int32 * int32) -> int64 * int64
 end

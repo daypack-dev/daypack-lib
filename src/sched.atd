@@ -12,7 +12,7 @@ type 'a set_diff <ocaml from="Set_utils" t="diff"> = abstract
 
 (* corresponds to Time_seg
 *)
-type time_slot <ocaml from="Time_seg"> = abstract
+type time_seg <ocaml from="Time_seg"> = abstract
 
 (* corresponds to Sched_req_data_unit_skeleton
 *)
@@ -135,7 +135,7 @@ type agenda = {
 }
 
 type agenda_diff = {
-  indexed_by_task_seg_id_diff : (task_seg_id, time_slot) diff;
+  indexed_by_task_seg_id_diff : (task_seg_id, time_seg) diff;
   indexed_by_start_diff : (int64, task_seg_id) diff_bucketed;
   indexed_by_end_exc_diff : (int64, task_seg_id) diff_bucketed;
 }

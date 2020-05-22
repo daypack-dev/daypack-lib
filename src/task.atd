@@ -1,6 +1,6 @@
 type int64 <ocaml from="Int64"> = abstract
 
-type time_slot <ocaml from="Time_seg"> = abstract
+type time_seg <ocaml from="Time_seg"> = abstract
 
 type time_pattern <ocaml from="Time_pattern" t="time_pattern"> = abstract
 
@@ -38,13 +38,13 @@ type recur_type = [
 ]
 
 type recur = {
-  excluded_time_slots : time_slot list;
+  excluded_time_segs : time_seg list;
   recur_type : recur_type;
 }
 
 type ('a, 'b, 'c) sched_req_data_unit_skeleton <ocaml from ="Sched_req_data_unit_skeleton"> = abstract
 
-type sched_req_template_data_unit = (task_seg_size, int64, time_slot) sched_req_data_unit_skeleton
+type sched_req_template_data_unit = (task_seg_size, int64, time_seg) sched_req_data_unit_skeleton
 
 type sched_req_template = sched_req_template_data_unit list
 

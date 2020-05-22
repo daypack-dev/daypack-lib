@@ -67,5 +67,5 @@ val single_task_seg_multi_even_splits :
   incre:int64 ->
   task_seg:Task.task_seg ->
   buckets:Time_seg.t list ->
-  usable_time_slots:Time_seg.t Seq.t ->
+  usable_time_segs:Time_seg.t Seq.t ->
   Task.task_seg_place list Seq.t

@@ -110,7 +110,7 @@ end
 module Qc = struct
   let slice_start =
     QCheck.Test.make ~count:10_000 ~name:"slice_start"
-      QCheck.(pair pos_int64 sorted_time_slots_maybe_gaps)
+      QCheck.(pair pos_int64 sorted_time_segs_maybe_gaps)
       (fun (start, l) ->
          l
          |> List.to_seq
@@ -120,7 +120,7 @@ module Qc = struct
 
   let slice_end_exc =
     QCheck.Test.make ~count:10_000 ~name:"slice_end_exc"
-      QCheck.(pair pos_int64 sorted_time_slots_maybe_gaps)
+      QCheck.(pair pos_int64 sorted_time_segs_maybe_gaps)
       (fun (end_exc, l) ->
          l
          |> List.to_seq
@@ -129,7 +129,7 @@ module Qc = struct
          |> List.for_all (fun (_, y) -> y <= end_exc))
 
   let normalize_pairs_are_fine =
-    QCheck.Test.make ~count:10_000 ~name:"normalize_pairs_are_fine" time_slots
+    QCheck.Test.make ~count:10_000 ~name:"normalize_pairs_are_fine" time_segs
       (fun l ->
          l
          |> List.to_seq
@@ -137,9 +137,9 @@ module Qc = struct
          |> List.of_seq
          |> List.for_all (fun (x, y) -> x <= y))
 
-  let normalize_time_slots_are_sorted =
-    QCheck.Test.make ~count:10_000 ~name:"normalize_time_slots_are_sorted"
-      time_slots (fun l ->
+  let normalize_time_segs_are_sorted =
+    QCheck.Test.make ~count:10_000 ~name:"normalize_time_segs_are_sorted"
+      time_segs (fun l ->
           l
           |> List.to_seq
           |> Daypack_lib.Time_segs.Normalize.normalize
@@ -155,9 +155,9 @@ module Qc = struct
             (true, None)
           |> fun (x, _) -> x)
 
-  let normalize_time_slots_are_unique =
-    QCheck.Test.make ~count:10_000 ~name:"normalize_time_slots_are_unique"
-      time_slots (fun l ->
+  let normalize_time_segs_are_unique =
+    QCheck.Test.make ~count:10_000 ~name:"normalize_time_segs_are_unique"
+      time_segs (fun l ->
           let l =
             l
             |> List.to_seq
@@ -166,9 +166,9 @@ module Qc = struct
           in
           List.length (List.sort_uniq compare l) = List.length l)
 
-  let normalize_time_slots_are_disjoint_with_gaps =
+  let normalize_time_segs_are_disjoint_with_gaps =
     QCheck.Test.make ~count:10_000
-      ~name:"normalize_time_slots_are_disjoint_with_gaps" time_slots (fun l ->
+      ~name:"normalize_time_segs_are_disjoint_with_gaps" time_segs (fun l ->
           l
           |> List.to_seq
           |> Daypack_lib.Time_segs.Normalize.normalize
@@ -182,20 +182,20 @@ module Qc = struct
             (true, None)
           |> fun (x, _) -> x)
 
-  let normalize_idempotent_wrt_normalized_time_slots =
+  let normalize_idempotent_wrt_normalized_time_segs =
     QCheck.Test.make ~count:10_000
-      ~name:"normalize_idempotent_wrt_normalized_time_slots"
-      sorted_time_slots_with_gaps (fun l ->
+      ~name:"normalize_idempotent_wrt_normalized_time_segs"
+      sorted_time_segs_with_gaps (fun l ->
           l
           |> List.to_seq
           |> Daypack_lib.Time_segs.Normalize.normalize
           |> List.of_seq
              = l)
 
-  let join_time_slots_are_disjoint_with_gaps =
+  let join_time_segs_are_disjoint_with_gaps =
     QCheck.Test.make ~count:10_000
-      ~name:"join_time_slots_are_disjoint_with_gaps"
-      sorted_time_slots_maybe_gaps (fun l ->
+      ~name:"join_time_segs_are_disjoint_with_gaps"
+      sorted_time_segs_maybe_gaps (fun l ->
           l
           |> List.to_seq
           |> Daypack_lib.Time_segs.join
@@ -209,14 +209,14 @@ module Qc = struct
             (true, None)
           |> fun (x, _) -> x)
 
-  let join_idempotent_wrt_joined_time_slots =
-    QCheck.Test.make ~count:10_000 ~name:"join_idempotent_wrt_joined_time_slots"
-      sorted_time_slots_with_gaps (fun l ->
+  let join_idempotent_wrt_joined_time_segs =
+    QCheck.Test.make ~count:10_000 ~name:"join_idempotent_wrt_joined_time_segs"
+      sorted_time_segs_with_gaps (fun l ->
           l |> List.to_seq |> Daypack_lib.Time_segs.join |> List.of_seq = l)
 
   let invert_disjoint_from_original =
     QCheck.Test.make ~count:10_000 ~name:"invert_disjoint_from_original"
-      QCheck.(triple pos_int64 pos_int64 sorted_time_slots_maybe_gaps)
+      QCheck.(triple pos_int64 pos_int64 sorted_time_segs_maybe_gaps)
       (fun (start, end_exc, l) ->
          QCheck.assume (start <= end_exc);
          let sliced =
@@ -238,7 +238,7 @@ module Qc = struct
 
   let invert_fit_gaps =
     QCheck.Test.make ~count:10_000 ~name:"invert_fit_gaps"
-      QCheck.(triple pos_int64 pos_int64 sorted_time_slots_maybe_gaps)
+      QCheck.(triple pos_int64 pos_int64 sorted_time_segs_maybe_gaps)
       (fun (start, end_exc, l) ->
          QCheck.assume (start < end_exc);
          let res =
@@ -261,7 +261,7 @@ module Qc = struct
   let relatvie_complement_result_disjoint_from_not_mem_of =
     QCheck.Test.make ~count:10_000
       ~name:"relative_complement_disjoint_from_not_mem_of"
-      QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
+      QCheck.(pair sorted_time_segs_maybe_gaps sorted_time_segs_maybe_gaps)
       (fun (mem_of, not_mem_of) ->
          let res =
            Daypack_lib.Time_segs.relative_complement
@@ -276,7 +276,7 @@ module Qc = struct
   let relatvie_complement_result_subset_of_mem_of =
     QCheck.Test.make ~count:10_000
       ~name:"relatvie_complement_result_subset_of_mem_of"
-      QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
+      QCheck.(pair sorted_time_segs_maybe_gaps sorted_time_segs_maybe_gaps)
       (fun (mem_of, not_mem_of) ->
          let res_s =
            Daypack_lib.Time_segs.relative_complement
@@ -289,7 +289,7 @@ module Qc = struct
 
   let relatvie_complement_self =
     QCheck.Test.make ~count:10_000 ~name:"relatvie_complement_self"
-      sorted_time_slots_maybe_gaps (fun l ->
+      sorted_time_segs_maybe_gaps (fun l ->
           let s = List.to_seq l in
           Daypack_lib.Time_segs.relative_complement ~not_mem_of:s s
           |> List.of_seq
@@ -297,14 +297,14 @@ module Qc = struct
 
   let intersect_with_self =
     QCheck.Test.make ~count:10_000 ~name:"intersect_with_self"
-      sorted_time_slots_maybe_gaps (fun l ->
+      sorted_time_segs_maybe_gaps (fun l ->
           let s = l |> List.to_seq in
           let res = Daypack_lib.Time_segs.intersect s s |> List.of_seq in
           l = res)
 
   let intersect_commutative =
     QCheck.Test.make ~count:10_000 ~name:"intersect_commutative"
-      QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
+      QCheck.(pair sorted_time_segs_maybe_gaps sorted_time_segs_maybe_gaps)
       (fun (l1, l2) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
@@ -315,8 +315,8 @@ module Qc = struct
   let intersect_associative =
     QCheck.Test.make ~count:10_000 ~name:"intersect_associative"
       QCheck.(
-        triple sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps
-          sorted_time_slots_maybe_gaps)
+        triple sorted_time_segs_maybe_gaps sorted_time_segs_maybe_gaps
+          sorted_time_segs_maybe_gaps)
       (fun (l1, l2, l3) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
@@ -333,14 +333,14 @@ module Qc = struct
 
   let union_with_self =
     QCheck.Test.make ~count:10_000 ~name:"union_with_self"
-      sorted_time_slots_with_gaps (fun l ->
+      sorted_time_segs_with_gaps (fun l ->
           let s = l |> List.to_seq in
           let res = Daypack_lib.Time_segs.Union.union s s |> List.of_seq in
           l = res)
 
   let union_commutative =
     QCheck.Test.make ~count:10_000 ~name:"union_commutative"
-      QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
+      QCheck.(pair sorted_time_segs_maybe_gaps sorted_time_segs_maybe_gaps)
       (fun (l1, l2) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
@@ -355,8 +355,8 @@ module Qc = struct
   let union_associative =
     QCheck.Test.make ~count:10_000 ~name:"union_associative"
       QCheck.(
-        triple sorted_time_slots_with_gaps sorted_time_slots_with_gaps
-          sorted_time_slots_with_gaps)
+        triple sorted_time_segs_with_gaps sorted_time_segs_with_gaps
+          sorted_time_segs_with_gaps)
       (fun (l1, l2, l3) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
@@ -374,8 +374,8 @@ module Qc = struct
   let intersect_union_distributive1 =
     QCheck.Test.make ~count:10_000 ~name:"intersect_union_distributive1"
       QCheck.(
-        triple sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps
-          sorted_time_slots_maybe_gaps)
+        triple sorted_time_segs_maybe_gaps sorted_time_segs_maybe_gaps
+          sorted_time_segs_maybe_gaps)
       (fun (l1, l2, l3) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
@@ -394,8 +394,8 @@ module Qc = struct
   let intersect_union_distributive2 =
     QCheck.Test.make ~count:10_000 ~name:"intersect_union_distributive2"
       QCheck.(
-        triple sorted_time_slots_with_gaps sorted_time_slots_maybe_gaps
-          sorted_time_slots_maybe_gaps)
+        triple sorted_time_segs_with_gaps sorted_time_segs_maybe_gaps
+          sorted_time_segs_maybe_gaps)
       (fun (l1, l2, l3) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
@@ -414,13 +414,13 @@ module Qc = struct
   let merge =
     QCheck.Test.make ~count:10_000 ~name:"merge"
       QCheck.(
-        pair sorted_time_slots_with_overlaps sorted_time_slots_with_overlaps)
+        pair sorted_time_segs_with_overlaps sorted_time_segs_with_overlaps)
       (fun (l1, l2) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
          let res1 = Daypack_lib.Time_segs.Merge.merge s1 s2 |> List.of_seq in
          let res2 =
-           Daypack_lib.Time_segs.Sort.sort_time_slots_list (l1 @ l2)
+           Daypack_lib.Time_segs.Sort.sort_time_segs_list (l1 @ l2)
          in
          res1 = res2)
 
@@ -429,12 +429,12 @@ module Qc = struct
       slice_start;
       slice_end_exc;
       normalize_pairs_are_fine;
-      normalize_time_slots_are_sorted;
-      normalize_time_slots_are_unique;
-      normalize_time_slots_are_disjoint_with_gaps;
-      normalize_idempotent_wrt_normalized_time_slots;
-      join_time_slots_are_disjoint_with_gaps;
-      join_idempotent_wrt_joined_time_slots;
+      normalize_time_segs_are_sorted;
+      normalize_time_segs_are_unique;
+      normalize_time_segs_are_disjoint_with_gaps;
+      normalize_idempotent_wrt_normalized_time_segs;
+      join_time_segs_are_disjoint_with_gaps;
+      join_idempotent_wrt_joined_time_segs;
       invert_disjoint_from_original;
       invert_fit_gaps;
       relatvie_complement_result_disjoint_from_not_mem_of;

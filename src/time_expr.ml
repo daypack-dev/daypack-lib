@@ -1,13 +1,13 @@
 type search_param = Time_pattern.search_param
 
 type f_resolve_tse_name =
-  string -> Time_expr_ast.unbounded_time_slots_expr option
+  string -> Time_expr_ast.unbounded_time_segs_expr option
 
 type f_resolve_tpe_name =
   string -> Time_expr_ast.unbounded_time_points_expr option
 
 let default_f_resolve_tse_name (_ : string) :
-  Time_expr_ast.unbounded_time_slots_expr option =
+  Time_expr_ast.unbounded_time_segs_expr option =
   None
 
 let default_f_resolve_tpe_name (_ : string) :
@@ -49,11 +49,11 @@ module Resolve = struct
     in
     aux f_resolve_tpe_name max_resolve_depth None e
 
-  let resolve_unbounded_time_slots_expr
+  let resolve_unbounded_time_segs_expr
       ~(f_resolve_tse_name : f_resolve_tse_name)
       ~(f_resolve_tpe_name : f_resolve_tpe_name)
-      (e : Time_expr_ast.unbounded_time_slots_expr) :
-    (Time_expr_ast.unbounded_time_slots_expr, string) result =
+      (e : Time_expr_ast.unbounded_time_segs_expr) :
+    (Time_expr_ast.unbounded_time_segs_expr, string) result =
     let rec aux f_resolve_tse_name f_resolve_tpe_name remaining_resolve_depth
         name e =
       if remaining_resolve_depth <= 0 then Error "Maximum resolve depth reached"
@@ -72,10 +72,10 @@ module Resolve = struct
                 aux f_resolve_tse_name f_resolve_tpe_name
                   (pred remaining_resolve_depth)
                   name e )
-        | Explicit_time_slots l -> (
+        | Explicit_time_segs l -> (
             try
               Ok
-                (Time_expr_ast.Explicit_time_slots
+                (Time_expr_ast.Explicit_time_segs
                    (List.map
                       (fun (start, end_exc) ->
                          match
@@ -375,7 +375,7 @@ module Of_string = struct
     let ts_name =
       string_ci "during:" *> ident_string >>| fun s -> Time_expr_ast.Tse_name s
 
-    let ts_explicit_time_slots =
+    let ts_explicit_time_segs =
       sep_by_comma1
         ( Time_points_expr.unbounded_time_points_expr
           >>= fun start ->
@@ -384,7 +384,7 @@ module Of_string = struct
           *> space
           *> Time_points_expr.unbounded_time_points_expr
           >>= fun end_exc -> return (start, end_exc) )
-      >>| fun l -> Time_expr_ast.Explicit_time_slots l
+      >>| fun l -> Time_expr_ast.Explicit_time_segs l
 
     let ts_days_hour_minute_second_ranges =
       Month_day.month_day_ranges_expr
@@ -466,11 +466,11 @@ module Of_string = struct
          .Years_and_months_and_month_days_and_hour_minute_second_ranges
            { years; months; month_days; hour_minute_second_ranges })
 
-    let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
+    let unbounded_time_segs_expr : Time_expr_ast.unbounded_time_segs_expr t =
       choice
         [
           ts_name;
-          ts_explicit_time_slots;
+          ts_explicit_time_segs;
           ts_days_hour_minute_second_ranges;
           ts_months_mdays_hour_minute_second;
           ts_months_wdays_hour_minute_second;
@@ -478,10 +478,10 @@ module Of_string = struct
           ts_years_months_mdays_hour_minute_second;
         ]
 
-    let time_slots_expr : Time_expr_ast.time_slots_expr t =
+    let time_segs_expr : Time_expr_ast.time_segs_expr t =
       bound
       >>= fun bound ->
-      space *> unbounded_time_slots_expr >>= fun e -> return (bound, e)
+      space *> unbounded_time_segs_expr >>= fun e -> return (bound, e)
   end
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
@@ -489,7 +489,7 @@ module Of_string = struct
       ( Time_points_expr.time_points_expr
         <* end_of_input
         >>| (fun e -> Time_expr_ast.Time_points_expr e)
-            <|> ( Time_segs_expr.time_slots_expr
+            <|> ( Time_segs_expr.time_segs_expr
                   <* end_of_input
                   >>| fun e -> Time_expr_ast.Time_segs_expr e ) )
       s
@@ -498,9 +498,9 @@ module Of_string = struct
     (Time_expr_ast.time_points_expr, string) result =
     parse_string ~consume:Consume.All Time_points_expr.time_points_expr s
 
-  let time_slots_expr_of_string (s : string) :
-    (Time_expr_ast.time_slots_expr, string) result =
-    parse_string ~consume:Consume.All Time_segs_expr.time_slots_expr s
+  let time_segs_expr_of_string (s : string) :
+    (Time_expr_ast.time_segs_expr, string) result =
+    parse_string ~consume:Consume.All Time_segs_expr.time_segs_expr s
 end
 
 module To_time_pattern_lossy = struct
@@ -728,14 +728,14 @@ module To_time_pattern_lossy = struct
     (Time_pattern.time_pattern, string) result =
     time_pattern_of_unbounded_time_points_expr ~f_resolve_tpe_name e
 
-  let time_range_patterns_of_unbounded_time_slots_expr
+  let time_range_patterns_of_unbounded_time_segs_expr
       ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-      (e : Time_expr_ast.unbounded_time_slots_expr) :
+      (e : Time_expr_ast.unbounded_time_segs_expr) :
     (Time_pattern.time_range_pattern list, string) result =
     try
       match
-        Resolve.resolve_unbounded_time_slots_expr ~f_resolve_tse_name
+        Resolve.resolve_unbounded_time_segs_expr ~f_resolve_tse_name
           ~f_resolve_tpe_name e
       with
       | Error msg -> Error msg
@@ -743,7 +743,7 @@ module To_time_pattern_lossy = struct
         Ok
           ( match e with
             | Tse_name _ -> failwith "Unexpected case"
-            | Explicit_time_slots l ->
+            | Explicit_time_segs l ->
               List.map
                 (fun (start, end_exc) ->
                    match
@@ -859,12 +859,12 @@ module To_time_pattern_lossy = struct
               |> List.of_seq )
     with Invalid_time_expr msg -> Error msg
 
-  let time_range_patterns_of_time_slots_expr
+  let time_range_patterns_of_time_segs_expr
       ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-      ((_, e) : Time_expr_ast.time_slots_expr) :
+      ((_, e) : Time_expr_ast.time_segs_expr) :
     (Time_pattern.time_range_pattern list, string) result =
-    time_range_patterns_of_unbounded_time_slots_expr ~f_resolve_tse_name
+    time_range_patterns_of_unbounded_time_segs_expr ~f_resolve_tse_name
       ~f_resolve_tpe_name e
 
   let single_or_ranges_of_time_expr
@@ -878,7 +878,7 @@ module To_time_pattern_lossy = struct
         | Error msg -> Error msg )
     | Time_expr_ast.Time_segs_expr e -> (
         match
-          time_range_patterns_of_time_slots_expr ~f_resolve_tse_name
+          time_range_patterns_of_time_segs_expr ~f_resolve_tse_name
             ~f_resolve_tpe_name e
         with
         | Ok x -> Ok (Time_range_patterns x)
@@ -969,7 +969,7 @@ module Time_points_expr = struct
                   | `Every -> fun x -> x )
             in
             match
-              Time_pattern.Single_pattern.matching_time_slots search_param pat
+              Time_pattern.Single_pattern.matching_time_segs search_param pat
             with
             | Error e -> Error (Time_pattern.To_string.string_of_error e)
             | Ok s -> s |> Seq.map (fun (x, _) -> x) |> selector |> Result.ok )
@@ -1027,13 +1027,13 @@ module Time_segs_expr = struct
         ( Time.unix_second_of_date_time x |> Result.get_ok,
           Time.unix_second_of_date_time y |> Result.get_ok ))
 
-  let matching_time_slots ?(force_bound : Time_expr_ast.bound option)
+  let matching_time_segs ?(force_bound : Time_expr_ast.bound option)
       ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-      (search_param : search_param) ((bound, e) : Time_expr_ast.time_slots_expr)
+      (search_param : search_param) ((bound, e) : Time_expr_ast.time_segs_expr)
     : (Time_seg.t Seq.t, string) result =
     match
-      Resolve.resolve_unbounded_time_slots_expr ~f_resolve_tse_name
+      Resolve.resolve_unbounded_time_segs_expr ~f_resolve_tse_name
         ~f_resolve_tpe_name e
     with
     | Error msg -> Error msg
@@ -1041,7 +1041,7 @@ module Time_segs_expr = struct
         let list_selector =
           match e with
           | Tse_name _ -> failwith "Unexpected case"
-          | Explicit_time_slots l -> (
+          | Explicit_time_segs l -> (
               match l with [] -> OSeq.take 0 | _ -> OSeq.take 1 )
           | Month_days_and_hour_minute_second_ranges _
           | Weekdays_and_hour_minute_second_ranges _
@@ -1059,7 +1059,7 @@ module Time_segs_expr = struct
         let flat_selector =
           match e with
           | Tse_name _ -> failwith "Unexpected case"
-          | Explicit_time_slots _ | Month_days_and_hour_minute_second_ranges _
+          | Explicit_time_segs _ | Month_days_and_hour_minute_second_ranges _
           | Weekdays_and_hour_minute_second_ranges _
           | Months_and_month_days_and_hour_minute_second_ranges _
           | Months_and_weekdays_and_hour_minute_second_ranges _
@@ -1077,14 +1077,14 @@ module Time_segs_expr = struct
                   ~n search_param )
         in
         match
-          To_time_pattern_lossy.time_range_patterns_of_unbounded_time_slots_expr
+          To_time_pattern_lossy.time_range_patterns_of_unbounded_time_segs_expr
             ~f_resolve_tse_name ~f_resolve_tpe_name e
         with
         | Error msg -> Error msg
         | Ok l -> (
             match
               Time_pattern.Range_pattern
-              .matching_time_slots_round_robin_non_decreasing search_param l
+              .matching_time_segs_round_robin_non_decreasing search_param l
             with
             | Error e -> Error (Time_pattern.To_string.string_of_error e)
             | Ok s ->
@@ -1094,12 +1094,12 @@ module Time_segs_expr = struct
               |> flat_selector
               |> Result.ok ) )
 
-  let next_match_time_slot ?(f_resolve_tse_name = default_f_resolve_tse_name)
+  let next_match_time_seg ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-      (search_param : search_param) (e : Time_expr_ast.time_slots_expr) :
+      (search_param : search_param) (e : Time_expr_ast.time_segs_expr) :
     ((int64 * int64) option, string) result =
     match
-      matching_time_slots ~f_resolve_tse_name ~f_resolve_tpe_name search_param e
+      matching_time_segs ~f_resolve_tse_name ~f_resolve_tpe_name search_param e
     with
     | Error msg -> Error msg
     | Ok seq -> (

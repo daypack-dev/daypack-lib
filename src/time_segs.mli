@@ -25,16 +25,16 @@ module Filter : sig
 end
 
 module Sort : sig
-  val sort_time_slots_list :
+  val sort_time_segs_list :
     ?skip_check:bool -> Time_seg.t list -> Time_seg.t list
 
-  val sort_time_slots :
+  val sort_time_segs :
     ?skip_check:bool -> Time_seg.t Seq.t -> Time_seg.t Seq.t
 
-  val sort_uniq_time_slots_list :
+  val sort_uniq_time_segs_list :
     ?skip_check:bool -> Time_seg.t list -> Time_seg.t list
 
-  val sort_uniq_time_slots :
+  val sort_uniq_time_segs :
     ?skip_check:bool -> Time_seg.t Seq.t -> Time_seg.t Seq.t
 end
 
@@ -163,11 +163,11 @@ val count_overlap :
   ?skip_check:bool -> Time_seg.t Seq.t -> (Time_seg.t * int) Seq.t
 
 module Serialize : sig
-  val pack_time_slots :
+  val pack_time_segs :
     (int64 * int64) list -> ((int32 * int32) * (int32 * int32)) list
 end
 
 module Deserialize : sig
-  val unpack_time_slots :
+  val unpack_time_segs :
     ((int32 * int32) * (int32 * int32)) list -> (int64 * int64) list
 end

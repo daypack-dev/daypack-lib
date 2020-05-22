@@ -5,20 +5,20 @@ let make_empty () : t = { profiles = String_map.empty }
 let of_profile_list profiles =
   { profiles = profiles |> List.to_seq |> String_map.of_seq }
 
-let matching_time_slots_of_profile =
+let matching_time_segs_of_profile =
   let cache : (string, Time_seg.t list) Hashtbl.t = Hashtbl.create 20 in
   fun ~start ~end_exc ~(profile : string) (t : t) ->
     ( match Hashtbl.find_opt cache profile with
       | None ->
         String_map.find_opt profile t.profiles
         |> Option.map (fun data ->
-            let time_slots =
-              Time_profile.matching_time_slots_of_data ~start ~end_exc data
+            let time_segs =
+              Time_profile.matching_time_segs_of_data ~start ~end_exc data
               |> List.of_seq
             in
-            Hashtbl.add cache profile time_slots;
-            time_slots)
-      | Some time_slots -> Some time_slots
+            Hashtbl.add cache profile time_segs;
+            time_segs)
+      | Some time_segs -> Some time_segs
                            : Time_seg.t list option )
 
 let add_profile ~(profile : string) (data : Time_profile.data) (t : t) : unit =

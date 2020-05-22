@@ -62,9 +62,9 @@ type month_weekday_mode =
   | First_n of int
   | Last_n of int
 
-type unbounded_time_slots_expr =
+type unbounded_time_segs_expr =
   | Tse_name of string
-  | Explicit_time_slots of
+  | Explicit_time_segs of
       (unbounded_time_points_expr * unbounded_time_points_expr) list
   | Month_days_and_hour_minute_second_ranges of {
       month_days : int Range.range list;
@@ -97,8 +97,8 @@ type unbounded_time_slots_expr =
       hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
 
-type time_slots_expr = bound * unbounded_time_slots_expr
+type time_segs_expr = bound * unbounded_time_segs_expr
 
 type t =
   | Time_points_expr of time_points_expr
-  | Time_segs_expr of time_slots_expr
+  | Time_segs_expr of time_segs_expr

@@ -19,22 +19,22 @@ type t = string * data
  *     )
  * |> OSeq.merge *)
 
-let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
+let matching_time_segs_of_periods ~start ~end_exc (periods : period list) :
   Time_seg.t Seq.t =
-  let time_slots = [ (start, end_exc) ] in
+  let time_segs = [ (start, end_exc) ] in
   periods
   |> List.to_seq
   |> Seq.map (fun (start_pat, end_exc_pat) ->
       let start_seq =
-        Time_pattern.Single_pattern.matching_time_slots
-          (Time_segs { search_using_tz_offset_s = None; time_slots })
+        Time_pattern.Single_pattern.matching_time_segs
+          (Time_segs { search_using_tz_offset_s = None; time_segs })
           start_pat
         |> Result.get_ok
         |> Seq.map (fun (x, _) -> x)
       in
       let end_exc_seq =
-        Time_pattern.Single_pattern.matching_time_slots
-          (Time_segs { search_using_tz_offset_s = None; time_slots })
+        Time_pattern.Single_pattern.matching_time_segs
+          (Time_segs { search_using_tz_offset_s = None; time_segs })
           end_exc_pat
         |> Result.get_ok
         |> Seq.map (fun (_, y) -> y)
@@ -42,13 +42,13 @@ let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
       OSeq.map2 (fun start end_exc -> (start, end_exc)) start_seq end_exc_seq)
   |> OSeq.merge
 
-let matching_time_slots_of_data ~start ~end_exc (data : data) :
+let matching_time_segs_of_data ~start ~end_exc (data : data) :
   Time_seg.t Seq.t =
-  matching_time_slots_of_periods ~start ~end_exc data.periods
+  matching_time_segs_of_periods ~start ~end_exc data.periods
 
-let matching_time_slots_of_profile ~start ~end_exc ((_id, data) : t) :
+let matching_time_segs_of_profile ~start ~end_exc ((_id, data) : t) :
   Time_seg.t Seq.t =
-  matching_time_slots_of_periods ~start ~end_exc data.periods
+  matching_time_segs_of_periods ~start ~end_exc data.periods
 
 module Equal = struct
   let period_equal ((pat11, pat12) : period) ((pat21, pat22) : period) : bool =

@@ -1,7 +1,7 @@
 type search_param = Time_pattern.search_param
 
 type f_resolve_tse_name =
-  string -> Time_expr_ast.unbounded_time_slots_expr option
+  string -> Time_expr_ast.unbounded_time_segs_expr option
 
 type f_resolve_tpe_name =
   string -> Time_expr_ast.unbounded_time_points_expr option
@@ -22,19 +22,19 @@ module Time_points_expr : sig
 end
 
 module Time_segs_expr : sig
-  val next_match_time_slot :
+  val next_match_time_seg :
     ?f_resolve_tse_name:f_resolve_tse_name ->
     ?f_resolve_tpe_name:f_resolve_tpe_name ->
     search_param ->
-    Time_expr_ast.time_slots_expr ->
+    Time_expr_ast.time_segs_expr ->
     ((int64 * int64) option, string) result
 
-  val matching_time_slots :
+  val matching_time_segs :
     ?force_bound:Time_expr_ast.bound ->
     ?f_resolve_tse_name:f_resolve_tse_name ->
     ?f_resolve_tpe_name:f_resolve_tpe_name ->
     search_param ->
-    Time_expr_ast.time_slots_expr ->
+    Time_expr_ast.time_segs_expr ->
     ((int64 * int64) Seq.t, string) result
 end
 
@@ -44,11 +44,11 @@ module Resolve : sig
     Time_expr_ast.unbounded_time_points_expr ->
     (Time_expr_ast.unbounded_time_points_expr, string) result
 
-  val resolve_unbounded_time_slots_expr :
+  val resolve_unbounded_time_segs_expr :
     f_resolve_tse_name:f_resolve_tse_name ->
     f_resolve_tpe_name:f_resolve_tpe_name ->
-    Time_expr_ast.unbounded_time_slots_expr ->
-    (Time_expr_ast.unbounded_time_slots_expr, string) result
+    Time_expr_ast.unbounded_time_segs_expr ->
+    (Time_expr_ast.unbounded_time_segs_expr, string) result
 end
 
 module To_string : sig
@@ -62,8 +62,8 @@ module Of_string : sig
   val time_points_expr_of_string :
     string -> (Time_expr_ast.time_points_expr, string) result
 
-  val time_slots_expr_of_string :
-    string -> (Time_expr_ast.time_slots_expr, string) result
+  val time_segs_expr_of_string :
+    string -> (Time_expr_ast.time_segs_expr, string) result
 end
 
 module To_time_pattern_lossy : sig
@@ -72,10 +72,10 @@ module To_time_pattern_lossy : sig
     Time_expr_ast.time_points_expr ->
     (Time_pattern.time_pattern, string) result
 
-  val time_range_patterns_of_time_slots_expr :
+  val time_range_patterns_of_time_segs_expr :
     ?f_resolve_tse_name:f_resolve_tse_name ->
     ?f_resolve_tpe_name:f_resolve_tpe_name ->
-    Time_expr_ast.time_slots_expr ->
+    Time_expr_ast.time_segs_expr ->
     (Time_pattern.time_range_pattern list, string) result
 
   val single_or_ranges_of_time_expr :

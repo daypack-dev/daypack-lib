@@ -8,53 +8,53 @@ let sched_req_template_data_unit_matches_sched_req_data_unit
         { task_seg_related_data = _id, size2; start = start2 } ) ->
     size1 = size2 && start1 = start2
   | ( Sched_req_data_unit_skeleton.Shift
-        { task_seg_related_data_list = sizes1; time_slots = time_slots1; _ },
+        { task_seg_related_data_list = sizes1; time_segs = time_segs1; _ },
       Sched_req_data_unit_skeleton.Shift
-        { task_seg_related_data_list = task_segs; time_slots = time_slots2; _ }
+        { task_seg_related_data_list = task_segs; time_segs = time_segs2; _ }
     )
   | ( Sched_req_data_unit_skeleton.Time_share
-        { task_seg_related_data_list = sizes1; time_slots = time_slots1; _ },
+        { task_seg_related_data_list = sizes1; time_segs = time_segs1; _ },
       Sched_req_data_unit_skeleton.Time_share
-        { task_seg_related_data_list = task_segs; time_slots = time_slots2; _ }
+        { task_seg_related_data_list = task_segs; time_segs = time_segs2; _ }
     ) ->
     let sizes2 = List.map (fun (_, size) -> size) task_segs in
     List.sort_uniq compare sizes1 = List.sort_uniq compare sizes2
-    && Time_segs.equal time_slots1 time_slots2
+    && Time_segs.equal time_segs1 time_segs2
   | ( Sched_req_data_unit_skeleton.Split_and_shift
-        { task_seg_related_data = size1; time_slots = time_slots1; _ },
+        { task_seg_related_data = size1; time_segs = time_segs1; _ },
       Sched_req_data_unit_skeleton.Split_and_shift
-        { task_seg_related_data = _id, size2; time_slots = time_slots2; _ } ) ->
-    size1 = size2 && Time_segs.equal time_slots1 time_slots2
+        { task_seg_related_data = _id, size2; time_segs = time_segs2; _ } ) ->
+    size1 = size2 && Time_segs.equal time_segs1 time_segs2
   | ( Sched_req_data_unit_skeleton.Split_even
         {
           task_seg_related_data = size1;
-          time_slots = time_slots1;
+          time_segs = time_segs1;
           buckets = buckets1;
         },
       Sched_req_data_unit_skeleton.Split_even
         {
           task_seg_related_data = _id, size2;
-          time_slots = time_slots2;
+          time_segs = time_segs2;
           buckets = buckets2;
         } ) ->
     size1 = size2
-    && Time_segs.equal time_slots1 time_slots2
+    && Time_segs.equal time_segs1 time_segs2
     && Time_segs.equal buckets1 buckets2
   | ( Push_toward
         {
           task_seg_related_data = size1;
           target = target1;
-          time_slots = time_slots1;
+          time_segs = time_segs1;
         },
       Push_toward
         {
           task_seg_related_data = _id, size2;
           target = target2;
-          time_slots = time_slots2;
+          time_segs = time_segs2;
         } ) ->
     target1 = target2
     && size1 = size2
-    && Time_segs.equal time_slots1 time_slots2
+    && Time_segs.equal time_segs1 time_segs2
   | _ -> false
 
 let sched_req_template_matches_sched_req_data
@@ -81,52 +81,52 @@ let sched_req_template_data_unit_matches_sched_req_record_data_unit
         { task_seg_related_data = _id, size2; start = start2 } ) ->
     size1 = size2 && start1 = start2
   | ( Sched_req_data_unit_skeleton.Shift
-        { task_seg_related_data_list = sizes1; time_slots = time_slots1 },
+        { task_seg_related_data_list = sizes1; time_segs = time_segs1 },
       Sched_req_data_unit_skeleton.Shift
-        { task_seg_related_data_list = task_segs; time_slots = time_slots2 } )
+        { task_seg_related_data_list = task_segs; time_segs = time_segs2 } )
   | ( Sched_req_data_unit_skeleton.Time_share
-        { task_seg_related_data_list = sizes1; time_slots = time_slots1 },
+        { task_seg_related_data_list = sizes1; time_segs = time_segs1 },
       Sched_req_data_unit_skeleton.Time_share
-        { task_seg_related_data_list = task_segs; time_slots = time_slots2 } )
+        { task_seg_related_data_list = task_segs; time_segs = time_segs2 } )
     ->
     let sizes2 = List.map (fun (_, size) -> size) task_segs in
     List.sort_uniq compare sizes1 = List.sort_uniq compare sizes2
-    && Time_segs.equal time_slots1 time_slots2
+    && Time_segs.equal time_segs1 time_segs2
   | ( Sched_req_data_unit_skeleton.Split_and_shift
-        { task_seg_related_data = size1; time_slots = time_slots1 },
+        { task_seg_related_data = size1; time_segs = time_segs1 },
       Sched_req_data_unit_skeleton.Split_and_shift
-        { task_seg_related_data = _id, size2; time_slots = time_slots2 } ) ->
-    size1 = size2 && Time_segs.equal time_slots1 time_slots2
+        { task_seg_related_data = _id, size2; time_segs = time_segs2 } ) ->
+    size1 = size2 && Time_segs.equal time_segs1 time_segs2
   | ( Sched_req_data_unit_skeleton.Split_even
         {
           task_seg_related_data = size1;
-          time_slots = time_slots1;
+          time_segs = time_segs1;
           buckets = buckets1;
         },
       Sched_req_data_unit_skeleton.Split_even
         {
           task_seg_related_data = _id, size2;
-          time_slots = time_slots2;
+          time_segs = time_segs2;
           buckets = buckets2;
         } ) ->
     size1 = size2
-    && Time_segs.equal time_slots1 time_slots2
+    && Time_segs.equal time_segs1 time_segs2
     && Time_segs.equal buckets1 buckets2
   | ( Push_toward
         {
           task_seg_related_data = size1;
           target = target1;
-          time_slots = time_slots1;
+          time_segs = time_segs1;
         },
       Push_toward
         {
           task_seg_related_data = _id, size2;
           target = target2;
-          time_slots = time_slots2;
+          time_segs = time_segs2;
         } ) ->
     target1 = target2
     && size1 = size2
-    && Time_segs.equal time_slots1 time_slots2
+    && Time_segs.equal time_segs1 time_segs2
   | _ -> false
 
 let sched_req_template_matches_sched_req_record_data

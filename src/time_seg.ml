@@ -54,13 +54,13 @@ let overlap_of_a_over_b ~(a : t) ~(b : t) : t option * t option * t option =
   else (None, Some (a_start, a_end_exc), Some (b_end_exc, a_end_exc))
 
 module Serialize = struct
-  let pack_time_slot (start, end_exc) =
+  let pack_time_seg (start, end_exc) =
     ( Misc_utils.int32_int32_of_int64 start,
       Misc_utils.int32_int32_of_int64 end_exc )
 end
 
 module Deserialize = struct
-  let unpack_time_slot (start, end_exc) =
+  let unpack_time_seg (start, end_exc) =
     ( Misc_utils.int64_of_int32_int32 start,
       Misc_utils.int64_of_int32_int32 end_exc )
 end
