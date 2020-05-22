@@ -322,10 +322,12 @@ module Qc = struct
          let s2 = l2 |> List.to_seq in
          let s3 = l3 |> List.to_seq in
          let inter1 =
-           Daypack_lib.Time_segments.(intersect (intersect s1 s2) s3) |> List.of_seq
+           Daypack_lib.Time_segments.(intersect (intersect s1 s2) s3)
+           |> List.of_seq
          in
          let inter2 =
-           Daypack_lib.Time_segments.(intersect s1 (intersect s2 s3)) |> List.of_seq
+           Daypack_lib.Time_segments.(intersect s1 (intersect s2 s3))
+           |> List.of_seq
          in
          inter1 = inter2)
 
@@ -342,8 +344,12 @@ module Qc = struct
       (fun (l1, l2) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
-         let inter1 = Daypack_lib.Time_segments.Union.union s1 s2 |> List.of_seq in
-         let inter2 = Daypack_lib.Time_segments.Union.union s2 s1 |> List.of_seq in
+         let inter1 =
+           Daypack_lib.Time_segments.Union.union s1 s2 |> List.of_seq
+         in
+         let inter2 =
+           Daypack_lib.Time_segments.Union.union s2 s1 |> List.of_seq
+         in
          inter1 = inter2)
 
   let union_associative =
@@ -413,7 +419,9 @@ module Qc = struct
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
          let res1 = Daypack_lib.Time_segments.Merge.merge s1 s2 |> List.of_seq in
-         let res2 = Daypack_lib.Time_segments.Sort.sort_time_slots_list (l1 @ l2) in
+         let res2 =
+           Daypack_lib.Time_segments.Sort.sort_time_slots_list (l1 @ l2)
+         in
          res1 = res2)
 
   let suite =

@@ -101,7 +101,9 @@ end
 
 module Round_robin : sig
   val collect_round_robin_non_decreasing :
-    ?skip_check:bool -> Time_segment.t Seq.t list -> Time_segment.t option list Seq.t
+    ?skip_check:bool ->
+    Time_segment.t Seq.t list ->
+    Time_segment.t option list Seq.t
 
   val merge_multi_seq_round_robin_non_decreasing :
     ?skip_check:bool -> Time_segment.t Seq.t Seq.t -> Time_segment.t Seq.t

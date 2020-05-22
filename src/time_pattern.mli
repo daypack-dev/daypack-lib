@@ -71,7 +71,9 @@ module Single_pattern : sig
     search_param -> time_pattern -> (Time_segment.t Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing :
-    search_param -> time_pattern list -> (Time_segment.t list Seq.t, error) result
+    search_param ->
+    time_pattern list ->
+    (Time_segment.t list Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing_flat :
     search_param -> time_pattern list -> (Time_segment.t Seq.t, error) result
@@ -94,7 +96,9 @@ module Range_pattern : sig
     search_param -> time_range_pattern -> (Time_segment.t option, error) result
 
   val matching_time_slots_multi :
-    search_param -> time_range_pattern list -> (Time_segment.t Seq.t, error) result
+    search_param ->
+    time_range_pattern list ->
+    (Time_segment.t Seq.t, error) result
 
   val next_match_time_slot_multi :
     search_param ->
@@ -107,7 +111,9 @@ module Range_pattern : sig
     (Time_segment.t list Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing_flat :
-    search_param -> time_range_pattern list -> (Time_segment.t Seq.t, error) result
+    search_param ->
+    time_range_pattern list ->
+    (Time_segment.t Seq.t, error) result
 end
 
 module Single_or_ranges : sig
@@ -118,7 +124,9 @@ module Single_or_ranges : sig
     search_param -> single_or_ranges -> (Time_segment.t option, error) result
 
   val matching_time_slots_round_robin_non_decreasing :
-    search_param -> single_or_ranges -> (Time_segment.t list Seq.t, error) result
+    search_param ->
+    single_or_ranges ->
+    (Time_segment.t list Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing_flat :
     search_param -> single_or_ranges -> (Time_segment.t Seq.t, error) result

@@ -188,7 +188,8 @@ let multi_task_segs_interleave ~interval_size ~(task_segs : Task.task_seg list)
       |> Int64.to_int
     in
     let time_slots_chunked =
-      Time_segments.chunk ~chunk_size:interval_size ~drop_partial:true time_slots
+      Time_segments.chunk ~chunk_size:interval_size ~drop_partial:true
+        time_slots
     in
     let task_segs =
       Seq_utils.zero_to_n_exc_int64 max_round_count
@@ -209,8 +210,8 @@ let multi_task_segs_interleave ~interval_size ~(task_segs : Task.task_seg list)
       task_segs time_slots_chunked
 
 let single_task_seg_multi_even_splits ~incre ~(task_seg : Task.task_seg)
-    ~(buckets : Time_segment.t list) ~(usable_time_slots : Time_segment.t Seq.t) :
-  Task.task_seg_place list Seq.t =
+    ~(buckets : Time_segment.t list) ~(usable_time_slots : Time_segment.t Seq.t)
+  : Task.task_seg_place list Seq.t =
   let rec aux task_seg_size n buckets =
     (* try to find maximum number of buckets to fit into *)
     if n = 0L then (None, [])
