@@ -231,8 +231,7 @@ let tiny_time_segs_gen =
     (list_size (int_bound 5)
        (pair (int64_bound_gen 10_000L) (pos_int64_bound_gen 20L)))
 
-let tiny_time_segs =
-  QCheck.make ~print:Print_utils.time_segs tiny_time_segs_gen
+let tiny_time_segs = QCheck.make ~print:Print_utils.time_segs tiny_time_segs_gen
 
 let time_segs_gen =
   let open QCheck.Gen in

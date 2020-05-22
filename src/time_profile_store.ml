@@ -19,7 +19,7 @@ let matching_time_segs_of_profile =
             Hashtbl.add cache profile time_segs;
             time_segs)
       | Some time_segs -> Some time_segs
-                           : Time_seg.t list option )
+                          : Time_seg.t list option )
 
 let add_profile ~(profile : string) (data : Time_profile.data) (t : t) : unit =
   t.profiles <- String_map.add profile data t.profiles

@@ -1,8 +1,7 @@
 let () =
   let alco_suites =
     [
-      ("Range.Alco", Range.Alco.suite);
-      ("Time_segs.Alco", Time_segs.Alco.suite);
+      ("Range.Alco", Range.Alco.suite); ("Time_segs.Alco", Time_segs.Alco.suite);
     ]
   in
   let qc_suites =

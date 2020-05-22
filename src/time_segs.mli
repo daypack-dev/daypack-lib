@@ -28,8 +28,7 @@ module Sort : sig
   val sort_time_segs_list :
     ?skip_check:bool -> Time_seg.t list -> Time_seg.t list
 
-  val sort_time_segs :
-    ?skip_check:bool -> Time_seg.t Seq.t -> Time_seg.t Seq.t
+  val sort_time_segs : ?skip_check:bool -> Time_seg.t Seq.t -> Time_seg.t Seq.t
 
   val sort_uniq_time_segs_list :
     ?skip_check:bool -> Time_seg.t list -> Time_seg.t list
@@ -87,10 +86,7 @@ val relative_complement :
 
 module Merge : sig
   val merge :
-    ?skip_check:bool ->
-    Time_seg.t Seq.t ->
-    Time_seg.t Seq.t ->
-    Time_seg.t Seq.t
+    ?skip_check:bool -> Time_seg.t Seq.t -> Time_seg.t Seq.t -> Time_seg.t Seq.t
 
   val merge_multi_seq :
     ?skip_check:bool -> Time_seg.t Seq.t Seq.t -> Time_seg.t Seq.t
@@ -101,9 +97,7 @@ end
 
 module Round_robin : sig
   val collect_round_robin_non_decreasing :
-    ?skip_check:bool ->
-    Time_seg.t Seq.t list ->
-    Time_seg.t option list Seq.t
+    ?skip_check:bool -> Time_seg.t Seq.t list -> Time_seg.t option list Seq.t
 
   val merge_multi_seq_round_robin_non_decreasing :
     ?skip_check:bool -> Time_seg.t Seq.t Seq.t -> Time_seg.t Seq.t
@@ -113,17 +107,11 @@ module Round_robin : sig
 end
 
 val intersect :
-  ?skip_check:bool ->
-  Time_seg.t Seq.t ->
-  Time_seg.t Seq.t ->
-  Time_seg.t Seq.t
+  ?skip_check:bool -> Time_seg.t Seq.t -> Time_seg.t Seq.t -> Time_seg.t Seq.t
 
 module Union : sig
   val union :
-    ?skip_check:bool ->
-    Time_seg.t Seq.t ->
-    Time_seg.t Seq.t ->
-    Time_seg.t Seq.t
+    ?skip_check:bool -> Time_seg.t Seq.t -> Time_seg.t Seq.t -> Time_seg.t Seq.t
 
   val union_multi_seq :
     ?skip_check:bool -> Time_seg.t Seq.t Seq.t -> Time_seg.t Seq.t

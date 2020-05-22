@@ -360,8 +360,8 @@ module Maybe_append_to_head = struct
       t
 
   let sched ~start ~end_exc ~include_sched_reqs_starting_within_time_seg
-      ~include_sched_reqs_ending_within_time_seg ~up_to_sched_req_id_inc
-      (t : t) : (unit, unit) result * action_record =
+      ~include_sched_reqs_ending_within_time_seg ~up_to_sched_req_id_inc (t : t)
+    : (unit, unit) result * action_record =
     map_head
       (fun hd ->
          let sched_req_records, hd' =

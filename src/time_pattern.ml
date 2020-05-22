@@ -863,8 +863,7 @@ module Single_pattern = struct
           match search_param with
           | Time_segs { time_segs; _ } ->
             let time_segs =
-              time_segs
-              |> Time_segs.Normalize.normalize_list_in_seq_out
+              time_segs |> Time_segs.Normalize.normalize_list_in_seq_out
             in
             Some time_segs
           | _ -> None
@@ -1019,8 +1018,8 @@ module Single_or_ranges = struct
     | Time_range_patterns l ->
       Range_pattern.matching_time_segs_multi search_param l
 
-  let next_match_time_seg (search_param : search_param) (x : single_or_ranges)
-    : (Time_seg.t option, error) result =
+  let next_match_time_seg (search_param : search_param) (x : single_or_ranges) :
+    (Time_seg.t option, error) result =
     matching_time_segs search_param x
     |> Result.map (fun s ->
         match s () with
@@ -1035,8 +1034,8 @@ module Single_or_ranges = struct
       Single_pattern.matching_time_segs_round_robin_non_decreasing
         search_param [ pat ]
     | Time_range_patterns l ->
-      Range_pattern.matching_time_segs_round_robin_non_decreasing
-        search_param l
+      Range_pattern.matching_time_segs_round_robin_non_decreasing search_param
+        l
 
   let matching_time_segs_round_robin_non_decreasing_flat
       (search_param : search_param) (t : single_or_ranges) :

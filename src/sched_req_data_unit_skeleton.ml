@@ -58,8 +58,7 @@ let shift_time ~offset (t : ('a, int64, Time_seg.t) t) :
   | Fixed { task_seg_related_data; start } ->
     Fixed { task_seg_related_data; start = start +^ offset }
   | Shift x ->
-    Shift
-      { x with time_segs = Time_segs.shift_list ~offset x.time_segs }
+    Shift { x with time_segs = Time_segs.shift_list ~offset x.time_segs }
   | Split_and_shift x ->
     Split_and_shift
       { x with time_segs = Time_segs.shift_list ~offset x.time_segs }
@@ -71,8 +70,7 @@ let shift_time ~offset (t : ('a, int64, Time_seg.t) t) :
         buckets = Time_segs.shift_list ~offset x.buckets;
       }
   | Time_share x ->
-    Time_share
-      { x with time_segs = Time_segs.shift_list ~offset x.time_segs }
+    Time_share { x with time_segs = Time_segs.shift_list ~offset x.time_segs }
   | Push_toward x ->
     Push_toward
       {

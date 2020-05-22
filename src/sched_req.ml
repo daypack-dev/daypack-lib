@@ -5,10 +5,7 @@ type sched_req_id = int64
 type sched_req = sched_req_id * sched_req_data
 
 and sched_req_data_unit =
-  ( Task.task_seg_alloc_req,
-    int64,
-    Time_seg.t )
-    Sched_req_data_unit_skeleton.t
+  (Task.task_seg_alloc_req, int64, Time_seg.t) Sched_req_data_unit_skeleton.t
 
 and sched_req_data = sched_req_data_unit list
 
@@ -76,9 +73,8 @@ let sort_sched_req_record_list_by_flexibility_score
 
 let start_and_end_exc_bound_of_sched_req_or_record
     ((_id, req_record_data_unit_list) :
-       sched_req_id
-       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) :
-  (int64 * int64) option =
+       sched_req_id * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list)
+  : (int64 * int64) option =
   List.fold_left
     (fun acc req_record_data_unit ->
        let cur =
@@ -104,45 +100,40 @@ let start_and_end_exc_bound_of_sched_req_or_record
 
 let sched_req_or_record_before_time (x : int64)
     (sched_req_or_record :
-       sched_req_id
-       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
-  =
+       sched_req_id * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list)
+  : bool =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
   | Some (_, end_exc) -> end_exc < x
 
 let sched_req_or_record_after_time (x : int64)
     (sched_req_or_record :
-       sched_req_id
-       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
-  =
+       sched_req_id * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list)
+  : bool =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
   | Some (start, _) -> x < start
 
 let sched_req_or_record_fully_within_time_seg ~start ~end_exc
     (sched_req_or_record :
-       sched_req_id
-       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
-  =
+       sched_req_id * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list)
+  : bool =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
   | Some (start', end_exc') -> start <= start' && end_exc' <= end_exc
 
 let sched_req_or_record_starting_within_time_seg ~start ~end_exc
     (sched_req_or_record :
-       sched_req_id
-       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
-  =
+       sched_req_id * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list)
+  : bool =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
   | Some (start', _) -> start <= start' && start' < end_exc
 
 let sched_req_or_record_ending_within_time_seg ~start ~end_exc
     (sched_req_or_record :
-       sched_req_id
-       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
-  =
+       sched_req_id * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list)
+  : bool =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
   | Some (_, end_exc') -> start <= end_exc' && end_exc' < end_exc
@@ -199,8 +190,7 @@ module Serialize = struct
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:Task.Serialize.pack_task_seg
       ~pack_time:Misc_utils.int32_int32_of_int64
-      ~pack_time_seg:Time_seg.Serialize.pack_time_seg
-      sched_req_record_data
+      ~pack_time_seg:Time_seg.Serialize.pack_time_seg sched_req_record_data
 end
 
 module Deserialize = struct
@@ -214,8 +204,7 @@ module Deserialize = struct
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:Task.Deserialize.unpack_task_seg_alloc_req
       ~unpack_time:Misc_utils.int64_of_int32_int32
-      ~unpack_time_seg:Time_seg.Deserialize.unpack_time_seg
-      sched_req_data_unit
+      ~unpack_time_seg:Time_seg.Deserialize.unpack_time_seg sched_req_data_unit
 
   let rec unpack_sched_req_record (id, data) : sched_req_record =
     ( Misc_utils.int64_of_int32_int32 id,
@@ -240,8 +229,8 @@ module To_string = struct
           Printf.sprintf "task_id : %s, len : %Ld\n"
             (Task.Id.string_of_task_inst_id id)
             len)
-      ~string_of_time:Int64.to_string
-      ~string_of_time_seg:Time_seg.to_string req_data
+      ~string_of_time:Int64.to_string ~string_of_time_seg:Time_seg.to_string
+      req_data
 
   let debug_string_of_sched_req_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data =
@@ -268,8 +257,8 @@ module To_string = struct
           Printf.sprintf "task_seg_id : %s, len : %Ld\n"
             (Task.Id.string_of_task_seg_id id)
             len)
-      ~string_of_time:Int64.to_string
-      ~string_of_time_seg:Time_seg.to_string req_data
+      ~string_of_time:Int64.to_string ~string_of_time_seg:Time_seg.to_string
+      req_data
 
   let debug_string_of_sched_req_record_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_record_data_list =

@@ -5,22 +5,18 @@ exception Time_segs_are_not_sorted
 exception Time_segs_are_not_disjoint
 
 module Check = struct
-  let check_if_valid (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t
-    =
+  let check_if_valid (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     Seq.map Time_seg.Check.check_if_valid time_segs
 
-  let check_if_not_empty (time_segs : Time_seg.t Seq.t) :
-    Time_seg.t Seq.t =
+  let check_if_not_empty (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     Seq.map Time_seg.Check.check_if_not_empty time_segs
 
-  let check_if_sorted (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t
-    =
+  let check_if_sorted (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     Seq_utils.check_if_f_holds_for_immediate_neighbors ~f:Time_seg.le
       ~f_exn:(fun _ _ -> Time_segs_are_not_sorted)
       time_segs
 
-  let check_if_disjoint (time_segs : Time_seg.t Seq.t) :
-    Time_seg.t Seq.t =
+  let check_if_disjoint (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     Seq_utils.check_if_f_holds_for_immediate_neighbors
       ~f:(fun x y ->
           match Time_seg.overlap_of_a_over_b ~a:y ~b:x with
@@ -29,8 +25,7 @@ module Check = struct
       ~f_exn:(fun _ _ -> Time_segs_are_not_disjoint)
       time_segs
 
-  let check_if_normalized (time_segs : Time_seg.t Seq.t) :
-    Time_seg.t Seq.t =
+  let check_if_normalized (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     time_segs
     |> check_if_valid
     |> check_if_not_empty
@@ -39,25 +34,22 @@ module Check = struct
 end
 
 module Filter = struct
-  let filter_invalid (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t
-    =
+  let filter_invalid (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     Seq.filter Time_seg.Check.is_valid time_segs
 
-  let filter_invalid_list (time_segs : Time_seg.t list) :
-    Time_seg.t list =
+  let filter_invalid_list (time_segs : Time_seg.t list) : Time_seg.t list =
     List.filter Time_seg.Check.is_valid time_segs
 
   let filter_empty (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     Seq.filter Time_seg.Check.is_not_empty time_segs
 
-  let filter_empty_list (time_segs : Time_seg.t list) : Time_seg.t list
-    =
+  let filter_empty_list (time_segs : Time_seg.t list) : Time_seg.t list =
     List.filter Time_seg.Check.is_not_empty time_segs
 end
 
 module Sort = struct
-  let sort_time_segs_list ?(skip_check = false)
-      (time_segs : Time_seg.t list) : Time_seg.t list =
+  let sort_time_segs_list ?(skip_check = false) (time_segs : Time_seg.t list) :
+    Time_seg.t list =
     time_segs
     |> (fun l ->
         if skip_check then l
@@ -72,16 +64,16 @@ module Sort = struct
         else l |> List.to_seq |> Check.check_if_valid |> List.of_seq)
     |> List.sort_uniq Time_seg.compare
 
-  let sort_uniq_time_segs ?(skip_check = false)
-      (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
+  let sort_uniq_time_segs ?(skip_check = false) (time_segs : Time_seg.t Seq.t) :
+    Time_seg.t Seq.t =
     time_segs
     |> (fun s -> if skip_check then s else Check.check_if_valid s)
     |> List.of_seq
     |> List.sort_uniq Time_seg.compare
     |> List.to_seq
 
-  let sort_time_segs ?(skip_check = false) (time_segs : Time_seg.t Seq.t)
-    : Time_seg.t Seq.t =
+  let sort_time_segs ?(skip_check = false) (time_segs : Time_seg.t Seq.t) :
+    Time_seg.t Seq.t =
     time_segs
     |> (fun s -> if skip_check then s else Check.check_if_valid s)
     |> List.of_seq
@@ -132,8 +124,7 @@ module Normalize = struct
 end
 
 module Slice_internal = struct
-  let slice_start ~start (time_segs : Time_seg.t Seq.t) :
-    Time_seg.t Seq.t =
+  let slice_start ~start (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     let rec aux start time_segs =
       match time_segs () with
       | Seq.Nil -> Seq.empty
@@ -150,8 +141,7 @@ module Slice_internal = struct
     in
     aux start time_segs
 
-  let slice_end_exc ~end_exc (time_segs : Time_seg.t Seq.t) :
-    Time_seg.t Seq.t =
+  let slice_end_exc ~end_exc (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     let rec aux end_exc time_segs =
       match time_segs () with
       | Seq.Nil -> Seq.empty
@@ -171,8 +161,7 @@ module Slice_internal = struct
 end
 
 module Slice_rev_internal = struct
-  let slice_start ~start (time_segs : Time_seg.t Seq.t) :
-    Time_seg.t Seq.t =
+  let slice_start ~start (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     let rec aux acc start time_segs =
       match time_segs () with
       | Seq.Nil -> List.rev acc |> List.to_seq
@@ -189,8 +178,7 @@ module Slice_rev_internal = struct
     in
     aux [] start time_segs
 
-  let slice_end_exc ~end_exc (time_segs : Time_seg.t Seq.t) :
-    Time_seg.t Seq.t =
+  let slice_end_exc ~end_exc (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     let rec aux end_exc time_segs =
       match time_segs () with
       | Seq.Nil -> Seq.empty
@@ -246,9 +234,8 @@ module Slice = struct
     | Some end_exc -> Slice_rev_internal.slice_end_exc ~end_exc s
 end
 
-let relative_complement ?(skip_check = false)
-    ~(not_mem_of : Time_seg.t Seq.t) (mem_of : Time_seg.t Seq.t) :
-  Time_seg.t Seq.t =
+let relative_complement ?(skip_check = false) ~(not_mem_of : Time_seg.t Seq.t)
+    (mem_of : Time_seg.t Seq.t) : Time_seg.t Seq.t =
   let rec aux mem_of not_mem_of =
     match (mem_of (), not_mem_of ()) with
     | Seq.Nil, _ -> Seq.empty
@@ -257,9 +244,7 @@ let relative_complement ?(skip_check = false)
         Seq.Cons (not_mem_of_ts, not_mem_of_rest) ) -> (
         let mem_of () = Seq.Cons (mem_of_ts, mem_of_rest) in
         let not_mem_of () = Seq.Cons (not_mem_of_ts, not_mem_of_rest) in
-        match
-          Time_seg.overlap_of_a_over_b ~a:mem_of_ts ~b:not_mem_of_ts
-        with
+        match Time_seg.overlap_of_a_over_b ~a:mem_of_ts ~b:not_mem_of_ts with
         | None, None, None ->
           (* mem_of_ts is empty, drop mem_of_ts *)
           aux mem_of_rest not_mem_of
@@ -298,8 +283,8 @@ let relative_complement ?(skip_check = false)
   in
   aux mem_of not_mem_of
 
-let invert ?(skip_check = false) ~start ~end_exc
-    (time_segs : Time_seg.t Seq.t) : Time_seg.t Seq.t =
+let invert ?(skip_check = false) ~start ~end_exc (time_segs : Time_seg.t Seq.t)
+  : Time_seg.t Seq.t =
   relative_complement ~skip_check ~not_mem_of:time_segs
     (Seq.return (start, end_exc))
 
@@ -451,8 +436,7 @@ let chunk ?(skip_check = false) ?(drop_partial = false) ~chunk_size
   |> aux
 
 module Sum = struct
-  let sum_length ?(skip_check = false) (time_segs : Time_seg.t Seq.t) :
-    int64 =
+  let sum_length ?(skip_check = false) (time_segs : Time_seg.t Seq.t) : int64 =
     time_segs
     |> (fun s -> if skip_check then s else Check.check_if_valid s)
     |> Seq.fold_left (fun acc (start, end_exc) -> acc +^ (end_exc -^ start)) 0L
@@ -480,14 +464,12 @@ module Bound = struct
     time_segs |> List.to_seq |> min_start_and_max_end_exc ~skip_check
 end
 
-let shift_list ~offset (time_segs : Time_seg.t list) : Time_seg.t list
-  =
+let shift_list ~offset (time_segs : Time_seg.t list) : Time_seg.t list =
   List.map
     (fun (start, end_exc) -> (start +^ offset, end_exc +^ offset))
     time_segs
 
-let equal (time_segs1 : Time_seg.t list)
-    (time_segs2 : Time_seg.t list) : bool =
+let equal (time_segs1 : Time_seg.t list) (time_segs2 : Time_seg.t list) : bool =
   let time_segs1 =
     time_segs1 |> List.to_seq |> Normalize.normalize |> List.of_seq
   in
@@ -496,8 +478,7 @@ let equal (time_segs1 : Time_seg.t list)
   in
   time_segs1 = time_segs2
 
-let a_is_subset_of_b ~(a : Time_seg.t Seq.t) ~(b : Time_seg.t Seq.t) :
-  bool =
+let a_is_subset_of_b ~(a : Time_seg.t Seq.t) ~(b : Time_seg.t Seq.t) : bool =
   let inter = intersect a b |> List.of_seq in
   let a = List.of_seq a in
   a = inter
@@ -515,8 +496,8 @@ let count_overlap ?(skip_check = false) (time_segs : Time_seg.t Seq.t) :
     Merge.merge (flatten_buffer buffer) time_segs
   in
   let rec aux (cur : ((int64 * int64) * int) option)
-      (buffer : ((int64 * int64) * int) list)
-      (time_segs : Time_seg.t Seq.t) : (Time_seg.t * int) Seq.t =
+      (buffer : ((int64 * int64) * int) list) (time_segs : Time_seg.t Seq.t) :
+    (Time_seg.t * int) Seq.t =
     match time_segs () with
     | Seq.Nil -> (
         match buffer with

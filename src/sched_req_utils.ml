@@ -10,13 +10,12 @@ let sched_req_template_data_unit_matches_sched_req_data_unit
   | ( Sched_req_data_unit_skeleton.Shift
         { task_seg_related_data_list = sizes1; time_segs = time_segs1; _ },
       Sched_req_data_unit_skeleton.Shift
-        { task_seg_related_data_list = task_segs; time_segs = time_segs2; _ }
-    )
+        { task_seg_related_data_list = task_segs; time_segs = time_segs2; _ } )
   | ( Sched_req_data_unit_skeleton.Time_share
         { task_seg_related_data_list = sizes1; time_segs = time_segs1; _ },
       Sched_req_data_unit_skeleton.Time_share
-        { task_seg_related_data_list = task_segs; time_segs = time_segs2; _ }
-    ) ->
+        { task_seg_related_data_list = task_segs; time_segs = time_segs2; _ } )
+    ->
     let sizes2 = List.map (fun (_, size) -> size) task_segs in
     List.sort_uniq compare sizes1 = List.sort_uniq compare sizes2
     && Time_segs.equal time_segs1 time_segs2
@@ -87,8 +86,7 @@ let sched_req_template_data_unit_matches_sched_req_record_data_unit
   | ( Sched_req_data_unit_skeleton.Time_share
         { task_seg_related_data_list = sizes1; time_segs = time_segs1 },
       Sched_req_data_unit_skeleton.Time_share
-        { task_seg_related_data_list = task_segs; time_segs = time_segs2 } )
-    ->
+        { task_seg_related_data_list = task_segs; time_segs = time_segs2 } ) ->
     let sizes2 = List.map (fun (_, size) -> size) task_segs in
     List.sort_uniq compare sizes1 = List.sort_uniq compare sizes2
     && Time_segs.equal time_segs1 time_segs2

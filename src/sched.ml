@@ -2140,8 +2140,7 @@ module Agenda = struct
       |> Seq.map (fun (time_seg, _) -> time_seg)
       |> Time_segs.Union.union (get_free_time_segs ~start ~end_exc sched)
 
-    let task_seg_place_count_in_time_seg ~start ~end_exc (sched : sched) : int
-      =
+    let task_seg_place_count_in_time_seg ~start ~end_exc (sched : sched) : int =
       let start = Some start in
       let end_exc = Some end_exc in
       let task_seg_places_in_range =
@@ -2236,8 +2235,7 @@ module Sched_req = struct
       in
       let starting_within, leftover =
         Sched_req_id_map.partition
-          (fun id data ->
-             f_starting_within_time_seg ~start ~end_exc (id, data))
+          (fun id data -> f_starting_within_time_seg ~start ~end_exc (id, data))
           leftover
       in
       let ending_within, outside =

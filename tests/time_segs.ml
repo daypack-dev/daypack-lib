@@ -193,8 +193,7 @@ module Qc = struct
              = l)
 
   let join_time_segs_are_disjoint_with_gaps =
-    QCheck.Test.make ~count:10_000
-      ~name:"join_time_segs_are_disjoint_with_gaps"
+    QCheck.Test.make ~count:10_000 ~name:"join_time_segs_are_disjoint_with_gaps"
       sorted_time_segs_maybe_gaps (fun l ->
           l
           |> List.to_seq
@@ -322,12 +321,10 @@ module Qc = struct
          let s2 = l2 |> List.to_seq in
          let s3 = l3 |> List.to_seq in
          let inter1 =
-           Daypack_lib.Time_segs.(intersect (intersect s1 s2) s3)
-           |> List.of_seq
+           Daypack_lib.Time_segs.(intersect (intersect s1 s2) s3) |> List.of_seq
          in
          let inter2 =
-           Daypack_lib.Time_segs.(intersect s1 (intersect s2 s3))
-           |> List.of_seq
+           Daypack_lib.Time_segs.(intersect s1 (intersect s2 s3)) |> List.of_seq
          in
          inter1 = inter2)
 
@@ -344,12 +341,8 @@ module Qc = struct
       (fun (l1, l2) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
-         let inter1 =
-           Daypack_lib.Time_segs.Union.union s1 s2 |> List.of_seq
-         in
-         let inter2 =
-           Daypack_lib.Time_segs.Union.union s2 s1 |> List.of_seq
-         in
+         let inter1 = Daypack_lib.Time_segs.Union.union s1 s2 |> List.of_seq in
+         let inter2 = Daypack_lib.Time_segs.Union.union s2 s1 |> List.of_seq in
          inter1 = inter2)
 
   let union_associative =
@@ -419,9 +412,7 @@ module Qc = struct
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
          let res1 = Daypack_lib.Time_segs.Merge.merge s1 s2 |> List.of_seq in
-         let res2 =
-           Daypack_lib.Time_segs.Sort.sort_time_segs_list (l1 @ l2)
-         in
+         let res2 = Daypack_lib.Time_segs.Sort.sort_time_segs_list (l1 @ l2) in
          res1 = res2)
 
   let suite =

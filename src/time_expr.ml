@@ -1010,8 +1010,7 @@ module Time_segs_expr = struct
 
   let get_first_or_last_n_matches_of_same_month
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
-      (search_param : search_param) (s : Time_seg.t Seq.t) :
-    Time_seg.t Seq.t =
+      (search_param : search_param) (s : Time_seg.t Seq.t) : Time_seg.t Seq.t =
     let tz_offset_s_of_date_time =
       Time_pattern.search_using_tz_offset_s_of_search_param search_param
     in

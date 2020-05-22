@@ -439,8 +439,8 @@ let debug_sched_backtracking_search_pending () =
   in
   Sched_search.backtracking_search_pending ~start:0L ~end_exc:50L
     ~include_sched_reqs_starting_within_time_seg:true
-    ~include_sched_reqs_ending_within_time_seg:true
-    ~up_to_sched_req_id_inc:None ~base
+    ~include_sched_reqs_ending_within_time_seg:true ~up_to_sched_req_id_inc:None
+    ~base
   |> OSeq.take 1
   |> Seq.iter (fun sched -> Sched.Print.debug_print_sched sched)
 
