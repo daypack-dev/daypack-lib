@@ -371,7 +371,7 @@ module Of_string = struct
       space *> unbounded_time_points_expr >>= fun e -> return (bound, e)
   end
 
-  module Time_segments_expr = struct
+  module Time_segs_expr = struct
     let ts_name =
       string_ci "during:" *> ident_string >>| fun s -> Time_expr_ast.Tse_name s
 
@@ -489,9 +489,9 @@ module Of_string = struct
       ( Time_points_expr.time_points_expr
         <* end_of_input
         >>| (fun e -> Time_expr_ast.Time_points_expr e)
-            <|> ( Time_segments_expr.time_slots_expr
+            <|> ( Time_segs_expr.time_slots_expr
                   <* end_of_input
-                  >>| fun e -> Time_expr_ast.Time_segments_expr e ) )
+                  >>| fun e -> Time_expr_ast.Time_segs_expr e ) )
       s
 
   let time_points_expr_of_string (s : string) :
@@ -500,7 +500,7 @@ module Of_string = struct
 
   let time_slots_expr_of_string (s : string) :
     (Time_expr_ast.time_slots_expr, string) result =
-    parse_string ~consume:Consume.All Time_segments_expr.time_slots_expr s
+    parse_string ~consume:Consume.All Time_segs_expr.time_slots_expr s
 end
 
 module To_time_pattern_lossy = struct
@@ -876,7 +876,7 @@ module To_time_pattern_lossy = struct
         match time_pattern_of_time_points_expr ~f_resolve_tpe_name e with
         | Ok x -> Ok (Single_time_pattern x)
         | Error msg -> Error msg )
-    | Time_expr_ast.Time_segments_expr e -> (
+    | Time_expr_ast.Time_segs_expr e -> (
         match
           time_range_patterns_of_time_slots_expr ~f_resolve_tse_name
             ~f_resolve_tpe_name e
@@ -976,7 +976,7 @@ module Time_points_expr = struct
       )
 end
 
-module Time_segments_expr = struct
+module Time_segs_expr = struct
   let get_first_or_last_n_matches_of_same_month_date_time_pair_seq
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
       (s : (Time.date_time * Time.date_time) Seq.t) :
@@ -1010,8 +1010,8 @@ module Time_segments_expr = struct
 
   let get_first_or_last_n_matches_of_same_month
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
-      (search_param : search_param) (s : Time_segment.t Seq.t) :
-    Time_segment.t Seq.t =
+      (search_param : search_param) (s : Time_seg.t Seq.t) :
+    Time_seg.t Seq.t =
     let tz_offset_s_of_date_time =
       Time_pattern.search_using_tz_offset_s_of_search_param search_param
     in
@@ -1031,7 +1031,7 @@ module Time_segments_expr = struct
       ?(f_resolve_tse_name = default_f_resolve_tse_name)
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (search_param : search_param) ((bound, e) : Time_expr_ast.time_slots_expr)
-    : (Time_segment.t Seq.t, string) result =
+    : (Time_seg.t Seq.t, string) result =
     match
       Resolve.resolve_unbounded_time_slots_expr ~f_resolve_tse_name
         ~f_resolve_tpe_name e

@@ -1,6 +1,6 @@
-exception Time_segment_is_invalid
+exception Time_seg_is_invalid
 
-exception Time_segment_is_empty
+exception Time_seg_is_empty
 
 type t = int64 * int64
 
@@ -25,10 +25,10 @@ module Check = struct
   let is_not_empty ((start, end_exc) : t) : bool = start <> end_exc
 
   let check_if_valid (x : t) : t =
-    if is_valid x then x else raise Time_segment_is_invalid
+    if is_valid x then x else raise Time_seg_is_invalid
 
   let check_if_not_empty (x : t) : t =
-    if is_not_empty x then x else raise Time_segment_is_empty
+    if is_not_empty x then x else raise Time_seg_is_empty
 end
 
 let join (ts1 : t) (ts2 : t) : t option =

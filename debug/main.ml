@@ -255,83 +255,83 @@ let debug_single_task_seg_multi_even_splits () =
         splits)
 
 let debug_slice_time_slots_start () =
-  print_endline "Debug print for Time_segments.slice start";
+  print_endline "Debug print for Time_segs.slice start";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = List.to_seq time_slots in
-  Time_segments.Slice.slice ~start:12L time_slots
+  Time_segs.Slice.slice ~start:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_slice_time_slots_end_exc () =
-  print_endline "Debug print for Time_segments.slice end_exc";
+  print_endline "Debug print for Time_segs.slice end_exc";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = List.to_seq time_slots in
-  Time_segments.Slice.slice ~end_exc:12L time_slots
+  Time_segs.Slice.slice ~end_exc:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_slice_time_slots_start_rev () =
-  print_endline "Debug print for Time_segments.slice_rev start";
+  print_endline "Debug print for Time_segs.slice_rev start";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = time_slots |> List.rev |> List.to_seq in
-  Time_segments.Slice.slice_rev ~start:12L time_slots
+  Time_segs.Slice.slice_rev ~start:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_slice_time_slots_end_exc_rev () =
-  print_endline "Debug print for Time_segments.slice_rev end_exc";
+  print_endline "Debug print for Time_segs.slice_rev end_exc";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = time_slots |> List.rev |> List.to_seq in
-  Time_segments.Slice.slice_rev ~end_exc:12L time_slots
+  Time_segs.Slice.slice_rev ~end_exc:12L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_normalize_time_slots () =
-  print_endline "Debug print for Time_segments.normalize";
+  print_endline "Debug print for Time_segs.normalize";
   let time_slots =
     [ (0L, 10L); (10L, 11L); (11L, 20L); (22L, 25L); (20L, 22L); (25L, 30L) ]
   in
   let time_slots = List.to_seq time_slots in
-  Time_segments.Normalize.normalize time_slots
+  Time_segs.Normalize.normalize time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_invert_time_slots () =
-  print_endline "Debug print for Time_segments.invert";
+  print_endline "Debug print for Time_segs.invert";
   let time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots = List.to_seq time_slots in
-  Time_segments.invert ~start:0L ~end_exc:22L time_slots
+  Time_segs.invert ~start:0L ~end_exc:22L time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_relative_complement_time_slots () =
-  print_endline "Debug print for Time_segments.relative_complement";
+  print_endline "Debug print for Time_segs.relative_complement";
   let mem_of_time_slots = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let not_mem_of_time_slots = [ (0L, 5L); (6L, 15L); (25L, 30L) ] in
   let mem_of_time_slots = List.to_seq mem_of_time_slots in
   let not_mem_of_time_slots = List.to_seq not_mem_of_time_slots in
-  Time_segments.relative_complement ~not_mem_of:not_mem_of_time_slots
+  Time_segs.relative_complement ~not_mem_of:not_mem_of_time_slots
     mem_of_time_slots
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_intersect_time_slots () =
-  print_endline "Debug print for Time_segments.intersect";
+  print_endline "Debug print for Time_segs.intersect";
   let time_slots1 = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots2 = [ (0L, 1L); (2L, 3L); (10L, 20L); (25L, 30L) ] in
   let time_slots1 = List.to_seq time_slots1 in
   let time_slots2 = List.to_seq time_slots2 in
-  Time_segments.intersect time_slots1 time_slots2
+  Time_segs.intersect time_slots1 time_slots2
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
 let debug_union_time_slots () =
-  print_endline "Debug print for Time_segments.union";
+  print_endline "Debug print for Time_segs.union";
   let time_slots1 = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots2 = [ (0L, 1L); (2L, 3L); (10L, 20L); (25L, 30L) ] in
   let time_slots1 = List.to_seq time_slots1 in
   let time_slots2 = List.to_seq time_slots2 in
-  Time_segments.Union.union time_slots1 time_slots2
+  Time_segs.Union.union time_slots1 time_slots2
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
@@ -763,7 +763,7 @@ let debug_time_pattern_matching_time_slots () =
   Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
   let s =
     Daypack_lib.Time_pattern.Single_pattern.matching_time_slots
-      (Time_segments { search_using_tz_offset_s = None; time_slots })
+      (Time_segs { search_using_tz_offset_s = None; time_slots })
       pattern
     |> Result.get_ok
   in
@@ -818,7 +818,7 @@ let debug_time_range_pattern_matching_time_slots () =
   Daypack_lib.Time_pattern.Print.debug_print_time_range_pattern pattern;
   let s =
     Daypack_lib.Time_pattern.Range_pattern.matching_time_slots
-      (Time_segments { search_using_tz_offset_s = None; time_slots })
+      (Time_segs { search_using_tz_offset_s = None; time_slots })
       pattern
     |> Result.get_ok
   in

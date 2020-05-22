@@ -7,7 +7,7 @@ module Alco = struct
       [
         ((0L, 1L), 2); ((1L, 3L), 4); ((3L, 4L), 3); ((4L, 5L), 2); ((5L, 6L), 1);
       ]
-      ( Daypack_lib.Time_segments.count_overlap
+      ( Daypack_lib.Time_segs.count_overlap
           (List.to_seq [ (0L, 5L); (0L, 6L); (1L, 3L); (1L, 4L) ])
         |> List.of_seq )
 
@@ -23,7 +23,7 @@ module Alco = struct
         ((5L, 6L), 2);
         ((6L, 7L), 1);
       ]
-      ( Daypack_lib.Time_segments.count_overlap
+      ( Daypack_lib.Time_segs.count_overlap
           (List.to_seq
              [
                (0L, 5L);
@@ -52,7 +52,7 @@ module Alco = struct
         ((17L, 19L), 1);
         ((19L, 20L), 2);
       ]
-      ( Daypack_lib.Time_segments.count_overlap
+      ( Daypack_lib.Time_segs.count_overlap
           (List.to_seq
              [
                (0L, 5L);
@@ -72,7 +72,7 @@ module Alco = struct
     Alcotest.(check (list (pair (pair int64 int64) int)))
       "same list"
       [ ((1L, 2L), 3); ((2L, 3L), 5); ((3L, 4L), 7); ((4L, 5L), 9) ]
-      ( Daypack_lib.Time_segments.count_overlap
+      ( Daypack_lib.Time_segs.count_overlap
           (List.to_seq
              [
                (1L, 5L);
@@ -93,7 +93,7 @@ module Alco = struct
       [
         ((1L, 2L), 1); ((2L, 3L), 2); ((3L, 4L), 3); ((4L, 5L), 5); ((5L, 6L), 2);
       ]
-      ( Daypack_lib.Time_segments.count_overlap
+      ( Daypack_lib.Time_segs.count_overlap
           (List.to_seq [ (1L, 5L); (2L, 5L); (3L, 5L); (4L, 6L); (4L, 6L) ])
         |> List.of_seq )
 
@@ -114,7 +114,7 @@ module Qc = struct
       (fun (start, l) ->
          l
          |> List.to_seq
-         |> Daypack_lib.Time_segments.Slice.slice ~start
+         |> Daypack_lib.Time_segs.Slice.slice ~start
          |> List.of_seq
          |> List.for_all (fun (x, _) -> start <= x))
 
@@ -124,7 +124,7 @@ module Qc = struct
       (fun (end_exc, l) ->
          l
          |> List.to_seq
-         |> Daypack_lib.Time_segments.Slice.slice ~end_exc
+         |> Daypack_lib.Time_segs.Slice.slice ~end_exc
          |> List.of_seq
          |> List.for_all (fun (_, y) -> y <= end_exc))
 
@@ -133,7 +133,7 @@ module Qc = struct
       (fun l ->
          l
          |> List.to_seq
-         |> Daypack_lib.Time_segments.Normalize.normalize
+         |> Daypack_lib.Time_segs.Normalize.normalize
          |> List.of_seq
          |> List.for_all (fun (x, y) -> x <= y))
 
@@ -142,7 +142,7 @@ module Qc = struct
       time_slots (fun l ->
           l
           |> List.to_seq
-          |> Daypack_lib.Time_segments.Normalize.normalize
+          |> Daypack_lib.Time_segs.Normalize.normalize
           |> List.of_seq
           |> List.fold_left
             (fun (res, last) (x, y) ->
@@ -161,7 +161,7 @@ module Qc = struct
           let l =
             l
             |> List.to_seq
-            |> Daypack_lib.Time_segments.Normalize.normalize
+            |> Daypack_lib.Time_segs.Normalize.normalize
             |> List.of_seq
           in
           List.length (List.sort_uniq compare l) = List.length l)
@@ -171,7 +171,7 @@ module Qc = struct
       ~name:"normalize_time_slots_are_disjoint_with_gaps" time_slots (fun l ->
           l
           |> List.to_seq
-          |> Daypack_lib.Time_segments.Normalize.normalize
+          |> Daypack_lib.Time_segs.Normalize.normalize
           |> Seq.fold_left
             (fun (res, last) (x, y) ->
                if res then
@@ -188,7 +188,7 @@ module Qc = struct
       sorted_time_slots_with_gaps (fun l ->
           l
           |> List.to_seq
-          |> Daypack_lib.Time_segments.Normalize.normalize
+          |> Daypack_lib.Time_segs.Normalize.normalize
           |> List.of_seq
              = l)
 
@@ -198,7 +198,7 @@ module Qc = struct
       sorted_time_slots_maybe_gaps (fun l ->
           l
           |> List.to_seq
-          |> Daypack_lib.Time_segments.join
+          |> Daypack_lib.Time_segs.join
           |> Seq.fold_left
             (fun (res, last) (x, y) ->
                if res then
@@ -212,7 +212,7 @@ module Qc = struct
   let join_idempotent_wrt_joined_time_slots =
     QCheck.Test.make ~count:10_000 ~name:"join_idempotent_wrt_joined_time_slots"
       sorted_time_slots_with_gaps (fun l ->
-          l |> List.to_seq |> Daypack_lib.Time_segments.join |> List.of_seq = l)
+          l |> List.to_seq |> Daypack_lib.Time_segs.join |> List.of_seq = l)
 
   let invert_disjoint_from_original =
     QCheck.Test.make ~count:10_000 ~name:"invert_disjoint_from_original"
@@ -222,13 +222,13 @@ module Qc = struct
          let sliced =
            l
            |> List.to_seq
-           |> Daypack_lib.Time_segments.Slice.slice ~start ~end_exc
+           |> Daypack_lib.Time_segs.Slice.slice ~start ~end_exc
            |> List.of_seq
          in
          let inverted =
            l
            |> List.to_seq
-           |> Daypack_lib.Time_segments.invert ~start ~end_exc
+           |> Daypack_lib.Time_segs.invert ~start ~end_exc
            |> List.of_seq
          in
          let sliced_count = List.length sliced in
@@ -244,15 +244,15 @@ module Qc = struct
          let res =
            l
            |> List.to_seq
-           |> Daypack_lib.Time_segments.invert ~start ~end_exc
+           |> Daypack_lib.Time_segs.invert ~start ~end_exc
            |> List.of_seq
            |> (fun inverted ->
-               ( Daypack_lib.Time_segments.Slice.slice ~start ~end_exc
+               ( Daypack_lib.Time_segs.Slice.slice ~start ~end_exc
                    (List.to_seq l)
                  |> List.of_seq )
                @ inverted)
            |> List.to_seq
-           |> Daypack_lib.Time_segments.Normalize.normalize
+           |> Daypack_lib.Time_segs.Normalize.normalize
            |> List.of_seq
          in
          (l <> [] && List.for_all (fun (x, y) -> y < start || end_exc < x) l)
@@ -264,7 +264,7 @@ module Qc = struct
       QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
       (fun (mem_of, not_mem_of) ->
          let res =
-           Daypack_lib.Time_segments.relative_complement
+           Daypack_lib.Time_segs.relative_complement
              ~not_mem_of:(List.to_seq not_mem_of) (List.to_seq mem_of)
            |> List.of_seq
          in
@@ -279,11 +279,11 @@ module Qc = struct
       QCheck.(pair sorted_time_slots_maybe_gaps sorted_time_slots_maybe_gaps)
       (fun (mem_of, not_mem_of) ->
          let res_s =
-           Daypack_lib.Time_segments.relative_complement
+           Daypack_lib.Time_segs.relative_complement
              ~not_mem_of:(List.to_seq not_mem_of) (List.to_seq mem_of)
          in
          let res = res_s |> List.of_seq in
-         Daypack_lib.Time_segments.intersect (List.to_seq mem_of) res_s
+         Daypack_lib.Time_segs.intersect (List.to_seq mem_of) res_s
          |> List.of_seq
             = res)
 
@@ -291,7 +291,7 @@ module Qc = struct
     QCheck.Test.make ~count:10_000 ~name:"relatvie_complement_self"
       sorted_time_slots_maybe_gaps (fun l ->
           let s = List.to_seq l in
-          Daypack_lib.Time_segments.relative_complement ~not_mem_of:s s
+          Daypack_lib.Time_segs.relative_complement ~not_mem_of:s s
           |> List.of_seq
              = [])
 
@@ -299,7 +299,7 @@ module Qc = struct
     QCheck.Test.make ~count:10_000 ~name:"intersect_with_self"
       sorted_time_slots_maybe_gaps (fun l ->
           let s = l |> List.to_seq in
-          let res = Daypack_lib.Time_segments.intersect s s |> List.of_seq in
+          let res = Daypack_lib.Time_segs.intersect s s |> List.of_seq in
           l = res)
 
   let intersect_commutative =
@@ -308,8 +308,8 @@ module Qc = struct
       (fun (l1, l2) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
-         let inter1 = Daypack_lib.Time_segments.intersect s1 s2 |> List.of_seq in
-         let inter2 = Daypack_lib.Time_segments.intersect s2 s1 |> List.of_seq in
+         let inter1 = Daypack_lib.Time_segs.intersect s1 s2 |> List.of_seq in
+         let inter2 = Daypack_lib.Time_segs.intersect s2 s1 |> List.of_seq in
          inter1 = inter2)
 
   let intersect_associative =
@@ -322,11 +322,11 @@ module Qc = struct
          let s2 = l2 |> List.to_seq in
          let s3 = l3 |> List.to_seq in
          let inter1 =
-           Daypack_lib.Time_segments.(intersect (intersect s1 s2) s3)
+           Daypack_lib.Time_segs.(intersect (intersect s1 s2) s3)
            |> List.of_seq
          in
          let inter2 =
-           Daypack_lib.Time_segments.(intersect s1 (intersect s2 s3))
+           Daypack_lib.Time_segs.(intersect s1 (intersect s2 s3))
            |> List.of_seq
          in
          inter1 = inter2)
@@ -335,7 +335,7 @@ module Qc = struct
     QCheck.Test.make ~count:10_000 ~name:"union_with_self"
       sorted_time_slots_with_gaps (fun l ->
           let s = l |> List.to_seq in
-          let res = Daypack_lib.Time_segments.Union.union s s |> List.of_seq in
+          let res = Daypack_lib.Time_segs.Union.union s s |> List.of_seq in
           l = res)
 
   let union_commutative =
@@ -345,10 +345,10 @@ module Qc = struct
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
          let inter1 =
-           Daypack_lib.Time_segments.Union.union s1 s2 |> List.of_seq
+           Daypack_lib.Time_segs.Union.union s1 s2 |> List.of_seq
          in
          let inter2 =
-           Daypack_lib.Time_segments.Union.union s2 s1 |> List.of_seq
+           Daypack_lib.Time_segs.Union.union s2 s1 |> List.of_seq
          in
          inter1 = inter2)
 
@@ -362,11 +362,11 @@ module Qc = struct
          let s2 = l2 |> List.to_seq in
          let s3 = l3 |> List.to_seq in
          let res1 =
-           Daypack_lib.Time_segments.(Union.union (Union.union s1 s2) s3)
+           Daypack_lib.Time_segs.(Union.union (Union.union s1 s2) s3)
            |> List.of_seq
          in
          let res2 =
-           Daypack_lib.Time_segments.(Union.union s1 (Union.union s2 s3))
+           Daypack_lib.Time_segs.(Union.union s1 (Union.union s2 s3))
            |> List.of_seq
          in
          res1 = res2)
@@ -381,11 +381,11 @@ module Qc = struct
          let s2 = l2 |> List.to_seq in
          let s3 = l3 |> List.to_seq in
          let res1 =
-           Daypack_lib.Time_segments.(Union.union s1 (intersect s2 s3))
+           Daypack_lib.Time_segs.(Union.union s1 (intersect s2 s3))
            |> List.of_seq
          in
          let res2 =
-           Daypack_lib.Time_segments.(
+           Daypack_lib.Time_segs.(
              intersect (Union.union s1 s2) (Union.union s1 s3))
            |> List.of_seq
          in
@@ -401,11 +401,11 @@ module Qc = struct
          let s2 = l2 |> List.to_seq in
          let s3 = l3 |> List.to_seq in
          let res1 =
-           Daypack_lib.Time_segments.(intersect s1 (Union.union s2 s3))
+           Daypack_lib.Time_segs.(intersect s1 (Union.union s2 s3))
            |> List.of_seq
          in
          let res2 =
-           Daypack_lib.Time_segments.(
+           Daypack_lib.Time_segs.(
              Union.union (intersect s1 s2) (intersect s1 s3))
            |> List.of_seq
          in
@@ -418,9 +418,9 @@ module Qc = struct
       (fun (l1, l2) ->
          let s1 = l1 |> List.to_seq in
          let s2 = l2 |> List.to_seq in
-         let res1 = Daypack_lib.Time_segments.Merge.merge s1 s2 |> List.of_seq in
+         let res1 = Daypack_lib.Time_segs.Merge.merge s1 s2 |> List.of_seq in
          let res2 =
-           Daypack_lib.Time_segments.Sort.sort_time_slots_list (l1 @ l2)
+           Daypack_lib.Time_segs.Sort.sort_time_slots_list (l1 @ l2)
          in
          res1 = res2)
 

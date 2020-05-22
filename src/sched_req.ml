@@ -7,7 +7,7 @@ type sched_req = sched_req_id * sched_req_data
 and sched_req_data_unit =
   ( Task.task_seg_alloc_req,
     int64,
-    Time_segment.t )
+    Time_seg.t )
     Sched_req_data_unit_skeleton.t
 
 and sched_req_data = sched_req_data_unit list
@@ -15,7 +15,7 @@ and sched_req_data = sched_req_data_unit list
 type sched_req_record = sched_req_id * sched_req_record_data
 
 and sched_req_record_data_unit =
-  (Task.task_seg, int64, Time_segment.t) Sched_req_data_unit_skeleton.t
+  (Task.task_seg, int64, Time_seg.t) Sched_req_data_unit_skeleton.t
 
 and sched_req_record_data = sched_req_record_data_unit list
 
@@ -29,23 +29,23 @@ let flexibility_score_of_sched_req_record
       |> Int64.to_float
     in
     let time_slot_sum_len =
-      Time_segments.Sum.sum_length_list x.time_slots |> Int64.to_float
+      Time_segs.Sum.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (task_seg_alloc_req_sum_len /. time_slot_sum_len)
   | Split_and_shift x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_segments.Sum.sum_length_list x.time_slots |> Int64.to_float
+      Time_segs.Sum.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
   | Split_even x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_segments.intersect
+      Time_segs.intersect
         (x.time_slots |> List.to_seq)
         (x.buckets |> List.to_seq)
       |> List.of_seq
-      |> Time_segments.Sum.sum_length_list
+      |> Time_segs.Sum.sum_length_list
       |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
@@ -55,13 +55,13 @@ let flexibility_score_of_sched_req_record
       |> Int64.to_float
     in
     let time_slot_sum_len =
-      Time_segments.Sum.sum_length_list x.time_slots |> Int64.to_float
+      Time_segs.Sum.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (task_seg_alloc_req_sum_len /. time_slot_sum_len)
   | Push_toward x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_segments.Sum.sum_length_list x.time_slots |> Int64.to_float
+      Time_segs.Sum.sum_length_list x.time_slots |> Int64.to_float
     in
     1. -. (Int64.to_float size /. time_slot_sum_len)
 
@@ -77,7 +77,7 @@ let sort_sched_req_record_list_by_flexibility_score
 let start_and_end_exc_bound_of_sched_req_or_record
     ((_id, req_record_data_unit_list) :
        sched_req_id
-       * ('a, int64, Time_segment.t) Sched_req_data_unit_skeleton.t list) :
+       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) :
   (int64 * int64) option =
   List.fold_left
     (fun acc req_record_data_unit ->
@@ -91,7 +91,7 @@ let start_and_end_exc_bound_of_sched_req_or_record
          | Split_even { time_slots; _ }
          | Time_share { time_slots; _ }
          | Push_toward { time_slots; _ } ->
-           Time_segments.Bound.min_start_and_max_end_exc_list time_slots
+           Time_segs.Bound.min_start_and_max_end_exc_list time_slots
        in
        match acc with
        | None -> cur
@@ -105,7 +105,7 @@ let start_and_end_exc_bound_of_sched_req_or_record
 let sched_req_or_record_before_time (x : int64)
     (sched_req_or_record :
        sched_req_id
-       * ('a, int64, Time_segment.t) Sched_req_data_unit_skeleton.t list) : bool
+       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
   =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
@@ -114,7 +114,7 @@ let sched_req_or_record_before_time (x : int64)
 let sched_req_or_record_after_time (x : int64)
     (sched_req_or_record :
        sched_req_id
-       * ('a, int64, Time_segment.t) Sched_req_data_unit_skeleton.t list) : bool
+       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
   =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
@@ -123,7 +123,7 @@ let sched_req_or_record_after_time (x : int64)
 let sched_req_or_record_fully_within_time_slot ~start ~end_exc
     (sched_req_or_record :
        sched_req_id
-       * ('a, int64, Time_segment.t) Sched_req_data_unit_skeleton.t list) : bool
+       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
   =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
@@ -132,7 +132,7 @@ let sched_req_or_record_fully_within_time_slot ~start ~end_exc
 let sched_req_or_record_starting_within_time_slot ~start ~end_exc
     (sched_req_or_record :
        sched_req_id
-       * ('a, int64, Time_segment.t) Sched_req_data_unit_skeleton.t list) : bool
+       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
   =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
@@ -141,7 +141,7 @@ let sched_req_or_record_starting_within_time_slot ~start ~end_exc
 let sched_req_or_record_ending_within_time_slot ~start ~end_exc
     (sched_req_or_record :
        sched_req_id
-       * ('a, int64, Time_segment.t) Sched_req_data_unit_skeleton.t list) : bool
+       * ('a, int64, Time_seg.t) Sched_req_data_unit_skeleton.t list) : bool
   =
   match start_and_end_exc_bound_of_sched_req_or_record sched_req_or_record with
   | None -> false
@@ -154,7 +154,7 @@ module Check = struct
          Sched_req_data_unit_skeleton.Check.check
            ~f_data:Task.Check.check_task_seg_alloc_req
            ~f_time:Time.Check.check_unix_second
-           ~f_time_slot:Time_segment.Check.is_valid x)
+           ~f_time_slot:Time_seg.Check.is_valid x)
       data
 
   let check_sched_req_data_list (l : sched_req_data list) : bool =
@@ -168,7 +168,7 @@ module Check = struct
       (fun x ->
          Sched_req_data_unit_skeleton.Check.check
            ~f_data:Task.Check.check_task_seg ~f_time:Time.Check.check_unix_second
-           ~f_time_slot:Time_segment.Check.is_valid x)
+           ~f_time_slot:Time_seg.Check.is_valid x)
       data
 
   let check_sched_req_record_data_list (l : sched_req_record_data list) : bool =
@@ -187,7 +187,7 @@ module Serialize = struct
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:Task.Serialize.pack_task_seg_alloc_req
       ~pack_time:Misc_utils.int32_int32_of_int64
-      ~pack_time_slot:Time_segment.Serialize.pack_time_slot sched_req_data_unit
+      ~pack_time_slot:Time_seg.Serialize.pack_time_slot sched_req_data_unit
 
   let rec pack_sched_req_record (id, data_list) : Sched_req_t.sched_req_record =
     ( Misc_utils.int32_int32_of_int64 id,
@@ -199,7 +199,7 @@ module Serialize = struct
     Sched_req_data_unit_skeleton.Serialize.pack
       ~pack_data:Task.Serialize.pack_task_seg
       ~pack_time:Misc_utils.int32_int32_of_int64
-      ~pack_time_slot:Time_segment.Serialize.pack_time_slot
+      ~pack_time_slot:Time_seg.Serialize.pack_time_slot
       sched_req_record_data
 end
 
@@ -214,7 +214,7 @@ module Deserialize = struct
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:Task.Deserialize.unpack_task_seg_alloc_req
       ~unpack_time:Misc_utils.int64_of_int32_int32
-      ~unpack_time_slot:Time_segment.Deserialize.unpack_time_slot
+      ~unpack_time_slot:Time_seg.Deserialize.unpack_time_slot
       sched_req_data_unit
 
   let rec unpack_sched_req_record (id, data) : sched_req_record =
@@ -227,7 +227,7 @@ module Deserialize = struct
     Sched_req_data_unit_skeleton.Deserialize.unpack
       ~unpack_data:Task.Deserialize.unpack_task_seg
       ~unpack_time:Misc_utils.int64_of_int32_int32
-      ~unpack_time_slot:Time_segment.Deserialize.unpack_time_slot
+      ~unpack_time_slot:Time_seg.Deserialize.unpack_time_slot
       sched_req_record_data_unit
 end
 
@@ -241,7 +241,7 @@ module To_string = struct
             (Task.Id.string_of_task_inst_id id)
             len)
       ~string_of_time:Int64.to_string
-      ~string_of_time_slot:Time_segment.to_string req_data
+      ~string_of_time_slot:Time_seg.to_string req_data
 
   let debug_string_of_sched_req_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_data =
@@ -269,7 +269,7 @@ module To_string = struct
             (Task.Id.string_of_task_seg_id id)
             len)
       ~string_of_time:Int64.to_string
-      ~string_of_time_slot:Time_segment.to_string req_data
+      ~string_of_time_slot:Time_seg.to_string req_data
 
   let debug_string_of_sched_req_record_data ?(indent_level = 0)
       ?(buffer = Buffer.create 4096) req_record_data_list =

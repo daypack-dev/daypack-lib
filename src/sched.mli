@@ -621,7 +621,7 @@ module Agenda : sig
       Task_.task_seg_id -> sched -> sched
   end
 
-  module Time_segment : sig
+  module Time_seg : sig
     val get_occupied_time_slots :
       ?start:int64 -> ?end_exc:int64 -> sched -> (int64 * int64) Seq.t
 

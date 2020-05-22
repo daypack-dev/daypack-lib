@@ -6,7 +6,7 @@ let normalize (type a) ?(skip_filter_invalid = false)
   | None ->
     s
     |> Seq.map (Range.int64_exc_range_of_range ~to_int64)
-    |> Time_segments.Normalize.normalize ~skip_filter_invalid
+    |> Time_segs.Normalize.normalize ~skip_filter_invalid
       ~skip_filter_empty ~skip_sort
     |> Seq.map (fun (x, y) -> (of_int64 x, of_int64 y))
     |> Seq.map (fun (x, y) -> `Range_exc (x, y))

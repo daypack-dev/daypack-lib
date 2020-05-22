@@ -40,7 +40,7 @@ let join (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a)
     (x : a range) (y : a range) : a range option =
   let x = int64_exc_range_of_range ~to_int64 x in
   let y = int64_exc_range_of_range ~to_int64 y in
-  Time_segment.join x y
+  Time_seg.join x y
   |> Option.map (fun (x, y) -> `Range_exc (of_int64 x, of_int64 y))
 
 module Flatten = struct

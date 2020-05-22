@@ -21,7 +21,7 @@ module Time_points_expr : sig
     (int64 Seq.t, string) result
 end
 
-module Time_segments_expr : sig
+module Time_segs_expr : sig
   val next_match_time_slot :
     ?f_resolve_tse_name:f_resolve_tse_name ->
     ?f_resolve_tpe_name:f_resolve_tpe_name ->

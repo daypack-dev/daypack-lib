@@ -101,4 +101,4 @@ type time_slots_expr = bound * unbounded_time_slots_expr
 
 type t =
   | Time_points_expr of time_points_expr
-  | Time_segments_expr of time_slots_expr
+  | Time_segs_expr of time_slots_expr

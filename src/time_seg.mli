@@ -1,6 +1,6 @@
-exception Time_segment_is_invalid
+exception Time_seg_is_invalid
 
-exception Time_segment_is_empty
+exception Time_seg_is_empty
 
 type t = int64 * int64
 
