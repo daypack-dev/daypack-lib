@@ -1946,16 +1946,16 @@ module Agenda = struct
 
     let time_slots_of_task_seg_places ~(start : int64 option)
         ~(end_exc : int64 option) (task_seg_places : Task_.task_seg_place Seq.t)
-      : Time_slot.t Seq.t =
+      : Time_segment.t Seq.t =
       task_seg_places
       |> Seq.map (fun (_, start, end_exc) -> (start, end_exc))
       |> (fun l ->
           Option.fold ~none:l
-            ~some:(fun start -> Time_slots.Slice.slice ~start l)
+            ~some:(fun start -> Time_segments.Slice.slice ~start l)
             start)
       |> fun l ->
       Option.fold ~none:l
-        ~some:(fun end_exc -> Time_slots.Slice.slice ~end_exc l)
+        ~some:(fun end_exc -> Time_segments.Slice.slice ~end_exc l)
         end_exc
 
     let get_occupied_time_slots_with_task_seg_place_count ~start ~end_exc
@@ -1964,7 +1964,7 @@ module Agenda = struct
         ~include_task_seg_place_starting_within_time_slot:(Some true)
         ~include_task_seg_place_ending_within_time_slot:(Some true) sched
       |> time_slots_of_task_seg_places ~start ~end_exc
-      |> Time_slots.count_overlap
+      |> Time_segments.count_overlap
   end
 
   module Filter = struct
@@ -2104,14 +2104,14 @@ module Agenda = struct
         remove_task_seg_place (task_seg_id, start, end_exc) sched
   end
 
-  module Time_slot = struct
+  module Time_segment = struct
     let get_occupied_time_slots ?start ?end_exc (sched : sched) :
       (int64 * int64) Seq.t =
       Internal.task_seg_place_uncompleted ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot:(Some true)
         ~include_task_seg_place_ending_within_time_slot:(Some true) sched
       |> Internal.time_slots_of_task_seg_places ~start ~end_exc
-      |> Time_slots.Normalize.normalize ~skip_sort:true
+      |> Time_segments.Normalize.normalize ~skip_sort:true
 
     let get_occupied_time_slots_with_task_seg_place_count ?start ?end_exc
         (sched : sched) : ((int64 * int64) * int) Seq.t =
@@ -2129,7 +2129,7 @@ module Agenda = struct
     let get_free_time_slots ~start ~end_exc (sched : sched) :
       (int64 * int64) Seq.t =
       get_occupied_time_slots ~start ~end_exc sched
-      |> Time_slots.invert ~start ~end_exc
+      |> Time_segments.invert ~start ~end_exc
 
     let get_free_or_occupied_time_slots_up_to_task_seg_place_count ~start
         ~end_exc ~(up_to_task_seg_place_count_inc : int) (sched : sched) =
@@ -2138,7 +2138,7 @@ module Agenda = struct
       |> Seq.filter (fun (_time_slot, count) ->
           count <= up_to_task_seg_place_count_inc)
       |> Seq.map (fun (time_slot, _) -> time_slot)
-      |> Time_slots.Union.union (get_free_time_slots ~start ~end_exc sched)
+      |> Time_segments.Union.union (get_free_time_slots ~start ~end_exc sched)
 
     let task_seg_place_count_in_time_slot ~start ~end_exc (sched : sched) : int
       =
@@ -3003,7 +3003,7 @@ module Recur = struct
     | Task_.One_off -> Seq.empty
     | Task_.Recurring recur ->
       let usable_time_slot_seq =
-        Time_slots.invert ~start ~end_exc
+        Time_segments.invert ~start ~end_exc
           (List.to_seq recur.excluded_time_slots)
       in
       let usable_time_slot_list = List.of_seq usable_time_slot_seq in
@@ -3041,7 +3041,7 @@ module Recur = struct
         | Task_.Time_pattern_match
             (pattern, { task_inst_data; sched_req_template }) ->
           Time_pattern.Single_pattern.matching_time_slots
-            (Time_slots
+            (Time_segments
                {
                  search_using_tz_offset_s = None;
                  time_slots = usable_time_slot_list;
@@ -3067,7 +3067,7 @@ module Recur = struct
            match template_bound with
            | None -> true
            | Some bound ->
-             Time_slots.a_is_subset_of_b ~a:(Seq.return bound)
+             Time_segments.a_is_subset_of_b ~a:(Seq.return bound)
                ~b:usable_time_slot_seq)
       |> Seq.map (fun (task_inst_data, sched_req_template, _template_bound) ->
           (task_inst_data, sched_req_template))

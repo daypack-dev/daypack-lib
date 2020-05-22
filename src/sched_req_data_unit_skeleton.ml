@@ -52,36 +52,36 @@ type ('task_seg_related_data, 'time, 'time_slot) t =
   | Time_share of ('task_seg_related_data, 'time_slot) time_share
   | Push_toward of ('task_seg_related_data, 'time, 'time_slot) push_toward
 
-let shift_time ~offset (t : ('a, int64, Time_slot.t) t) :
-  ('a, int64, Time_slot.t) t =
+let shift_time ~offset (t : ('a, int64, Time_segment.t) t) :
+  ('a, int64, Time_segment.t) t =
   match t with
   | Fixed { task_seg_related_data; start } ->
     Fixed { task_seg_related_data; start = start +^ offset }
   | Shift x ->
-    Shift { x with time_slots = Time_slots.shift_list ~offset x.time_slots }
+    Shift { x with time_slots = Time_segments.shift_list ~offset x.time_slots }
   | Split_and_shift x ->
     Split_and_shift
-      { x with time_slots = Time_slots.shift_list ~offset x.time_slots }
+      { x with time_slots = Time_segments.shift_list ~offset x.time_slots }
   | Split_even x ->
     Split_even
       {
         x with
-        time_slots = Time_slots.shift_list ~offset x.time_slots;
-        buckets = Time_slots.shift_list ~offset x.buckets;
+        time_slots = Time_segments.shift_list ~offset x.time_slots;
+        buckets = Time_segments.shift_list ~offset x.buckets;
       }
   | Time_share x ->
     Time_share
-      { x with time_slots = Time_slots.shift_list ~offset x.time_slots }
+      { x with time_slots = Time_segments.shift_list ~offset x.time_slots }
   | Push_toward x ->
     Push_toward
       {
         x with
         target = x.target +^ offset;
-        time_slots = Time_slots.shift_list ~offset x.time_slots;
+        time_slots = Time_segments.shift_list ~offset x.time_slots;
       }
 
-let shift_time_list ~offset (ts : ('a, int64, Time_slot.t) t list) :
-  ('a, int64, Time_slot.t) t list =
+let shift_time_list ~offset (ts : ('a, int64, Time_segment.t) t list) :
+  ('a, int64, Time_segment.t) t list =
   List.map (shift_time ~offset) ts
 
 let map (type a b c d e f) ~(f_data : a -> d) ~(f_time : b -> e)

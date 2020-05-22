@@ -4,7 +4,7 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     ((_sched_req_id, sched_req_record_data_list) : Sched_req.sched_req_record) :
   Sched.sched Seq.t =
   let free_time_slots =
-    Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc base
+    Sched.Agenda.Time_segment.get_free_time_slots ~start ~end_exc base
   in
   let get_parallelizability ((task_seg_id, _data) : Task.task_seg) : int =
     let task_id = Task.Id.task_id_of_task_seg_id task_seg_id in
@@ -22,14 +22,14 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
         |> List.hd
     in
     let time_slot_candidates =
-      Time_slots.Union.union free_time_slots
-        (Sched.Agenda.Time_slot
+      Time_segments.Union.union free_time_slots
+        (Sched.Agenda.Time_segment
          .get_free_or_occupied_time_slots_up_to_task_seg_place_count ~start
            ~end_exc ~up_to_task_seg_place_count_inc base)
     in
     time_slots
-    |> Time_slots.Normalize.normalize_list_in_seq_out
-    |> Time_slots.intersect time_slot_candidates
+    |> Time_segments.Normalize.normalize_list_in_seq_out
+    |> Time_segments.intersect time_slot_candidates
   in
   Seq.flat_map
     (fun sched_req_record_data ->

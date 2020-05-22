@@ -1,7 +1,7 @@
 type search_param =
-  | Time_slots of {
+  | Time_segments of {
       search_using_tz_offset_s : Time.tz_offset_s option;
-      time_slots : Time_slot.t list;
+      time_slots : Time_segment.t list;
     }
   | Years_ahead_start_unix_second of {
       search_using_tz_offset_s : Time.tz_offset_s option;
@@ -53,11 +53,11 @@ module Check = struct
   let check_search_param (x : search_param) : (unit, search_param_error) result
     =
     match x with
-    | Time_slots { search_using_tz_offset_s = _; time_slots } ->
+    | Time_segments { search_using_tz_offset_s = _; time_slots } ->
       if
         List.for_all
           (fun (x, y) ->
-             Time_slot.Check.is_valid (x, y)
+             Time_segment.Check.is_valid (x, y)
              && Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None x
                 |> Result.is_ok
              && Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None y
@@ -183,7 +183,7 @@ let of_unix_second ~(tz_offset_s_of_time_pattern : Time.tz_offset_s option)
 (* let search_in_time_zone_of_search_param (param : search_param) : Time.time_zone
    =
    match param with
-   | Time_slots { search_in_time_zone; _ } -> search_in_time_zone
+   | Time_segments { search_in_time_zone; _ } -> search_in_time_zone
    | Years_ahead_start_unix_second { search_in_time_zone; _ } ->
     search_in_time_zone
    | Years_ahead_start_tm { search_in_time_zone; _ } -> search_in_time_zone
@@ -192,7 +192,7 @@ let of_unix_second ~(tz_offset_s_of_time_pattern : Time.tz_offset_s option)
 let search_using_tz_offset_s_of_search_param (param : search_param) :
   Time.tz_offset_s option =
   match param with
-  | Time_slots { search_using_tz_offset_s; _ } -> search_using_tz_offset_s
+  | Time_segments { search_using_tz_offset_s; _ } -> search_using_tz_offset_s
   | Years_ahead_start_unix_second { search_using_tz_offset_s; _ } ->
     search_using_tz_offset_s
   | Years_ahead_start_date_time { search_using_tz_offset_s; _ } ->
@@ -201,18 +201,18 @@ let search_using_tz_offset_s_of_search_param (param : search_param) :
 let push_search_param_to_later_start ~(start : int64)
     (search_param : search_param) : (search_param, unit) result =
   match search_param with
-  | Time_slots { search_using_tz_offset_s; time_slots } -> (
-      match Time_slots.Bound.min_start_and_max_end_exc_list time_slots with
+  | Time_segments { search_using_tz_offset_s; time_slots } -> (
+      match Time_segments.Bound.min_start_and_max_end_exc_list time_slots with
       | None -> Ok search_param
       | Some (start', end_exc') ->
         let start = max start' start in
         let time_slots =
           time_slots
           |> List.to_seq
-          |> Time_slots.intersect (Seq.return (start, end_exc'))
+          |> Time_segments.intersect (Seq.return (start, end_exc'))
           |> List.of_seq
         in
-        Ok (Time_slots { search_using_tz_offset_s; time_slots }) )
+        Ok (Time_segments { search_using_tz_offset_s; time_slots }) )
   | Years_ahead_start_unix_second
       { search_using_tz_offset_s; start = start'; search_years_ahead } ->
     let start = max start' start in
@@ -673,8 +673,8 @@ end
 let start_date_time_and_search_years_ahead_of_search_param
     (search_param : search_param) : (Time.date_time * int) option =
   match search_param with
-  | Time_slots { search_using_tz_offset_s; time_slots } -> (
-      match Time_slots.Bound.min_start_and_max_end_exc_list time_slots with
+  | Time_segments { search_using_tz_offset_s; time_slots } -> (
+      match Time_segments.Bound.min_start_and_max_end_exc_list time_slots with
       | None -> None
       | Some (start, end_exc) ->
         let start =
@@ -845,7 +845,7 @@ module Single_pattern = struct
           |> Result.ok )
 
   let matching_time_slots (search_param : search_param) (t : time_pattern) :
-    (Time_slot.t Seq.t, error) result =
+    (Time_segment.t Seq.t, error) result =
     let f (x, y) =
       (Time.unix_second_of_date_time x, Time.unix_second_of_date_time y)
     in
@@ -861,9 +861,9 @@ module Single_pattern = struct
         |> fun l ->
         let time_slots =
           match search_param with
-          | Time_slots { time_slots; _ } ->
+          | Time_segments { time_slots; _ } ->
             let time_slots =
-              time_slots |> Time_slots.Normalize.normalize_list_in_seq_out
+              time_slots |> Time_segments.Normalize.normalize_list_in_seq_out
             in
             Some time_slots
           | _ -> None
@@ -871,20 +871,20 @@ module Single_pattern = struct
         match time_slots with
         | None -> l
         | Some time_slots ->
-          Time_slots.intersect time_slots ~skip_check:true l
-          |> Time_slots.Normalize.normalize ~skip_filter_invalid:true
+          Time_segments.intersect time_slots ~skip_check:true l
+          |> Time_segments.Normalize.normalize ~skip_filter_invalid:true
             ~skip_sort:true)
 
   let matching_time_slots_round_robin_non_decreasing
       (search_param : search_param) (l : time_pattern list) :
-    (Time_slot.t list Seq.t, error) result =
+    (Time_segment.t list Seq.t, error) result =
     let l = List.map (matching_time_slots search_param) l in
     match List.find_opt Result.is_error l with
     | Some e -> Error (Result.get_error e)
     | None ->
       l
       |> List.map Result.get_ok
-      |> Time_slots.Round_robin.collect_round_robin_non_decreasing
+      |> Time_segments.Round_robin.collect_round_robin_non_decreasing
         ~skip_check:true
       |> OSeq.take_while (List.for_all Option.is_some)
       |> Seq.map (List.map Option.get)
@@ -892,7 +892,7 @@ module Single_pattern = struct
 
   let matching_time_slots_round_robin_non_decreasing_flat
       (search_param : search_param) (l : time_pattern list) :
-    (Time_slot.t Seq.t, error) result =
+    (Time_segment.t Seq.t, error) result =
     matching_time_slots_round_robin_non_decreasing search_param l
     |> Result.map (Seq.flat_map List.to_seq)
 
@@ -914,7 +914,7 @@ module Single_pattern = struct
             | Ok x -> Some x ))
 
   let next_match_time_slot (search_param : search_param) (t : time_pattern) :
-    (Time_slot.t option, error) result =
+    (Time_segment.t option, error) result =
     matching_time_slots search_param t
     |> Result.map (fun s ->
         match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x)
@@ -922,9 +922,9 @@ end
 
 module Range_pattern = struct
   let matching_time_slots (search_param : search_param)
-      (range : time_range_pattern) : (Time_slot.t Seq.t, error) result =
+      (range : time_range_pattern) : (Time_segment.t Seq.t, error) result =
     let search_and_get_start (search_param : search_param) (t : time_pattern)
-        ((start, _) : Time_slot.t) : Time_slot.t option =
+        ((start, _) : Time_segment.t) : Time_segment.t option =
       let search_param =
         push_search_param_to_later_start ~start search_param |> Result.get_ok
       in
@@ -935,7 +935,7 @@ module Range_pattern = struct
       | Some (start', _) -> Some (start, start')
     in
     let search_and_get_end_exc (search_param : search_param) (t : time_pattern)
-        ((start, _) : Time_slot.t) : Time_slot.t option =
+        ((start, _) : Time_segment.t) : Time_segment.t option =
       let search_param =
         push_search_param_to_later_start ~start search_param |> Result.get_ok
       in
@@ -969,14 +969,14 @@ module Range_pattern = struct
         | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc))
 
   let matching_time_slots_multi (search_param : search_param)
-      (l : time_range_pattern list) : (Time_slot.t Seq.t, error) result =
+      (l : time_range_pattern list) : (Time_segment.t Seq.t, error) result =
     let l = List.map (matching_time_slots search_param) l in
     match List.find_opt Result.is_error l with
     | Some e -> Error (Result.get_error e)
     | None ->
       l
       |> List.map Result.get_ok
-      |> Time_slots.Merge.merge_multi_list ~skip_check:true
+      |> Time_segments.Merge.merge_multi_list ~skip_check:true
       |> Result.ok
 
   let next_match_time_slot_multi (search_param : search_param)
@@ -989,14 +989,14 @@ module Range_pattern = struct
 
   let matching_time_slots_round_robin_non_decreasing
       (search_param : search_param) (l : time_range_pattern list) :
-    (Time_slot.t list Seq.t, error) result =
+    (Time_segment.t list Seq.t, error) result =
     let l = List.map (matching_time_slots search_param) l in
     match List.find_opt Result.is_error l with
     | Some e -> Error (Result.get_error e)
     | None ->
       l
       |> List.map Result.get_ok
-      |> Time_slots.Round_robin.collect_round_robin_non_decreasing
+      |> Time_segments.Round_robin.collect_round_robin_non_decreasing
         ~skip_check:true
       |> OSeq.take_while (List.for_all Option.is_some)
       |> Seq.map (List.map Option.get)
@@ -1004,14 +1004,14 @@ module Range_pattern = struct
 
   let matching_time_slots_round_robin_non_decreasing_flat
       (search_param : search_param) (l : time_range_pattern list) :
-    (Time_slot.t Seq.t, error) result =
+    (Time_segment.t Seq.t, error) result =
     matching_time_slots_round_robin_non_decreasing search_param l
     |> Result.map (Seq.flat_map List.to_seq)
 end
 
 module Single_or_ranges = struct
   let matching_time_slots (search_param : search_param) (x : single_or_ranges) :
-    (Time_slot.t Seq.t, error) result =
+    (Time_segment.t Seq.t, error) result =
     match x with
     | Single_time_pattern pat ->
       Single_pattern.matching_time_slots search_param pat
@@ -1019,7 +1019,7 @@ module Single_or_ranges = struct
       Range_pattern.matching_time_slots_multi search_param l
 
   let next_match_time_slot (search_param : search_param) (x : single_or_ranges)
-    : (Time_slot.t option, error) result =
+    : (Time_segment.t option, error) result =
     matching_time_slots search_param x
     |> Result.map (fun s ->
         match s () with
@@ -1028,7 +1028,7 @@ module Single_or_ranges = struct
 
   let matching_time_slots_round_robin_non_decreasing
       (search_param : search_param) (t : single_or_ranges) :
-    (Time_slot.t list Seq.t, error) result =
+    (Time_segment.t list Seq.t, error) result =
     match t with
     | Single_time_pattern pat ->
       Single_pattern.matching_time_slots_round_robin_non_decreasing
@@ -1039,7 +1039,7 @@ module Single_or_ranges = struct
 
   let matching_time_slots_round_robin_non_decreasing_flat
       (search_param : search_param) (t : single_or_ranges) :
-    (Time_slot.t Seq.t, error) result =
+    (Time_segment.t Seq.t, error) result =
     matching_time_slots_round_robin_non_decreasing search_param t
     |> Result.map (Seq.flat_map List.to_seq)
 end

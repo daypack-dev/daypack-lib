@@ -2,7 +2,7 @@ let () =
   let alco_suites =
     [
       ("Range.Alco", Range.Alco.suite);
-      ("Time_slots.Alco", Time_slots.Alco.suite);
+      ("Time_segments.Alco", Time_segments.Alco.suite);
     ]
   in
   let qc_suites =
@@ -10,7 +10,7 @@ let () =
       ("Misc_utils.Qc", Misc_utils.Qc.suite);
       ("Map_utils.Qc", Map_utils.Qc.suite);
       ("Set_utils.Qc", Set_utils.Qc.suite);
-      ("Time_slots.Qc", Time_slots.Qc.suite);
+      ("Time_segments.Qc", Time_segments.Qc.suite);
       ("Time_pattern.Qc", Time_pattern.Qc.suite);
       ("Time_profile.Qc", Time_profile.Qc.suite);
       ("Time_profile_store.Qc", Time_profile_store.Qc.suite);
