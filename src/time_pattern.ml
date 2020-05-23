@@ -1093,9 +1093,10 @@ module Of_string = struct
 
   let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
       (p : 'a t) : 'a list t =
-    try
-      if allow_empty then sep_by_comma (range_inc_expr p) >>| f_flatten
-      else sep_by_comma1 (range_inc_expr p) >>| f_flatten
+    ( if allow_empty then sep_by_comma (range_inc_expr p)
+      else sep_by_comma1 (range_inc_expr p) )
+    >>= fun l ->
+    try return (f_flatten l)
     with Range.Range_is_invalid -> fail "Invalid range"
 
   let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
