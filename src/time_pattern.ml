@@ -1089,20 +1089,15 @@ module Of_string = struct
   let range_inc_expr (p : 'a t) : 'a Range.range t =
     p >>= fun x -> hyphen *> p >>| fun y -> `Range_inc (x, y)
 
-  let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list) (p : 'a t) : 'a list t =
+  let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
+      (p : 'a t) : 'a list t =
     try
-    if allow_empty then
-      sep_by_comma (range_inc_expr p) >>| f_flatten
-    else
-      sep_by_comma1 (range_inc_expr p) >>| f_flatten
-    with
-    | Range.Range_is_invalid -> fail "Invalid range"
+      if allow_empty then sep_by_comma (range_inc_expr p) >>| f_flatten
+      else sep_by_comma1 (range_inc_expr p) >>| f_flatten
+    with Range.Range_is_invalid -> fail "Invalid range"
 
   let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
-    (char '['
-     *> p
-     >>= fun l -> char ']' *> return l)
-    <|> (return [])
+    char '[' *> p >>= (fun l -> char ']' *> return l) <|> return []
 
   module Second = struct
     let second_expr =
@@ -1111,11 +1106,11 @@ module Of_string = struct
       if x >= 60 then fail (Printf.sprintf "Invalid second: %d" x) else return x
 
     let seconds_expr ~allow_empty =
-      ranges_expr ~allow_empty ~f_flatten:Time.Second_ranges.Flatten.flatten_list second_expr
+      ranges_expr ~allow_empty
+        ~f_flatten:Time.Second_ranges.Flatten.flatten_list second_expr
 
     let seconds_cron_expr =
-      (char '*' *> return [])
-      <|> seconds_expr ~allow_empty:false
+      char '*' *> return [] <|> seconds_expr ~allow_empty:false
 
     let seconds_time_pattern_expr =
       time_pattern_ranges_expr (seconds_expr ~allow_empty:true)
@@ -1128,11 +1123,11 @@ module Of_string = struct
       if x >= 60 then fail (Printf.sprintf "Invalid minute: %d" x) else return x
 
     let minutes_expr ~allow_empty =
-      ranges_expr ~allow_empty ~f_flatten:Time.Minute_ranges.Flatten.flatten_list minute_expr
+      ranges_expr ~allow_empty
+        ~f_flatten:Time.Minute_ranges.Flatten.flatten_list minute_expr
 
     let minutes_cron_expr =
-      (char '*' *> return [])
-      <|> minutes_expr ~allow_empty:false
+      char '*' *> return [] <|> minutes_expr ~allow_empty:false
 
     let minutes_time_pattern_expr =
       time_pattern_ranges_expr (minutes_expr ~allow_empty:true)
@@ -1145,11 +1140,11 @@ module Of_string = struct
       if x >= 24 then fail (Printf.sprintf "Invalid hour: %d" x) else return x
 
     let hours_expr ~allow_empty =
-      ranges_expr ~allow_empty ~f_flatten:Time.Hour_ranges.Flatten.flatten_list hour_expr
+      ranges_expr ~allow_empty ~f_flatten:Time.Hour_ranges.Flatten.flatten_list
+        hour_expr
 
     let hours_cron_expr =
-      (char '*' *> return [])
-      <|> hours_expr ~allow_empty:false
+      char '*' *> return [] <|> hours_expr ~allow_empty:false
 
     let hours_time_pattern_expr =
       time_pattern_ranges_expr (hours_expr ~allow_empty:true)
@@ -1164,12 +1159,10 @@ module Of_string = struct
 
     let month_days_expr ~allow_empty =
       ranges_expr ~allow_empty
-        ~f_flatten:Time.Month_day_ranges.Flatten.flatten_list
-        month_day_expr
+        ~f_flatten:Time.Month_day_ranges.Flatten.flatten_list month_day_expr
 
     let month_days_cron_expr =
-      (char '*' *> return [])
-      <|> month_days_expr ~allow_empty:false
+      char '*' *> return [] <|> month_days_expr ~allow_empty:false
 
     let month_days_time_pattern_expr =
       time_pattern_ranges_expr (month_days_expr ~allow_empty:true)
@@ -1192,33 +1185,27 @@ module Of_string = struct
                   | Error () -> fail (Printf.sprintf "Invalid month string: %s" x) )
 
     let months_expr ~allow_empty ~for_cron =
-      ranges_expr ~allow_empty
-            ~f_flatten:Time.Month_ranges.Flatten.flatten_list
+      ranges_expr ~allow_empty ~f_flatten:Time.Month_ranges.Flatten.flatten_list
         (month_expr ~for_cron)
 
     let months_cron_expr =
-      (char '*' *> return [])
-      <|> months_expr ~allow_empty:false ~for_cron:true
+      char '*' *> return [] <|> months_expr ~allow_empty:false ~for_cron:true
 
     let months_time_pattern_expr =
-      time_pattern_ranges_expr
-      (months_expr ~allow_empty:true ~for_cron:true)
+      time_pattern_ranges_expr (months_expr ~allow_empty:true ~for_cron:true)
   end
 
   module Year = struct
     let year_expr = nat_zero
 
     let years_expr ~allow_empty =
-      ranges_expr ~allow_empty
-        ~f_flatten:Time.Year_ranges.Flatten.flatten_list
+      ranges_expr ~allow_empty ~f_flatten:Time.Year_ranges.Flatten.flatten_list
         year_expr
 
     let years_cron_expr =
-      (char '*' *> return [])
-      <|> years_expr ~allow_empty:false
+      char '*' *> return [] <|> years_expr ~allow_empty:false
 
-    let years_time_pattern_expr =
-      years_expr ~allow_empty:true
+    let years_time_pattern_expr = years_expr ~allow_empty:true
   end
 
   module Weekday = struct
@@ -1240,12 +1227,11 @@ module Of_string = struct
 
     let weekdays_expr ~allow_empty ~for_cron =
       ranges_expr ~allow_empty
-            ~f_flatten:Time.Weekday_ranges.Flatten.flatten_list
-          (weekday_expr ~for_cron)
+        ~f_flatten:Time.Weekday_ranges.Flatten.flatten_list
+        (weekday_expr ~for_cron)
 
     let weekdays_cron_expr =
-      (char '*' *> return [])
-      <|> weekdays_expr ~allow_empty:false ~for_cron:true
+      char '*' *> return [] <|> weekdays_expr ~allow_empty:false ~for_cron:true
 
     let weekdays_time_pattern_expr =
       time_pattern_ranges_expr (weekdays_expr ~allow_empty:true ~for_cron:false)
@@ -1276,30 +1262,30 @@ module Of_string = struct
     }
 
   let time_pattern_expr =
-    char 'y'
-    *> Year.years_time_pattern_expr >>= fun years ->
-    char 'm'
-    *> Month.months_time_pattern_expr >>= fun months ->
-    char 'd'
-    *> Month_day.month_days_time_pattern_expr >>= fun month_days ->
-    char 'w'
-    *> Weekday.weekdays_time_pattern_expr >>= fun weekdays ->
-    char 'h'
-    *> Hour.hours_time_pattern_expr >>= fun hours ->
-    char 'm'
-    *> Minute.minutes_time_pattern_expr >>= fun minutes ->
-    char 's'
-    *> Second.seconds_time_pattern_expr >>| fun seconds ->
-      {
-        years;
-        months;
-        month_days;
-        weekdays;
-        hours;
-        minutes;
-        seconds;
-        unix_seconds = [];
-      }
+    char 'y' *> Year.years_time_pattern_expr
+    >>= fun years ->
+    char 'm' *> Month.months_time_pattern_expr
+    >>= fun months ->
+    char 'd' *> Month_day.month_days_time_pattern_expr
+    >>= fun month_days ->
+    char 'w' *> Weekday.weekdays_time_pattern_expr
+    >>= fun weekdays ->
+    char 'h' *> Hour.hours_time_pattern_expr
+    >>= fun hours ->
+    char 'm' *> Minute.minutes_time_pattern_expr
+    >>= fun minutes ->
+    char 's' *> Second.seconds_time_pattern_expr
+    >>| fun seconds ->
+    {
+      years;
+      months;
+      month_days;
+      weekdays;
+      hours;
+      minutes;
+      seconds;
+      unix_seconds = [];
+    }
 
   let time_pattern_of_cron_string (s : string) : (time_pattern, string) result =
     parse_string ~consume:Consume.All cron_expr s
