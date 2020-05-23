@@ -1172,20 +1172,26 @@ module Of_string = struct
   end
 
   module Month = struct
-    let month_expr ~for_cron =
+    let month_int_expr =
       nat_zero
-      >>= (fun x ->
-          match Time.month_of_human_int x with
-          | Ok x -> return x
-          | Error () -> fail (Printf.sprintf "Invalid month int: %d" x))
-          <|> ( alpha_string
-                >>= fun x ->
-                if for_cron && String.length x <> 3 then
-                  fail (Printf.sprintf "Invalid length for month string: %s" x)
-                else
-                  match Time.Of_string.month_of_string x with
-                  | Ok x -> return x
-                  | Error () -> fail (Printf.sprintf "Invalid month string: %s" x) )
+      >>= fun x ->
+      match Time.month_of_human_int x with
+      | Ok x -> return x
+      | Error () -> fail (Printf.sprintf "Invalid month int: %d" x)
+
+    let month_word_expr ~for_cron =
+      alpha_string
+      >>= fun x ->
+      if for_cron && String.length x <> 3 then
+        fail (Printf.sprintf "Invalid length for month string: %s" x)
+      else
+        match Time.Of_string.month_of_string x with
+        | Ok x -> return x
+        | Error () -> fail (Printf.sprintf "Invalid month string: %s" x)
+
+    let month_expr ~for_cron =
+      if for_cron then month_int_expr <|> month_word_expr ~for_cron
+      else month_word_expr ~for_cron
 
     let months_expr ~allow_empty ~for_cron =
       ranges_expr ~allow_empty ~f_flatten:Time.Month_ranges.Flatten.flatten_list
@@ -1212,21 +1218,26 @@ module Of_string = struct
   end
 
   module Weekday = struct
-    let weekday_expr ~for_cron =
+    let weekday_int_expr =
       nat_zero
-      >>= (fun x ->
-          match Time.weekday_of_tm_int x with
-          | Ok x -> return x
-          | Error () -> fail (Printf.sprintf "Invalid weekday int: %d" x))
-          <|> ( alpha_string
-                >>= fun x ->
-                if for_cron && String.length x <> 3 then
-                  fail (Printf.sprintf "Invalid length for weekday string: %s" x)
-                else
-                  match Time.Of_string.weekday_of_string x with
-                  | Ok x -> return x
-                  | Error () -> fail (Printf.sprintf "Invalid weekday string: %s" x)
-              )
+      >>= fun x ->
+      match Time.weekday_of_tm_int x with
+      | Ok x -> return x
+      | Error () -> fail (Printf.sprintf "Invalid weekday int: %d" x)
+
+    let weekday_word_expr ~for_cron =
+      alpha_string
+      >>= fun x ->
+      if for_cron && String.length x <> 3 then
+        fail (Printf.sprintf "Invalid length for weekday string: %s" x)
+      else
+        match Time.Of_string.weekday_of_string x with
+        | Ok x -> return x
+        | Error () -> fail (Printf.sprintf "Invalid weekday string: %s" x)
+
+    let weekday_expr ~for_cron =
+      if for_cron then weekday_int_expr <|> weekday_word_expr ~for_cron
+      else weekday_word_expr ~for_cron
 
     let weekdays_expr ~allow_empty ~for_cron =
       ranges_expr ~allow_empty
@@ -1265,19 +1276,19 @@ module Of_string = struct
     }
 
   let time_pattern_expr =
-    char 'y' *> Year.years_time_pattern_expr
+    char 'y' *> space *> Year.years_time_pattern_expr
     >>= fun years ->
-    char 'm' *> Month.months_time_pattern_expr
+    space *> char 'm' *> space *> Month.months_time_pattern_expr
     >>= fun months ->
-    char 'd' *> Month_day.month_days_time_pattern_expr
+    space *> char 'd' *> space *> Month_day.month_days_time_pattern_expr
     >>= fun month_days ->
-    char 'w' *> Weekday.weekdays_time_pattern_expr
+    space *> char 'w' *> space *> Weekday.weekdays_time_pattern_expr
     >>= fun weekdays ->
-    char 'h' *> Hour.hours_time_pattern_expr
+    space *> char 'h' *> space *> Hour.hours_time_pattern_expr
     >>= fun hours ->
-    char 'm' *> Minute.minutes_time_pattern_expr
+    space *> char 'm' *> space *> Minute.minutes_time_pattern_expr
     >>= fun minutes ->
-    char 's' *> Second.seconds_time_pattern_expr
+    space *> char 's' *> space *> Second.seconds_time_pattern_expr
     >>| fun seconds ->
     {
       years;
