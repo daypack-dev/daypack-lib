@@ -1087,7 +1087,9 @@ module Of_string = struct
   open Parser_components
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
-    p >>= fun x -> hyphen *> p >>| fun y -> `Range_inc (x, y)
+    p
+    >>= (fun x -> hyphen *> p >>| fun y -> `Range_inc (x, y))
+        <|> (p >>| fun x -> `Range_inc (x, x))
 
   let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
       (p : 'a t) : 'a list t =
@@ -1240,15 +1242,15 @@ module Of_string = struct
   let cron_expr =
     Minute.minutes_cron_expr
     >>= fun minutes ->
-    Hour.hours_cron_expr
+    space *> Hour.hours_cron_expr
     >>= fun hours ->
-    Month_day.month_days_cron_expr
+    space *> Month_day.month_days_cron_expr
     >>= fun month_days ->
-    Month.months_cron_expr
+    space *> Month.months_cron_expr
     >>= fun months ->
-    Year.years_cron_expr
+    space *> Year.years_cron_expr
     >>= fun years ->
-    Weekday.weekdays_cron_expr
+    space *> Weekday.weekdays_cron_expr
     >>| fun weekdays ->
     {
       years;
