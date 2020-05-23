@@ -30,4 +30,6 @@ let dot = char '.'
 
 let hyphen = char '-'
 
+let sep_by_comma (p : 'a t) : 'a list t = sep_by (space *> comma *> space) p
+
 let sep_by_comma1 (p : 'a t) : 'a list t = sep_by1 (space *> comma *> space) p
