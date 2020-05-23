@@ -130,6 +130,8 @@ end
 
 module Of_string : sig
   val time_pattern_of_cron_string : string -> (time_pattern, string) result
+
+  val time_pattern_of_string : string -> (time_pattern, string) result
 end
 
 module To_string : sig
