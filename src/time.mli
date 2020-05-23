@@ -89,7 +89,7 @@ val next_weekday : weekday -> weekday
 
 val tm_int_of_weekday : weekday -> int
 
-val weekday_of_tm_int : int -> weekday
+val weekday_of_tm_int : int -> (weekday, unit) result
 
 val tm_int_of_month : month -> int
 
