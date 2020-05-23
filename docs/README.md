@@ -18,7 +18,8 @@ Refer to the library documentation for information on individual types and funct
 
   - [Time pattern](time_pattern.md)
 
-    - Finding time or time segments using a pattern similar to cron expression
+    - Finding time or time segments using a pattern similar to cron expression, but slightly
+      more powerful
     
   - [Time expression](time_expr.md)
 
