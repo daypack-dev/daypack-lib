@@ -1100,7 +1100,7 @@ module Of_string = struct
     with Range.Range_is_invalid -> fail "Invalid range"
 
   let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
-    char '[' *> p >>= (fun l -> char ']' *> return l) <|> return []
+    char '[' *> commit *> p >>= (fun l -> char ']' *> return l) <|> return []
 
   module Second = struct
     let second_expr =
