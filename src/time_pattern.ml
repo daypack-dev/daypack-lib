@@ -1089,8 +1089,17 @@ module Of_string = struct
   let range_inc_expr (p : 'a t) : 'a Range.range t =
     p >>= fun x -> hyphen *> p >>| fun y -> `Range_inc (x, y)
 
-  let ranges_expr (p : 'a t) : 'a Range.range list t =
-    sep_by_comma1 (range_inc_expr p)
+  let ranges_expr ~allow_empty (p : 'a t) : 'a Range.range list t =
+    if allow_empty then
+      sep_by_comma (range_inc_expr p)
+    else
+      sep_by_comma1 (range_inc_expr p)
+
+  let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
+    (char '['
+     *> p
+     >>= fun l -> char ']' *> return l)
+    <|> (return [])
 
   module Second = struct
     let second_expr =
@@ -1098,9 +1107,15 @@ module Of_string = struct
       >>= fun x ->
       if x >= 60 then fail (Printf.sprintf "Invalid second: %d" x) else return x
 
-    let second_ranges_expr =
-      char '*' *> return []
-      <|> (ranges_expr second_expr >>| Time.Second_ranges.Flatten.flatten_list)
+    let seconds_expr ~allow_empty =
+      ranges_expr ~allow_empty second_expr >>| Time.Second_ranges.Flatten.flatten_list
+
+    let seconds_cron_expr =
+      (char '*' *> return [])
+      <|> seconds_expr ~allow_empty:false
+
+    let seconds_time_pattern_expr =
+      time_pattern_ranges_expr (seconds_expr ~allow_empty:true)
   end
 
   module Minute = struct
@@ -1109,9 +1124,15 @@ module Of_string = struct
       >>= fun x ->
       if x >= 60 then fail (Printf.sprintf "Invalid minute: %d" x) else return x
 
-    let minute_ranges_expr =
-      char '*' *> return []
-      <|> (ranges_expr minute_expr >>| Time.Minute_ranges.Flatten.flatten_list)
+    let minutes_expr ~allow_empty =
+      (ranges_expr ~allow_empty minute_expr >>| Time.Minute_ranges.Flatten.flatten_list)
+
+    let minute_ranges_cron_expr =
+      (char '*' *> return [])
+      <|> minutes_expr ~allow_empty:false
+
+    let minutes_time_pattern_expr =
+      time_pattern_ranges_expr (minutes_expr ~allow_empty:true)
   end
 
   module Hour = struct
@@ -1120,9 +1141,15 @@ module Of_string = struct
       >>= fun x ->
       if x >= 24 then fail (Printf.sprintf "Invalid hour: %d" x) else return x
 
-    let hour_ranges_expr =
-      char '*' *> return []
-      <|> (ranges_expr hour_expr >>| Time.Hour_ranges.Flatten.flatten_list)
+    let hours_expr ~allow_empty =
+      (ranges_expr ~allow_empty hour_expr >>| Time.Hour_ranges.Flatten.flatten_list)
+
+    let hour_ranges_cron_expr =
+      (char '*' *> return [])
+      <|> hours_expr ~allow_empty:false
+
+    let hours_time_pattern_expr =
+      time_pattern_ranges_expr (hours_expr ~allow_empty:true)
   end
 
   module Month_day = struct
@@ -1132,10 +1159,16 @@ module Of_string = struct
       if 1 <= x && x <= 31 then return x
       else fail (Printf.sprintf "Invalid month day: %d" x)
 
-    let month_day_ranges_expr =
-      char '*' *> return []
-      <|> ( ranges_expr month_day_expr
+    let month_days_expr ~allow_empty =
+      ( ranges_expr ~allow_empty month_day_expr
             >>| Time.Month_day_ranges.Flatten.flatten_list )
+
+    let month_days_cron_expr =
+      (char '*' *> return [])
+      <|> month_days_expr ~allow_empty:false
+
+    let month_days_time_pattern_expr =
+      time_pattern_ranges_expr (month_days_expr ~allow_empty:true)
   end
 
   module Month = struct
@@ -1155,17 +1188,23 @@ module Of_string = struct
                   | Error () -> fail (Printf.sprintf "Invalid month string: %s" x) )
 
     let month_ranges_expr ~for_cron =
-      char '*' *> return []
-      <|> ( ranges_expr (month_expr ~for_cron)
+      ( ranges_expr (month_expr ~for_cron)
             >>| Time.Month_ranges.Flatten.flatten_list )
+
+    let month_ranges_cron_expr =
+      (char '*' *> return [])
+      <|> month_ranges_expr ~for_cron:true
   end
 
   module Year = struct
     let year_expr = nat_zero
 
     let year_ranges_expr =
-      char '*' *> return []
-      <|> (ranges_expr year_expr >>| Time.Year_ranges.Flatten.flatten_list)
+      (ranges_expr year_expr >>| Time.Year_ranges.Flatten.flatten_list)
+
+    let year_ranges_cron_expr =
+      (char '*' *> return [])
+      <|> year_ranges_expr
   end
 
   module Weekday = struct
@@ -1186,23 +1225,26 @@ module Of_string = struct
               )
 
     let weekday_ranges_expr ~for_cron =
-      char '*' *> return []
-      <|> ( ranges_expr (weekday_expr ~for_cron)
+      ( ranges_expr (weekday_expr ~for_cron)
             >>| Time.Weekday_ranges.Flatten.flatten_list )
+
+    let weekday_ranges_cron_expr =
+      (char '*' *> return [])
+      <|> weekday_ranges_expr ~for_cron:true
   end
 
   let cron_expr =
-    Minute.minute_ranges_expr
+    Minute.minute_ranges_cron_expr
     >>= fun minutes ->
-    Hour.hour_ranges_expr
+    Hour.hour_ranges_cron_expr
     >>= fun hours ->
-    Month_day.month_day_ranges_expr
+    Month_day.month_day_ranges_cron_expr
     >>= fun month_days ->
-    Month.month_ranges_expr ~for_cron:true
+    Month.month_ranges_cron_expr
     >>= fun months ->
-    Year.year_ranges_expr
+    Year.year_ranges_cron_expr
     >>= fun years ->
-    Weekday.weekday_ranges_expr ~for_cron:true
+    Weekday.weekday_ranges_cron_expr
     >>| fun weekdays ->
     {
       years;
