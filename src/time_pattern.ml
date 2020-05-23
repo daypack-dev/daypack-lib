@@ -1214,6 +1214,9 @@ module Of_string = struct
       seconds = [];
       unix_seconds = [];
     }
+
+  let time_pattern_of_cron_string (s : string) : (time_pattern, string) result =
+    parse_string ~consume:Consume.All cron_expr s
 end
 
 module To_string = struct

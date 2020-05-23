@@ -128,6 +128,10 @@ module Equal : sig
   val equal : time_pattern -> time_pattern -> bool
 end
 
+module Of_string : sig
+  val time_pattern_of_cron_string : string -> (time_pattern, string) result
+end
+
 module To_string : sig
   val string_of_error : error -> string
 
