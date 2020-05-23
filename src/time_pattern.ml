@@ -1082,6 +1082,170 @@ module Equal = struct
     && List.sort compare pat1.minutes = List.sort compare pat2.minutes
 end
 
+module Of_string = struct
+  open Angstrom
+  open Parser_components
+
+  let range_inc_expr (p : 'a t) : 'a Range.range t =
+    p >>= (fun x -> hyphen *> p >>| (fun y -> `Range_inc (x, y)))
+
+  let ranges_expr (p : 'a t) : 'a Range.range list t =
+    sep_by_comma1 (range_inc_expr p)
+
+  module Second = struct
+    let second_expr =
+      nat_zero
+      >>= fun x ->
+      if x >= 60 then fail (Printf.sprintf "Invalid second: %d" x)
+      else return x
+
+    let second_ranges_expr =
+      (char '*' *> return []
+      )
+      <|>
+      (ranges_expr second_expr >>|
+       Time.Second_ranges.Flatten.flatten_list
+      )
+  end
+
+  module Minute = struct
+    let minute_expr =
+      nat_zero
+      >>= fun x ->
+      if x >= 60 then fail (Printf.sprintf "Invalid minute: %d" x)
+      else return x
+
+    let minute_ranges_expr =
+      (char '*' *> return []
+      )
+      <|>
+      (ranges_expr minute_expr >>|
+       Time.Minute_ranges.Flatten.flatten_list
+      )
+  end
+
+  module Hour = struct
+    let hour_expr =
+      nat_zero
+      >>= fun x ->
+      if x >= 24 then fail (Printf.sprintf "Invalid hour: %d" x)
+      else return x
+
+    let hour_ranges_expr =
+      (char '*' *> return []
+      )
+      <|>
+      (ranges_expr hour_expr >>|
+       Time.Hour_ranges.Flatten.flatten_list
+      )
+  end
+
+  module Month_day = struct
+    let month_day_expr =
+      nat_zero
+      >>= fun x ->
+      if 1 <= x && x <= 31 then return x
+      else fail (Printf.sprintf "Invalid month day: %d" x)
+
+    let month_day_ranges_expr =
+      (char '*' *> return []
+      )
+      <|>
+      (ranges_expr month_day_expr >>|
+       Time.Month_day_ranges.Flatten.flatten_list
+      )
+  end
+
+  module Month = struct
+    let month_expr ~for_cron =
+      (nat_zero
+       >>= fun x ->
+       match Time.month_of_human_int x with
+       | Ok x -> return x
+       | Error () -> fail (Printf.sprintf "Invalid month int: %d" x)
+      )
+      <|>
+      (alpha_string
+       >>= fun x ->
+       if for_cron && String.length x <> 3 then fail (Printf.sprintf "Invalid length for month string: %s" x)
+       else
+         match Time.Of_string.month_of_string x with
+         | Ok x -> return x
+         | Error () -> fail (Printf.sprintf "Invalid month string: %s" x)
+      )
+
+    let month_ranges_expr ~for_cron =
+      (char '*' *> return []
+      )
+      <|>
+      (
+        ranges_expr (month_expr ~for_cron) >>|
+        Time.Month_ranges.Flatten.flatten_list
+      )
+  end
+
+  module Year = struct
+    let year_expr =
+      nat_zero
+
+    let year_ranges_expr =
+      (char '*' *> return []
+      )
+      <|>
+      (
+        ranges_expr year_expr >>|
+        Time.Year_ranges.Flatten.flatten_list
+      )
+  end
+
+  module Weekday = struct
+    let weekday_expr ~for_cron =
+      (nat_zero
+       >>= fun x ->
+       match Time.weekday_of_tm_int x with
+       | Ok x -> return x
+       | Error () -> fail (Printf.sprintf "Invalid weekday int: %d" x)
+      )
+      <|>
+      (alpha_string
+       >>= fun x ->
+       if for_cron && String.length x <> 3 then fail (Printf.sprintf "Invalid length for weekday string: %s" x)
+       else
+         match Time.Of_string.weekday_of_string x with
+         | Ok x -> return x
+         | Error () -> fail (Printf.sprintf "Invalid weekday string: %s" x)
+      )
+
+    let weekday_ranges_expr ~for_cron =
+      (char '*' *> return []
+      )
+      <|>
+      (
+        ranges_expr (weekday_expr ~for_cron) >>|
+        Time.Weekday_ranges.Flatten.flatten_list
+      )
+  end
+
+  let cron_expr =
+    Minute.minute_ranges_expr
+    >>=
+    (fun minutes ->
+       Hour.hour_ranges_expr >>= (fun hours ->
+           Month_day.month_day_ranges_expr >>= (fun month_days ->
+               Month.month_ranges_expr ~for_cron:true >>= (fun months ->
+                   Year.year_ranges_expr >>= (fun years ->
+                       Weekday.weekday_ranges_expr ~for_cron:true >>| (fun weekdays ->
+                           {
+                             years; months; month_days; weekdays; hours; minutes; seconds = []; unix_seconds = [];
+                           }
+                         )
+                     )
+                 )
+             )
+         )
+    )
+end
+
 module To_string = struct
   let string_of_error (e : error) : string =
     match e with
