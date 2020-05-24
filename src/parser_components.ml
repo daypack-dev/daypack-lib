@@ -33,3 +33,6 @@ let hyphen = char '-'
 let sep_by_comma (p : 'a t) : 'a list t = sep ~by:(space *> comma *> space) p
 
 let sep_by_comma1 (p : 'a t) : 'a list t = sep1 ~by:(space *> comma *> space) p
+
+let option (default : 'a) p : 'a t =
+  p <|> (return default)
