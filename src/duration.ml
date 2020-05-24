@@ -37,7 +37,7 @@ let normalize (t : t) : t = t |> to_seconds |> of_seconds
 module Of_string = struct
   type duration = t
 
-  open Angstrom
+  open CCParse
   open Parser_components
 
   let seconds_string : unit t =
@@ -83,7 +83,7 @@ module Of_string = struct
     >>= fun seconds -> return (normalize { days; hours; minutes; seconds })
 
   let of_string (s : string) : (duration, string) result =
-    parse_string ~consume:Consume.All duration_expr s
+    parse_string (duration_expr <* eoi) s
 end
 
 module To_string = struct
