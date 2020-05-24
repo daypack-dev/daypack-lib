@@ -1087,9 +1087,8 @@ module Of_string = struct
   open Parser_components
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
-    p
-    >>= (fun x -> hyphen *> p >>= fun y -> return (`Range_inc (x, y)))
-        <|> (p >>= fun x -> return (`Range_inc (x, x)))
+    try_ (p >>= fun x -> hyphen *> p >>= fun y -> return (`Range_inc (x, y)))
+    <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
   let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
       (p : 'a t) : 'a list t =
