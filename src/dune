@@ -18,7 +18,7 @@ let () = Jbuild_plugin.V1.send @@ {|
             biniou
             yojson
             atdgen-runtime
-            angstrom
+            containers
  )
 |}
 ^ preprocess ^

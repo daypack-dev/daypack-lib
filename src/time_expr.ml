@@ -98,7 +98,7 @@ module Resolve = struct
 end
 
 module Of_string = struct
-  open Angstrom
+  open CCParse
   open Parser_components
 
   let to_string = string_ci "to"
