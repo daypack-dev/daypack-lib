@@ -109,30 +109,29 @@ module Of_string = struct
 
   let bound =
     option `Next
-      (
-        (try_ (string "coming" *> return `Next))
-        <|>
-        (try_ (char '?' *> return `Next))
-        <|>
-        (try_ (string "every" *> return `Every))
-        <|>
-        (char '!' *> return `Every)
-      )
+      ( try_ (string "coming" *> return `Next)
+        <|> try_ (char '?' *> return `Next)
+        <|> try_ (string "every" *> return `Every)
+        <|> char '!' *> return `Every )
 
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "lasst"; "coming"; "every" ]
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
-    (try_ (p
-    >>= (fun x ->
-        space *> to_string *> space *> p >>= fun y -> return (`Range_inc (x, y)))))
-        <|> (p >>= fun x -> return (`Range_inc (x, x)))
+    try_
+      ( p
+        >>= fun x ->
+        space *> to_string *> space *> p >>= fun y -> return (`Range_inc (x, y))
+      )
+    <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
   let range_exc_expr (p : 'a t) : 'a Range.range t =
-    (try_ (p
-    >>= (fun x ->
-        space *> to_string *> space *> p >>= fun y -> return (`Range_exc (x, y)))))
-        <|> (p >>= fun x -> return (`Range_inc (x, x)))
+    try_
+      ( p
+        >>= fun x ->
+        space *> to_string *> space *> p >>= fun y -> return (`Range_exc (x, y))
+      )
+    <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
   (* let ranges_expr ~(to_int : 'a -> int) ~(of_int : int -> 'a) (p : 'a Range.range t) : 'a Range.range list t =
    *   sep_by_comma1 p >>| fun l ->
@@ -165,7 +164,7 @@ module Of_string = struct
   module Hour_minute_second = struct
     let hour_minute_second_mode_expr =
       option `Hour_in_24_hours
-        ( (try_ (string "am" *> return `Hour_in_AM))
+        ( try_ (string "am" *> return `Hour_in_AM)
           <|> string "pm" *> return `Hour_in_PM )
 
     let hour_minute_second_expr : Time_expr_ast.hour_minute_second_expr t =
@@ -235,9 +234,10 @@ module Of_string = struct
 
   module Day = struct
     let day_expr : Time_expr_ast.day_expr t =
-      (try_ (Month_day.month_day_expr
-      >>= (fun x -> return (Time_expr_ast.Month_day x))))
-          <|> (Weekday.weekday_expr >>= fun x -> return (Time_expr_ast.Weekday x))
+      try_
+        ( Month_day.month_day_expr
+          >>= fun x -> return (Time_expr_ast.Month_day x) )
+      <|> (Weekday.weekday_expr >>= fun x -> return (Time_expr_ast.Weekday x))
   end
 
   module Month = struct
@@ -282,7 +282,8 @@ module Of_string = struct
 
   module Time_points_expr = struct
     let tp_name =
-      string "at:" *> ident_string >>= fun s -> return (Time_expr_ast.Tpe_name s)
+      string "at:" *> ident_string
+      >>= fun s -> return (Time_expr_ast.Tpe_name s)
 
     let tp_ymd_hour_minute_second =
       nat_zero
@@ -354,23 +355,15 @@ module Of_string = struct
 
     let unbounded_time_points_expr : Time_expr_ast.unbounded_time_points_expr t
       =
-      (try_ tp_name)
-      <|>
-      (try_ tp_ymd_hour_minute_second)
-      <|>
-      (try_ tp_ymond_hour_minute_second)
-      <|>
-      (try_ tp_md_hour_minute_second)
-      <|>
-      (try_ tp_mond_hour_minute_second)
-      <|>
-      (try_ tp_d_hour_minute_second)
-      <|>
-      (try_ tp_hour_minute_second)
-      <|>
-      (try_ tp_minute_second)
-      <|>
-      tp_second
+      try_ tp_name
+      <|> try_ tp_ymd_hour_minute_second
+      <|> try_ tp_ymond_hour_minute_second
+      <|> try_ tp_md_hour_minute_second
+      <|> try_ tp_mond_hour_minute_second
+      <|> try_ tp_d_hour_minute_second
+      <|> try_ tp_hour_minute_second
+      <|> try_ tp_minute_second
+      <|> tp_second
 
     let time_points_expr : Time_expr_ast.time_points_expr t =
       bound
@@ -380,7 +373,8 @@ module Of_string = struct
 
   module Time_slots_expr = struct
     let ts_name =
-      string "during:" *> ident_string >>= fun s -> return (Time_expr_ast.Tse_name s)
+      string "during:" *> ident_string
+      >>= fun s -> return (Time_expr_ast.Tse_name s)
 
     let ts_explicit_time_slots =
       sep_by_comma1
@@ -394,8 +388,9 @@ module Of_string = struct
       >>= fun l -> return (Time_expr_ast.Explicit_time_slots l)
 
     let ts_days_hour_minute_second_ranges =
-      (try_ (Month_day.month_day_ranges_expr
-      >>= (fun month_days ->
+      try_
+        ( Month_day.month_day_ranges_expr
+          >>= fun month_days ->
           space
           *> dot
           *> space
@@ -403,17 +398,17 @@ module Of_string = struct
           >>= fun hour_minute_second_ranges ->
           return
             (Time_expr_ast.Month_days_and_hour_minute_second_ranges
-               { month_days; hour_minute_second_ranges }))))
-          <|> (( Weekday.weekday_ranges_expr
-                >>= fun weekdays ->
-                space
-                *> dot
-                *> space
-                *> Hour_minute_second.hour_minute_second_ranges_expr
-                >>= fun hour_minute_second_ranges ->
-                return
-                  (Time_expr_ast.Weekdays_and_hour_minute_second_ranges
-                     { weekdays; hour_minute_second_ranges }) ))
+               { month_days; hour_minute_second_ranges }) )
+      <|> ( Weekday.weekday_ranges_expr
+            >>= fun weekdays ->
+            space
+            *> dot
+            *> space
+            *> Hour_minute_second.hour_minute_second_ranges_expr
+            >>= fun hour_minute_second_ranges ->
+            return
+              (Time_expr_ast.Weekdays_and_hour_minute_second_ranges
+                 { weekdays; hour_minute_second_ranges }) )
 
     let ts_months_mdays_hour_minute_second =
       Month.month_ranges_expr
@@ -438,11 +433,11 @@ module Of_string = struct
            { months; weekdays; hour_minute_second_ranges })
 
     let month_weekday_mode_expr =
-      ( try_ (first_string *> space *> nat_zero
-        >>= fun n -> return (Some (Time_expr_ast.First_n n) )))
-      <|>
-      ( (last_string *> space *> nat_zero
-        >>= fun n -> return (Some (Time_expr_ast.Last_n n) )))
+      try_
+        ( first_string *> space *> nat_zero
+          >>= fun n -> return (Some (Time_expr_ast.First_n n)) )
+      <|> ( last_string *> space *> nat_zero
+            >>= fun n -> return (Some (Time_expr_ast.Last_n n)) )
 
     let ts_months_wday_hour_minute_second =
       Month.month_ranges_expr
@@ -472,19 +467,13 @@ module Of_string = struct
            { years; months; month_days; hour_minute_second_ranges })
 
     let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
-      (try_ ts_name)
-      <|>
-      (try_ ts_explicit_time_slots)
-      <|>
-      (try_ ts_days_hour_minute_second_ranges)
-      <|>
-      (try_ ts_months_mdays_hour_minute_second)
-      <|>
-      (try_ ts_months_wdays_hour_minute_second)
-      <|>
-      (try_ ts_months_wday_hour_minute_second)
-      <|>
-      (ts_years_months_mdays_hour_minute_second)
+      try_ ts_name
+      <|> try_ ts_explicit_time_slots
+      <|> try_ ts_days_hour_minute_second_ranges
+      <|> try_ ts_months_mdays_hour_minute_second
+      <|> try_ ts_months_wdays_hour_minute_second
+      <|> try_ ts_months_wday_hour_minute_second
+      <|> ts_years_months_mdays_hour_minute_second
 
     let time_slots_expr : Time_expr_ast.time_slots_expr t =
       bound
@@ -494,11 +483,13 @@ module Of_string = struct
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string
-      ( (try_ (Time_points_expr.time_points_expr <* eoi
-        >>= (fun e -> return (Time_expr_ast.Time_points_expr e))))
-            <|> ( Time_slots_expr.time_slots_expr
-                  <* eoi
-                  >>= fun e -> return (Time_expr_ast.Time_slots_expr e) ) )
+      ( try_
+          ( Time_points_expr.time_points_expr
+            <* eoi
+            >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
+        <|> ( Time_slots_expr.time_slots_expr
+              <* eoi
+              >>= fun e -> return (Time_expr_ast.Time_slots_expr e) ) )
       s
 
   let time_points_expr_of_string (s : string) :
