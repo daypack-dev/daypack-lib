@@ -1105,7 +1105,7 @@ module Of_string = struct
          (
            get_cnum >>= fun cnum ->
            chars_if (function ']' -> false | _ -> true) >>= fun s ->
-           fail (Printf.sprintf "col %d, invalid rangees: %s" cnum s)
+           failf "col %d, invalid rangees: %s" cnum s
          )
          )) <|> return []
 
