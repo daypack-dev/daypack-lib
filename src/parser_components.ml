@@ -1,11 +1,11 @@
 open CCParse
 
 let alpha_string : string t =
-  chars1_if (function 'a' .. 'z' | 'A' .. 'Z' -> true | _ -> false)
+  chars1_if is_alpha
 
 let ident_string ~(reserved_words : string list) : string t =
   let reserved_words = List.map String.lowercase_ascii reserved_words in
-  chars1_if (function 'a' .. 'z' | 'A' .. 'Z' | '_' -> true | _ -> false)
+  chars1_if is_alpha
   >>= fun s ->
   if List.mem (String.lowercase_ascii s) reserved_words then
     fail (Printf.sprintf "\"%s\" is a reserved word" s)
@@ -22,8 +22,6 @@ let nat_zero : int t =
   try return (int_of_string s)
   with _ -> fail (Printf.sprintf "Integer %s is out of range" s)
 
-let space : unit t = skip_chars (function ' ' | '\t' -> true | _ -> false)
-
 let comma = char ','
 
 let dot = char '.'
@@ -35,3 +33,5 @@ let sep_by_comma (p : 'a t) : 'a list t = sep ~by:(space *> comma *> space) p
 let sep_by_comma1 (p : 'a t) : 'a list t = sep1 ~by:(space *> comma *> space) p
 
 let option (default : 'a) p : 'a t = try_ p <|> return default
+
+let skip_space1 = char_if is_space *> skip_space

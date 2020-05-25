@@ -1099,7 +1099,7 @@ module Of_string = struct
     with Range.Range_is_invalid -> fail "Invalid range"
 
   let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
-    char '[' *> p >>= (fun l -> char ']' *> return l) <|> return []
+    (char '[' *> p >>= (fun l -> char ']' *> return l)) <|> return []
 
   module Second = struct
     let second_expr =
@@ -1112,7 +1112,7 @@ module Of_string = struct
         ~f_flatten:Time.Second_ranges.Flatten.flatten_list second_expr
 
     let seconds_cron_expr =
-      try_ (char '*' *> return []) <|> seconds_expr ~allow_empty:false
+      (char '*' *> return []) <|> seconds_expr ~allow_empty:false
 
     let seconds_time_pattern_expr =
       time_pattern_ranges_expr (seconds_expr ~allow_empty:true)
@@ -1189,7 +1189,7 @@ module Of_string = struct
         | Error () -> fail (Printf.sprintf "Invalid month string: %s" x)
 
     let month_expr ~for_cron =
-      if for_cron then month_int_expr <|> month_word_expr ~for_cron
+      if for_cron then ((month_word_expr ~for_cron)) <|> month_int_expr
       else month_word_expr ~for_cron
 
     let months_expr ~allow_empty ~for_cron =
@@ -1201,7 +1201,7 @@ module Of_string = struct
       <|> months_expr ~allow_empty:false ~for_cron:true
 
     let months_time_pattern_expr =
-      time_pattern_ranges_expr (months_expr ~allow_empty:true ~for_cron:true)
+      time_pattern_ranges_expr (months_expr ~allow_empty:true ~for_cron:false)
   end
 
   module Year = struct
@@ -1255,15 +1255,15 @@ module Of_string = struct
   let cron_expr =
     Minute.minutes_cron_expr
     >>= fun minutes ->
-    space *> Hour.hours_cron_expr
+    skip_space1 *> Hour.hours_cron_expr
     >>= fun hours ->
-    space *> Month_day.month_days_cron_expr
+    skip_space1 *> Month_day.month_days_cron_expr
     >>= fun month_days ->
-    space *> Month.months_cron_expr
+    skip_space1 *> Month.months_cron_expr
     >>= fun months ->
-    space *> Year.years_cron_expr
+    skip_space1 *> Year.years_cron_expr
     >>= fun years ->
-    space *> Weekday.weekdays_cron_expr
+    skip_space1 *> Weekday.weekdays_cron_expr
     >>= fun weekdays ->
     return
       {
@@ -1278,19 +1278,19 @@ module Of_string = struct
       }
 
   let time_pattern_expr =
-    char 'y' *> space *> Year.years_time_pattern_expr
+    char 'y' *> skip_space *> Year.years_time_pattern_expr
     >>= fun years ->
-    space *> char 'm' *> space *> Month.months_time_pattern_expr
+    skip_space *> char 'm' *> skip_space *> Month.months_time_pattern_expr
     >>= fun months ->
-    space *> char 'd' *> space *> Month_day.month_days_time_pattern_expr
+    skip_space *> char 'd' *> skip_space *> Month_day.month_days_time_pattern_expr
     >>= fun month_days ->
-    space *> char 'w' *> space *> Weekday.weekdays_time_pattern_expr
+    skip_space *> char 'w' *> skip_space *> Weekday.weekdays_time_pattern_expr
     >>= fun weekdays ->
-    space *> char 'h' *> space *> Hour.hours_time_pattern_expr
+    skip_space *> char 'h' *> skip_space *> Hour.hours_time_pattern_expr
     >>= fun hours ->
-    space *> char 'm' *> space *> Minute.minutes_time_pattern_expr
+    skip_space *> char 'm' *> skip_space *> Minute.minutes_time_pattern_expr
     >>= fun minutes ->
-    space *> char 's' *> space *> Second.seconds_time_pattern_expr
+    skip_space *> char 's' *> skip_space *> Second.seconds_time_pattern_expr
     >>= fun seconds ->
     return
       {
