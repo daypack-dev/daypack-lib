@@ -1099,7 +1099,15 @@ module Of_string = struct
     with Range.Range_is_invalid -> fail "Invalid range"
 
   let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
-    (char '[' *> p >>= (fun l -> char ']' *> return l)) <|> return []
+    (char '[' *> p >>= (fun l ->
+         try_ (char ']' *> return l)
+         <|>
+         (
+           get_cnum >>= fun cnum ->
+           chars_if (function ']' -> false | _ -> true) >>= fun s ->
+           fail (Printf.sprintf "col %d, invalid rangees: %s" cnum s)
+         )
+         )) <|> return []
 
   module Second = struct
     let second_expr =
@@ -1214,7 +1222,8 @@ module Of_string = struct
     let years_cron_expr =
       try_ (char '*' *> return []) <|> years_expr ~allow_empty:false
 
-    let years_time_pattern_expr = years_expr ~allow_empty:true
+    let years_time_pattern_expr =
+      time_pattern_ranges_expr (years_expr ~allow_empty:true)
   end
 
   module Weekday = struct
