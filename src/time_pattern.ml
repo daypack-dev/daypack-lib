@@ -1107,7 +1107,7 @@ module Of_string = struct
            get_cnum >>= fun cnum ->
            non_square_bracket_string >>= fun s ->
            if s = "" then
-             failf "Missing ], at pos: %d" cnum
+             failf "Missing ], pos: %d" cnum
            else
              failf "Invalid ranges: %s, pos: %d" s cnum
          )

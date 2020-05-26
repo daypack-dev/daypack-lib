@@ -8,7 +8,7 @@ let ident_string ~(reserved_words : string list) : string t =
   chars1_if is_alpha
   >>= fun s ->
   if List.mem (String.lowercase_ascii s) reserved_words then
-    fail (Printf.sprintf "\"%s\" is a reserved word" s)
+    failf "\"%s\" is a reserved word" s
   else return s
 
 let skip_non_num_string ~delim : unit t =
