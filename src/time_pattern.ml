@@ -1118,14 +1118,14 @@ module Of_string = struct
     let second_expr =
       nat_zero
       >>= fun x ->
-      if x >= 60 then fail (Printf.sprintf "Invalid second: %d" x) else return x
+      if x >= 60 then failf "Invalid second: %d" x else return x
 
     let seconds_expr ~allow_empty =
       ranges_expr ~allow_empty
         ~f_flatten:Time.Second_ranges.Flatten.flatten_list second_expr
 
     let seconds_cron_expr =
-      (char '*' *> return []) <|> seconds_expr ~allow_empty:false
+      try_ (char '*' *> return []) <|> seconds_expr ~allow_empty:false
 
     let seconds_time_pattern_expr =
       time_pattern_ranges_expr (seconds_expr ~allow_empty:true)
@@ -1135,14 +1135,14 @@ module Of_string = struct
     let minute_expr =
       nat_zero
       >>= fun x ->
-      if x >= 60 then fail (Printf.sprintf "Invalid minute: %d" x) else return x
+      if x >= 60 then failf "Invalid minute: %d" x else return x
 
     let minutes_expr ~allow_empty =
       ranges_expr ~allow_empty
         ~f_flatten:Time.Minute_ranges.Flatten.flatten_list minute_expr
 
     let minutes_cron_expr =
-      (char '*' *> return []) <|> minutes_expr ~allow_empty:false
+      try_ (char '*' *> return []) <|> minutes_expr ~allow_empty:false
 
     let minutes_time_pattern_expr =
       time_pattern_ranges_expr (minutes_expr ~allow_empty:true)
@@ -1152,14 +1152,14 @@ module Of_string = struct
     let hour_expr =
       nat_zero
       >>= fun x ->
-      if x >= 24 then fail (Printf.sprintf "Invalid hour: %d" x) else return x
+      if x >= 24 then failf "Invalid hour: %d" x else return x
 
     let hours_expr ~allow_empty =
       ranges_expr ~allow_empty ~f_flatten:Time.Hour_ranges.Flatten.flatten_list
         hour_expr
 
     let hours_cron_expr =
-      (char '*' *> return []) <|> hours_expr ~allow_empty:false
+      try_ (char '*' *> return []) <|> hours_expr ~allow_empty:false
 
     let hours_time_pattern_expr =
       time_pattern_ranges_expr (hours_expr ~allow_empty:true)
@@ -1170,14 +1170,14 @@ module Of_string = struct
       nat_zero
       >>= fun x ->
       if 1 <= x && x <= 31 then return x
-      else fail (Printf.sprintf "Invalid month day: %d" x)
+      else failf "Invalid month day: %d" x
 
     let month_days_expr ~allow_empty =
       ranges_expr ~allow_empty
         ~f_flatten:Time.Month_day_ranges.Flatten.flatten_list month_day_expr
 
     let month_days_cron_expr =
-      (char '*' *> return []) <|> month_days_expr ~allow_empty:false
+      try_ (char '*' *> return []) <|> month_days_expr ~allow_empty:false
 
     let month_days_time_pattern_expr =
       time_pattern_ranges_expr (month_days_expr ~allow_empty:true)
@@ -1189,21 +1189,22 @@ module Of_string = struct
       >>= fun x ->
       match Time.month_of_human_int x with
       | Ok x -> return x
-      | Error () -> fail (Printf.sprintf "Invalid month int: %d" x)
+      | Error () -> failf "Invalid month int: %d" x
 
     let month_word_expr ~for_cron =
       alpha_string
       >>= fun x ->
       if for_cron && String.length x <> 3 then
-        fail (Printf.sprintf "Invalid length for month string: %s" x)
+        failf "Invalid length for month string: %s" x
       else
         match Time.Of_string.month_of_string x with
         | Ok x -> return x
-        | Error () -> fail (Printf.sprintf "Invalid month string: %s" x)
+        | Error () -> failf "Invalid month string: %s" x
 
     let month_expr ~for_cron =
-      if for_cron then ((month_word_expr ~for_cron)) <|> month_int_expr
-      else month_word_expr ~for_cron
+      (* if for_cron then ((month_word_expr ~for_cron)) <|> month_int_expr
+       * else month_word_expr ~for_cron *)
+      ((month_word_expr ~for_cron)) <|> month_int_expr
 
     let months_expr ~allow_empty ~for_cron =
       ranges_expr ~allow_empty ~f_flatten:Time.Month_ranges.Flatten.flatten_list
@@ -1237,17 +1238,17 @@ module Of_string = struct
       >>= fun x ->
       match Time.weekday_of_tm_int x with
       | Ok x -> return x
-      | Error () -> fail (Printf.sprintf "Invalid weekday int: %d" x)
+      | Error () -> failf "Invalid weekday int: %d" x
 
     let weekday_word_expr ~for_cron =
       alpha_string
       >>= fun x ->
       if for_cron && String.length x <> 3 then
-        fail (Printf.sprintf "Invalid length for weekday string: %s" x)
+        failf "Invalid length for weekday string: %s" x
       else
         match Time.Of_string.weekday_of_string x with
         | Ok x -> return x
-        | Error () -> fail (Printf.sprintf "Invalid weekday string: %s" x)
+        | Error () -> failf "Invalid weekday string: %s" x
 
     let weekday_expr ~for_cron =
       if for_cron then weekday_int_expr <|> weekday_word_expr ~for_cron
