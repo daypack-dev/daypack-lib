@@ -1099,15 +1099,20 @@ module Of_string = struct
     with Range.Range_is_invalid -> fail "Invalid range"
 
   let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
-    (char '[' *> p >>= (fun l ->
-         try_ (char ']' *> return l)
+    (char '[' *> p >>=
+     (fun l ->
+         (char ']' *> return l)
          <|>
          (
            get_cnum >>= fun cnum ->
-           chars_if (function ']' -> false | _ -> true) >>= fun s ->
-           failf "col %d, invalid rangees: %s" cnum s
+           non_square_bracket_string >>= fun s ->
+           if s = "" then
+             failf "Missing ], at pos: %d" cnum
+           else
+             failf "Invalid ranges: %s, at pos: %d" s cnum
          )
-         )) <|> return []
+     )
+    ) <|> return []
 
   module Second = struct
     let second_expr =
@@ -1137,7 +1142,7 @@ module Of_string = struct
         ~f_flatten:Time.Minute_ranges.Flatten.flatten_list minute_expr
 
     let minutes_cron_expr =
-      try_ (char '*' *> return []) <|> minutes_expr ~allow_empty:false
+      (char '*' *> return []) <|> minutes_expr ~allow_empty:false
 
     let minutes_time_pattern_expr =
       time_pattern_ranges_expr (minutes_expr ~allow_empty:true)
@@ -1154,7 +1159,7 @@ module Of_string = struct
         hour_expr
 
     let hours_cron_expr =
-      try_ (char '*' *> return []) <|> hours_expr ~allow_empty:false
+      (char '*' *> return []) <|> hours_expr ~allow_empty:false
 
     let hours_time_pattern_expr =
       time_pattern_ranges_expr (hours_expr ~allow_empty:true)
@@ -1172,7 +1177,7 @@ module Of_string = struct
         ~f_flatten:Time.Month_day_ranges.Flatten.flatten_list month_day_expr
 
     let month_days_cron_expr =
-      try_ (char '*' *> return []) <|> month_days_expr ~allow_empty:false
+      (char '*' *> return []) <|> month_days_expr ~allow_empty:false
 
     let month_days_time_pattern_expr =
       time_pattern_ranges_expr (month_days_expr ~allow_empty:true)
