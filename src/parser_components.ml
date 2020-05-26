@@ -28,10 +28,23 @@ let dot = char '.'
 
 let hyphen = char '-'
 
-let sep_by_comma (p : 'a t) : 'a list t = sep ~by:(space *> comma *> space) p
+let non_square_bracket_string =
+  chars_if (function ']' -> false | _ -> true)
 
-let sep_by_comma1 (p : 'a t) : 'a list t = sep1 ~by:(space *> comma *> space) p
+let sep_by_comma (p : 'a t) : 'a list t = sep ~by:(skip_space *> comma *> skip_space) p
+
+let sep_by_comma1 (p : 'a t) : 'a list t = sep1 ~by:(skip_space *> comma *> skip_space) p
 
 let option (default : 'a) p : 'a t = try_ p <|> return default
 
 let skip_space1 = char_if is_space *> skip_space
+
+let get_first_line_error_msg (s : string) : string =
+  List.hd (String.split_on_char '\n' s)
+
+let map_first_line_error_msg (x : ('a, string) result) : ('a, string) result =
+  Result.map_error get_first_line_error_msg x
+
+let parse_string (p : 'a t) s : ('a, string) result =
+  parse_string p s
+  (* |> map_first_line_error_msg *)
