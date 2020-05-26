@@ -40,50 +40,116 @@ module Of_string = struct
   open CCParse
   open Parser_components
 
-  let seconds_string : unit t =
+  let seconds_string : string t =
     alpha_string
     >>= fun x ->
     match
       Misc_utils.prefix_string_match [ ("seconds", ()); ("secs", ()) ] x
     with
     | [] -> fail "String doesn't match keyword representing seconds"
-    | _ -> return ()
+    | _ -> return x
 
-  let minutes_string : unit t =
+  let minutes_string : string t =
     alpha_string
     >>= fun x ->
     match
       Misc_utils.prefix_string_match [ ("minutes", ()); ("mins", ()) ] x
     with
     | [] -> fail "String doesn't match keyword representing minutes"
-    | _ -> return ()
+    | _ -> return x
 
-  let hours_string : unit t =
+  let hours_string : string t =
     alpha_string
     >>= fun x ->
     match Misc_utils.prefix_string_match [ ("hours", ()); ("hrs", ()) ] x with
     | [] -> fail "String doesn't match keyword representing hours"
-    | _ -> return ()
+    | _ -> return x
 
-  let days_string : unit t =
+  let days_string : string t =
     alpha_string
     >>= fun x ->
     match Misc_utils.prefix_string_match [ ("days", ()) ] x with
     | [] -> fail "String doesn't match keyword representing days"
-    | _ -> return ()
+    | _ -> return x
+
+  (* let try_parse_duration_unit (default : int) (unit_string_p : unit t) : int t =
+   *   ((try_ nat_zero >>= fun x ->
+   *     skip_space *>
+   *     unit_string_p *> return x
+   *    )
+   *    <|>
+   *    return default
+   *   ) *)
+
+  let check_for_unused_term : unit t =
+    let fail' units n spaces s cnum =
+      failf "Incorrect position for %s term: %d%s%s, pos: %d" units n spaces s cnum
+    in
+    skip_space *>
+    (
+      (
+        try_
+          (get_cnum >>= fun cnum ->
+           nat_zero >>= fun n -> take_space >>= fun s -> return (cnum, n, s)
+          ) >>=
+        fun (cnum, n, spaces) ->
+        ((try_ days_string >>= fun s -> fail' "days" n spaces s cnum)
+         <|>
+         (try_ hours_string >>= fun s -> fail' "hours" n spaces s cnum)
+         <|>
+         (try_ minutes_string >>= fun s -> fail' "minutes" n spaces s cnum)
+         <|>
+         (try_ seconds_string >>= fun s -> fail' "seconds" n spaces s cnum)
+         <|>
+         alpha_string >>= fun s -> eoi *> failf "Invalid unit keyword: %s, pos: %d" s cnum
+        )
+      )
+      <|>
+      (
+        get_cnum >>= fun cnum ->
+        any_string >>= fun s ->
+        eoi *>
+        failf "Invalid syntax: %s, pos: %d" s cnum
+      )
+    )
 
   let duration_expr : duration t =
-    option 0 (nat_zero <* space <* days_string)
-    >>= fun days ->
-    space *> option 0 (nat_zero <* space <* hours_string)
-    >>= fun hours ->
-    space *> option 0 (nat_zero <* space <* minutes_string)
-    >>= fun minutes ->
-    space *> option 0 (nat_zero <* space <* seconds_string)
-    >>= fun seconds -> return (normalize { days; hours; minutes; seconds })
+    (option 0 (nat_zero <* skip_space <* days_string)
+     >>= fun days ->
+     skip_space *> option 0 (nat_zero <* skip_space <* hours_string)
+     >>= fun hours ->
+     skip_space *> option 0 (nat_zero <* skip_space <* minutes_string)
+     >>= fun minutes ->
+     skip_space *> option 0 (nat_zero <* skip_space <* seconds_string)
+     >>= fun seconds ->
+     check_for_unused_term *>
+     return (normalize { days; hours; minutes; seconds })
+    )
+    (* <|>
+     * (
+     *   try_ nat_zero *> skip_space *>
+     *   get_cnum >>= fun cnum ->
+     *   ((try_ days_string >>= fun s -> failf "Incorrect use of days unit keyword: %s, pos: %d" s cnum)
+     *    <|>
+     *    (try_ hours_string >>= fun s -> failf "Incorrect use of hours unit keyword: %s, pos: %d" s cnum)
+     *    <|>
+     *    (try_ minutes_string >>= fun s -> failf "Incorrect use of minutes unit keyword: %s, pos: %d" s cnum)
+     *    <|>
+     *    (try_ seconds_string >>= fun s -> failf "Incorrect use of seconds unit keyword: %s, pos: %d" s cnum)
+     *    <|>
+     *    alpha_string >>= fun s -> eoi *> failf "Invalid unit keyword: %s, pos: %d" s cnum
+     *   )
+     * )
+     * <|>
+     * (
+     *   get_cnum >>= fun cnum ->
+     *   any_string >>= fun s ->
+     *   eoi *>
+     *   failf "Invalid syntax: %s, pos: %d" s cnum
+     * ) *)
 
   let of_string (s : string) : (duration, string) result =
-    parse_string (duration_expr <* eoi) s
+    parse_string duration_expr s
 end
 
 module To_string = struct

@@ -2,6 +2,12 @@ open CCParse
 
 let alpha_string : string t = chars1_if is_alpha
 
+let any_string : string t =
+  chars_if (fun _ -> true)
+
+let take_space : string t =
+  chars_if is_space
+
 let ident_string ~(reserved_words : string list) : string t =
   let reserved_words = List.map String.lowercase_ascii reserved_words in
   chars1_if is_alpha
