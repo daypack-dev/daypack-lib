@@ -1099,9 +1099,9 @@ module Of_string = struct
     with Range.Range_is_invalid -> fail "Invalid range"
 
   let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
-    (char '[' *> p >>=
+    (try_ (char '[') *> p >>=
      (fun l ->
-         (char ']' *> return l)
+         try_ (char ']' *> return l)
          <|>
          (
            get_cnum >>= fun cnum ->
@@ -1109,7 +1109,7 @@ module Of_string = struct
            if s = "" then
              failf "Missing ], at pos: %d" cnum
            else
-             failf "Invalid ranges: %s, at pos: %d" s cnum
+             failf "Invalid ranges: %s, pos: %d" s cnum
          )
      )
     ) <|> return []

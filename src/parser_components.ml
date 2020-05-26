@@ -47,4 +47,4 @@ let map_first_line_error_msg (x : ('a, string) result) : ('a, string) result =
 
 let parse_string (p : 'a t) s : ('a, string) result =
   parse_string p s
-  (* |> map_first_line_error_msg *)
+  |> map_first_line_error_msg
