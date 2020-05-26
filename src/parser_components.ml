@@ -1,7 +1,6 @@
 open CCParse
 
-let alpha_string : string t =
-  chars1_if is_alpha
+let alpha_string : string t = chars1_if is_alpha
 
 let ident_string ~(reserved_words : string list) : string t =
   let reserved_words = List.map String.lowercase_ascii reserved_words in
@@ -28,12 +27,13 @@ let dot = char '.'
 
 let hyphen = char '-'
 
-let non_square_bracket_string =
-  chars_if (function ']' -> false | _ -> true)
+let non_square_bracket_string = chars_if (function ']' -> false | _ -> true)
 
-let sep_by_comma (p : 'a t) : 'a list t = sep ~by:(skip_space *> comma *> skip_space) p
+let sep_by_comma (p : 'a t) : 'a list t =
+  sep ~by:(skip_space *> comma *> skip_space) p
 
-let sep_by_comma1 (p : 'a t) : 'a list t = sep1 ~by:(skip_space *> comma *> skip_space) p
+let sep_by_comma1 (p : 'a t) : 'a list t =
+  sep1 ~by:(skip_space *> comma *> skip_space) p
 
 let option (default : 'a) p : 'a t = try_ p <|> return default
 
@@ -46,5 +46,4 @@ let map_first_line_error_msg (x : ('a, string) result) : ('a, string) result =
   Result.map_error get_first_line_error_msg x
 
 let parse_string (p : 'a t) s : ('a, string) result =
-  parse_string p s
-  |> map_first_line_error_msg
+  parse_string p s |> map_first_line_error_msg

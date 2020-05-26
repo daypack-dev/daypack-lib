@@ -121,16 +121,16 @@ module Of_string = struct
     try_
       ( p
         >>= fun x ->
-        skip_space *> to_string *> skip_space *> p >>= fun y -> return (`Range_inc (x, y))
-      )
+        skip_space *> to_string *> skip_space *> p
+        >>= fun y -> return (`Range_inc (x, y)) )
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
   let range_exc_expr (p : 'a t) : 'a Range.range t =
     try_
       ( p
         >>= fun x ->
-        skip_space *> to_string *> skip_space *> p >>= fun y -> return (`Range_exc (x, y))
-      )
+        skip_space *> to_string *> skip_space *> p
+        >>= fun y -> return (`Range_exc (x, y)) )
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
   (* let ranges_expr ~(to_int : 'a -> int) ~(of_int : int -> 'a) (p : 'a Range.range t) : 'a Range.range list t =
@@ -415,7 +415,10 @@ module Of_string = struct
       >>= fun months ->
       skip_space *> dot *> skip_space *> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      skip_space *> dot *> skip_space *> Hour_minute_second.hour_minute_second_ranges_expr
+      skip_space
+      *> dot
+      *> skip_space
+      *> Hour_minute_second.hour_minute_second_ranges_expr
       >>= fun hour_minute_second_ranges ->
       return
         (Time_expr_ast.Months_and_month_days_and_hour_minute_second_ranges
@@ -426,7 +429,10 @@ module Of_string = struct
       >>= fun months ->
       skip_space *> dot *> skip_space *> Weekday.weekday_ranges_expr
       >>= fun weekdays ->
-      skip_space *> dot *> skip_space *> Hour_minute_second.hour_minute_second_ranges_expr
+      skip_space
+      *> dot
+      *> skip_space
+      *> Hour_minute_second.hour_minute_second_ranges_expr
       >>= fun hour_minute_second_ranges ->
       return
         (Time_expr_ast.Months_and_weekdays_and_hour_minute_second_ranges
@@ -446,7 +452,10 @@ module Of_string = struct
       >>= fun month_weekday_mode ->
       skip_space *> Weekday.weekday_expr
       >>= fun weekday ->
-      skip_space *> dot *> skip_space *> Hour_minute_second.hour_minute_second_ranges_expr
+      skip_space
+      *> dot
+      *> skip_space
+      *> Hour_minute_second.hour_minute_second_ranges_expr
       >>= fun hour_minute_second_ranges ->
       return
         (Time_expr_ast.Months_and_weekday_and_hour_minute_second_ranges
@@ -459,7 +468,10 @@ module Of_string = struct
       >>= fun months ->
       skip_space *> dot *> skip_space *> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      skip_space *> dot *> skip_space *> Hour_minute_second.hour_minute_second_ranges_expr
+      skip_space
+      *> dot
+      *> skip_space
+      *> Hour_minute_second.hour_minute_second_ranges_expr
       >>= fun hour_minute_second_ranges ->
       return
         (Time_expr_ast

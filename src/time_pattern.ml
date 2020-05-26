@@ -1099,26 +1099,21 @@ module Of_string = struct
     with Range.Range_is_invalid -> fail "Invalid range"
 
   let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
-    (try_ (char '[') *> p >>=
-     (fun l ->
-         try_ (char ']' *> return l)
-         <|>
-         (
-           get_cnum >>= fun cnum ->
-           non_square_bracket_string >>= fun s ->
-           if s = "" then
-             failf "Missing ], pos: %d" cnum
-           else
-             failf "Invalid ranges: %s, pos: %d" s cnum
-         )
-     )
-    ) <|> return []
+    try_ (char '[') *> p
+    >>= (fun l ->
+        try_ (char ']' *> return l)
+        <|> ( get_cnum
+              >>= fun cnum ->
+              non_square_bracket_string
+              >>= fun s ->
+              if s = "" then failf "Missing ], pos: %d" cnum
+              else failf "Invalid ranges: %s, pos: %d" s cnum ))
+        <|> return []
 
   module Second = struct
     let second_expr =
       nat_zero
-      >>= fun x ->
-      if x >= 60 then failf "Invalid second: %d" x else return x
+      >>= fun x -> if x >= 60 then failf "Invalid second: %d" x else return x
 
     let seconds_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1134,8 +1129,7 @@ module Of_string = struct
   module Minute = struct
     let minute_expr =
       nat_zero
-      >>= fun x ->
-      if x >= 60 then failf "Invalid minute: %d" x else return x
+      >>= fun x -> if x >= 60 then failf "Invalid minute: %d" x else return x
 
     let minutes_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1151,8 +1145,7 @@ module Of_string = struct
   module Hour = struct
     let hour_expr =
       nat_zero
-      >>= fun x ->
-      if x >= 24 then failf "Invalid hour: %d" x else return x
+      >>= fun x -> if x >= 24 then failf "Invalid hour: %d" x else return x
 
     let hours_expr ~allow_empty =
       ranges_expr ~allow_empty ~f_flatten:Time.Hour_ranges.Flatten.flatten_list
@@ -1169,8 +1162,7 @@ module Of_string = struct
     let month_day_expr =
       nat_zero
       >>= fun x ->
-      if 1 <= x && x <= 31 then return x
-      else failf "Invalid month day: %d" x
+      if 1 <= x && x <= 31 then return x else failf "Invalid month day: %d" x
 
     let month_days_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1204,7 +1196,7 @@ module Of_string = struct
     let month_expr ~for_cron =
       (* if for_cron then ((month_word_expr ~for_cron)) <|> month_int_expr
        * else month_word_expr ~for_cron *)
-      ((month_word_expr ~for_cron)) <|> month_int_expr
+      month_word_expr ~for_cron <|> month_int_expr
 
     let months_expr ~allow_empty ~for_cron =
       ranges_expr ~allow_empty ~f_flatten:Time.Month_ranges.Flatten.flatten_list
@@ -1297,7 +1289,10 @@ module Of_string = struct
     >>= fun years ->
     skip_space *> char 'm' *> skip_space *> Month.months_time_pattern_expr
     >>= fun months ->
-    skip_space *> char 'd' *> skip_space *> Month_day.month_days_time_pattern_expr
+    skip_space
+    *> char 'd'
+    *> skip_space
+    *> Month_day.month_days_time_pattern_expr
     >>= fun month_days ->
     skip_space *> char 'w' *> skip_space *> Weekday.weekdays_time_pattern_expr
     >>= fun weekdays ->
