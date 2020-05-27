@@ -17,7 +17,10 @@ let ident_string ~(reserved_words : string list) : string t =
 let skip_non_num_string ~end_markers : unit t =
   skip_chars (function
       | '0' .. '9' -> false
-      | c -> ( match end_markers with None -> true | Some x -> not (String.contains x c) ))
+      | c -> (
+          match end_markers with
+          | None -> true
+          | Some x -> not (String.contains x c) ))
 
 let nat_zero : int t =
   chars1_if (function '0' .. '9' -> true | _ -> false)
@@ -55,32 +58,30 @@ let parse_string (p : 'a t) s : ('a, string) result =
 let shift_pos_of_error_msg ~(incre : int) (s : string) : string =
   try
     Scanf.sscanf s "%[^,], pos: %d" (fun s pos ->
-        Printf.sprintf "%s, pos: %d" s (pos + incre)
-      )
-  with
-  | _ -> s
+        Printf.sprintf "%s, pos: %d" s (pos + incre))
+  with _ -> s
 
 let sep_res_seq ~by ~end_markers (p : 'a t) : ('a, string) result Seq.t t =
   sep ~by:(char by)
-    (get_cnum >>= fun cnum -> chars1_if (fun c ->
-         c <> by &&
-         not (String.contains end_markers c)
-       ) >>= fun s -> return (cnum, s)
-    )
+    ( get_cnum
+      >>= fun cnum ->
+      chars1_if (fun c -> c <> by && not (String.contains end_markers c))
+      >>= fun s -> return (cnum, s) )
   >>= fun l ->
-  return (l |> List.to_seq |> Seq.map (fun (cnum, s) ->
-      parse_string p s
-      |> Result.map_error (fun s ->
-          shift_pos_of_error_msg ~incre:cnum s
-        )
-    ))
+  return
+    ( l
+      |> List.to_seq
+      |> Seq.map (fun (cnum, s) ->
+          parse_string p s
+          |> Result.map_error (fun s -> shift_pos_of_error_msg ~incre:cnum s))
+    )
 
 let sep_res ~by ~end_markers (p : 'a t) : ('a, string) result list t =
-  sep_res_seq ~by ~end_markers p >>=
-  fun s -> return (List.of_seq s)
+  sep_res_seq ~by ~end_markers p >>= fun s -> return (List.of_seq s)
 
 let sep_fail_on_first_fail ~by ~end_markers (p : 'a t) : 'a list t =
-  sep_res_seq ~by ~end_markers p >>=
-  fun s -> match Seq_utils.find_first_error_or_return_whole_list s with
+  sep_res_seq ~by ~end_markers p
+  >>= fun s ->
+  match Seq_utils.find_first_error_or_return_whole_list s with
   | Ok l -> return l
   | Error s -> fail s

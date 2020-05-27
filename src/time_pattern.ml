@@ -1086,8 +1086,7 @@ module Of_string = struct
   open CCParse
   open Parser_components
 
-  let end_markers =
-    " ]"
+  let end_markers = " ]"
 
   let non_end_markers_p =
     chars_if (fun c -> not (String.contains end_markers c))
@@ -1098,7 +1097,8 @@ module Of_string = struct
 
   let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
       (p : 'a t) : 'a list t =
-    ( if allow_empty then sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p)
+    ( if allow_empty then
+        sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p)
       else sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p) )
     >>= fun l ->
     try return (f_flatten l)
@@ -1118,12 +1118,12 @@ module Of_string = struct
 
   module Second = struct
     let second_expr =
-      (nat_zero
-      >>= fun x -> if x >= 60 then failf "Invalid second: %d" x else return x)
-     <|>
-      (get_cnum >>= fun cnum ->
-      non_end_markers_p >>= fun s ->
-      failf "Invalid second term: %s, pos: %d" s cnum)
+      nat_zero
+      >>= (fun x -> if x >= 60 then failf "Invalid second: %d" x else return x)
+          <|> ( get_cnum
+                >>= fun cnum ->
+                non_end_markers_p
+                >>= fun s -> failf "Invalid second term: %s, pos: %d" s cnum )
 
     let seconds_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1138,12 +1138,12 @@ module Of_string = struct
 
   module Minute = struct
     let minute_expr =
-      (try_ nat_zero
-      >>= fun x -> if x >= 60 then failf "Invalid minute: %d" x else return x)
-      <|>
-      (get_cnum >>= fun cnum ->
-      non_end_markers_p >>= fun s ->
-      failf "Invalid minute term: %s, pos: %d" s cnum)
+      try_ nat_zero
+      >>= (fun x -> if x >= 60 then failf "Invalid minute: %d" x else return x)
+          <|> ( get_cnum
+                >>= fun cnum ->
+                non_end_markers_p
+                >>= fun s -> failf "Invalid minute term: %s, pos: %d" s cnum )
 
     let minutes_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1158,12 +1158,12 @@ module Of_string = struct
 
   module Hour = struct
     let hour_expr =
-      (nat_zero
-      >>= fun x -> if x >= 24 then failf "Invalid hour: %d" x else return x)
-      <|>
-      (get_cnum >>= fun cnum ->
-       non_end_markers_p >>= fun s ->
-       failf "Invalid hour term: %s, pos: %d" s cnum)
+      nat_zero
+      >>= (fun x -> if x >= 24 then failf "Invalid hour: %d" x else return x)
+          <|> ( get_cnum
+                >>= fun cnum ->
+                non_end_markers_p
+                >>= fun s -> failf "Invalid hour term: %s, pos: %d" s cnum )
 
     let hours_expr ~allow_empty =
       ranges_expr ~allow_empty ~f_flatten:Time.Hour_ranges.Flatten.flatten_list
@@ -1231,10 +1231,10 @@ module Of_string = struct
   module Year = struct
     let year_expr =
       try_ nat_zero
-      <|>
-      (get_cnum >>= fun cnum ->
-      non_end_markers_p >>= fun s ->
-      failf "Invalid year term: %s, pos: %d" s cnum)
+      <|> ( get_cnum
+            >>= fun cnum ->
+            non_end_markers_p
+            >>= fun s -> failf "Invalid year term: %s, pos: %d" s cnum )
 
     let years_expr ~allow_empty =
       ranges_expr ~allow_empty ~f_flatten:Time.Year_ranges.Flatten.flatten_list
@@ -1249,7 +1249,8 @@ module Of_string = struct
 
   module Weekday = struct
     let weekday_int_expr =
-      get_cnum >>= fun cnum ->
+      get_cnum
+      >>= fun cnum ->
       nat_zero
       >>= fun x ->
       match Time.weekday_of_tm_int x with
@@ -1257,7 +1258,8 @@ module Of_string = struct
       | Error () -> failf "Invalid weekday int: %d, pos: %d" x cnum
 
     let weekday_word_expr ~for_cron =
-      get_cnum >>= fun cnum ->
+      get_cnum
+      >>= fun cnum ->
       alpha_string
       >>= fun x ->
       if for_cron && String.length x <> 3 then
@@ -1297,8 +1299,8 @@ module Of_string = struct
     >>= fun years ->
     skip_space1 *> Weekday.weekdays_cron_expr
     >>= fun weekdays ->
-    eoi *>
-    return
+    eoi
+    *> return
       {
         years;
         months;
