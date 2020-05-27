@@ -1092,11 +1092,9 @@ module Of_string = struct
     chars_if (fun c -> not (String.contains end_markers c))
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
-    get_cnum >>= fun cnum ->
     (
       try_ (p >>= fun x -> hyphen *> p >>= fun y -> return (`Range_inc (x, y)))
-      <|> try_ (p >>= fun x -> return (`Range_inc (x, x)))
-      <|> failf "Invalid syntax, pos: %d" cnum
+      <|> (p >>= fun x -> return (`Range_inc (x, x)))
     )
 
   let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
