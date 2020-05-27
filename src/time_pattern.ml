@@ -1088,7 +1088,7 @@ module Of_string = struct
 
   let end_markers = " ]"
 
-  let non_end_markers_p =
+  let non_end_markers =
     chars_if (fun c -> not (String.contains end_markers c))
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
@@ -1125,7 +1125,7 @@ module Of_string = struct
       >>= (fun x -> if x >= 60 then failf "Invalid second: %d" x else return x)
           <|> ( get_cnum
                 >>= fun cnum ->
-                non_end_markers_p
+                non_end_markers
                 >>= fun s -> failf "Invalid second term: %s, pos: %d" s cnum )
 
     let seconds_expr ~allow_empty =
@@ -1145,7 +1145,7 @@ module Of_string = struct
       >>= (fun x -> if x >= 60 then failf "Invalid minute: %d" x else return x)
           <|> ( get_cnum
                 >>= fun cnum ->
-                non_end_markers_p
+                non_end_markers
                 >>= fun s -> failf "Invalid minute term: %s, pos: %d" s cnum )
 
     let minutes_expr ~allow_empty =
@@ -1165,7 +1165,7 @@ module Of_string = struct
       >>= (fun x -> if x >= 24 then failf "Invalid hour: %d" x else return x)
           <|> ( get_cnum
                 >>= fun cnum ->
-                non_end_markers_p
+                non_end_markers
                 >>= fun s -> failf "Invalid hour term: %s, pos: %d" s cnum )
 
     let hours_expr ~allow_empty =
@@ -1236,7 +1236,7 @@ module Of_string = struct
       try_ nat_zero
       <|> ( get_cnum
             >>= fun cnum ->
-            non_end_markers_p
+            non_end_markers
             >>= fun s -> failf "Invalid year term: %s, pos: %d" s cnum )
 
     let years_expr ~allow_empty =
@@ -1315,23 +1315,32 @@ module Of_string = struct
         unix_seconds = [];
       }
 
+  let unit_char c : unit t =
+    get_cnum >>= fun cnum ->
+    try_ (char c) *> nop
+    <|>
+    (
+      char_if (fun _ -> true) >>= fun c ->
+      failf "Invalid unit char: %c, pos: %d" c cnum
+    )
+
   let time_pattern_expr =
-    char 'y' *> skip_space *> Year.years_time_pattern_expr
+    unit_char 'y' *> skip_space *> Year.years_time_pattern_expr
     >>= fun years ->
-    skip_space *> char 'm' *> skip_space *> Month.months_time_pattern_expr
+    skip_space *> unit_char 'm' *> skip_space *> Month.months_time_pattern_expr
     >>= fun months ->
     skip_space
-    *> char 'd'
+    *> unit_char 'd'
     *> skip_space
     *> Month_day.month_days_time_pattern_expr
     >>= fun month_days ->
-    skip_space *> char 'w' *> skip_space *> Weekday.weekdays_time_pattern_expr
+    skip_space *> unit_char 'w' *> skip_space *> Weekday.weekdays_time_pattern_expr
     >>= fun weekdays ->
-    skip_space *> char 'h' *> skip_space *> Hour.hours_time_pattern_expr
+    skip_space *> unit_char 'h' *> skip_space *> Hour.hours_time_pattern_expr
     >>= fun hours ->
-    skip_space *> char 'm' *> skip_space *> Minute.minutes_time_pattern_expr
+    skip_space *> unit_char 'm' *> skip_space *> Minute.minutes_time_pattern_expr
     >>= fun minutes ->
-    skip_space *> char 's' *> skip_space *> Second.seconds_time_pattern_expr
+    skip_space *> unit_char 's' *> skip_space *> Second.seconds_time_pattern_expr
     >>= fun seconds ->
     return
       {
