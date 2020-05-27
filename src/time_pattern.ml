@@ -1086,15 +1086,18 @@ module Of_string = struct
   open CCParse
   open Parser_components
 
+  let end_markers =
+    " ]"
+
+  let non_end_markers_p =
+    chars_if (fun c -> not (String.contains end_markers c))
+
   let range_inc_expr (p : 'a t) : 'a Range.range t =
     try_ (p >>= fun x -> hyphen *> p >>= fun y -> return (`Range_inc (x, y)))
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
   let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
       (p : 'a t) : 'a list t =
-    let end_markers =
-      " ]"
-    in
     ( if allow_empty then sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p)
       else sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p) )
     >>= fun l ->
@@ -1115,8 +1118,12 @@ module Of_string = struct
 
   module Second = struct
     let second_expr =
-      nat_zero
-      >>= fun x -> if x >= 60 then failf "Invalid second: %d" x else return x
+      (nat_zero
+      >>= fun x -> if x >= 60 then failf "Invalid second: %d" x else return x)
+     <|>
+      (get_cnum >>= fun cnum ->
+      non_end_markers_p >>= fun s ->
+      failf "Invalid second term: %s, pos: %d" s cnum)
 
     let seconds_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1131,8 +1138,12 @@ module Of_string = struct
 
   module Minute = struct
     let minute_expr =
-      nat_zero
-      >>= fun x -> if x >= 60 then failf "Invalid minute: %d" x else return x
+      (try_ nat_zero
+      >>= fun x -> if x >= 60 then failf "Invalid minute: %d" x else return x)
+      <|>
+      (get_cnum >>= fun cnum ->
+      non_end_markers_p >>= fun s ->
+      failf "Invalid minute term: %s, pos: %d" s cnum)
 
     let minutes_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1147,8 +1158,12 @@ module Of_string = struct
 
   module Hour = struct
     let hour_expr =
-      nat_zero
-      >>= fun x -> if x >= 24 then failf "Invalid hour: %d" x else return x
+      (nat_zero
+      >>= fun x -> if x >= 24 then failf "Invalid hour: %d" x else return x)
+      <|>
+      (get_cnum >>= fun cnum ->
+       non_end_markers_p >>= fun s ->
+       failf "Invalid hour term: %s, pos: %d" s cnum)
 
     let hours_expr ~allow_empty =
       ranges_expr ~allow_empty ~f_flatten:Time.Hour_ranges.Flatten.flatten_list
@@ -1214,7 +1229,12 @@ module Of_string = struct
   end
 
   module Year = struct
-    let year_expr = nat_zero
+    let year_expr =
+      try_ nat_zero
+      <|>
+      (get_cnum >>= fun cnum ->
+      non_end_markers_p >>= fun s ->
+      failf "Invalid year term: %s, pos: %d" s cnum)
 
     let years_expr ~allow_empty =
       ranges_expr ~allow_empty ~f_flatten:Time.Year_ranges.Flatten.flatten_list
