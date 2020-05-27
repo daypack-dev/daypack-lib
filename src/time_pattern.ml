@@ -1088,18 +1088,16 @@ module Of_string = struct
 
   let end_markers = " ]"
 
-  let non_end_markers =
-    chars_if (fun c -> not (String.contains end_markers c))
+  let non_end_markers = chars_if (fun c -> not (String.contains end_markers c))
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
-    (
-      try_ (p >>= fun x -> hyphen *> p >>= fun y -> return (`Range_inc (x, y)))
-      <|> (p >>= fun x -> return (`Range_inc (x, x)))
-    )
+    try_ (p >>= fun x -> hyphen *> p >>= fun y -> return (`Range_inc (x, y)))
+    <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
   let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
       (p : 'a t) : 'a list t =
-    get_cnum >>= fun cnum ->
+    get_cnum
+    >>= fun cnum ->
     ( if allow_empty then
         sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p)
       else sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p) )
@@ -1316,13 +1314,11 @@ module Of_string = struct
       }
 
   let unit_char c : unit t =
-    get_cnum >>= fun cnum ->
+    get_cnum
+    >>= fun cnum ->
     try_ (char c) *> nop
-    <|>
-    (
-      char_if (fun _ -> true) >>= fun c ->
-      failf "Invalid unit char: %c, pos: %d" c cnum
-    )
+    <|> ( char_if (fun _ -> true)
+          >>= fun c -> failf "Invalid unit char: %c, pos: %d" c cnum )
 
   let time_pattern_expr =
     unit_char 'y' *> skip_space *> Year.years_time_pattern_expr
@@ -1334,13 +1330,22 @@ module Of_string = struct
     *> skip_space
     *> Month_day.month_days_time_pattern_expr
     >>= fun month_days ->
-    skip_space *> unit_char 'w' *> skip_space *> Weekday.weekdays_time_pattern_expr
+    skip_space
+    *> unit_char 'w'
+    *> skip_space
+    *> Weekday.weekdays_time_pattern_expr
     >>= fun weekdays ->
     skip_space *> unit_char 'h' *> skip_space *> Hour.hours_time_pattern_expr
     >>= fun hours ->
-    skip_space *> unit_char 'm' *> skip_space *> Minute.minutes_time_pattern_expr
+    skip_space
+    *> unit_char 'm'
+    *> skip_space
+    *> Minute.minutes_time_pattern_expr
     >>= fun minutes ->
-    skip_space *> unit_char 's' *> skip_space *> Second.seconds_time_pattern_expr
+    skip_space
+    *> unit_char 's'
+    *> skip_space
+    *> Second.seconds_time_pattern_expr
     >>= fun seconds ->
     return
       {

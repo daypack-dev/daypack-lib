@@ -74,15 +74,13 @@ let sep_res_seq ~by ~end_markers (p : 'a t) : ('a, string) result Seq.t t =
       |> Seq.map (fun (cnum, s) ->
           s
           |> parse_string
-            ( p >>= fun x ->
-              (try_ eoi *> return x)
-              <|>
-              (
-                get_cnum >>= fun cnum ->
-                any_string >>= fun s ->
-                failf "Invalid syntax: %s, pos: %d" s cnum
-              )
-             )
+            ( p
+              >>= fun x ->
+              try_ eoi *> return x
+              <|> ( get_cnum
+                    >>= fun cnum ->
+                    any_string
+                    >>= fun s -> failf "Invalid syntax: %s, pos: %d" s cnum ) )
           |> Result.map_error (fun s -> shift_pos_of_error_msg ~incre:cnum s))
     )
 
