@@ -1092,8 +1092,11 @@ module Of_string = struct
 
   let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
       (p : 'a t) : 'a list t =
-    ( if allow_empty then sep_by_comma (range_inc_expr p)
-      else sep_by_comma1 (range_inc_expr p) )
+    let end_markers =
+      " ]"
+    in
+    ( if allow_empty then sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p)
+      else sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p) )
     >>= fun l ->
     try return (f_flatten l)
     with Range.Range_is_invalid -> fail "Invalid range"
@@ -1274,6 +1277,7 @@ module Of_string = struct
     >>= fun years ->
     skip_space1 *> Weekday.weekdays_cron_expr
     >>= fun weekdays ->
+    eoi *>
     return
       {
         years;
