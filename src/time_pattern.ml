@@ -1226,21 +1226,23 @@ module Of_string = struct
 
   module Weekday = struct
     let weekday_int_expr =
+      get_cnum >>= fun cnum ->
       nat_zero
       >>= fun x ->
       match Time.weekday_of_tm_int x with
       | Ok x -> return x
-      | Error () -> failf "Invalid weekday int: %d" x
+      | Error () -> failf "Invalid weekday int: %d, pos: %d" x cnum
 
     let weekday_word_expr ~for_cron =
+      get_cnum >>= fun cnum ->
       alpha_string
       >>= fun x ->
       if for_cron && String.length x <> 3 then
-        failf "Invalid length for weekday string: %s" x
+        failf "Invalid length for weekday string: %s, pos: %d" x cnum
       else
         match Time.Of_string.weekday_of_string x with
         | Ok x -> return x
-        | Error () -> failf "Invalid weekday string: %s" x
+        | Error () -> failf "Invalid weekday string: %s, pos: %d" x cnum
 
     let weekday_expr ~for_cron =
       if for_cron then weekday_int_expr <|> weekday_word_expr ~for_cron
