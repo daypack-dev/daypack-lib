@@ -1092,17 +1092,22 @@ module Of_string = struct
     chars_if (fun c -> not (String.contains end_markers c))
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
-    try_ (p >>= fun x -> hyphen *> p >>= fun y -> return (`Range_inc (x, y)))
-    <|> (p >>= fun x -> return (`Range_inc (x, x)))
+    get_cnum >>= fun cnum ->
+    (
+      try_ (p >>= fun x -> hyphen *> p >>= fun y -> return (`Range_inc (x, y)))
+      <|> try_ (p >>= fun x -> return (`Range_inc (x, x)))
+      <|> failf "Invalid syntax, pos: %d" cnum
+    )
 
   let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
       (p : 'a t) : 'a list t =
+    get_cnum >>= fun cnum ->
     ( if allow_empty then
         sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p)
       else sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p) )
     >>= fun l ->
     try return (f_flatten l)
-    with Range.Range_is_invalid -> fail "Invalid range"
+    with Range.Range_is_invalid -> failf "Invalid range, pos: %d" cnum
 
   let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
     try_ (char '[') *> p
