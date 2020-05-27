@@ -62,12 +62,10 @@ let shift_pos_of_error_msg ~(incre : int) (s : string) : string =
 
 let sep_res_seq ~by ~end_markers (p : 'a t) : ('a, string) result Seq.t t =
   sep ~by:(char by)
-    (try_ (get_cnum >>= fun cnum -> chars1_if (fun c ->
+    (get_cnum >>= fun cnum -> chars1_if (fun c ->
          c <> by &&
          not (String.contains end_markers c)
-       ) >>= fun s -> return (cnum, s))
-     <?>
-     ""
+       ) >>= fun s -> return (cnum, s)
     )
   >>= fun l ->
   return (l |> List.to_seq |> Seq.map (fun (cnum, s) ->
