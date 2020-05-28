@@ -8,7 +8,7 @@ let take_space : string t = chars_if is_space
 
 let ident_string ~(reserved_words : string list) : string t =
   let reserved_words = List.map String.lowercase_ascii reserved_words in
-  chars1_if is_alpha
+  alpha_string
   >>= fun s ->
   if List.mem (String.lowercase_ascii s) reserved_words then
     failf "\"%s\" is a reserved word" s
@@ -35,6 +35,8 @@ let dot = char '.'
 let hyphen = char '-'
 
 let non_square_bracket_string = chars_if (function ']' -> false | _ -> true)
+
+let non_space_string = chars_if (fun c -> not (is_space c))
 
 let sep_by_comma (p : 'a t) : 'a list t =
   sep ~by:(skip_space *> comma *> skip_space) p

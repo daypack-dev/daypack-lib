@@ -522,12 +522,14 @@ module Of_string = struct
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string
-      ( ( Time_points_expr.time_points_expr
-            <* eoi
-            >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
-        <|> ( Time_slots_expr.time_slots_expr
-              <* eoi
-              >>= fun e -> return (Time_expr_ast.Time_slots_expr e) ) )
+      (  ( Time_slots_expr.time_slots_expr
+           <* eoi
+           >>= fun e -> return (Time_expr_ast.Time_slots_expr e) )
+         <|>
+         ( Time_points_expr.time_points_expr
+           <* eoi
+           >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
+      )
       s
 
   let time_points_expr_of_string (s : string) :
