@@ -1,4 +1,4 @@
-# Daypack
+# Daypack-lib
 
 Daypack-lib is a schedule, time and time slots handling library
 
