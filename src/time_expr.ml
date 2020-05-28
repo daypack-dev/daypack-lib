@@ -112,8 +112,7 @@ module Of_string = struct
       ( try_ (string "coming" *> return `Next)
         <|> try_ (char '?' *> return `Next)
         <|> try_ (string "every" *> return `Every)
-        <|> char '!' *> return `Every
-      )
+        <|> char '!' *> return `Every )
 
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "lasst"; "coming"; "every" ]
@@ -144,30 +143,28 @@ module Of_string = struct
 
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =
-      try_ (string "::") *>
-      get_cnum >>= fun cnum ->
-      (try_ nat_zero
-      >>= fun second ->
-      if second >= 60 then failf "Invalid second: %d, pos: %d" second cnum
-      else return second)
-      <|>
-      (non_space_string >>= fun s ->
-       if s = "" then
-         failf "Missing second after ::, pos: %d" cnum
-       else
-         failf "Invalid second: %s, pos: %d" s cnum
-      )
+      try_ (string "::") *> get_cnum
+      >>= fun cnum ->
+      try_ nat_zero
+      >>= (fun second ->
+          if second >= 60 then failf "Invalid second: %d, pos: %d" second cnum
+          else return second)
+          <|> ( non_space_string
+                >>= fun s ->
+                if s = "" then failf "Missing second after ::, pos: %d" cnum
+                else failf "Invalid second: %s, pos: %d" s cnum )
   end
 
   module Minute_second = struct
     let minute_second_expr : Time_expr_ast.minute_second_expr t =
-      try_ (char ':') *>
-      get_cnum >>= fun cnum ->
+      try_ (char ':') *> get_cnum
+      >>= fun cnum ->
       nat_zero
       >>= fun minute ->
       if minute >= 60 then failf "Invalid minute: %d, pos: %d" minute cnum
       else
-        get_cnum >>= fun cnum ->
+        get_cnum
+        >>= fun cnum ->
         option 0 (char ':' *> nat_zero)
         >>= fun second ->
         if second >= 60 then failf "Invalid second: %d, pos: %d" second cnum
@@ -181,9 +178,9 @@ module Of_string = struct
           <|> string "pm" *> return `Hour_in_PM )
 
     let hour_minute_second_expr : Time_expr_ast.hour_minute_second_expr t =
-      try_ (nat_zero <* char ':') >>=
-      fun hour ->
-      (nat_zero
+      try_ (nat_zero <* char ':')
+      >>= fun hour ->
+      nat_zero
       >>= fun minute ->
       if minute >= 60 then failf "Invalid minute: %d" minute
       else
@@ -206,7 +203,7 @@ module Of_string = struct
             if 1 <= hour && hour <= 12 then
               let hour = if hour = 12 then 0 else hour in
               return Time_expr_ast.{ hour = hour + 12; minute; second }
-            else fail (Printf.sprintf "Invalid hour: %d" hour))
+            else fail (Printf.sprintf "Invalid hour: %d" hour)
 
     let hour_minute_second_range_expr :
       Time_expr_ast.hour_minute_second_range_expr t =
@@ -299,13 +296,14 @@ module Of_string = struct
       >>= fun s -> return (Time_expr_ast.Tpe_name s)
 
     let tp_ymd_hour_minute_second =
-      try_ (nat_zero
-            >>= fun year ->
-            hyphen *> Month.human_int_month_expr
-            >>= fun month ->
-            hyphen *> nat_zero
-            >>= fun month_day ->
-            return (year, month, month_day)) >>= fun (year, month, month_day) ->
+      try_
+        ( nat_zero
+          >>= fun year ->
+          hyphen *> Month.human_int_month_expr
+          >>= fun month ->
+          hyphen *> nat_zero >>= fun month_day -> return (year, month, month_day)
+        )
+      >>= fun (year, month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return
@@ -313,12 +311,14 @@ module Of_string = struct
            { year; month; month_day; hour_minute_second })
 
     let tp_ymond_hour_minute_second =
-      try_ (nat_zero
-      >>= fun year ->
-      skip_space *> Month.direct_pick_month_expr
-      >>= fun month ->
-      skip_space *> nat_zero
-      >>= fun month_day -> return (year, month, month_day)) >>= fun (year, month, month_day) ->
+      try_
+        ( nat_zero
+          >>= fun year ->
+          skip_space *> Month.direct_pick_month_expr
+          >>= fun month ->
+          skip_space *> nat_zero
+          >>= fun month_day -> return (year, month, month_day) )
+      >>= fun (year, month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return
@@ -326,10 +326,11 @@ module Of_string = struct
            { year; month; month_day; hour_minute_second })
 
     let tp_md_hour_minute_second =
-      try_ (Month.month_expr
-      >>= fun month ->
-      hyphen *> nat_zero
-      >>= fun month_day -> return (month, month_day)) >>= fun (month, month_day) ->
+      try_
+        ( Month.month_expr
+          >>= fun month ->
+          hyphen *> nat_zero >>= fun month_day -> return (month, month_day) )
+      >>= fun (month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return
@@ -337,10 +338,11 @@ module Of_string = struct
            { month; month_day; hour_minute_second })
 
     let tp_mond_hour_minute_second =
-      try_ (Month.direct_pick_month_expr
-      >>= fun month ->
-      skip_space *> nat_zero
-      >>= fun month_day -> return (month, month_day)) >>= fun (month, month_day) ->
+      try_
+        ( Month.direct_pick_month_expr
+          >>= fun month ->
+          skip_space *> nat_zero >>= fun month_day -> return (month, month_day) )
+      >>= fun (month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return
@@ -382,20 +384,17 @@ module Of_string = struct
     let time_points_expr : Time_expr_ast.time_points_expr t =
       bound
       >>= fun bound ->
-      skip_space *>
-      (unbounded_time_points_expr >>= fun e ->
-       (try_ eoi *> return (bound, e))
-       <|>
-       (get_cnum >>= fun cnum ->
-        any_string >>= fun s ->
-        failf "Invalid syntax: %s, pos: %d" s cnum
-       )
-      )
-      <|>
-      (get_cnum >>= fun cnum ->
-       any_string >>= fun s ->
-       failf "Invalid syntax: %s, pos: %d" s cnum
-      )
+      skip_space
+      *> ( unbounded_time_points_expr
+           >>= fun e ->
+           try_ eoi *> return (bound, e)
+           <|> ( get_cnum
+                 >>= fun cnum ->
+                 any_string >>= fun s -> failf "Invalid syntax: %s, pos: %d" s cnum
+               ) )
+      <|> ( get_cnum
+            >>= fun cnum ->
+            any_string >>= fun s -> failf "Invalid syntax: %s, pos: %d" s cnum )
   end
 
   module Time_slots_expr = struct
@@ -522,14 +521,12 @@ module Of_string = struct
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string
-      (  ( Time_slots_expr.time_slots_expr
-           <* eoi
-           >>= fun e -> return (Time_expr_ast.Time_slots_expr e) )
-         <|>
-         ( Time_points_expr.time_points_expr
-           <* eoi
-           >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
-      )
+      ( Time_slots_expr.time_slots_expr
+        <* eoi
+        >>= (fun e -> return (Time_expr_ast.Time_slots_expr e))
+            <|> ( Time_points_expr.time_points_expr
+                  <* eoi
+                  >>= fun e -> return (Time_expr_ast.Time_points_expr e) ) )
       s
 
   let time_points_expr_of_string (s : string) :
