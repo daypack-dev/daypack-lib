@@ -37,53 +37,98 @@ let normalize (t : t) : t = t |> to_seconds |> of_seconds
 module Of_string = struct
   type duration = t
 
-  open Angstrom
+  open CCParse
   open Parser_components
 
-  let seconds_string : unit t =
+  let seconds_string : string t =
     alpha_string
     >>= fun x ->
     match
       Misc_utils.prefix_string_match [ ("seconds", ()); ("secs", ()) ] x
     with
     | [] -> fail "String doesn't match keyword representing seconds"
-    | _ -> return ()
+    | _ -> return x
 
-  let minutes_string : unit t =
+  let minutes_string : string t =
     alpha_string
     >>= fun x ->
     match
       Misc_utils.prefix_string_match [ ("minutes", ()); ("mins", ()) ] x
     with
     | [] -> fail "String doesn't match keyword representing minutes"
-    | _ -> return ()
+    | _ -> return x
 
-  let hours_string : unit t =
+  let hours_string : string t =
     alpha_string
     >>= fun x ->
     match Misc_utils.prefix_string_match [ ("hours", ()); ("hrs", ()) ] x with
     | [] -> fail "String doesn't match keyword representing hours"
-    | _ -> return ()
+    | _ -> return x
 
-  let days_string : unit t =
+  let days_string : string t =
     alpha_string
     >>= fun x ->
     match Misc_utils.prefix_string_match [ ("days", ()) ] x with
     | [] -> fail "String doesn't match keyword representing days"
-    | _ -> return ()
+    | _ -> return x
+
+  let check_for_unused_term days hours minutes seconds : unit t =
+    let fail' units prev n spaces s cnum =
+      match prev with
+      | None ->
+        failf "Incorrect position for %s term: %d%s%s, pos: %d" units n spaces
+          s cnum
+      | Some _ ->
+        failf "Duplicate use of %s term: %d%s%s, pos: %d" units n spaces s
+          cnum
+    in
+    try_
+      ( get_cnum
+        >>= fun cnum ->
+        nat_zero >>= fun n -> take_space >>= fun s -> return (cnum, n, s) )
+    >>= (fun (cnum, n, spaces) ->
+        try_ days_string
+        >>= (fun s -> fail' "days" days n spaces s cnum)
+            <|> ( try_ hours_string
+                  >>= fun s -> fail' "hours" hours n spaces s cnum )
+            <|> ( try_ minutes_string
+                  >>= fun s -> fail' "minutes" minutes n spaces s cnum )
+            <|> ( try_ seconds_string
+                  >>= fun s -> fail' "seconds" seconds n spaces s cnum )
+            <|> alpha_string
+        >>= fun s -> eoi *> failf "Invalid unit keyword: %s, pos: %d" s cnum)
+        <|> ( get_cnum
+              >>= fun cnum ->
+              any_string
+              >>= fun s ->
+              eoi
+              *> if s = "" then nop else failf "Invalid syntax: %s, pos: %d" s cnum )
 
   let duration_expr : duration t =
-    option 0 (nat_zero <* space <* days_string)
+    let term' p =
+      option None (nat_zero <* skip_space <* p >>= fun n -> return (Some n))
+    in
+    term' days_string
     >>= fun days ->
-    space *> option 0 (nat_zero <* space <* hours_string)
+    skip_space *> term' hours_string
     >>= fun hours ->
-    space *> option 0 (nat_zero <* space <* minutes_string)
+    skip_space *> term' minutes_string
     >>= fun minutes ->
-    space *> option 0 (nat_zero <* space <* seconds_string)
-    >>= fun seconds -> return (normalize { days; hours; minutes; seconds })
+    skip_space *> term' seconds_string
+    >>= fun seconds ->
+    skip_space
+    *> check_for_unused_term days hours minutes seconds
+    *> return
+      (normalize
+         {
+           days = Option.value ~default:0 days;
+           hours = Option.value ~default:0 hours;
+           minutes = Option.value ~default:0 minutes;
+           seconds = Option.value ~default:0 seconds;
+         })
 
   let of_string (s : string) : (duration, string) result =
-    parse_string ~consume:Consume.All duration_expr s
+    parse_string duration_expr s
 end
 
 module To_string = struct

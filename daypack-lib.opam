@@ -14,7 +14,7 @@ dev-repo: "git+https://github.com/daypack-dev/daypack"
 depends: [
   "ocaml"
   "oseq"
-  "calendar"
+  "ptime"
   "biniou"
   "yojson"
   "atdgen"

@@ -24,8 +24,8 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     let time_slot_candidates =
       Time_slots.Union.union free_time_slots
         (Sched.Agenda.Time_slot
-         .get_occupied_time_slots_up_to_task_seg_place_count ~start ~end_exc
-           ~up_to_task_seg_place_count_inc base)
+         .get_free_or_occupied_time_slots_up_to_task_seg_place_count ~start
+           ~end_exc ~up_to_task_seg_place_count_inc base)
     in
     time_slots
     |> Time_slots.Normalize.normalize_list_in_seq_out

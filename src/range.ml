@@ -1,3 +1,7 @@
+exception Modulo_is_invalid
+
+exception Range_is_invalid
+
 type 'a range =
   [ `Range_inc of 'a * 'a
   | `Range_exc of 'a * 'a
@@ -55,9 +59,9 @@ module Flatten = struct
           Seq_utils.a_to_b_inc_int64 ~a:start ~b:end_inc |> Seq.map of_int64
         else
           match modulo with
-          | None -> raise (Invalid_argument "End is before start")
+          | None -> raise Range_is_invalid
           | Some modulo ->
-            if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
+            if modulo <= 0L then raise Modulo_is_invalid
             else
               OSeq.append
                 (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)
@@ -70,9 +74,9 @@ module Flatten = struct
           Seq_utils.a_to_b_exc_int64 ~a:start ~b:end_exc |> Seq.map of_int64
         else
           match modulo with
-          | None -> raise (Invalid_argument "End is before start")
+          | None -> raise Range_is_invalid
           | Some modulo ->
-            if modulo <= 0L then raise (Invalid_argument "Modulo is <= 0")
+            if modulo <= 0L then raise Modulo_is_invalid
             else
               OSeq.append
                 (Seq_utils.a_to_b_exc_int64 ~a:start ~b:modulo)

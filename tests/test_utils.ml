@@ -60,6 +60,13 @@ let nz_small_nat_gen = QCheck.Gen.(map (( + ) 1) small_nat)
 
 let nz_small_nat = QCheck.make nz_small_nat_gen
 
+let int64_bound_gen bound =
+  let open QCheck.Gen in
+  map
+    (fun (pos, x) ->
+       x |> min bound |> fun x -> if pos then x else Int64.mul (-1L) x)
+    (pair bool ui64)
+
 let pos_int64_bound_gen bound =
   QCheck.Gen.(map (fun x -> x |> max 0L |> min bound) ui64)
 
@@ -69,6 +76,8 @@ let nz_pos_int64_bound_gen bound =
 let small_pos_int64_gen = pos_int64_bound_gen 100L
 
 let small_nz_pos_int64_gen = nz_pos_int64_bound_gen 100L
+
+let int64_gen = int64_bound_gen (Int64.sub Int64.max_int 1L)
 
 let pos_int64_gen = pos_int64_bound_gen (Int64.sub Int64.max_int 1L)
 
@@ -135,8 +144,7 @@ let tiny_sorted_time_slots_gen =
             (Some end_exc, (start, end_exc) :: acc))
          (None, [])
        |> fun (_, l) -> List.rev l)
-    (pair
-       (pos_int64_bound_gen 10_000L)
+    (pair (int64_bound_gen 10_000L)
        (list_size (int_bound 5)
           (pair (pos_int64_bound_gen 20L) (pos_int64_bound_gen 20L))))
 
@@ -159,7 +167,7 @@ let sorted_time_slots_maybe_gaps_gen =
             (Some end_exc, (start, end_exc) :: acc))
          (None, [])
        |> fun (_, l) -> List.rev l)
-    (pair pos_int64_gen
+    (pair int64_gen
        (list_size (int_bound 1000) (pair nz_small_nat_gen small_nat)))
 
 let sorted_time_slots_maybe_gaps =
@@ -181,7 +189,7 @@ let sorted_time_slots_with_gaps_gen =
             (Some end_exc, (start, end_exc) :: acc))
          (None, [])
        |> fun (_, l) -> List.rev l)
-    (pair pos_int64_gen
+    (pair int64_gen
        (list_size (int_bound 1000) (pair nz_small_nat_gen nz_small_nat_gen)))
 
 let sorted_time_slots_with_gaps =
@@ -210,7 +218,7 @@ let sorted_time_slots_with_overlaps_gen =
             (Some (start, size), (start, end_exc) :: acc))
          (None, [])
        |> fun (_, l) -> List.rev l)
-    (pair pos_int64_gen
+    (pair int64_gen
        (list_size (int_bound 1000) (pair nz_small_nat_gen small_nat)))
 
 let sorted_time_slots_with_overlaps =
@@ -221,7 +229,7 @@ let tiny_time_slots_gen =
   map
     (List.map (fun (start, size) -> (start, Int64.add start size)))
     (list_size (int_bound 5)
-       (pair (pos_int64_bound_gen 10_000L) (pos_int64_bound_gen 20L)))
+       (pair (int64_bound_gen 10_000L) (pos_int64_bound_gen 20L)))
 
 let tiny_time_slots =
   QCheck.make ~print:Print_utils.time_slots tiny_time_slots_gen
@@ -231,7 +239,7 @@ let time_slots_gen =
   map
     (List.map (fun (start, size) ->
          (start, Int64.add start (Int64.of_int size))))
-    (list_size (int_bound 100) (pair (pos_int64_bound_gen 100_000L) small_nat))
+    (list_size (int_bound 100) (pair (int64_bound_gen 100_000L) small_nat))
 
 let time_slots = QCheck.make ~print:Print_utils.time_slots time_slots_gen
 

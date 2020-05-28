@@ -1,3 +1,7 @@
+exception Modulo_is_invalid
+
+exception Range_is_invalid
+
 type 'a range =
   [ `Range_inc of 'a * 'a
   | `Range_exc of 'a * 'a

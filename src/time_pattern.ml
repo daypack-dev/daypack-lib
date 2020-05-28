@@ -1082,6 +1082,290 @@ module Equal = struct
     && List.sort compare pat1.minutes = List.sort compare pat2.minutes
 end
 
+module Of_string = struct
+  open CCParse
+  open Parser_components
+
+  let end_markers = " ]"
+
+  let non_end_markers = chars_if (fun c -> not (String.contains end_markers c))
+
+  let range_inc_expr (p : 'a t) : 'a Range.range t =
+    try_ (p >>= fun x -> hyphen *> p >>= fun y -> return (`Range_inc (x, y)))
+    <|> (p >>= fun x -> return (`Range_inc (x, x)))
+
+  let ranges_expr ~allow_empty ~(f_flatten : 'a Range.range list -> 'a list)
+      (p : 'a t) : 'a list t =
+    get_cnum
+    >>= fun cnum ->
+    ( if allow_empty then
+        sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p)
+      else sep_fail_on_first_fail ~by:',' ~end_markers (range_inc_expr p) )
+    >>= fun l ->
+    try return (f_flatten l)
+    with Range.Range_is_invalid -> failf "Invalid range, pos: %d" cnum
+
+  let time_pattern_ranges_expr (p : 'a list t) : 'a list t =
+    try_ (char '[') *> p
+    >>= (fun l ->
+        try_ (char ']' *> return l)
+        <|> ( get_cnum
+              >>= fun cnum ->
+              non_square_bracket_string
+              >>= fun s ->
+              if s = "" then failf "Missing ], pos: %d" cnum
+              else failf "Invalid ranges: %s, pos: %d" s cnum ))
+        <|> return []
+
+  module Second = struct
+    let second_expr =
+      nat_zero
+      >>= (fun x -> if x >= 60 then failf "Invalid second: %d" x else return x)
+          <|> ( get_cnum
+                >>= fun cnum ->
+                non_end_markers
+                >>= fun s -> failf "Invalid second term: %s, pos: %d" s cnum )
+
+    let seconds_expr ~allow_empty =
+      ranges_expr ~allow_empty
+        ~f_flatten:Time.Second_ranges.Flatten.flatten_list second_expr
+
+    let seconds_cron_expr =
+      try_ (char '*' *> return []) <|> seconds_expr ~allow_empty:false
+
+    let seconds_time_pattern_expr =
+      time_pattern_ranges_expr (seconds_expr ~allow_empty:true)
+  end
+
+  module Minute = struct
+    let minute_expr =
+      try_ nat_zero
+      >>= (fun x -> if x >= 60 then failf "Invalid minute: %d" x else return x)
+          <|> ( get_cnum
+                >>= fun cnum ->
+                non_end_markers
+                >>= fun s -> failf "Invalid minute term: %s, pos: %d" s cnum )
+
+    let minutes_expr ~allow_empty =
+      ranges_expr ~allow_empty
+        ~f_flatten:Time.Minute_ranges.Flatten.flatten_list minute_expr
+
+    let minutes_cron_expr =
+      try_ (char '*' *> return []) <|> minutes_expr ~allow_empty:false
+
+    let minutes_time_pattern_expr =
+      time_pattern_ranges_expr (minutes_expr ~allow_empty:true)
+  end
+
+  module Hour = struct
+    let hour_expr =
+      nat_zero
+      >>= (fun x -> if x >= 24 then failf "Invalid hour: %d" x else return x)
+          <|> ( get_cnum
+                >>= fun cnum ->
+                non_end_markers
+                >>= fun s -> failf "Invalid hour term: %s, pos: %d" s cnum )
+
+    let hours_expr ~allow_empty =
+      ranges_expr ~allow_empty ~f_flatten:Time.Hour_ranges.Flatten.flatten_list
+        hour_expr
+
+    let hours_cron_expr =
+      try_ (char '*' *> return []) <|> hours_expr ~allow_empty:false
+
+    let hours_time_pattern_expr =
+      time_pattern_ranges_expr (hours_expr ~allow_empty:true)
+  end
+
+  module Month_day = struct
+    let month_day_expr =
+      nat_zero
+      >>= fun x ->
+      if 1 <= x && x <= 31 then return x else failf "Invalid month day: %d" x
+
+    let month_days_expr ~allow_empty =
+      ranges_expr ~allow_empty
+        ~f_flatten:Time.Month_day_ranges.Flatten.flatten_list month_day_expr
+
+    let month_days_cron_expr =
+      try_ (char '*' *> return []) <|> month_days_expr ~allow_empty:false
+
+    let month_days_time_pattern_expr =
+      time_pattern_ranges_expr (month_days_expr ~allow_empty:true)
+  end
+
+  module Month = struct
+    let month_int_expr =
+      nat_zero
+      >>= fun x ->
+      match Time.month_of_human_int x with
+      | Ok x -> return x
+      | Error () -> failf "Invalid month int: %d" x
+
+    let month_word_expr ~for_cron =
+      alpha_string
+      >>= fun x ->
+      if for_cron && String.length x <> 3 then
+        failf "Invalid length for month string: %s" x
+      else
+        match Time.Of_string.month_of_string x with
+        | Ok x -> return x
+        | Error () -> failf "Invalid month string: %s" x
+
+    let month_expr ~for_cron =
+      (* if for_cron then ((month_word_expr ~for_cron)) <|> month_int_expr
+       * else month_word_expr ~for_cron *)
+      month_word_expr ~for_cron <|> month_int_expr
+
+    let months_expr ~allow_empty ~for_cron =
+      ranges_expr ~allow_empty ~f_flatten:Time.Month_ranges.Flatten.flatten_list
+        (month_expr ~for_cron)
+
+    let months_cron_expr =
+      try_ (char '*' *> return [])
+      <|> months_expr ~allow_empty:false ~for_cron:true
+
+    let months_time_pattern_expr =
+      time_pattern_ranges_expr (months_expr ~allow_empty:true ~for_cron:false)
+  end
+
+  module Year = struct
+    let year_expr =
+      try_ nat_zero
+      <|> ( get_cnum
+            >>= fun cnum ->
+            non_end_markers
+            >>= fun s -> failf "Invalid year term: %s, pos: %d" s cnum )
+
+    let years_expr ~allow_empty =
+      ranges_expr ~allow_empty ~f_flatten:Time.Year_ranges.Flatten.flatten_list
+        year_expr
+
+    let years_cron_expr =
+      try_ (char '*' *> return []) <|> years_expr ~allow_empty:false
+
+    let years_time_pattern_expr =
+      time_pattern_ranges_expr (years_expr ~allow_empty:true)
+  end
+
+  module Weekday = struct
+    let weekday_int_expr =
+      get_cnum
+      >>= fun cnum ->
+      nat_zero
+      >>= fun x ->
+      match Time.weekday_of_tm_int x with
+      | Ok x -> return x
+      | Error () -> failf "Invalid weekday int: %d, pos: %d" x cnum
+
+    let weekday_word_expr ~for_cron =
+      get_cnum
+      >>= fun cnum ->
+      alpha_string
+      >>= fun x ->
+      if for_cron && String.length x <> 3 then
+        failf "Invalid length for weekday string: %s, pos: %d" x cnum
+      else
+        match Time.Of_string.weekday_of_string x with
+        | Ok x -> return x
+        | Error () -> failf "Invalid weekday string: %s, pos: %d" x cnum
+
+    let weekday_expr ~for_cron =
+      if for_cron then weekday_int_expr <|> weekday_word_expr ~for_cron
+      else weekday_word_expr ~for_cron
+
+    let weekdays_expr ~allow_empty ~for_cron =
+      ranges_expr ~allow_empty
+        ~f_flatten:Time.Weekday_ranges.Flatten.flatten_list
+        (weekday_expr ~for_cron)
+
+    let weekdays_cron_expr =
+      try_ (char '*' *> return [])
+      <|> weekdays_expr ~allow_empty:false ~for_cron:true
+
+    let weekdays_time_pattern_expr =
+      time_pattern_ranges_expr (weekdays_expr ~allow_empty:true ~for_cron:false)
+  end
+
+  let cron_expr =
+    Minute.minutes_cron_expr
+    >>= fun minutes ->
+    skip_space1 *> Hour.hours_cron_expr
+    >>= fun hours ->
+    skip_space1 *> Month_day.month_days_cron_expr
+    >>= fun month_days ->
+    skip_space1 *> Month.months_cron_expr
+    >>= fun months ->
+    skip_space1 *> Year.years_cron_expr
+    >>= fun years ->
+    skip_space1 *> Weekday.weekdays_cron_expr
+    >>= fun weekdays ->
+    eoi
+    *> return
+      {
+        years;
+        months;
+        month_days;
+        weekdays;
+        hours;
+        minutes;
+        seconds = [];
+        unix_seconds = [];
+      }
+
+  let unit_char c : unit t =
+    get_cnum
+    >>= fun cnum ->
+    try_ (char c) *> nop
+    <|> ( char_if (fun _ -> true)
+          >>= fun c -> failf "Invalid unit char: %c, pos: %d" c cnum )
+
+  let time_pattern_expr =
+    unit_char 'y' *> skip_space *> Year.years_time_pattern_expr
+    >>= fun years ->
+    skip_space *> unit_char 'm' *> skip_space *> Month.months_time_pattern_expr
+    >>= fun months ->
+    skip_space
+    *> unit_char 'd'
+    *> skip_space
+    *> Month_day.month_days_time_pattern_expr
+    >>= fun month_days ->
+    skip_space
+    *> unit_char 'w'
+    *> skip_space
+    *> Weekday.weekdays_time_pattern_expr
+    >>= fun weekdays ->
+    skip_space *> unit_char 'h' *> skip_space *> Hour.hours_time_pattern_expr
+    >>= fun hours ->
+    skip_space
+    *> unit_char 'm'
+    *> skip_space
+    *> Minute.minutes_time_pattern_expr
+    >>= fun minutes ->
+    skip_space
+    *> unit_char 's'
+    *> skip_space
+    *> Second.seconds_time_pattern_expr
+    >>= fun seconds ->
+    return
+      {
+        years;
+        months;
+        month_days;
+        weekdays;
+        hours;
+        minutes;
+        seconds;
+        unix_seconds = [];
+      }
+
+  let time_pattern_of_cron_string (s : string) : (time_pattern, string) result =
+    parse_string (cron_expr <* eoi) s
+
+  let time_pattern_of_string (s : string) : (time_pattern, string) result =
+    parse_string (time_pattern_expr <* eoi) s
+end
+
 module To_string = struct
   let string_of_error (e : error) : string =
     match e with

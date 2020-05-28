@@ -78,16 +78,16 @@ let tm_int_of_weekday (wday : weekday) : int =
   | `Fri -> 5
   | `Sat -> 6
 
-let weekday_of_tm_int (x : int) : weekday =
+let weekday_of_tm_int (x : int) : (weekday, unit) result =
   match x with
-  | 0 -> `Sun
-  | 1 -> `Mon
-  | 2 -> `Tue
-  | 3 -> `Wed
-  | 4 -> `Thu
-  | 5 -> `Fri
-  | 6 -> `Sat
-  | _ -> failwith "Invalid wday int"
+  | 0 -> Ok `Sun
+  | 1 -> Ok `Mon
+  | 2 -> Ok `Tue
+  | 3 -> Ok `Wed
+  | 4 -> Ok `Thu
+  | 5 -> Ok `Fri
+  | 6 -> Ok `Sat
+  | _ -> Error ()
 
 let tm_int_of_month (month : month) : int =
   match month with
@@ -353,7 +353,7 @@ module Weekday_ranges = Ranges_small.Make (struct
 
     let to_int = tm_int_of_weekday
 
-    let of_int = weekday_of_tm_int
+    let of_int x = x |> weekday_of_tm_int |> Result.get_ok
   end)
 
 module Month_day_ranges = Ranges_small.Make (struct
