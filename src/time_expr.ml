@@ -112,7 +112,8 @@ module Of_string = struct
       ( try_ (string "coming" *> return `Next)
         <|> try_ (char '?' *> return `Next)
         <|> try_ (string "every" *> return `Every)
-        <|> char '!' *> return `Every )
+        <|> char '!' *> return `Every
+      )
 
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "lasst"; "coming"; "every" ]
@@ -143,21 +144,33 @@ module Of_string = struct
 
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =
-      string "::" *> nat_zero
+      try_ (string "::") *>
+      get_cnum >>= fun cnum ->
+      (try_ nat_zero
       >>= fun second ->
-      if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
-      else return second
+      if second >= 60 then failf "Invalid second: %d, pos: %d" second cnum
+      else return second)
+      <|>
+      (non_space_string >>= fun s ->
+       if s = "" then
+         failf "Missing second after ::, pos: %d" cnum
+       else
+         failf "Invalid second: %s, pos: %d" s cnum
+      )
   end
 
   module Minute_second = struct
     let minute_second_expr : Time_expr_ast.minute_second_expr t =
-      char ':' *> nat_zero
+      try_ (char ':') *>
+      get_cnum >>= fun cnum ->
+      nat_zero
       >>= fun minute ->
-      if minute >= 60 then fail (Printf.sprintf "Invalid minute: %d" minute)
+      if minute >= 60 then failf "Invalid minute: %d, pos: %d" minute cnum
       else
+        get_cnum >>= fun cnum ->
         option 0 (char ':' *> nat_zero)
         >>= fun second ->
-        if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
+        if second >= 60 then failf "Invalid second: %d, pos: %d" second cnum
         else return Time_expr_ast.{ minute; second }
   end
 
@@ -168,11 +181,11 @@ module Of_string = struct
           <|> string "pm" *> return `Hour_in_PM )
 
     let hour_minute_second_expr : Time_expr_ast.hour_minute_second_expr t =
-      nat_zero
-      >>= fun hour ->
-      char ':' *> nat_zero
+      try_ (nat_zero <* char ':') >>=
+      fun hour ->
+      (nat_zero
       >>= fun minute ->
-      if minute >= 60 then fail (Printf.sprintf "Invalid minute: %d" minute)
+      if minute >= 60 then failf "Invalid minute: %d" minute
       else
         option 0 (char ':' *> nat_zero)
         >>= fun second ->
@@ -193,7 +206,7 @@ module Of_string = struct
             if 1 <= hour && hour <= 12 then
               let hour = if hour = 12 then 0 else hour in
               return Time_expr_ast.{ hour = hour + 12; minute; second }
-            else fail (Printf.sprintf "Invalid hour: %d" hour)
+            else fail (Printf.sprintf "Invalid hour: %d" hour))
 
     let hour_minute_second_range_expr :
       Time_expr_ast.hour_minute_second_range_expr t =
@@ -282,7 +295,7 @@ module Of_string = struct
 
   module Time_points_expr = struct
     let tp_name =
-      string "at:" *> ident_string
+      try_ (string "at:") *> ident_string
       >>= fun s -> return (Time_expr_ast.Tpe_name s)
 
     let tp_ymd_hour_minute_second =
@@ -355,25 +368,38 @@ module Of_string = struct
 
     let unbounded_time_points_expr : Time_expr_ast.unbounded_time_points_expr t
       =
-      try_ tp_name
-      <|> try_ tp_ymd_hour_minute_second
-      <|> try_ tp_ymond_hour_minute_second
+      tp_name
+      <|> tp_second
+      <|> tp_minute_second
+      <|> tp_hour_minute_second
+      <|> try_ tp_d_hour_minute_second
       <|> try_ tp_md_hour_minute_second
       <|> try_ tp_mond_hour_minute_second
-      <|> try_ tp_d_hour_minute_second
-      <|> try_ tp_hour_minute_second
-      <|> try_ tp_minute_second
-      <|> tp_second
+      <|> try_ tp_ymd_hour_minute_second
+      <|> try_ tp_ymond_hour_minute_second
 
     let time_points_expr : Time_expr_ast.time_points_expr t =
       bound
       >>= fun bound ->
-      skip_space *> unbounded_time_points_expr >>= fun e -> return (bound, e)
+      skip_space *>
+      (unbounded_time_points_expr >>= fun e ->
+       (try_ eoi *> return (bound, e))
+       <|>
+       (get_cnum >>= fun cnum ->
+        any_string >>= fun s ->
+        failf "Invalid syntax: %s, pos: %d" s cnum
+       )
+      )
+      <|>
+      (get_cnum >>= fun cnum ->
+       any_string >>= fun s ->
+       failf "Invalid syntax: %s, pos: %d" s cnum
+      )
   end
 
   module Time_slots_expr = struct
     let ts_name =
-      string "during:" *> ident_string
+      try_ (string "during:") *> ident_string
       >>= fun s -> return (Time_expr_ast.Tse_name s)
 
     let ts_explicit_time_slots =
@@ -479,13 +505,13 @@ module Of_string = struct
            { years; months; month_days; hour_minute_second_ranges })
 
     let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
-      try_ ts_name
+      ts_name
       <|> try_ ts_explicit_time_slots
       <|> try_ ts_days_hour_minute_second_ranges
       <|> try_ ts_months_mdays_hour_minute_second
       <|> try_ ts_months_wdays_hour_minute_second
       <|> try_ ts_months_wday_hour_minute_second
-      <|> ts_years_months_mdays_hour_minute_second
+      <|> try_ ts_years_months_mdays_hour_minute_second
 
     let time_slots_expr : Time_expr_ast.time_slots_expr t =
       bound
@@ -495,8 +521,7 @@ module Of_string = struct
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string
-      ( try_
-          ( Time_points_expr.time_points_expr
+      ( ( Time_points_expr.time_points_expr
             <* eoi
             >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
         <|> ( Time_slots_expr.time_slots_expr
