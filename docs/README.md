@@ -1,33 +1,33 @@
 # Supplementary documentation
 
-The documentation here contains info and examples which aim to help one get started
+The documentation here contains tutorials and other info that does not fit into library documentation
 
 Refer to the library documentation for information on individual types and functions
 
-## Index
+## Tutorial
 
-- [Time](time.md)
+- [Time](tutorial/time.md)
 
   - Basic time handling
 
-- [Time slots](time_slots.md)
+- [Time slots](tutorial/time_slots.md)
 
   - Time slots/intervals manipulations for general use and also for performing set operations
 
 - Time finding
 
-  - [Time pattern](time_pattern.md)
+  - [Time pattern](tutorial/time_pattern.md)
 
     - Finding time or time segments using a pattern similar to cron expression, but slightly
       more powerful
     
-  - [Time expression](time_expr.md)
+  - [Time expression](tutorial/time_expr.md)
 
     - A small language for specifying complex time segments
     
     - Aims to be a more expressive and user-friendly layer over time pattern
 
-- [Schedule](sched.md)
+- [Schedule](tutorial/sched.md)
 
   - Schedule implementation which provides:
   
