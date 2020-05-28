@@ -299,12 +299,13 @@ module Of_string = struct
       >>= fun s -> return (Time_expr_ast.Tpe_name s)
 
     let tp_ymd_hour_minute_second =
-      nat_zero
-      >>= fun year ->
-      hyphen *> Month.human_int_month_expr
-      >>= fun month ->
-      hyphen *> nat_zero
-      >>= fun month_day ->
+      try_ (nat_zero
+            >>= fun year ->
+            hyphen *> Month.human_int_month_expr
+            >>= fun month ->
+            hyphen *> nat_zero
+            >>= fun month_day ->
+            return (year, month, month_day)) >>= fun (year, month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return
@@ -312,12 +313,12 @@ module Of_string = struct
            { year; month; month_day; hour_minute_second })
 
     let tp_ymond_hour_minute_second =
-      nat_zero
+      try_ (nat_zero
       >>= fun year ->
       skip_space *> Month.direct_pick_month_expr
       >>= fun month ->
       skip_space *> nat_zero
-      >>= fun month_day ->
+      >>= fun month_day -> return (year, month, month_day)) >>= fun (year, month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return
@@ -325,10 +326,10 @@ module Of_string = struct
            { year; month; month_day; hour_minute_second })
 
     let tp_md_hour_minute_second =
-      Month.month_expr
+      try_ (Month.month_expr
       >>= fun month ->
       hyphen *> nat_zero
-      >>= fun month_day ->
+      >>= fun month_day -> return (month, month_day)) >>= fun (month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return
@@ -336,10 +337,10 @@ module Of_string = struct
            { month; month_day; hour_minute_second })
 
     let tp_mond_hour_minute_second =
-      Month.direct_pick_month_expr
+      try_ (Month.direct_pick_month_expr
       >>= fun month ->
       skip_space *> nat_zero
-      >>= fun month_day ->
+      >>= fun month_day -> return (month, month_day)) >>= fun (month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
       return
@@ -347,7 +348,7 @@ module Of_string = struct
            { month; month_day; hour_minute_second })
 
     let tp_d_hour_minute_second =
-      Day.day_expr
+      try_ Day.day_expr
       >>= fun day ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
@@ -369,14 +370,14 @@ module Of_string = struct
     let unbounded_time_points_expr : Time_expr_ast.unbounded_time_points_expr t
       =
       tp_name
-      <|> tp_second
-      <|> tp_minute_second
+      <|> tp_ymd_hour_minute_second
+      <|> tp_ymond_hour_minute_second
+      <|> tp_md_hour_minute_second
+      <|> tp_mond_hour_minute_second
       <|> tp_hour_minute_second
-      <|> try_ tp_d_hour_minute_second
-      <|> try_ tp_md_hour_minute_second
-      <|> try_ tp_mond_hour_minute_second
-      <|> try_ tp_ymd_hour_minute_second
-      <|> try_ tp_ymond_hour_minute_second
+      <|> tp_minute_second
+      <|> tp_second
+      <|> tp_d_hour_minute_second
 
     let time_points_expr : Time_expr_ast.time_points_expr t =
       bound
