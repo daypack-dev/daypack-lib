@@ -8,19 +8,20 @@ type t = {
 }
 
 let of_seconds (x : int64) : t =
-  assert (x >= 0L);
-  let seconds = Int64.rem x 60L in
-  let minutes = Int64.div x 60L in
-  let hours = Int64.div minutes 60L in
-  let days = Int64.div hours 24L in
-  let hours = Int64.rem hours 24L in
-  let minutes = Int64.rem minutes 60L in
-  {
-    days = Int64.to_int days;
-    hours = Int64.to_int hours;
-    minutes = Int64.to_int minutes;
-    seconds = Int64.to_int seconds;
-  }
+  if x < 0L then raise (Invalid_argument "Negative number of seconds")
+  else
+    let seconds = Int64.rem x 60L in
+    let minutes = Int64.div x 60L in
+    let hours = Int64.div minutes 60L in
+    let days = Int64.div hours 24L in
+    let hours = Int64.rem hours 24L in
+    let minutes = Int64.rem minutes 60L in
+    {
+      days = Int64.to_int days;
+      hours = Int64.to_int hours;
+      minutes = Int64.to_int minutes;
+      seconds = Int64.to_int seconds;
+    }
 
 let to_seconds (t : t) : int64 =
   let days = Int64.of_int t.days in
