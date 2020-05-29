@@ -7,6 +7,13 @@ type t = {
   seconds : int;
 }
 
+let zero = {
+  days = 0;
+  hours = 0;
+  minutes = 0;
+  seconds = 0;
+}
+
 let of_seconds (x : int64) : (t, unit) result =
   if x < 0L then Error ()
   else
