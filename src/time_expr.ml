@@ -385,10 +385,10 @@ module Of_string = struct
       <|> tp_ymond_hour_minute_second
       <|> tp_md_hour_minute_second
       <|> tp_mond_hour_minute_second
+      <|> tp_d_hour_minute_second
       <|> tp_hour_minute_second
       <|> tp_minute_second
       <|> tp_second
-      <|> tp_d_hour_minute_second
 
     let time_points_expr : Time_expr_ast.time_points_expr t =
       bound
