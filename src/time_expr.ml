@@ -359,10 +359,12 @@ module Of_string = struct
            { month; month_day; hour_minute_second })
 
     let tp_d_hour_minute_second =
-      try_ Day.day_expr
-      >>= fun day ->
-      skip_space *> Hour_minute_second.hour_minute_second_expr
-      >>= fun hour_minute_second ->
+      try_
+        ( Day.day_expr
+          >>= fun day ->
+          skip_space *> Hour_minute_second.hour_minute_second_expr
+          >>= fun hour_minute_second -> return (day, hour_minute_second) )
+      >>= fun (day, hour_minute_second) ->
       return (Time_expr_ast.Day_hour_minute_second { day; hour_minute_second })
 
     let tp_hour_minute_second =
