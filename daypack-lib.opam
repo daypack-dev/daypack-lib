@@ -3,6 +3,7 @@ name: "daypack-lib"
 version: "0.0.1"
 synopsis: "A schedule, time and time slots handling library"
 description: """
+Daypack-lib is WIP and subject to drastic changes between versions, do not use it for anything serious
 """
 maintainer: "Darren Ldl <darrenldldev@gmail.com>"
 authors: "Daypack developers"
