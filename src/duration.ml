@@ -82,12 +82,12 @@ module Of_string = struct
         failf "Duplicate use of %s term: %d%s%s, pos: %d" units n spaces s
           cnum
     in
-    try_
-      ( get_cnum
-        >>= fun cnum ->
-        nat_zero >>= fun n -> take_space >>= fun s -> return (cnum, n, s) )
+    get_cnum >>= fun cnum ->
+    (try_
+      ( nat_zero >>= fun n -> take_space >>= fun s -> return (cnum, n, s) )
     >>= (fun (cnum, n, spaces) ->
-        try_ days_string
+         get_cnum >>= fun unit_keyword_cnum ->
+        (try_ days_string
         >>= (fun s -> fail' "days" days n spaces s cnum)
             <|> ( try_ hours_string
                   >>= fun s -> fail' "hours" hours n spaces s cnum )
@@ -95,18 +95,23 @@ module Of_string = struct
                   >>= fun s -> fail' "minutes" minutes n spaces s cnum )
             <|> ( try_ seconds_string
                   >>= fun s -> fail' "seconds" seconds n spaces s cnum )
-            <|> alpha_string
-        >>= fun s -> eoi *> failf "Invalid unit keyword: %s, pos: %d" s cnum)
-        <|> ( get_cnum
-              >>= fun cnum ->
-              any_string
+            <|> non_space_string)
+        >>= fun s -> eoi *> failf "Invalid unit keyword: %s, pos: %d" s unit_keyword_cnum
+       ))
+        <|> ( any_string
               >>= fun s ->
               eoi
               *> if s = "" then nop else failf "Invalid syntax: %s, pos: %d" s cnum )
 
   let duration_expr : duration t =
     let term' p =
-      option None (nat_zero <* skip_space <* p >>= fun n -> return (Some n))
+      (try_ (nat_zero <* skip_space <* p) >>= fun n -> return (Some n))
+      <|>
+      (try_ (nat_zero <* skip_space <* eoi) >>= fun n -> return (Some n))
+      <|>
+      (
+        return None
+      )
     in
     term' days_string
     >>= fun days ->
