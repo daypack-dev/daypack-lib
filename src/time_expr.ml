@@ -177,33 +177,42 @@ module Of_string = struct
         ( try_ (string "am" *> return `Hour_in_AM)
           <|> string "pm" *> return `Hour_in_PM )
 
+    let handle_time_with_mode ~(hour : int) ~(minute : int) ~(second : int) mode
+      =
+      match mode with
+      | `Hour_in_24_hours ->
+        if hour >= 24 then failf "Invalid hour: %d" hour
+        else return Time_expr_ast.{ hour; minute; second }
+      | `Hour_in_AM ->
+        if 1 <= hour && hour <= 12 then
+          let hour = if hour = 12 then 0 else hour in
+          return Time_expr_ast.{ hour; minute; second }
+        else failf "Invalid hour: %d" hour
+      | `Hour_in_PM ->
+        if 1 <= hour && hour <= 12 then
+          let hour = if hour = 12 then 0 else hour in
+          return Time_expr_ast.{ hour = hour + 12; minute; second }
+        else failf "Invalid hour: %d" hour
+
     let hour_minute_second_expr : Time_expr_ast.hour_minute_second_expr t =
       try_ (nat_zero <* char ':')
-      >>= fun hour ->
-      nat_zero
-      >>= fun minute ->
-      if minute >= 60 then failf "Invalid minute: %d" minute
-      else
-        option 0 (char ':' *> nat_zero)
-        >>= fun second ->
-        if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
-        else
-          skip_space *> hour_minute_second_mode_expr
-          >>= fun mode ->
-          match mode with
-          | `Hour_in_24_hours ->
-            if hour >= 24 then fail (Printf.sprintf "Invalid hour: %d" hour)
-            else return Time_expr_ast.{ hour; minute; second }
-          | `Hour_in_AM ->
-            if 1 <= hour && hour <= 12 then
-              let hour = if hour = 12 then 0 else hour in
-              return Time_expr_ast.{ hour; minute; second }
-            else fail (Printf.sprintf "Invalid hour: %d" hour)
-          | `Hour_in_PM ->
-            if 1 <= hour && hour <= 12 then
-              let hour = if hour = 12 then 0 else hour in
-              return Time_expr_ast.{ hour = hour + 12; minute; second }
-            else fail (Printf.sprintf "Invalid hour: %d" hour)
+      >>= (fun hour ->
+          nat_zero
+          >>= fun minute ->
+          if minute >= 60 then failf "Invalid minute: %d" minute
+          else
+            option 0 (char ':' *> nat_zero)
+            >>= fun second ->
+            if second >= 60 then
+              fail (Printf.sprintf "Invalid second: %d" second)
+            else
+              skip_space *> hour_minute_second_mode_expr
+              >>= fun mode -> handle_time_with_mode ~hour ~minute ~second mode)
+          <|> ( nat_zero
+                >>= fun hour ->
+                skip_space *> hour_minute_second_mode_expr
+                >>= fun mode -> handle_time_with_mode ~hour ~minute:0 ~second:0 mode
+              )
 
     let hour_minute_second_range_expr :
       Time_expr_ast.hour_minute_second_range_expr t =
