@@ -5,7 +5,7 @@ type t = {
   seconds : int;
 }
 
-val of_seconds : int64 -> t
+val of_seconds : int64 -> (t, unit) result
 
 val to_seconds : t -> int64
 
