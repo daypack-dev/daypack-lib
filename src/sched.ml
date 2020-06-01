@@ -2157,7 +2157,7 @@ module Sched_req = struct
   module Add = struct
     let add_sched_req_data (sched_req_data : Sched_req_.sched_req_data)
         (sched : sched) : (Sched_req_.sched_req * sched, unit) result =
-      if Sched_req_.Check.check_sched_req_data sched_req_data then
+      if Sched_req_.Check.sched_req_data_is_valid sched_req_data then
         let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
         Ok
           ( (sched_req_id, sched_req_data),
@@ -2177,7 +2177,7 @@ module Sched_req = struct
     let add_sched_req_data_list
         (sched_req_data_list : Sched_req_.sched_req_data list) (sched : sched) :
       (Sched_req_.sched_req list * sched, unit) result =
-      if Sched_req_.Check.check_sched_req_data_list sched_req_data_list then
+      if Sched_req_.Check.sched_req_data_list_is_valid sched_req_data_list then
         List.fold_left
           (fun (sched_reqs, sched) sched_req_data ->
              let sched_req, sched =

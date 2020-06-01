@@ -167,27 +167,27 @@ let sched_req_template_bound_on_start_and_end_exc
     None sched_req_template
 
 module Check = struct
-  let check_user_id (id : user_id) = id >= 0L
+  let user_id_is_valid (id : user_id) = id >= 0L
 
-  let check_task_id ((id1, id2) : task_id) = id1 >= 0L && id2 >= 0L
+  let task_id_is_valid ((id1, id2) : task_id) = id1 >= 0L && id2 >= 0L
 
-  let check_task_inst_id ((id1, id2, id3) : task_inst_id) =
+  let task_inst_id_is_valid ((id1, id2, id3) : task_inst_id) =
     id1 >= 0L && id2 >= 0L && id3 >= 0L
 
-  let check_task_seg_id ((id1, id2, id3, id4, id5) : task_seg_id) =
+  let task_seg_id_is_valid ((id1, id2, id3, id4, id5) : task_seg_id) =
     id1 >= 0L
     && id2 >= 0L
     && id3 >= 0L
     && id4 >= 0L
     && match id5 with None -> true | Some x -> x >= 0L
 
-  let check_task_seg_size (size : task_seg_size) : bool = size > 0L
+  let task_seg_size_is_valid (size : task_seg_size) : bool = size > 0L
 
-  let check_task_seg_alloc_req ((id, size) : task_seg_alloc_req) : bool =
-    check_task_inst_id id && check_task_seg_size size
+  let task_seg_alloc_req_is_valid ((id, size) : task_seg_alloc_req) : bool =
+    task_inst_id_is_valid id && task_seg_size_is_valid size
 
-  let check_task_seg ((id, size) : task_seg) : bool =
-    check_task_seg_id id && check_task_seg_size size
+  let task_seg_is_valid ((id, size) : task_seg) : bool =
+    task_seg_id_is_valid id && task_seg_size_is_valid size
 end
 
 module Serialize = struct
