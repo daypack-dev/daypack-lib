@@ -107,7 +107,8 @@ module Check = struct
     | Time_expr_ast.Weekday _ -> true
     | Month_day x -> 1 <= x && x <= 31
 
-  let check_unbounded_time_points_expr (e : Time_expr_ast.unbounded_time_points_expr) : (unit, unit) result =
+  let check_unbounded_time_points_expr
+      (e : Time_expr_ast.unbounded_time_points_expr) : (unit, unit) result =
     let open Time_expr_ast in
     match e with
     | Tpe_name _ -> Ok ()
@@ -119,35 +120,47 @@ module Check = struct
                  (Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None x))
             l
         in
-        match invalid_unix_seconds with
-        | [] -> Ok ()
-        | _ -> Error ()
-      )
+        match invalid_unix_seconds with [] -> Ok () | _ -> Error () )
     | Second second ->
       if Time.Check.second_is_valid ~second then Ok () else Error ()
     | Minute_second { minute; second } ->
-      if Time.Check.minute_second_is_valid ~minute ~second then Ok () else Error ()
+      if Time.Check.minute_second_is_valid ~minute ~second then Ok ()
+      else Error ()
     | Hour_minute_second { hour; minute; second } ->
-      if Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then Ok () else Error ()
-    | Day_hour_minute_second { day; hour_minute_second = { hour; minute; second }} ->
+      if Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then
+        Ok ()
+      else Error ()
+    | Day_hour_minute_second
+        { day; hour_minute_second = { hour; minute; second } } ->
       if
-        day_expr_is_valid day &&
-        Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then
-        Ok ()
-      else
-        Error ()
-    | Month_day_hour_minute_second { month = _; month_day; hour_minute_second = { hour; minute; second}} ->
-      if 1 <= month_day && month_day <= 31
-        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then
-        Ok ()
-      else
-         Error ()
-    | Year_month_day_hour_minute_second { year; month = _; month_day; hour_minute_second = { hour; minute; second}} ->
-      if 0 <= year && year <= 9999 && 1 <= month_day && month_day <= 31
-        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then
-        Ok ()
-      else
-         Error ()
+        day_expr_is_valid day
+        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second
+      then Ok ()
+      else Error ()
+    | Month_day_hour_minute_second
+        { month = _; month_day; hour_minute_second = { hour; minute; second } }
+      ->
+      if
+        1 <= month_day
+        && month_day <= 31
+        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second
+      then Ok ()
+      else Error ()
+    | Year_month_day_hour_minute_second
+        {
+          year;
+          month = _;
+          month_day;
+          hour_minute_second = { hour; minute; second };
+        } ->
+      if
+        0 <= year
+        && year <= 9999
+        && 1 <= month_day
+        && month_day <= 31
+        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second
+      then Ok ()
+      else Error ()
 end
 
 module Of_string = struct
@@ -636,8 +649,8 @@ module To_time_pattern_lossy = struct
     let update_time_pattern_using_minute_second_expr
         (e : Time_expr_ast.minute_second_expr)
         (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
-      if Time.Check.minute_second_is_valid ~minute:e.minute ~second:e.second then
-        { base with minutes = [ e.minute ] }
+      if Time.Check.minute_second_is_valid ~minute:e.minute ~second:e.second
+      then { base with minutes = [ e.minute ] }
       else
         raise
           (Invalid_time_expr

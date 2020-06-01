@@ -195,8 +195,8 @@ module Check = struct
   let minute_second_is_valid ~(minute : int) ~(second : int) : bool =
     0 <= minute && minute < 60 && second_is_valid ~second
 
-  let hour_minute_second_is_valid ~(hour : int) ~(minute : int) ~(second : int) :
-    bool =
+  let hour_minute_second_is_valid ~(hour : int) ~(minute : int) ~(second : int)
+    : bool =
     (0 <= hour && hour < 24) && minute_second_is_valid ~minute ~second
 
   let date_time_is_valid (x : date_time) : bool =

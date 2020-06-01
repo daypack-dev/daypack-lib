@@ -159,11 +159,13 @@ module Check = struct
     List.for_all
       (fun x ->
          Sched_req_data_unit_skeleton.Check.check
-           ~f_data:Task.Check.task_seg_is_valid ~f_time:Time.Check.unix_second_is_valid
+           ~f_data:Task.Check.task_seg_is_valid
+           ~f_time:Time.Check.unix_second_is_valid
            ~f_time_slot:Time_slot.Check.is_valid x)
       data
 
-  let sched_req_record_data_list_is_valid (l : sched_req_record_data list) : bool =
+  let sched_req_record_data_list_is_valid (l : sched_req_record_data list) :
+    bool =
     List.for_all sched_req_record_data_is_valid l
 
   let sched_req_record_is_valid ((id, data) : sched_req_record) : bool =
