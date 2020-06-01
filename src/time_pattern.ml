@@ -98,7 +98,7 @@ module Check = struct
     let invalid_unix_seconds =
       List.filter
         (fun x ->
-           Result.is_ok
+           Result.is_error
              (Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None x))
         x.unix_seconds
     in
