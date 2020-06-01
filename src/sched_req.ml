@@ -145,7 +145,7 @@ module Check = struct
       (fun x ->
          Sched_req_data_unit_skeleton.Check.check
            ~f_data:Task.Check.check_task_seg_alloc_req
-           ~f_time:Time.Check.check_unix_second
+           ~f_time:Time.Check.unix_second_is_valid
            ~f_time_slot:Time_slot.Check.is_valid x)
       data
 
@@ -159,7 +159,7 @@ module Check = struct
     List.for_all
       (fun x ->
          Sched_req_data_unit_skeleton.Check.check
-           ~f_data:Task.Check.check_task_seg ~f_time:Time.Check.check_unix_second
+           ~f_data:Task.Check.check_task_seg ~f_time:Time.Check.unix_second_is_valid
            ~f_time_slot:Time_slot.Check.is_valid x)
       data
 

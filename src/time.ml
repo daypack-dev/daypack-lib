@@ -185,26 +185,26 @@ let max =
   |> Result.get_ok
 
 module Check = struct
-  let check_unix_second (x : int64) : bool =
+  let unix_second_is_valid (x : int64) : bool =
     match date_time_of_unix_second ~tz_offset_s_of_date_time:None x with
     | Ok _ -> true
     | Error () -> false
 
-  let check_second ~(second : int) : bool = 0 <= second && second < 60
+  let second_is_valid ~(second : int) : bool = 0 <= second && second < 60
 
-  let check_minute_second ~(minute : int) ~(second : int) : bool =
-    0 <= minute && minute < 60 && check_second ~second
+  let minute_second_is_valid ~(minute : int) ~(second : int) : bool =
+    0 <= minute && minute < 60 && second_is_valid ~second
 
-  let check_hour_minute_second ~(hour : int) ~(minute : int) ~(second : int) :
+  let hour_minute_second_is_valid ~(hour : int) ~(minute : int) ~(second : int) :
     bool =
-    (0 <= hour && hour < 24) && check_minute_second ~minute ~second
+    (0 <= hour && hour < 24) && minute_second_is_valid ~minute ~second
 
-  let check_date_time (x : date_time) : bool =
+  let date_time_is_valid (x : date_time) : bool =
     match unix_second_of_date_time x with Ok _ -> true | Error () -> false
 end
 
 let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
-  if Check.check_hour_minute_second ~hour ~minute ~second:0 then
+  if Check.hour_minute_second_is_valid ~hour ~minute ~second:0 then
     if minute < 59 then Ok (hour, succ minute) else Ok (succ hour mod 24, 0)
   else Error ()
 

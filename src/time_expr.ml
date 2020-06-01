@@ -124,27 +124,27 @@ module Check = struct
         | _ -> Error ()
       )
     | Second second ->
-      if Time.Check.check_second ~second then Ok () else Error ()
+      if Time.Check.second_is_valid ~second then Ok () else Error ()
     | Minute_second { minute; second } ->
-      if Time.Check.check_minute_second ~minute ~second then Ok () else Error ()
+      if Time.Check.minute_second_is_valid ~minute ~second then Ok () else Error ()
     | Hour_minute_second { hour; minute; second } ->
-      if Time.Check.check_hour_minute_second ~hour ~minute ~second then Ok () else Error ()
+      if Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then Ok () else Error ()
     | Day_hour_minute_second { day; hour_minute_second = { hour; minute; second }} ->
       if
         day_expr_is_valid day &&
-        Time.Check.check_hour_minute_second ~hour ~minute ~second then
+        Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then
         Ok ()
       else
         Error ()
     | Month_day_hour_minute_second { month = _; month_day; hour_minute_second = { hour; minute; second}} ->
       if 1 <= month_day && month_day <= 31
-        && Time.Check.check_hour_minute_second ~hour ~minute ~second then
+        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then
         Ok ()
       else
          Error ()
     | Year_month_day_hour_minute_second { year; month = _; month_day; hour_minute_second = { hour; minute; second}} ->
       if 0 <= year && year <= 9999 && 1 <= month_day && month_day <= 31
-        && Time.Check.check_hour_minute_second ~hour ~minute ~second then
+        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then
         Ok ()
       else
          Error ()
@@ -606,7 +606,7 @@ module To_time_pattern_lossy = struct
   module Second = struct
     let update_time_pattern_using_second_expr (e : Time_expr_ast.second_expr)
         (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
-      if Time.Check.check_second ~second:e then { base with seconds = [ e ] }
+      if Time.Check.second_is_valid ~second:e then { base with seconds = [ e ] }
       else raise (Invalid_time_expr (Printf.sprintf "Invalid second: ::%d" e))
 
     let time_range_pattern_of_second_range_expr_and_base_time_pattern
@@ -636,7 +636,7 @@ module To_time_pattern_lossy = struct
     let update_time_pattern_using_minute_second_expr
         (e : Time_expr_ast.minute_second_expr)
         (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
-      if Time.Check.check_minute_second ~minute:e.minute ~second:e.second then
+      if Time.Check.minute_second_is_valid ~minute:e.minute ~second:e.second then
         { base with minutes = [ e.minute ] }
       else
         raise
@@ -671,7 +671,7 @@ module To_time_pattern_lossy = struct
         (e : Time_expr_ast.hour_minute_second_expr)
         (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       if
-        Time.Check.check_hour_minute_second ~hour:e.hour ~minute:e.minute
+        Time.Check.hour_minute_second_is_valid ~hour:e.hour ~minute:e.minute
           ~second:e.second
       then { base with hours = [ e.hour ]; minutes = [ e.minute ] }
       else

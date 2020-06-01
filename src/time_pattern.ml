@@ -79,7 +79,7 @@ module Check = struct
           else Ok () )
     | Years_ahead_start_date_time
         { search_using_tz_offset_s = _; start; search_years_ahead } ->
-      if Time.Check.check_date_time start then
+      if Time.Check.date_time_is_valid start then
         if search_years_ahead <= 0 then Error Invalid_search_years_ahead
         else if start.year + search_years_ahead > Time.max.year then
           Error Too_far_into_future
