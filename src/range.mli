@@ -31,6 +31,12 @@ val join :
   'a range ->
   'a range option
 
+val is_valid :
+  modulo:(int64 option) ->
+  to_int64:('a -> int64) ->
+  'a range ->
+  bool
+
 module Flatten : sig
   val flatten_into_seq :
     modulo:int64 option ->
@@ -69,6 +75,8 @@ module type S = sig
   val exc_range_of_range : t range -> t * t
 
   val join : t range -> t range -> t range option
+
+  val is_valid : t range -> bool
 
   module Flatten : sig
     val flatten_into_seq : t range -> t Seq.t

@@ -8,6 +8,20 @@ val normalize :
   'a Range.range Seq.t ->
   'a Range.range Seq.t
 
+module Check : sig
+  val seq_is_valid :
+    modulo:int64 option ->
+    to_int64:('a -> int64) ->
+    'a Range.range Seq.t ->
+    bool
+
+  val list_is_valid :
+    modulo:int64 option ->
+    to_int64:('a -> int64) ->
+    'a Range.range list ->
+    bool
+end
+
 module Flatten : sig
   val flatten :
     modulo:int64 option ->
@@ -77,6 +91,12 @@ module type S = sig
     ?skip_sort:bool ->
     t Range.range Seq.t ->
     t Range.range Seq.t
+
+  module Check : sig
+    val seq_is_valid : t Range.range Seq.t -> bool
+
+    val list_is_valid : t Range.range list -> bool
+  end
 
   module Flatten : sig
     val flatten : t Range.range Seq.t -> t Seq.t
