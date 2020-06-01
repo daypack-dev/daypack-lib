@@ -107,15 +107,18 @@ module Check = struct
     | Time_expr_ast.Weekday _ -> true
     | Month_day x -> 1 <= x && x <= 31
 
-  let hour_minute_second_ranges_are_valid (l : Time_expr_ast.hour_minute_second_range_expr list) =
+  let hour_minute_second_ranges_are_valid
+      (l : Time_expr_ast.hour_minute_second_range_expr list) =
     let open Time_expr_ast in
-    List.for_all (fun x ->
-        match x with
-        | `Range_inc (x, y)
-        | `Range_exc (x, y) ->
-          Time.Check.hour_minute_second_is_valid ~hour:x.hour ~minute:x.minute ~second:x.second
-          && Time.Check.hour_minute_second_is_valid ~hour:y.hour ~minute:y.minute ~second:y.second
-      ) l
+    List.for_all
+      (fun x ->
+         match x with
+         | `Range_inc (x, y) | `Range_exc (x, y) ->
+           Time.Check.hour_minute_second_is_valid ~hour:x.hour ~minute:x.minute
+             ~second:x.second
+           && Time.Check.hour_minute_second_is_valid ~hour:y.hour
+             ~minute:y.minute ~second:y.second)
+      l
 
   let check_unbounded_time_points_expr
       (e : Time_expr_ast.unbounded_time_points_expr) : (unit, unit) result =
@@ -172,69 +175,66 @@ module Check = struct
       then Ok ()
       else Error ()
 
-  let check_unbounded_time_slots_expr (e : Time_expr_ast.unbounded_time_slots_expr) : (unit, unit) result =
+  let check_unbounded_time_slots_expr
+      (e : Time_expr_ast.unbounded_time_slots_expr) : (unit, unit) result =
     let open Time_expr_ast in
     match e with
     | Tse_name _ -> Ok ()
     | Explicit_time_slots l ->
       if
-        List.for_all (fun (x, y) ->
-            Result.is_ok (check_unbounded_time_points_expr x)
-              && Result.is_ok (check_unbounded_time_points_expr y)
-          )
+        List.for_all
+          (fun (x, y) ->
+             Result.is_ok (check_unbounded_time_points_expr x)
+             && Result.is_ok (check_unbounded_time_points_expr y))
           l
-      then
-        Ok ()
-      else
-        Error ()
-    | Month_days_and_hour_minute_second_ranges { month_days; hour_minute_second_ranges } ->
+      then Ok ()
+      else Error ()
+    | Month_days_and_hour_minute_second_ranges
+        { month_days; hour_minute_second_ranges } ->
       if
-        Time.Month_day_ranges.Check.list_is_valid month_days &&
-        hour_minute_second_ranges_are_valid hour_minute_second_ranges
-      then
+        Time.Month_day_ranges.Check.list_is_valid month_days
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
+    | Weekdays_and_hour_minute_second_ranges
+        { weekdays = _; hour_minute_second_ranges } ->
+      if hour_minute_second_ranges_are_valid hour_minute_second_ranges then
         Ok ()
-      else
-        Error ()
-    | Weekdays_and_hour_minute_second_ranges { weekdays = _; hour_minute_second_ranges } ->
+      else Error ()
+    | Months_and_month_days_and_hour_minute_second_ranges
+        { months = _; month_days; hour_minute_second_ranges } ->
       if
-        hour_minute_second_ranges_are_valid hour_minute_second_ranges
-      then
-        Ok ()
-      else
-        Error ()
-    | Months_and_month_days_and_hour_minute_second_ranges { months = _; month_days; hour_minute_second_ranges } ->
+        Time.Month_day_ranges.Check.list_is_valid month_days
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
+    | Months_and_weekdays_and_hour_minute_second_ranges
+        { months; weekdays = _; hour_minute_second_ranges } ->
       if
-        Time.Month_day_ranges.Check.list_is_valid month_days &&
-        hour_minute_second_ranges_are_valid hour_minute_second_ranges
-      then
-        Ok ()
-      else
-        Error ()
-    | Months_and_weekdays_and_hour_minute_second_ranges { months; weekdays = _; hour_minute_second_ranges } ->
+        Time.Month_ranges.Check.list_is_valid months
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
+    | Months_and_weekday_and_hour_minute_second_ranges
+        {
+          months;
+          weekday = _;
+          hour_minute_second_ranges;
+          month_weekday_mode = _;
+        } ->
       if
-        Time.Month_ranges.Check.list_is_valid months &&
-        hour_minute_second_ranges_are_valid hour_minute_second_ranges
-      then
-        Ok ()
-      else
-        Error ()
-    | Months_and_weekday_and_hour_minute_second_ranges { months; weekday = _; hour_minute_second_ranges; month_weekday_mode = _ } ->
+        Time.Month_ranges.Check.list_is_valid months
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
+    | Years_and_months_and_month_days_and_hour_minute_second_ranges
+        { years = _; months; month_days; hour_minute_second_ranges } ->
       if
-        Time.Month_ranges.Check.list_is_valid months &&
-        hour_minute_second_ranges_are_valid hour_minute_second_ranges
-      then
-        Ok ()
-      else
-        Error ()
-    | Years_and_months_and_month_days_and_hour_minute_second_ranges { years = _; months; month_days; hour_minute_second_ranges } ->
-      if
-        Time.Month_ranges.Check.list_is_valid months &&
-        Time.Month_day_ranges.Check.list_is_valid month_days &&
-        hour_minute_second_ranges_are_valid hour_minute_second_ranges
-      then
-        Ok ()
-      else
-        Error ()
+        Time.Month_ranges.Check.list_is_valid months
+        && Time.Month_day_ranges.Check.list_is_valid month_days
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
 end
 
 module Of_string = struct

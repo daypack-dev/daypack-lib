@@ -17,15 +17,11 @@ let normalize (type a) ?(skip_filter_invalid = false)
 module Check = struct
   let seq_is_valid (type a) ~(modulo : int64 option) ~(to_int64 : a -> int64)
       (s : a Range.range Seq.t) : bool =
-    OSeq.for_all
-      (Range.is_valid ~modulo ~to_int64)
-      s
+    OSeq.for_all (Range.is_valid ~modulo ~to_int64) s
 
   let list_is_valid (type a) ~(modulo : int64 option) ~(to_int64 : a -> int64)
       (s : a Range.range list) : bool =
-    List.for_all
-      (Range.is_valid ~modulo ~to_int64)
-      s
+    List.for_all (Range.is_valid ~modulo ~to_int64) s
 end
 
 module Flatten = struct
@@ -120,11 +116,9 @@ module Make (B : Range.B) : S with type t := B.t = struct
       ~to_int64 ~of_int64 s
 
   module Check = struct
-    let seq_is_valid s =
-      Check.seq_is_valid ~modulo ~to_int64 s
+    let seq_is_valid s = Check.seq_is_valid ~modulo ~to_int64 s
 
-    let list_is_valid l =
-      Check.list_is_valid ~modulo ~to_int64 l
+    let list_is_valid l = Check.list_is_valid ~modulo ~to_int64 l
   end
 
   module Flatten = struct

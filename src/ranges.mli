@@ -16,10 +16,7 @@ module Check : sig
     bool
 
   val list_is_valid :
-    modulo:int64 option ->
-    to_int64:('a -> int64) ->
-    'a Range.range list ->
-    bool
+    modulo:int64 option -> to_int64:('a -> int64) -> 'a Range.range list -> bool
 end
 
 module Flatten : sig

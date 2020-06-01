@@ -17,8 +17,8 @@ module Check = struct
 
   let list_is_valid (type a) ~(modulo : int option) ~(to_int : a -> int)
       (l : a Range.range list) : bool =
-  let modulo = Option.map Int64.of_int modulo in
-  let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
+    let modulo = Option.map Int64.of_int modulo in
+    let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
     Ranges.Check.list_is_valid ~modulo ~to_int64 l
 end
 
@@ -82,11 +82,9 @@ module Make (B : Range_small.B) : Ranges.S with type t := B.t = struct
       ~of_int s
 
   module Check = struct
-    let seq_is_valid s =
-      Check.seq_is_valid ~modulo ~to_int s
+    let seq_is_valid s = Check.seq_is_valid ~modulo ~to_int s
 
-    let list_is_valid l =
-      Check.list_is_valid ~modulo ~to_int l
+    let list_is_valid l = Check.list_is_valid ~modulo ~to_int l
   end
 
   module Flatten = struct

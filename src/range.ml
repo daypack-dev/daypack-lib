@@ -47,13 +47,13 @@ let join (type a) ~(to_int64 : a -> int64) ~(of_int64 : int64 -> a)
   Time_slot.join x y
   |> Option.map (fun (x, y) -> `Range_exc (of_int64 x, of_int64 y))
 
-let is_valid (type a) ~(modulo : int64 option) ~(to_int64 : a -> int64) (t : a range) : bool =
+let is_valid (type a) ~(modulo : int64 option) ~(to_int64 : a -> int64)
+    (t : a range) : bool =
   match modulo with
   | None ->
-    let (x, y) = int64_exc_range_of_range ~to_int64 t in
+    let x, y = int64_exc_range_of_range ~to_int64 t in
     x <= y
-  | Some _ ->
-    true
+  | Some _ -> true
 
 module Flatten = struct
   let flatten_into_seq (type a) ~(modulo : int64 option)
@@ -146,8 +146,7 @@ module Make (B : B) : S with type t := B.t = struct
   let join (x : t range) (y : t range) : t range option =
     join ~to_int64 ~of_int64 x y
 
-  let is_valid (x : t range) : bool =
-    is_valid ~modulo ~to_int64 x
+  let is_valid (x : t range) : bool = is_valid ~modulo ~to_int64 x
 
   module Flatten = struct
     let flatten_into_seq (t : t range) : t Seq.t =

@@ -31,11 +31,7 @@ val join :
   'a range ->
   'a range option
 
-val is_valid :
-  modulo:(int64 option) ->
-  to_int64:('a -> int64) ->
-  'a range ->
-  bool
+val is_valid : modulo:int64 option -> to_int64:('a -> int64) -> 'a range -> bool
 
 module Flatten : sig
   val flatten_into_seq :
