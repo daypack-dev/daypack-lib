@@ -18,7 +18,7 @@ type task = task_id * task_data
 
 and task_data = {
   splittable : bool;
-  parallelizability : int;
+  parallelizable : bool;
   task_type : task_type;
   name : string;
 }
@@ -221,7 +221,7 @@ module Serialize = struct
   and pack_task_data (task_data : task_data) : Task_t.task_data =
     {
       splittable = task_data.splittable;
-      parallelizability = task_data.parallelizability;
+      parallelizable = task_data.parallelizable;
       task_type = pack_task_type task_data.task_type;
       name = task_data.name;
     }
@@ -326,7 +326,7 @@ module Deserialize = struct
   and unpack_task_data (task_data : Task_t.task_data) : task_data =
     {
       splittable = task_data.splittable;
-      parallelizability = task_data.parallelizability;
+      parallelizable = task_data.parallelizable;
       task_type = unpack_task_type task_data.task_type;
       name = task_data.name;
     }
@@ -437,7 +437,7 @@ module To_string = struct
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
       "splittable : %b\n" data.splittable;
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
-      "parallelizability : %d\n" data.parallelizability;
+      "parallelizable : %b\n" data.parallelizable;
     ( match data.task_type with
       | One_off ->
         Debug_print.bprintf ~indent_level:(indent_level + 1) buffer
