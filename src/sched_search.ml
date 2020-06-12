@@ -3,9 +3,6 @@ open Int64_utils
 let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     ((_sched_req_id, sched_req_record_data_list) : Sched_req.sched_req_record) :
   Sched.sched Seq.t =
-  let free_time_slots =
-    Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc base
-  in
   let task_seg_is_parallelizable ((task_seg_id, _data) : Task.task_seg) : bool =
     let task_id = Task.Id.task_id_of_task_seg_id task_seg_id in
     let task = Sched.Task.Find.find_task_any_opt task_id base |> Option.get in
@@ -14,7 +11,8 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
   let get_usable_time_slots (task_segs : Task.task_seg list) time_slots =
     let is_parallelizable = List.for_all task_seg_is_parallelizable task_segs in
     let time_slot_candidates =
-      if is_parallelizable then Seq.return (start, end_exc) else free_time_slots
+      if is_parallelizable then Seq.return (start, end_exc)
+      else Sched.Agenda.Time_slot.get_free_time_slots ~start ~end_exc base
     in
     time_slots
     |> Time_slots.Normalize.normalize_list_in_seq_out
