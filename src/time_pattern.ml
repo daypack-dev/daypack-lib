@@ -79,7 +79,7 @@ module Check = struct
           else Ok () )
     | Years_ahead_start_date_time
         { search_using_tz_offset_s = _; start; search_years_ahead } ->
-      if Time.Check.check_date_time start then
+      if Time.Check.date_time_is_valid start then
         if search_years_ahead <= 0 then Error Invalid_search_years_ahead
         else if start.year + search_years_ahead > Time.max.year then
           Error Too_far_into_future
@@ -98,7 +98,7 @@ module Check = struct
     let invalid_unix_seconds =
       List.filter
         (fun x ->
-           Result.is_ok
+           Result.is_error
              (Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None x))
         x.unix_seconds
     in

@@ -1,10 +1,22 @@
 type search_param = Time_pattern.search_param
 
+type error =
+  | Invalid_time_points_expr
+  | Invalid_time_slots_expr
+
 type f_resolve_tse_name =
   string -> Time_expr_ast.unbounded_time_slots_expr option
 
 type f_resolve_tpe_name =
   string -> Time_expr_ast.unbounded_time_points_expr option
+
+module Check : sig
+  val check_unbounded_time_points_expr :
+    Time_expr_ast.unbounded_time_points_expr -> (unit, unit) result
+
+  val check_unbounded_time_slots_expr :
+    Time_expr_ast.unbounded_time_slots_expr -> (unit, unit) result
+end
 
 module Time_points_expr : sig
   val next_match_unix_second :

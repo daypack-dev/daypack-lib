@@ -1,5 +1,9 @@
 type search_param = Time_pattern.search_param
 
+type error =
+  | Invalid_time_points_expr
+  | Invalid_time_slots_expr
+
 type f_resolve_tse_name =
   string -> Time_expr_ast.unbounded_time_slots_expr option
 
@@ -97,6 +101,142 @@ module Resolve = struct
     aux f_resolve_tse_name f_resolve_tpe_name max_resolve_depth None e
 end
 
+module Check = struct
+  let day_expr_is_valid (e : Time_expr_ast.day_expr) : bool =
+    match e with
+    | Time_expr_ast.Weekday _ -> true
+    | Month_day x -> 1 <= x && x <= 31
+
+  let hour_minute_second_ranges_are_valid
+      (l : Time_expr_ast.hour_minute_second_range_expr list) =
+    let open Time_expr_ast in
+    List.for_all
+      (fun x ->
+         match x with
+         | `Range_inc (x, y) | `Range_exc (x, y) ->
+           Time.Check.hour_minute_second_is_valid ~hour:x.hour ~minute:x.minute
+             ~second:x.second
+           && Time.Check.hour_minute_second_is_valid ~hour:y.hour
+             ~minute:y.minute ~second:y.second)
+      l
+
+  let check_unbounded_time_points_expr
+      (e : Time_expr_ast.unbounded_time_points_expr) : (unit, unit) result =
+    let open Time_expr_ast in
+    match e with
+    | Tpe_name _ -> Ok ()
+    | Tpe_unix_seconds l -> (
+        let invalid_unix_seconds =
+          List.filter
+            (fun x ->
+               Result.is_error
+                 (Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None x))
+            l
+        in
+        match invalid_unix_seconds with [] -> Ok () | _ -> Error () )
+    | Second second ->
+      if Time.Check.second_is_valid ~second then Ok () else Error ()
+    | Minute_second { minute; second } ->
+      if Time.Check.minute_second_is_valid ~minute ~second then Ok ()
+      else Error ()
+    | Hour_minute_second { hour; minute; second } ->
+      if Time.Check.hour_minute_second_is_valid ~hour ~minute ~second then
+        Ok ()
+      else Error ()
+    | Day_hour_minute_second
+        { day; hour_minute_second = { hour; minute; second } } ->
+      if
+        day_expr_is_valid day
+        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second
+      then Ok ()
+      else Error ()
+    | Month_day_hour_minute_second
+        { month = _; month_day; hour_minute_second = { hour; minute; second } }
+      ->
+      if
+        1 <= month_day
+        && month_day <= 31
+        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second
+      then Ok ()
+      else Error ()
+    | Year_month_day_hour_minute_second
+        {
+          year;
+          month = _;
+          month_day;
+          hour_minute_second = { hour; minute; second };
+        } ->
+      if
+        0 <= year
+        && year <= 9999
+        && 1 <= month_day
+        && month_day <= 31
+        && Time.Check.hour_minute_second_is_valid ~hour ~minute ~second
+      then Ok ()
+      else Error ()
+
+  let check_unbounded_time_slots_expr
+      (e : Time_expr_ast.unbounded_time_slots_expr) : (unit, unit) result =
+    let open Time_expr_ast in
+    match e with
+    | Tse_name _ -> Ok ()
+    | Explicit_time_slots l ->
+      if
+        List.for_all
+          (fun (x, y) ->
+             Result.is_ok (check_unbounded_time_points_expr x)
+             && Result.is_ok (check_unbounded_time_points_expr y))
+          l
+      then Ok ()
+      else Error ()
+    | Month_days_and_hour_minute_second_ranges
+        { month_days; hour_minute_second_ranges } ->
+      if
+        Time.Month_day_ranges.Check.list_is_valid month_days
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
+    | Weekdays_and_hour_minute_second_ranges
+        { weekdays = _; hour_minute_second_ranges } ->
+      if hour_minute_second_ranges_are_valid hour_minute_second_ranges then
+        Ok ()
+      else Error ()
+    | Months_and_month_days_and_hour_minute_second_ranges
+        { months = _; month_days; hour_minute_second_ranges } ->
+      if
+        Time.Month_day_ranges.Check.list_is_valid month_days
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
+    | Months_and_weekdays_and_hour_minute_second_ranges
+        { months; weekdays = _; hour_minute_second_ranges } ->
+      if
+        Time.Month_ranges.Check.list_is_valid months
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
+    | Months_and_weekday_and_hour_minute_second_ranges
+        {
+          months;
+          weekday = _;
+          hour_minute_second_ranges;
+          month_weekday_mode = _;
+        } ->
+      if
+        Time.Month_ranges.Check.list_is_valid months
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
+    | Years_and_months_and_month_days_and_hour_minute_second_ranges
+        { years = _; months; month_days; hour_minute_second_ranges } ->
+      if
+        Time.Month_ranges.Check.list_is_valid months
+        && Time.Month_day_ranges.Check.list_is_valid month_days
+        && hour_minute_second_ranges_are_valid hour_minute_second_ranges
+      then Ok ()
+      else Error ()
+end
+
 module Of_string = struct
   open CCParse
   open Parser_components
@@ -177,33 +317,42 @@ module Of_string = struct
         ( try_ (string "am" *> return `Hour_in_AM)
           <|> string "pm" *> return `Hour_in_PM )
 
+    let handle_time_with_mode ~(hour : int) ~(minute : int) ~(second : int) mode
+      =
+      match mode with
+      | `Hour_in_24_hours ->
+        if hour >= 24 then failf "Invalid hour: %d" hour
+        else return Time_expr_ast.{ hour; minute; second }
+      | `Hour_in_AM ->
+        if 1 <= hour && hour <= 12 then
+          let hour = if hour = 12 then 0 else hour in
+          return Time_expr_ast.{ hour; minute; second }
+        else failf "Invalid hour: %d" hour
+      | `Hour_in_PM ->
+        if 1 <= hour && hour <= 12 then
+          let hour = if hour = 12 then 0 else hour in
+          return Time_expr_ast.{ hour = hour + 12; minute; second }
+        else failf "Invalid hour: %d" hour
+
     let hour_minute_second_expr : Time_expr_ast.hour_minute_second_expr t =
       try_ (nat_zero <* char ':')
-      >>= fun hour ->
-      nat_zero
-      >>= fun minute ->
-      if minute >= 60 then failf "Invalid minute: %d" minute
-      else
-        option 0 (char ':' *> nat_zero)
-        >>= fun second ->
-        if second >= 60 then fail (Printf.sprintf "Invalid second: %d" second)
-        else
-          skip_space *> hour_minute_second_mode_expr
-          >>= fun mode ->
-          match mode with
-          | `Hour_in_24_hours ->
-            if hour >= 24 then fail (Printf.sprintf "Invalid hour: %d" hour)
-            else return Time_expr_ast.{ hour; minute; second }
-          | `Hour_in_AM ->
-            if 1 <= hour && hour <= 12 then
-              let hour = if hour = 12 then 0 else hour in
-              return Time_expr_ast.{ hour; minute; second }
-            else fail (Printf.sprintf "Invalid hour: %d" hour)
-          | `Hour_in_PM ->
-            if 1 <= hour && hour <= 12 then
-              let hour = if hour = 12 then 0 else hour in
-              return Time_expr_ast.{ hour = hour + 12; minute; second }
-            else fail (Printf.sprintf "Invalid hour: %d" hour)
+      >>= (fun hour ->
+          nat_zero
+          >>= fun minute ->
+          if minute >= 60 then failf "Invalid minute: %d" minute
+          else
+            option 0 (char ':' *> nat_zero)
+            >>= fun second ->
+            if second >= 60 then
+              fail (Printf.sprintf "Invalid second: %d" second)
+            else
+              skip_space *> hour_minute_second_mode_expr
+              >>= fun mode -> handle_time_with_mode ~hour ~minute ~second mode)
+          <|> ( nat_zero
+                >>= fun hour ->
+                skip_space *> hour_minute_second_mode_expr
+                >>= fun mode -> handle_time_with_mode ~hour ~minute:0 ~second:0 mode
+              )
 
     let hour_minute_second_range_expr :
       Time_expr_ast.hour_minute_second_range_expr t =
@@ -350,10 +499,12 @@ module Of_string = struct
            { month; month_day; hour_minute_second })
 
     let tp_d_hour_minute_second =
-      try_ Day.day_expr
-      >>= fun day ->
-      skip_space *> Hour_minute_second.hour_minute_second_expr
-      >>= fun hour_minute_second ->
+      try_
+        ( Day.day_expr
+          >>= fun day ->
+          skip_space *> Hour_minute_second.hour_minute_second_expr
+          >>= fun hour_minute_second -> return (day, hour_minute_second) )
+      >>= fun (day, hour_minute_second) ->
       return (Time_expr_ast.Day_hour_minute_second { day; hour_minute_second })
 
     let tp_hour_minute_second =
@@ -376,10 +527,10 @@ module Of_string = struct
       <|> tp_ymond_hour_minute_second
       <|> tp_md_hour_minute_second
       <|> tp_mond_hour_minute_second
+      <|> tp_d_hour_minute_second
       <|> tp_hour_minute_second
       <|> tp_minute_second
       <|> tp_second
-      <|> tp_d_hour_minute_second
 
     let time_points_expr : Time_expr_ast.time_points_expr t =
       bound
@@ -542,7 +693,7 @@ module To_time_pattern_lossy = struct
   module Second = struct
     let update_time_pattern_using_second_expr (e : Time_expr_ast.second_expr)
         (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
-      if Time.Check.check_second ~second:e then { base with seconds = [ e ] }
+      if Time.Check.second_is_valid ~second:e then { base with seconds = [ e ] }
       else raise (Invalid_time_expr (Printf.sprintf "Invalid second: ::%d" e))
 
     let time_range_pattern_of_second_range_expr_and_base_time_pattern
@@ -572,8 +723,8 @@ module To_time_pattern_lossy = struct
     let update_time_pattern_using_minute_second_expr
         (e : Time_expr_ast.minute_second_expr)
         (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
-      if Time.Check.check_minute_second ~minute:e.minute ~second:e.second then
-        { base with minutes = [ e.minute ] }
+      if Time.Check.minute_second_is_valid ~minute:e.minute ~second:e.second
+      then { base with minutes = [ e.minute ] }
       else
         raise
           (Invalid_time_expr
@@ -607,7 +758,7 @@ module To_time_pattern_lossy = struct
         (e : Time_expr_ast.hour_minute_second_expr)
         (base : Time_pattern.time_pattern) : Time_pattern.time_pattern =
       if
-        Time.Check.check_hour_minute_second ~hour:e.hour ~minute:e.minute
+        Time.Check.hour_minute_second_is_valid ~hour:e.hour ~minute:e.minute
           ~second:e.second
       then { base with hours = [ e.hour ]; minutes = [ e.minute ] }
       else

@@ -1958,11 +1958,27 @@ module Agenda = struct
         ~some:(fun end_exc -> Time_slots.Slice.slice ~end_exc l)
         end_exc
 
-    let get_occupied_time_slots_with_task_seg_place_count ~start ~end_exc
-        (sched : sched) : ((int64 * int64) * int) Seq.t =
+    let filter_non_paralleliazble_task_seg_places sched
+        (s : Task_.task_seg_place Seq.t) =
+      Seq.filter
+        (fun (task_seg_id, _start, _end_exc) ->
+           let task_id = Task_.Id.task_id_of_task_seg_id task_seg_id in
+           let task_data =
+             Task.Find.find_task_uncompleted_opt task_id sched |> Option.get
+           in
+           not task_data.parallelizable)
+        s
+
+    let get_occupied_time_slots_with_task_seg_place_count
+        ~exclude_parallelizable_task_seg_places ~start ~end_exc (sched : sched)
+      : ((int64 * int64) * int) Seq.t =
       task_seg_place_uncompleted ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot:(Some true)
         ~include_task_seg_place_ending_within_time_slot:(Some true) sched
+      |> (fun s ->
+          if exclude_parallelizable_task_seg_places then
+            filter_non_paralleliazble_task_seg_places sched s
+          else s)
       |> time_slots_of_task_seg_places ~start ~end_exc
       |> Time_slots.count_overlap
   end
@@ -2105,40 +2121,53 @@ module Agenda = struct
   end
 
   module Time_slot = struct
-    let get_occupied_time_slots ?start ?end_exc (sched : sched) :
-      (int64 * int64) Seq.t =
+    let get_occupied_time_slots ?(exclude_parallelizable_task_seg_places = true)
+        ?start ?end_exc (sched : sched) : (int64 * int64) Seq.t =
       Internal.task_seg_place_uncompleted ~start ~end_exc
         ~include_task_seg_place_starting_within_time_slot:(Some true)
         ~include_task_seg_place_ending_within_time_slot:(Some true) sched
+      |> (fun s ->
+          if exclude_parallelizable_task_seg_places then
+            Internal.filter_non_paralleliazble_task_seg_places sched s
+          else s)
       |> Internal.time_slots_of_task_seg_places ~start ~end_exc
       |> Time_slots.Normalize.normalize ~skip_sort:true
 
-    let get_occupied_time_slots_with_task_seg_place_count ?start ?end_exc
+    let get_occupied_time_slots_with_task_seg_place_count
+        ?(exclude_parallelizable_task_seg_places = true) ?start ?end_exc
         (sched : sched) : ((int64 * int64) * int) Seq.t =
-      Internal.get_occupied_time_slots_with_task_seg_place_count ~start ~end_exc
-        sched
+      Internal.get_occupied_time_slots_with_task_seg_place_count
+        ~exclude_parallelizable_task_seg_places ~start ~end_exc sched
 
-    let get_occupied_time_slots_up_to_task_seg_place_count ?start ?end_exc
+    let get_occupied_time_slots_up_to_task_seg_place_count
+        ?(exclude_parallelizable_task_seg_places = true) ?start ?end_exc
         ~(up_to_task_seg_place_count_inc : int) (sched : sched) =
-      Internal.get_occupied_time_slots_with_task_seg_place_count ~start ~end_exc
-        sched
+      Internal.get_occupied_time_slots_with_task_seg_place_count
+        ~exclude_parallelizable_task_seg_places ~start ~end_exc sched
       |> Seq.filter (fun (_time_slot, count) ->
           count <= up_to_task_seg_place_count_inc)
       |> Seq.map (fun (time_slot, _) -> time_slot)
 
-    let get_free_time_slots ~start ~end_exc (sched : sched) :
-      (int64 * int64) Seq.t =
-      get_occupied_time_slots ~start ~end_exc sched
+    let get_free_time_slots ?(include_parallelizable_task_seg_places = true)
+        ~start ~end_exc (sched : sched) : (int64 * int64) Seq.t =
+      get_occupied_time_slots
+        ~exclude_parallelizable_task_seg_places:
+          include_parallelizable_task_seg_places ~start ~end_exc sched
       |> Time_slots.invert ~start ~end_exc
 
-    let get_free_or_occupied_time_slots_up_to_task_seg_place_count ~start
-        ~end_exc ~(up_to_task_seg_place_count_inc : int) (sched : sched) =
+    let get_free_or_occupied_time_slots_up_to_task_seg_place_count
+        ?(include_parallelizable_task_seg_places = true) ~start ~end_exc
+        ~(up_to_task_seg_place_count_inc : int) (sched : sched) =
       Internal.get_occupied_time_slots_with_task_seg_place_count
-        ~start:(Some start) ~end_exc:(Some end_exc) sched
+        ~exclude_parallelizable_task_seg_places:
+          include_parallelizable_task_seg_places ~start:(Some start)
+        ~end_exc:(Some end_exc) sched
       |> Seq.filter (fun (_time_slot, count) ->
           count <= up_to_task_seg_place_count_inc)
       |> Seq.map (fun (time_slot, _) -> time_slot)
-      |> Time_slots.Union.union (get_free_time_slots ~start ~end_exc sched)
+      |> Time_slots.Union.union
+        (get_free_time_slots ~include_parallelizable_task_seg_places ~start
+           ~end_exc sched)
 
     let task_seg_place_count_in_time_slot ~start ~end_exc (sched : sched) : int
       =
@@ -2157,7 +2186,7 @@ module Sched_req = struct
   module Add = struct
     let add_sched_req_data (sched_req_data : Sched_req_.sched_req_data)
         (sched : sched) : (Sched_req_.sched_req * sched, unit) result =
-      if Sched_req_.Check.check_sched_req_data sched_req_data then
+      if Sched_req_.Check.sched_req_data_is_valid sched_req_data then
         let sched_req_id, (sid, sd) = Id.get_new_sched_req_id sched in
         Ok
           ( (sched_req_id, sched_req_data),
@@ -2177,7 +2206,7 @@ module Sched_req = struct
     let add_sched_req_data_list
         (sched_req_data_list : Sched_req_.sched_req_data list) (sched : sched) :
       (Sched_req_.sched_req list * sched, unit) result =
-      if Sched_req_.Check.check_sched_req_data_list sched_req_data_list then
+      if Sched_req_.Check.sched_req_data_list_is_valid sched_req_data_list then
         List.fold_left
           (fun (sched_reqs, sched) sched_req_data ->
              let sched_req, sched =

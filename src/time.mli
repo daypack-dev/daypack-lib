@@ -72,15 +72,15 @@ val date_time_of_unix_second :
   (date_time, unit) result
 
 module Check : sig
-  val check_unix_second : int64 -> bool
+  val unix_second_is_valid : int64 -> bool
 
-  val check_second : second:int -> bool
+  val second_is_valid : second:int -> bool
 
-  val check_minute_second : minute:int -> second:int -> bool
+  val minute_second_is_valid : minute:int -> second:int -> bool
 
-  val check_hour_minute_second : hour:int -> minute:int -> second:int -> bool
+  val hour_minute_second_is_valid : hour:int -> minute:int -> second:int -> bool
 
-  val check_date_time : date_time -> bool
+  val date_time_is_valid : date_time -> bool
 end
 
 val next_hour_minute : hour:int -> minute:int -> (int * int, unit) result

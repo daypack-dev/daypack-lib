@@ -623,12 +623,21 @@ module Agenda : sig
 
   module Time_slot : sig
     val get_occupied_time_slots :
-      ?start:int64 -> ?end_exc:int64 -> sched -> (int64 * int64) Seq.t
+      ?exclude_parallelizable_task_seg_places:bool ->
+      ?start:int64 ->
+      ?end_exc:int64 ->
+      sched ->
+      (int64 * int64) Seq.t
 
     val get_occupied_time_slots_with_task_seg_place_count :
-      ?start:int64 -> ?end_exc:int64 -> sched -> ((int64 * int64) * int) Seq.t
+      ?exclude_parallelizable_task_seg_places:bool ->
+      ?start:int64 ->
+      ?end_exc:int64 ->
+      sched ->
+      ((int64 * int64) * int) Seq.t
 
     val get_occupied_time_slots_up_to_task_seg_place_count :
+      ?exclude_parallelizable_task_seg_places:bool ->
       ?start:int64 ->
       ?end_exc:int64 ->
       up_to_task_seg_place_count_inc:int ->
@@ -636,9 +645,14 @@ module Agenda : sig
       (int64 * int64) Seq.t
 
     val get_free_time_slots :
-      start:int64 -> end_exc:int64 -> sched -> (int64 * int64) Seq.t
+      ?include_parallelizable_task_seg_places:bool ->
+      start:int64 ->
+      end_exc:int64 ->
+      sched ->
+      (int64 * int64) Seq.t
 
     val get_free_or_occupied_time_slots_up_to_task_seg_place_count :
+      ?include_parallelizable_task_seg_places:bool ->
       start:int64 ->
       end_exc:int64 ->
       up_to_task_seg_place_count_inc:int ->

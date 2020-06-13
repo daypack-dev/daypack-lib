@@ -7,20 +7,24 @@ type t = {
   seconds : int;
 }
 
-let of_seconds (x : int64) : t =
-  assert (x >= 0L);
-  let seconds = Int64.rem x 60L in
-  let minutes = Int64.div x 60L in
-  let hours = Int64.div minutes 60L in
-  let days = Int64.div hours 24L in
-  let hours = Int64.rem hours 24L in
-  let minutes = Int64.rem minutes 60L in
-  {
-    days = Int64.to_int days;
-    hours = Int64.to_int hours;
-    minutes = Int64.to_int minutes;
-    seconds = Int64.to_int seconds;
-  }
+let zero = { days = 0; hours = 0; minutes = 0; seconds = 0 }
+
+let of_seconds (x : int64) : (t, unit) result =
+  if x < 0L then Error ()
+  else
+    let seconds = Int64.rem x 60L in
+    let minutes = Int64.div x 60L in
+    let hours = Int64.div minutes 60L in
+    let days = Int64.div hours 24L in
+    let hours = Int64.rem hours 24L in
+    let minutes = Int64.rem minutes 60L in
+    Ok
+      {
+        days = Int64.to_int days;
+        hours = Int64.to_int hours;
+        minutes = Int64.to_int minutes;
+        seconds = Int64.to_int seconds;
+      }
 
 let to_seconds (t : t) : int64 =
   let days = Int64.of_int t.days in
@@ -32,7 +36,7 @@ let to_seconds (t : t) : int64 =
   +^ (minutes *^ Time.minute_to_second_multiplier)
   +^ seconds
 
-let normalize (t : t) : t = t |> to_seconds |> of_seconds
+let normalize (t : t) : t = t |> to_seconds |> of_seconds |> Result.get_ok
 
 module Of_string = struct
   type duration = t
@@ -82,11 +86,12 @@ module Of_string = struct
         failf "Duplicate use of %s term: %d%s%s, pos: %d" units n spaces s
           cnum
     in
-    try_
-      ( get_cnum
-        >>= fun cnum ->
-        nat_zero >>= fun n -> take_space >>= fun s -> return (cnum, n, s) )
+    get_cnum
+    >>= fun cnum ->
+    try_ (nat_zero >>= fun n -> take_space >>= fun s -> return (cnum, n, s))
     >>= (fun (cnum, n, spaces) ->
+        get_cnum
+        >>= fun unit_keyword_cnum ->
         try_ days_string
         >>= (fun s -> fail' "days" days n spaces s cnum)
             <|> ( try_ hours_string
@@ -95,18 +100,20 @@ module Of_string = struct
                   >>= fun s -> fail' "minutes" minutes n spaces s cnum )
             <|> ( try_ seconds_string
                   >>= fun s -> fail' "seconds" seconds n spaces s cnum )
-            <|> alpha_string
-        >>= fun s -> eoi *> failf "Invalid unit keyword: %s, pos: %d" s cnum)
-        <|> ( get_cnum
-              >>= fun cnum ->
-              any_string
+            <|> non_space_string
+        >>= fun s ->
+        eoi *> failf "Invalid unit keyword: %s, pos: %d" s unit_keyword_cnum)
+        <|> ( any_string
               >>= fun s ->
               eoi
               *> if s = "" then nop else failf "Invalid syntax: %s, pos: %d" s cnum )
 
   let duration_expr : duration t =
     let term' p =
-      option None (nat_zero <* skip_space <* p >>= fun n -> return (Some n))
+      try_ (nat_zero <* skip_space <* p)
+      >>= (fun n -> return (Some n))
+          <|> (try_ (nat_zero <* skip_space <* eoi) >>= fun n -> return (Some n))
+          <|> return None
     in
     term' days_string
     >>= fun days ->

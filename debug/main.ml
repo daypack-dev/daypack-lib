@@ -479,7 +479,7 @@ let debug_sched_usage_simulation () =
     Task.
       {
         splittable = false;
-        parallelizability = 0;
+        parallelizable = false;
         task_type = One_off;
         name = "Test1";
       }
@@ -489,7 +489,7 @@ let debug_sched_usage_simulation () =
     Task.
       {
         splittable = false;
-        parallelizability = 0;
+        parallelizable = false;
         task_type =
           Recurring
             {
@@ -510,7 +510,7 @@ let debug_sched_usage_simulation () =
     Task.
       {
         splittable = false;
-        parallelizability = 0;
+        parallelizable = false;
         task_type = One_off;
         name = "Test3";
       }

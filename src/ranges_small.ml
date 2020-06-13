@@ -8,6 +8,20 @@ let normalize (type a) ?(skip_filter_invalid = false)
   Ranges.normalize ~skip_filter_invalid ~skip_filter_empty ~skip_sort ~modulo
     ~to_int64 ~of_int64 s
 
+module Check = struct
+  let seq_is_valid (type a) ~(modulo : int option) ~(to_int : a -> int)
+      (s : a Range.range Seq.t) : bool =
+    let modulo = Option.map Int64.of_int modulo in
+    let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
+    Ranges.Check.seq_is_valid ~modulo ~to_int64 s
+
+  let list_is_valid (type a) ~(modulo : int option) ~(to_int : a -> int)
+      (l : a Range.range list) : bool =
+    let modulo = Option.map Int64.of_int modulo in
+    let to_int64 = Misc_utils.convert_to_int_to_int64 to_int in
+    Ranges.Check.list_is_valid ~modulo ~to_int64 l
+end
+
 module Flatten = struct
   let flatten (type a) ~(modulo : int option) ~(to_int : a -> int)
       ~(of_int : int -> a) (s : a Range.range Seq.t) : a Seq.t =
@@ -66,6 +80,12 @@ module Make (B : Range_small.B) : Ranges.S with type t := B.t = struct
       ?(skip_sort = false) (s : t Range.range Seq.t) =
     normalize ~skip_filter_invalid ~skip_filter_empty ~skip_sort ~modulo ~to_int
       ~of_int s
+
+  module Check = struct
+    let seq_is_valid s = Check.seq_is_valid ~modulo ~to_int s
+
+    let list_is_valid l = Check.list_is_valid ~modulo ~to_int l
+  end
 
   module Flatten = struct
     let flatten (s : t Range.range Seq.t) : t Seq.t =

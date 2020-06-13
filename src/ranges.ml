@@ -14,6 +14,16 @@ let normalize (type a) ?(skip_filter_invalid = false)
     (* not sure what would be a reasonable normalization procedure when domain is a field *)
     s
 
+module Check = struct
+  let seq_is_valid (type a) ~(modulo : int64 option) ~(to_int64 : a -> int64)
+      (s : a Range.range Seq.t) : bool =
+    OSeq.for_all (Range.is_valid ~modulo ~to_int64) s
+
+  let list_is_valid (type a) ~(modulo : int64 option) ~(to_int64 : a -> int64)
+      (s : a Range.range list) : bool =
+    List.for_all (Range.is_valid ~modulo ~to_int64) s
+end
+
 module Flatten = struct
   let flatten (type a) ~(modulo : int64 option) ~(to_int64 : a -> int64)
       ~(of_int64 : int64 -> a) (s : a Range.range Seq.t) : a Seq.t =
@@ -72,6 +82,12 @@ module type S = sig
     t Range.range Seq.t ->
     t Range.range Seq.t
 
+  module Check : sig
+    val seq_is_valid : t Range.range Seq.t -> bool
+
+    val list_is_valid : t Range.range list -> bool
+  end
+
   module Flatten : sig
     val flatten : t Range.range Seq.t -> t Seq.t
 
@@ -98,6 +114,12 @@ module Make (B : Range.B) : S with type t := B.t = struct
       ?(skip_sort = false) (s : t Range.range Seq.t) =
     normalize ~skip_filter_invalid ~skip_filter_empty ~skip_sort ~modulo
       ~to_int64 ~of_int64 s
+
+  module Check = struct
+    let seq_is_valid s = Check.seq_is_valid ~modulo ~to_int64 s
+
+    let list_is_valid l = Check.list_is_valid ~modulo ~to_int64 l
+  end
 
   module Flatten = struct
     let flatten (s : t Range.range Seq.t) : t Seq.t =
