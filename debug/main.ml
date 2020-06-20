@@ -315,13 +315,13 @@ let debug_relative_complement_time_slots () =
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
-let debug_intersect_time_slots () =
-  print_endline "Debug print for Time_slots.intersect";
+let debug_inter_time_slots () =
+  print_endline "Debug print for Time_slots.inter";
   let time_slots1 = [ (0L, 10L); (11L, 20L); (25L, 30L) ] in
   let time_slots2 = [ (0L, 1L); (2L, 3L); (10L, 20L); (25L, 30L) ] in
   let time_slots1 = List.to_seq time_slots1 in
   let time_slots2 = List.to_seq time_slots2 in
-  Time_slots.intersect time_slots1 time_slots2
+  Time_slots.inter time_slots1 time_slots2
   |> Seq.iter (fun (start, end_exc) ->
       Printf.printf "  [%Ld, %Ld)\n" start end_exc)
 
@@ -1030,7 +1030,7 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   print_newline () *)
 
 (* let () =
- *   debug_intersect_time_slots ();
+ *   debug_inter_time_slots ();
  *   print_newline () *)
 
 (* let () =

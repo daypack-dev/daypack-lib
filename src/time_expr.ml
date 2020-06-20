@@ -1317,14 +1317,14 @@ let matching_time_slots
          | Ok s2 ->
            Ok (Time_slots.Union.union ~skip_check:true s1 s2)
       )
-    | Time_slots_intersect (e1, e2) ->
+    | Time_slots_inter (e1, e2) ->
       (match aux f_resolve_tpe_name f_resolve_tse_name search_param e1 with
        | Error msg -> Error msg
        | Ok s1 ->
          match aux f_resolve_tpe_name f_resolve_tse_name search_param e2 with
          | Error msg -> Error msg
          | Ok s2 ->
-           Ok (Time_slots.intersect ~skip_check:true s1 s2)
+           Ok (Time_slots.inter ~skip_check:true s1 s2)
       )
   in
   aux f_resolve_tpe_name f_resolve_tse_name search_param e

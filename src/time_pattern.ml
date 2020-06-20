@@ -209,7 +209,7 @@ let push_search_param_to_later_start ~(start : int64)
         let time_slots =
           time_slots
           |> List.to_seq
-          |> Time_slots.intersect (Seq.return (start, end_exc'))
+          |> Time_slots.inter (Seq.return (start, end_exc'))
           |> List.of_seq
         in
         Ok (Time_slots { search_using_tz_offset_s; time_slots }) )
@@ -871,7 +871,7 @@ module Single_pattern = struct
         match time_slots with
         | None -> l
         | Some time_slots ->
-          Time_slots.intersect time_slots ~skip_check:true l
+          Time_slots.inter time_slots ~skip_check:true l
           |> Time_slots.Normalize.normalize ~skip_filter_invalid:true
             ~skip_sort:true)
 
