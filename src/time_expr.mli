@@ -90,27 +90,27 @@ module To_time_pattern_lossy : sig
     Time_expr_ast.time_slots_expr ->
     (Time_pattern.time_range_pattern list, string) result
 
-  val single_or_ranges_of_time_expr :
-    ?f_resolve_tse_name:f_resolve_tse_name ->
-    ?f_resolve_tpe_name:f_resolve_tpe_name ->
-    Time_expr_ast.t ->
-    (Time_pattern.single_or_ranges, string) result
-
-  val time_pattern_of_time_expr :
-    ?f_resolve_tse_name:f_resolve_tse_name ->
-    ?f_resolve_tpe_name:f_resolve_tpe_name ->
-    Time_expr_ast.t ->
-    (Time_pattern.time_pattern, string) result
-
-  val time_range_pattern_of_time_expr :
-    ?f_resolve_tse_name:f_resolve_tse_name ->
-    ?f_resolve_tpe_name:f_resolve_tpe_name ->
-    Time_expr_ast.t ->
-    (Time_pattern.time_range_pattern, string) result
-
-  val time_range_patterns_of_time_expr :
-    ?f_resolve_tse_name:f_resolve_tse_name ->
-    ?f_resolve_tpe_name:f_resolve_tpe_name ->
-    Time_expr_ast.t ->
-    (Time_pattern.time_range_pattern list, string) result
+  (* val single_or_ranges_of_time_expr :
+   *   ?f_resolve_tse_name:f_resolve_tse_name ->
+   *   ?f_resolve_tpe_name:f_resolve_tpe_name ->
+   *   Time_expr_ast.t ->
+   *   (Time_pattern.single_or_ranges, string) result
+   * 
+   * val time_pattern_of_time_expr :
+   *   ?f_resolve_tse_name:f_resolve_tse_name ->
+   *   ?f_resolve_tpe_name:f_resolve_tpe_name ->
+   *   Time_expr_ast.t ->
+   *   (Time_pattern.time_pattern, string) result
+   * 
+   * val time_range_pattern_of_time_expr :
+   *   ?f_resolve_tse_name:f_resolve_tse_name ->
+   *   ?f_resolve_tpe_name:f_resolve_tpe_name ->
+   *   Time_expr_ast.t ->
+   *   (Time_pattern.time_range_pattern, string) result
+   * 
+   * val time_range_patterns_of_time_expr :
+   *   ?f_resolve_tse_name:f_resolve_tse_name ->
+   *   ?f_resolve_tpe_name:f_resolve_tpe_name ->
+   *   Time_expr_ast.t ->
+   *   (Time_pattern.time_range_pattern list, string) result *)
 end
