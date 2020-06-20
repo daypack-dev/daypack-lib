@@ -233,8 +233,7 @@ let single_task_seg_multi_even_splits ~incre ~(task_seg : Task.task_seg)
   let possibly_usable_buckets =
     buckets
     |> List.map (fun bucket ->
-        Time_slots.inter (Seq.return bucket) usable_time_slots
-        |> List.of_seq)
+        Time_slots.inter (Seq.return bucket) usable_time_slots |> List.of_seq)
   in
   let possibly_usable_bucket_count =
     List.length possibly_usable_buckets |> Int64.of_int

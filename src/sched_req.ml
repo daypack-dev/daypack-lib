@@ -38,9 +38,7 @@ let flexibility_score_of_sched_req_record
   | Split_even x ->
     let _, size = x.task_seg_related_data in
     let time_slot_sum_len =
-      Time_slots.inter
-        (x.time_slots |> List.to_seq)
-        (x.buckets |> List.to_seq)
+      Time_slots.inter (x.time_slots |> List.to_seq) (x.buckets |> List.to_seq)
       |> List.of_seq
       |> Time_slots.Sum.sum_length_list
       |> Int64.to_float

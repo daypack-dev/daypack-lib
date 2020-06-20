@@ -375,12 +375,10 @@ module Qc = struct
          let s2 = l2 |> List.to_seq in
          let s3 = l3 |> List.to_seq in
          let res1 =
-           Daypack_lib.Time_slots.(Union.union s1 (inter s2 s3))
-           |> List.of_seq
+           Daypack_lib.Time_slots.(Union.union s1 (inter s2 s3)) |> List.of_seq
          in
          let res2 =
-           Daypack_lib.Time_slots.(
-             inter (Union.union s1 s2) (Union.union s1 s3))
+           Daypack_lib.Time_slots.(inter (Union.union s1 s2) (Union.union s1 s3))
            |> List.of_seq
          in
          res1 = res2)
@@ -395,12 +393,10 @@ module Qc = struct
          let s2 = l2 |> List.to_seq in
          let s3 = l3 |> List.to_seq in
          let res1 =
-           Daypack_lib.Time_slots.(inter s1 (Union.union s2 s3))
-           |> List.of_seq
+           Daypack_lib.Time_slots.(inter s1 (Union.union s2 s3)) |> List.of_seq
          in
          let res2 =
-           Daypack_lib.Time_slots.(
-             Union.union (inter s1 s2) (inter s1 s3))
+           Daypack_lib.Time_slots.(Union.union (inter s1 s2) (inter s1 s3))
            |> List.of_seq
          in
          res1 = res2)
