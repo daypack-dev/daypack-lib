@@ -684,7 +684,7 @@ module Of_string = struct
                       >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
         in
         let term =
-          (char '(' *> expr <* char ')')
+          (try_ (char '(') *> expr <* char ')')
           <|> atom
         in
         chainl1 term op
