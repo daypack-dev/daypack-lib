@@ -671,10 +671,13 @@ module Of_string = struct
       skip_space *> unbounded_time_slots_expr >>= fun e -> return (bound, e)
   end
 
-  let op : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
+  let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     skip_space *>
-    ((try_ (string "&&") *> skip_space *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Inter, a, b)))
-    <|> (try_ (string "||") *> skip_space *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Union, a, b))))
+    (try_ (string "&&") *> skip_space *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Inter, a, b)))
+
+  let union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
+    skip_space *>
+    (try_ (string "||") *> skip_space *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Union, a, b)))
 
   let time_expr : Time_expr_ast.t t =
     fix (fun expr ->
@@ -684,11 +687,12 @@ module Of_string = struct
                 <|> ( Time_points_expr.time_points_expr
                       >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
         in
-        let term =
+        let term' =
           (try_ (char '(') *> expr <* char ')')
           <|> atom
         in
-        chainl1 term op
+        let term = chainl1 term' inter in
+        chainl1 term union
       )
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
