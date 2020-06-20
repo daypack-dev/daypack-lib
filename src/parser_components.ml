@@ -95,3 +95,9 @@ let sep_fail_on_first_fail ~by ~end_markers (p : 'a t) : 'a list t =
   match Seq_utils.find_first_error_or_return_whole_list s with
   | Ok l -> return l
   | Error s -> fail s
+
+let chainl1 x op =
+  let rec aux a =
+    (op >>= fun f -> x >>= fun b -> aux (f a b)) <|> return a
+  in
+  x >>= aux
