@@ -672,14 +672,14 @@ module Of_string = struct
     skip_space
     *> ( try_ (string "&&")
          *> skip_space
-         *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Inter, a, b))
+         *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (Inter, a, b))
        )
 
   let union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     skip_space
     *> ( try_ (string "||")
          *> skip_space
-         *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Union, a, b))
+         *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (Union, a, b))
        )
 
   let time_expr : Time_expr_ast.t t =
@@ -1330,7 +1330,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
             | Ok s2 ->
               Ok
                 ( match op with
-                  | `Union -> Time_slots.Union.union ~skip_check:true s1 s2
-                  | `Inter -> Time_slots.inter ~skip_check:true s1 s2 ) ) )
+                  | Union -> Time_slots.Union.union ~skip_check:true s1 s2
+                  | Inter -> Time_slots.inter ~skip_check:true s1 s2 ) ) )
   in
   aux f_resolve_tpe_name f_resolve_tse_name search_param e

@@ -100,9 +100,8 @@ type unbounded_time_slots_expr =
 type time_slots_expr = bound * unbounded_time_slots_expr
 
 type binary_op =
-  [ `Union
-  | `Inter
-  ]
+  | Union
+  | Inter
 
 type t =
   | Time_points_expr of time_points_expr
