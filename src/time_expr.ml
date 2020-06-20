@@ -273,6 +273,8 @@ module Of_string = struct
         >>= fun y -> return (`Range_exc (x, y)) )
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
+  let symbols = "()[]&|"
+
   (* let ranges_expr ~(to_int : 'a -> int) ~(of_int : int -> 'a) (p : 'a Range.range t) : 'a Range.range list t =
    *   sep_by_comma1 p >>| fun l ->
    *   l |> List.to_seq |>
@@ -538,14 +540,13 @@ module Of_string = struct
       skip_space
       *> ( unbounded_time_points_expr
            >>= fun e ->
-           try_ eoi *> return (bound, e)
-           <|> ( get_cnum
-                 >>= fun cnum ->
-                 any_string >>= fun s -> failf "Invalid syntax: %s, pos: %d" s cnum
-               ) )
+           extraneous_text_check ~end_markers:symbols *>
+           return (bound, e)
+         )
       <|> ( get_cnum
             >>= fun cnum ->
-            any_string >>= fun s -> failf "Invalid syntax: %s, pos: %d" s cnum )
+            any_string >>= fun text ->
+            invalid_syntax ~text ~cnum )
   end
 
   module Time_slots_expr = struct
@@ -672,8 +673,8 @@ module Of_string = struct
 
   let op : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     skip_space *>
-    ((try_ (string "&&") *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Inter, a, b)))
-    <|> (try_ (string "||") *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Union, a, b))))
+    ((try_ (string "&&") *> skip_space *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Inter, a, b)))
+    <|> (try_ (string "||") *> skip_space *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Union, a, b))))
 
   let time_expr : Time_expr_ast.t t =
     fix (fun expr ->
@@ -692,7 +693,7 @@ module Of_string = struct
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string
-      time_expr
+      (time_expr <* skip_space <* eoi)
       s
 
   let time_points_expr_of_string (s : string) :
