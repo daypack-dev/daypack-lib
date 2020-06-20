@@ -103,4 +103,4 @@ type t =
   | Time_points_expr of time_points_expr
   | Time_slots_expr of time_slots_expr
   | Time_slots_union of t * t
-  | Time_slots_inter of t * t
+  | Time_slots_intersect of t * t

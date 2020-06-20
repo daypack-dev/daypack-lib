@@ -1115,20 +1115,20 @@ module To_time_pattern_lossy = struct
 end
 
 module Time_points_expr = struct
-  let next_match_unix_second ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-      (search_param : search_param) (e : Time_expr_ast.time_points_expr) :
-    (int64 option, string) result =
-    match
-      To_time_pattern_lossy.time_pattern_of_time_points_expr ~f_resolve_tpe_name
-        e
-    with
-    | Error msg -> Error msg
-    | Ok pat ->
-      Time_pattern.Single_pattern.next_match_unix_second search_param pat
-      |> Result.map_error Time_pattern.To_string.string_of_error
+  (* let next_match_unix_second ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+   *     (search_param : search_param) (e : Time_expr_ast.time_points_expr) :
+   *   (int64 option, string) result =
+   *   match
+   *     To_time_pattern_lossy.time_pattern_of_time_points_expr ~f_resolve_tpe_name
+   *       e
+   *   with
+   *   | Error msg -> Error msg
+   *   | Ok pat ->
+   *     Time_pattern.Single_pattern.next_match_unix_second search_param pat
+   *     |> Result.map_error Time_pattern.To_string.string_of_error *)
 
-  let matching_unix_seconds ?(force_bound : Time_expr_ast.bound option)
-      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+  let matching_unix_seconds ~(force_bound : Time_expr_ast.bound option)
+      ~f_resolve_tpe_name
       (search_param : search_param)
       ((bound, e) : Time_expr_ast.time_points_expr) :
     (int64 Seq.t, string) result =
@@ -1213,9 +1213,9 @@ module Time_slots_expr = struct
         ( Time.unix_second_of_date_time x |> Result.get_ok,
           Time.unix_second_of_date_time y |> Result.get_ok ))
 
-  let matching_time_slots ?(force_bound : Time_expr_ast.bound option)
-      ?(f_resolve_tse_name = default_f_resolve_tse_name)
-      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+  let matching_time_slots ~(force_bound : Time_expr_ast.bound option)
+      ~(f_resolve_tpe_name)
+      ~(f_resolve_tse_name)
       (search_param : search_param) ((bound, e) : Time_expr_ast.time_slots_expr)
     : (Time_slot.t Seq.t, string) result =
     match
@@ -1280,14 +1280,51 @@ module Time_slots_expr = struct
               |> flat_selector
               |> Result.ok ) )
 
-  let next_match_time_slot ?(f_resolve_tse_name = default_f_resolve_tse_name)
-      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-      (search_param : search_param) (e : Time_expr_ast.time_slots_expr) :
-    ((int64 * int64) option, string) result =
-    match
-      matching_time_slots ~f_resolve_tse_name ~f_resolve_tpe_name search_param e
-    with
-    | Error msg -> Error msg
-    | Ok seq -> (
-        match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
+  (* let next_match_time_slot ?(f_resolve_tse_name = default_f_resolve_tse_name)
+   *     ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+   *     (search_param : search_param) (e : Time_expr_ast.time_slots_expr) :
+   *   ((int64 * int64) option, string) result =
+   *   match
+   *     matching_time_slots ~f_resolve_tse_name ~f_resolve_tpe_name search_param e
+   *   with
+   *   | Error msg -> Error msg
+   *   | Ok seq -> (
+   *       match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) ) *)
 end
+
+let matching_time_slots
+    ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+    ?(f_resolve_tse_name = default_f_resolve_tse_name)
+    (search_param : search_param) (e : Time_expr_ast.t) : (Time_slot.t Seq.t, string) result =
+  let rec aux f_resolve_tpe_name f_resolve_tse_name search_param e =
+    let open Time_expr_ast in
+    match e with
+    | Time_points_expr e ->
+      Time_points_expr.matching_unix_seconds ~force_bound:None
+        ~f_resolve_tpe_name
+        search_param e
+      |> Result.map (Seq.map (fun x -> (x, Int64.succ x)))
+    | Time_slots_expr e ->
+      Time_slots_expr.matching_time_slots ~force_bound:None
+        ~f_resolve_tpe_name ~f_resolve_tse_name
+        search_param e
+    | Time_slots_union (e1, e2) ->
+      (match aux f_resolve_tpe_name f_resolve_tse_name search_param e1 with
+       | Error e -> Error e
+       | Ok s1 ->
+         match aux f_resolve_tpe_name f_resolve_tse_name search_param e2 with
+         | Error e -> Error e
+         | Ok s2 ->
+           Ok (Time_slots.Union.union ~skip_check:true s1 s2)
+      )
+    | Time_slots_intersect (e1, e2) ->
+      (match aux f_resolve_tpe_name f_resolve_tse_name search_param e1 with
+       | Error msg -> Error msg
+       | Ok s1 ->
+         match aux f_resolve_tpe_name f_resolve_tse_name search_param e2 with
+         | Error msg -> Error msg
+         | Ok s2 ->
+           Ok (Time_slots.intersect ~skip_check:true s1 s2)
+      )
+  in
+  aux f_resolve_tpe_name f_resolve_tse_name search_param e
