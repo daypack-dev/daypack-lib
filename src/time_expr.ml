@@ -248,7 +248,7 @@ module Of_string = struct
   let last_string = string "last"
 
   let bound =
-    option `Next
+    option `Every
       ( try_ (string "coming" *> return `Next)
         <|> try_ (char '?' *> return `Next)
         <|> try_ (string "every" *> return `Every)
