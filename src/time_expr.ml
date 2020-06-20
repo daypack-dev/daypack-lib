@@ -670,14 +670,29 @@ module Of_string = struct
       skip_space *> unbounded_time_slots_expr >>= fun e -> return (bound, e)
   end
 
+  let op : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
+    skip_space *>
+    ((try_ (string "&&") *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Inter, a, b)))
+    <|> (try_ (string "||") *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Union, a, b))))
+
+  let time_expr : Time_expr_ast.t t =
+    fix (fun expr ->
+        let atom =
+          Time_slots_expr.time_slots_expr
+            >>= (fun e -> return (Time_expr_ast.Time_slots_expr e))
+                <|> ( Time_points_expr.time_points_expr
+                      >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
+        in
+        let term =
+          (char '(' *> expr <* char ')')
+          <|> atom
+        in
+        chainl1 term op
+      )
+
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string
-      ( Time_slots_expr.time_slots_expr
-        <* eoi
-        >>= (fun e -> return (Time_expr_ast.Time_slots_expr e))
-            <|> ( Time_points_expr.time_points_expr
-                  <* eoi
-                  >>= fun e -> return (Time_expr_ast.Time_points_expr e) ) )
+      time_expr
       s
 
   let time_points_expr_of_string (s : string) :
@@ -1304,19 +1319,20 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     | Time_slots_expr e ->
       Time_slots_expr.matching_time_slots ~force_bound:None
         ~f_resolve_tpe_name ~f_resolve_tse_name search_param e
-    | Time_slots_union (e1, e2) -> (
+    | Time_slots_binary_op (op, e1, e2) -> (
         match aux f_resolve_tpe_name f_resolve_tse_name search_param e1 with
         | Error e -> Error e
         | Ok s1 -> (
             match aux f_resolve_tpe_name f_resolve_tse_name search_param e2 with
             | Error e -> Error e
-            | Ok s2 -> Ok (Time_slots.Union.union ~skip_check:true s1 s2) ) )
-    | Time_slots_inter (e1, e2) -> (
-        match aux f_resolve_tpe_name f_resolve_tse_name search_param e1 with
-        | Error msg -> Error msg
-        | Ok s1 -> (
-            match aux f_resolve_tpe_name f_resolve_tse_name search_param e2 with
-            | Error msg -> Error msg
-            | Ok s2 -> Ok (Time_slots.inter ~skip_check:true s1 s2) ) )
+            | Ok s2 ->
+              Ok (
+              match op with
+              | `Union ->
+                Time_slots.Union.union ~skip_check:true s1 s2
+              | `Inter -> Time_slots.inter ~skip_check:true s1 s2
+            )
+          )
+      )
   in
   aux f_resolve_tpe_name f_resolve_tse_name search_param e
