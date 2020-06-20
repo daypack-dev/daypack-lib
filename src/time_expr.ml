@@ -540,13 +540,10 @@ module Of_string = struct
       skip_space
       *> ( unbounded_time_points_expr
            >>= fun e ->
-           extraneous_text_check ~end_markers:symbols *>
-           return (bound, e)
-         )
+           extraneous_text_check ~end_markers:symbols *> return (bound, e) )
       <|> ( get_cnum
-            >>= fun cnum ->
-            any_string >>= fun text ->
-            invalid_syntax ~text ~cnum )
+            >>= fun cnum -> any_string >>= fun text -> invalid_syntax ~text ~cnum
+          )
   end
 
   module Time_slots_expr = struct
@@ -672,33 +669,33 @@ module Of_string = struct
   end
 
   let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
-    skip_space *>
-    (try_ (string "&&") *> skip_space *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Inter, a, b)))
+    skip_space
+    *> ( try_ (string "&&")
+         *> skip_space
+         *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Inter, a, b))
+       )
 
   let union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
-    skip_space *>
-    (try_ (string "||") *> skip_space *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Union, a, b)))
+    skip_space
+    *> ( try_ (string "||")
+         *> skip_space
+         *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (`Union, a, b))
+       )
 
   let time_expr : Time_expr_ast.t t =
     fix (fun expr ->
         let atom =
           Time_slots_expr.time_slots_expr
-            >>= (fun e -> return (Time_expr_ast.Time_slots_expr e))
-                <|> ( Time_points_expr.time_points_expr
-                      >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
+          >>= (fun e -> return (Time_expr_ast.Time_slots_expr e))
+              <|> ( Time_points_expr.time_points_expr
+                    >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
         in
-        let term' =
-          (try_ (char '(') *> expr <* char ')')
-          <|> atom
-        in
+        let term' = try_ (char '(') *> expr <* char ')' <|> atom in
         let term = chainl1 term' inter in
-        chainl1 term union
-      )
+        chainl1 term union)
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
-    parse_string
-      (time_expr <* skip_space <* eoi)
-      s
+    parse_string (time_expr <* skip_space <* eoi) s
 
   let time_points_expr_of_string (s : string) :
     (Time_expr_ast.time_points_expr, string) result =
@@ -1331,13 +1328,9 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
             match aux f_resolve_tpe_name f_resolve_tse_name search_param e2 with
             | Error e -> Error e
             | Ok s2 ->
-              Ok (
-              match op with
-              | `Union ->
-                Time_slots.Union.union ~skip_check:true s1 s2
-              | `Inter -> Time_slots.inter ~skip_check:true s1 s2
-            )
-          )
-      )
+              Ok
+                ( match op with
+                  | `Union -> Time_slots.Union.union ~skip_check:true s1 s2
+                  | `Inter -> Time_slots.inter ~skip_check:true s1 s2 ) ) )
   in
   aux f_resolve_tpe_name f_resolve_tse_name search_param e

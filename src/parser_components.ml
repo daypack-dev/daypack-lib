@@ -34,9 +34,11 @@ let dot = char '.'
 
 let hyphen = char '-'
 
-let non_square_bracket_string = chars_if (function '[' | ']'-> false | _ -> true)
+let non_square_bracket_string =
+  chars_if (function '[' | ']' -> false | _ -> true)
 
-let non_parenthesis_string = chars_if (function '(' | ')' -> false | _ -> true)
+let non_parenthesis_string =
+  chars_if (function '(' | ')' -> false | _ -> true)
 
 let non_space_string = chars_if (fun c -> not (is_space c))
 
@@ -99,20 +101,13 @@ let sep_fail_on_first_fail ~by ~end_markers (p : 'a t) : 'a list t =
   | Error s -> fail s
 
 let chainl1 x op =
-  let rec aux a =
-    (op >>= fun f -> x >>= fun b -> aux (f a b)) <|> return a
-  in
+  let rec aux a = op >>= (fun f -> x >>= fun b -> aux (f a b)) <|> return a in
   x >>= aux
 
-let invalid_syntax ~text ~cnum =
-  failf "Invalid syntax: %s, pos: %d" text cnum
+let invalid_syntax ~text ~cnum = failf "Invalid syntax: %s, pos: %d" text cnum
 
 let extraneous_text_check ~end_markers =
-  skip_space *>
-  get_cnum >>= fun cnum ->
+  skip_space *> get_cnum
+  >>= fun cnum ->
   chars_if (fun c -> not (String.contains end_markers c))
-  >>= fun s ->
-  match s with
-  | "" -> nop
-  | text -> invalid_syntax ~text ~cnum
-
+  >>= fun s -> match s with "" -> nop | text -> invalid_syntax ~text ~cnum
