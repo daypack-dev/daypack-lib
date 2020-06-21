@@ -1311,7 +1311,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     ?(f_resolve_tse_name = default_f_resolve_tse_name)
     (search_param : search_param) (e : Time_expr_ast.t) :
   (Time_slot.t Seq.t, string) result =
-  let rec aux f_resolve_tpe_name f_resolve_tse_name search_param e =
+  let rec aux e =
     let open Time_expr_ast in
     match e with
     | Time_points_expr e ->
@@ -1322,10 +1322,10 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       Time_slots_expr.matching_time_slots ~force_bound:None
         ~f_resolve_tpe_name ~f_resolve_tse_name search_param e
     | Time_slots_binary_op (op, e1, e2) -> (
-        match aux f_resolve_tpe_name f_resolve_tse_name search_param e1 with
+        match aux e1 with
         | Error e -> Error e
         | Ok s1 -> (
-            match aux f_resolve_tpe_name f_resolve_tse_name search_param e2 with
+            match aux e2 with
             | Error e -> Error e
             | Ok s2 ->
               Ok
@@ -1333,4 +1333,4 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
                   | Union -> Time_slots.Union.union ~skip_check:true s1 s2
                   | Inter -> Time_slots.inter ~skip_check:true s1 s2 ) ) )
   in
-  aux f_resolve_tpe_name f_resolve_tse_name search_param e
+  aux e
