@@ -290,7 +290,7 @@ let invert ?(skip_check = false) ~start ~end_exc
   relative_complement ~skip_check ~not_mem_of:time_slots
     (Seq.return (start, end_exc))
 
-let intersect ?(skip_check = false) (time_slots1 : Time_slot.t Seq.t)
+let inter ?(skip_check = false) (time_slots1 : Time_slot.t Seq.t)
     (time_slots2 : Time_slot.t Seq.t) : Time_slot.t Seq.t =
   let rec aux time_slots1 time_slots2 : Time_slot.t Seq.t =
     match (time_slots1 (), time_slots2 ()) with
@@ -483,7 +483,7 @@ let equal (time_slots1 : Time_slot.t list) (time_slots2 : Time_slot.t list) :
   time_slots1 = time_slots2
 
 let a_is_subset_of_b ~(a : Time_slot.t Seq.t) ~(b : Time_slot.t Seq.t) : bool =
-  let inter = intersect a b |> List.of_seq in
+  let inter = inter a b |> List.of_seq in
   let a = List.of_seq a in
   a = inter
 

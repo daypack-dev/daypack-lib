@@ -110,7 +110,7 @@ module Round_robin : sig
     ?skip_check:bool -> Time_slot.t Seq.t list -> Time_slot.t Seq.t
 end
 
-val intersect :
+val inter :
   ?skip_check:bool ->
   Time_slot.t Seq.t ->
   Time_slot.t Seq.t ->

@@ -16,7 +16,7 @@ let brute_force_single ~start ~end_exc ~(base : Sched.sched)
     in
     time_slots
     |> Time_slots.Normalize.normalize_list_in_seq_out
-    |> Time_slots.intersect time_slot_candidates
+    |> Time_slots.inter time_slot_candidates
   in
   Seq.flat_map
     (fun sched_req_record_data ->
