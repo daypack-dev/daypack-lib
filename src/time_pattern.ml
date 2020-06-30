@@ -1082,7 +1082,7 @@ module Equal = struct
     && List.sort compare pat1.minutes = List.sort compare pat2.minutes
 end
 
-module Of_string = struct
+module Parser = struct
   open CCParse
   open Parser_components
 
@@ -1362,11 +1362,16 @@ module Of_string = struct
         unix_seconds = [];
       }
 
+end
+
+module Of_string = struct
+  open CCParse
+
   let time_pattern_of_cron_string (s : string) : (time_pattern, string) result =
-    parse_string (cron_expr <* eoi) s
+    parse_string (Parser.cron_expr <* eoi) s
 
   let time_pattern_of_string (s : string) : (time_pattern, string) result =
-    parse_string (time_pattern_expr <* eoi) s
+    parse_string (Parser.time_pattern_expr <* eoi) s
 end
 
 module To_string = struct
