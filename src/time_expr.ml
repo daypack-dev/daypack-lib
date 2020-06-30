@@ -1,5 +1,3 @@
-type search_param = Time_pattern.search_param
-
 type error =
   | Invalid_time_points_expr
   | Invalid_time_slots_expr
@@ -1147,7 +1145,7 @@ module Time_points_expr = struct
    *     |> Result.map_error Time_pattern.To_string.string_of_error *)
 
   let matching_unix_seconds ~(force_bound : Time_expr_ast.bound option)
-      ~f_resolve_tpe_name (search_param : search_param)
+      ~f_resolve_tpe_name (search_param : Search_param.t)
       ((bound, e) : Time_expr_ast.time_points_expr) :
     (int64 Seq.t, string) result =
     match
@@ -1214,10 +1212,10 @@ module Time_slots_expr = struct
 
   let get_first_or_last_n_matches_of_same_month
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
-      (search_param : search_param) (s : Time_slot.t Seq.t) : Time_slot.t Seq.t
+      (search_param : Search_param.t) (s : Time_slot.t Seq.t) : Time_slot.t Seq.t
     =
     let tz_offset_s_of_date_time =
-      Time_pattern.search_using_tz_offset_s_of_search_param search_param
+      Search_param.search_using_tz_offset_s_of_search_param search_param
     in
     s
     |> Seq.map (fun (x, y) ->
@@ -1232,7 +1230,7 @@ module Time_slots_expr = struct
           Time.unix_second_of_date_time y |> Result.get_ok ))
 
   let matching_time_slots ~(force_bound : Time_expr_ast.bound option)
-      ~f_resolve_tpe_name ~f_resolve_tse_name (search_param : search_param)
+      ~f_resolve_tpe_name ~f_resolve_tse_name (search_param : Search_param.t)
       ((bound, e) : Time_expr_ast.time_slots_expr) :
     (Time_slot.t Seq.t, string) result =
     match
@@ -1311,7 +1309,7 @@ end
 
 let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     ?(f_resolve_tse_name = default_f_resolve_tse_name)
-    (search_param : search_param) (e : Time_expr_ast.t) :
+    (search_param : Search_param.t) (e : Time_expr_ast.t) :
   (Time_slot.t Seq.t, string) result =
   let rec aux e =
     let open Time_expr_ast in
@@ -1326,9 +1324,19 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     | Time_pattern pat ->
       Time_pattern.Single_pattern.matching_time_slots search_param pat
       |> Result.map_error Time_pattern.To_string.string_of_error
+    | Time_slots_unary_op (op, e) -> (
+        match aux e with
+        | Error x -> Error x
+        | Ok not_mem_of ->
+          match op with
+          | Not ->
+            match Time_pattern.Single_pattern.matching_time_slots search_param Time_pattern.empty with
+            | Error x -> Error (Time_pattern.To_string.string_of_error x)
+            | Ok s -> Ok (Time_slots.relative_complement ~not_mem_of s)
+      )
     | Time_slots_binary_op (op, e1, e2) -> (
         match aux e1 with
-        | Error e -> Error e
+        | Error x -> Error x
         | Ok s1 -> (
             match aux e2 with
             | Error e -> Error e
