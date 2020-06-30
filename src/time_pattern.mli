@@ -27,9 +27,6 @@ type single_or_ranges =
   | Single_time_pattern of time_pattern
   | Time_range_patterns of time_range_pattern list
 
-val search_using_tz_offset_s_of_search_param :
-  Search_param.t -> Time.tz_offset_s option
-
 val empty : time_pattern
 
 module Check : sig
