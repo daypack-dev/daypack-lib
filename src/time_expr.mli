@@ -1,5 +1,3 @@
-type search_param = Time_pattern.search_param
-
 type error =
   | Invalid_time_points_expr
   | Invalid_time_slots_expr
@@ -118,6 +116,6 @@ end
 val matching_time_slots :
   ?f_resolve_tpe_name:f_resolve_tpe_name ->
   ?f_resolve_tse_name:f_resolve_tse_name ->
-  search_param ->
+  Search_param.t ->
   Time_expr_ast.t ->
   (Time_slot.t Seq.t, string) result
