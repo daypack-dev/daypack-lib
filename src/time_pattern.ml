@@ -1320,22 +1320,29 @@ module Of_string = struct
     <|> ( char_if (fun _ -> true)
           >>= fun c -> failf "Invalid unit char: %c, pos: %d" c cnum )
 
+  let optional_part p =
+    option [] (try_ p)
+
   let time_pattern_expr =
-    unit_char 'y' *> skip_space *> Year.years_time_pattern_expr
+    optional_part (unit_char 'y' *> skip_space *> Year.years_time_pattern_expr)
     >>= fun years ->
-    skip_space *> unit_char 'm' *> skip_space *> Month.months_time_pattern_expr
+    skip_space *>
+    optional_part (unit_char 'm' *> skip_space *> Month.months_time_pattern_expr)
     >>= fun months ->
     skip_space
-    *> unit_char 'd'
+    *>
+    optional_part (unit_char 'd'
     *> skip_space
-    *> Month_day.month_days_time_pattern_expr
+    *> Month_day.month_days_time_pattern_expr)
     >>= fun month_days ->
     skip_space
-    *> unit_char 'w'
+    *>
+    optional_part (unit_char 'w'
     *> skip_space
-    *> Weekday.weekdays_time_pattern_expr
+    *> Weekday.weekdays_time_pattern_expr)
     >>= fun weekdays ->
-    skip_space *> unit_char 'h' *> skip_space *> Hour.hours_time_pattern_expr
+    skip_space *>
+    optional_part (unit_char 'h' *> skip_space *> Hour.hours_time_pattern_expr)
     >>= fun hours ->
     skip_space
     *> unit_char 'm'
@@ -1343,9 +1350,10 @@ module Of_string = struct
     *> Minute.minutes_time_pattern_expr
     >>= fun minutes ->
     skip_space
-    *> unit_char 's'
+    *>
+    optional_part (unit_char 's'
     *> skip_space
-    *> Second.seconds_time_pattern_expr
+    *> Second.seconds_time_pattern_expr)
     >>= fun seconds ->
     return
       {
