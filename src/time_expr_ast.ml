@@ -106,4 +106,5 @@ type binary_op =
 type t =
   | Time_points_expr of time_points_expr
   | Time_slots_expr of time_slots_expr
+  | Time_pattern of Time_pattern.time_pattern
   | Time_slots_binary_op of binary_op * t * t
