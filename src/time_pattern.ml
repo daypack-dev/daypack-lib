@@ -1361,7 +1361,6 @@ module Parser = struct
         seconds;
         unix_seconds = [];
       }
-
 end
 
 module Of_string = struct
