@@ -20,11 +20,9 @@ type error =
   | Invalid_search_years_ahead
   | Too_far_into_future
 
-val search_using_tz_offset_s_of_search_param :
-  t -> Time.tz_offset_s option
+val search_using_tz_offset_s_of_search_param : t -> Time.tz_offset_s option
 
-val push_search_param_to_later_start :
-  start:int64 -> t -> (t, unit) result
+val push_search_param_to_later_start : start:int64 -> t -> (t, unit) result
 
 val start_date_time_and_search_years_ahead_of_search_param :
   t -> (Time.date_time * int) option

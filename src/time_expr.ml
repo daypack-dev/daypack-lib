@@ -1212,8 +1212,8 @@ module Time_slots_expr = struct
 
   let get_first_or_last_n_matches_of_same_month
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
-      (search_param : Search_param.t) (s : Time_slot.t Seq.t) : Time_slot.t Seq.t
-    =
+      (search_param : Search_param.t) (s : Time_slot.t Seq.t) :
+    Time_slot.t Seq.t =
     let tz_offset_s_of_date_time =
       Search_param.search_using_tz_offset_s_of_search_param search_param
     in
@@ -1327,12 +1327,15 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     | Time_slots_unary_op (op, e) -> (
         match aux e with
         | Error x -> Error x
-        | Ok not_mem_of ->
-          match op with
-          | Not ->
-            match Time_pattern.Single_pattern.matching_time_slots search_param Time_pattern.empty with
-            | Error x -> Error (Time_pattern.To_string.string_of_error x)
-            | Ok s -> Ok (Time_slots.relative_complement ~not_mem_of s)
+        | Ok not_mem_of -> (
+            match op with
+            | Not -> (
+                match
+                  Time_pattern.Single_pattern.matching_time_slots search_param
+                    Time_pattern.empty
+                with
+                | Error x -> Error (Time_pattern.To_string.string_of_error x)
+                | Ok s -> Ok (Time_slots.relative_complement ~not_mem_of s) ) )
       )
     | Time_slots_binary_op (op, e1, e2) -> (
         match aux e1 with

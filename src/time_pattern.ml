@@ -601,12 +601,14 @@ module Single_pattern = struct
     Check.check_search_param_and_time_pattern search_param t
     |> Result.map (fun () ->
         match
-          Search_param.start_date_time_and_search_years_ahead_of_search_param search_param
+          Search_param.start_date_time_and_search_years_ahead_of_search_param
+            search_param
         with
         | None -> Seq.empty
         | Some (start, search_years_ahead) ->
           let search_using_tz_offset_s =
-            Search_param.search_using_tz_offset_s_of_search_param search_param
+            Search_param.search_using_tz_offset_s_of_search_param
+              search_param
           in
           Matching_years.matching_years ~search_years_ahead t start start
           |> Seq.flat_map (Matching_months.matching_months t start)
@@ -628,10 +630,11 @@ module Single_pattern = struct
              | Error () -> None)
           s)
 
-  let matching_date_time_ranges (search_param : Search_param.t) (t : time_pattern)
-    : (Time.date_time Range.range Seq.t, error) result =
+  let matching_date_time_ranges (search_param : Search_param.t)
+      (t : time_pattern) : (Time.date_time Range.range Seq.t, error) result =
     match
-      Search_param.start_date_time_and_search_years_ahead_of_search_param search_param
+      Search_param.start_date_time_and_search_years_ahead_of_search_param
+        search_param
     with
     | None -> Ok Seq.empty
     | Some (start, search_years_ahead) -> (
@@ -771,8 +774,8 @@ module Single_pattern = struct
     |> Result.map (fun s ->
         match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x)
 
-  let next_match_unix_second (search_param : Search_param.t) (t : time_pattern) :
-    (int64 option, error) result =
+  let next_match_unix_second (search_param : Search_param.t) (t : time_pattern)
+    : (int64 option, error) result =
     next_match_date_time search_param t
     |> Result.map (fun x ->
         match x with
@@ -795,7 +798,8 @@ module Range_pattern = struct
     let search_and_get_start (search_param : Search_param.t) (t : time_pattern)
         ((start, _) : Time_slot.t) : Time_slot.t option =
       let search_param =
-        Search_param.push_search_param_to_later_start ~start search_param |> Result.get_ok
+        Search_param.push_search_param_to_later_start ~start search_param
+        |> Result.get_ok
       in
       match
         Single_pattern.next_match_time_slot search_param t |> Result.get_ok
@@ -803,10 +807,11 @@ module Range_pattern = struct
       | None -> None
       | Some (start', _) -> Some (start, start')
     in
-    let search_and_get_end_exc (search_param : Search_param.t) (t : time_pattern)
-        ((start, _) : Time_slot.t) : Time_slot.t option =
+    let search_and_get_end_exc (search_param : Search_param.t)
+        (t : time_pattern) ((start, _) : Time_slot.t) : Time_slot.t option =
       let search_param =
-        Search_param.push_search_param_to_later_start ~start search_param |> Result.get_ok
+        Search_param.push_search_param_to_later_start ~start search_param
+        |> Result.get_ok
       in
       match
         Single_pattern.next_match_time_slot search_param t |> Result.get_ok
@@ -879,16 +884,16 @@ module Range_pattern = struct
 end
 
 module Single_or_ranges = struct
-  let matching_time_slots (search_param : Search_param.t) (x : single_or_ranges) :
-    (Time_slot.t Seq.t, error) result =
+  let matching_time_slots (search_param : Search_param.t) (x : single_or_ranges)
+    : (Time_slot.t Seq.t, error) result =
     match x with
     | Single_time_pattern pat ->
       Single_pattern.matching_time_slots search_param pat
     | Time_range_patterns l ->
       Range_pattern.matching_time_slots_multi search_param l
 
-  let next_match_time_slot (search_param : Search_param.t) (x : single_or_ranges)
-    : (Time_slot.t option, error) result =
+  let next_match_time_slot (search_param : Search_param.t)
+      (x : single_or_ranges) : (Time_slot.t option, error) result =
     matching_time_slots search_param x
     |> Result.map (fun s ->
         match s () with

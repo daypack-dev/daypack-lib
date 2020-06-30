@@ -29,8 +29,8 @@ let search_using_tz_offset_s_of_search_param (param : t) :
   | Years_ahead_start_date_time { search_using_tz_offset_s; _ } ->
     search_using_tz_offset_s
 
-let push_search_param_to_later_start ~(start : int64)
-    (search_param : t) : (t, unit) result =
+let push_search_param_to_later_start ~(start : int64) (search_param : t) :
+  (t, unit) result =
   match search_param with
   | Time_slots { search_using_tz_offset_s; time_slots } -> (
       match Time_slots.Bound.min_start_and_max_end_exc_list time_slots with
@@ -62,8 +62,8 @@ let push_search_param_to_later_start ~(start : int64)
             Years_ahead_start_date_time
               { search_using_tz_offset_s; start; search_years_ahead }) )
 
-let start_date_time_and_search_years_ahead_of_search_param
-    (search_param : t) : (Time.date_time * int) option =
+let start_date_time_and_search_years_ahead_of_search_param (search_param : t) :
+  (Time.date_time * int) option =
   match search_param with
   | Time_slots { search_using_tz_offset_s; time_slots } -> (
       match Time_slots.Bound.min_start_and_max_end_exc_list time_slots with
@@ -94,8 +94,7 @@ let start_date_time_and_search_years_ahead_of_search_param
     Some (start, search_years_ahead)
 
 module Check = struct
-  let check_search_param (x : t) : (unit, error) result
-    =
+  let check_search_param (x : t) : (unit, error) result =
     match x with
     | Time_slots { search_using_tz_offset_s = _; time_slots } ->
       if

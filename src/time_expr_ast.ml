@@ -99,8 +99,7 @@ type unbounded_time_slots_expr =
 
 type time_slots_expr = bound * unbounded_time_slots_expr
 
-type unary_op =
-  | Not
+type unary_op = Not
 
 type binary_op =
   | Union
