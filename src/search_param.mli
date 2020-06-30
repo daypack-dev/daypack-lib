@@ -28,3 +28,7 @@ val push_search_param_to_later_start :
 
 val start_date_time_and_search_years_ahead_of_search_param :
   t -> (Time.date_time * int) option
+
+module Check : sig
+  val check_search_param : t -> (unit, error) result
+end

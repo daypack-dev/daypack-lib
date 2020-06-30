@@ -28,42 +28,6 @@ type single_or_ranges =
   | Time_range_patterns of time_range_pattern list
 
 module Check = struct
-  let check_search_param (x : Search_param.t) : (unit, Search_param.error) result
-    =
-    match x with
-    | Time_slots { search_using_tz_offset_s = _; time_slots } ->
-      if
-        List.for_all
-          (fun (x, y) ->
-             Time_slot.Check.is_valid (x, y)
-             && Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None x
-                |> Result.is_ok
-             && Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None y
-                |> Result.is_ok)
-          time_slots
-      then Ok ()
-      else Error Invalid_time_slots
-    | Years_ahead_start_unix_second
-        { search_using_tz_offset_s; start; search_years_ahead } -> (
-        match
-          Time.date_time_of_unix_second
-            ~tz_offset_s_of_date_time:search_using_tz_offset_s start
-        with
-        | Error () -> Error Invalid_start
-        | Ok start ->
-          if search_years_ahead <= 0 then Error Invalid_search_years_ahead
-          else if start.year + search_years_ahead > Time.max.year then
-            Error Too_far_into_future
-          else Ok () )
-    | Years_ahead_start_date_time
-        { search_using_tz_offset_s = _; start; search_years_ahead } ->
-      if Time.Check.date_time_is_valid start then
-        if search_years_ahead <= 0 then Error Invalid_search_years_ahead
-        else if start.year + search_years_ahead > Time.max.year then
-          Error Too_far_into_future
-        else Ok ()
-      else Error Invalid_start
-
   let check_time_pattern (x : time_pattern) : (unit, time_pattern_error) result
     =
     let invalid_years = List.filter (fun x -> x < 0 || 9999 < x) x.years in
@@ -112,7 +76,7 @@ module Check = struct
 
   let check_search_param_and_time_pattern (search_param : Search_param.t)
       (x : time_pattern) : (unit, error) result =
-    match check_search_param search_param with
+    match Search_param.Check.check_search_param search_param with
     | Error e -> Error (Invalid_search_param e)
     | Ok () -> (
         match check_time_pattern x with
@@ -121,7 +85,7 @@ module Check = struct
 
   let check_search_param_and_time_range_pattern (search_param : Search_param.t)
       (x : time_range_pattern) : (unit, error) result =
-    match check_search_param search_param with
+    match Search_param.Check.check_search_param search_param with
     | Error e -> Error (Invalid_search_param e)
     | Ok () -> (
         match check_time_range_pattern x with

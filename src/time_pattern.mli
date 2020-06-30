@@ -30,8 +30,6 @@ type single_or_ranges =
 val empty : time_pattern
 
 module Check : sig
-  val check_search_param : Search_param.t -> (unit, Search_param.error) result
-
   val check_time_pattern : time_pattern -> (unit, time_pattern_error) result
 
   val check_time_range_pattern :
