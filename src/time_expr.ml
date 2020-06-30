@@ -239,6 +239,8 @@ module Of_string = struct
   open CCParse
   open Parser_components
 
+  let not_string = string "not"
+
   let to_string = string "to"
 
   let first_string = string "first"
@@ -681,6 +683,7 @@ module Of_string = struct
        )
 
   let time_expr : Time_expr_ast.t t =
+    let open Time_expr_ast in
     fix (fun expr ->
         let atom =
           try_ Time_pattern.Parser.time_pattern_expr
@@ -690,7 +693,14 @@ module Of_string = struct
               <|> ( Time_points_expr.time_points_expr
                     >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
         in
-        let factor = try_ (char '(') *> expr <* char ')' <|> atom in
+        let factor =
+          try_ (char '(') *> skip_space *> expr
+          <* skip_space
+          <* char ')'
+          <|> ( try_ not_string *> skip_space *> expr
+                >>= fun e -> return (Time_slots_unary_op (Not, e)) )
+          <|> atom
+        in
         let term = chainl1 factor inter in
         chainl1 term union)
 
