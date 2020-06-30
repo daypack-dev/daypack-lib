@@ -1,2 +1,1 @@
-(lang dune 2.4)
-(using menhir 2.1)
+(lang dune 1.11)

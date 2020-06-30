@@ -685,13 +685,15 @@ module Of_string = struct
   let time_expr : Time_expr_ast.t t =
     fix (fun expr ->
         let atom =
-          Time_slots_expr.time_slots_expr
-          >>= (fun e -> return (Time_expr_ast.Time_slots_expr e))
+          try_ Time_pattern.Parser.time_pattern_expr
+          >>= (fun e -> return (Time_expr_ast.Time_pattern e))
+              <|> ( Time_slots_expr.time_slots_expr
+                    >>= fun e -> return (Time_expr_ast.Time_slots_expr e) )
               <|> ( Time_points_expr.time_points_expr
                     >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
         in
-        let term' = try_ (char '(') *> expr <* char ')' <|> atom in
-        let term = chainl1 term' inter in
+        let factor = try_ (char '(') *> expr <* char ')' <|> atom in
+        let term = chainl1 factor inter in
         chainl1 term union)
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
@@ -1321,6 +1323,9 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     | Time_slots_expr e ->
       Time_slots_expr.matching_time_slots ~force_bound:None
         ~f_resolve_tpe_name ~f_resolve_tse_name search_param e
+    | Time_pattern pat ->
+      Time_pattern.Single_pattern.matching_time_slots search_param pat
+      |> Result.map_error Time_pattern.To_string.string_of_error
     | Time_slots_binary_op (op, e1, e2) -> (
         match aux e1 with
         | Error e -> Error e

@@ -1082,7 +1082,7 @@ module Equal = struct
     && List.sort compare pat1.minutes = List.sort compare pat2.minutes
 end
 
-module Of_string = struct
+module Parser = struct
   open CCParse
   open Parser_components
 
@@ -1320,22 +1320,26 @@ module Of_string = struct
     <|> ( char_if (fun _ -> true)
           >>= fun c -> failf "Invalid unit char: %c, pos: %d" c cnum )
 
+  let optional_part p = option [] (try_ p)
+
   let time_pattern_expr =
-    unit_char 'y' *> skip_space *> Year.years_time_pattern_expr
+    optional_part (unit_char 'y' *> skip_space *> Year.years_time_pattern_expr)
     >>= fun years ->
-    skip_space *> unit_char 'm' *> skip_space *> Month.months_time_pattern_expr
+    skip_space
+    *> optional_part
+      (unit_char 'm' *> skip_space *> Month.months_time_pattern_expr)
     >>= fun months ->
     skip_space
-    *> unit_char 'd'
-    *> skip_space
-    *> Month_day.month_days_time_pattern_expr
+    *> optional_part
+      (unit_char 'd' *> skip_space *> Month_day.month_days_time_pattern_expr)
     >>= fun month_days ->
     skip_space
-    *> unit_char 'w'
-    *> skip_space
-    *> Weekday.weekdays_time_pattern_expr
+    *> optional_part
+      (unit_char 'w' *> skip_space *> Weekday.weekdays_time_pattern_expr)
     >>= fun weekdays ->
-    skip_space *> unit_char 'h' *> skip_space *> Hour.hours_time_pattern_expr
+    skip_space
+    *> optional_part
+      (unit_char 'h' *> skip_space *> Hour.hours_time_pattern_expr)
     >>= fun hours ->
     skip_space
     *> unit_char 'm'
@@ -1343,9 +1347,8 @@ module Of_string = struct
     *> Minute.minutes_time_pattern_expr
     >>= fun minutes ->
     skip_space
-    *> unit_char 's'
-    *> skip_space
-    *> Second.seconds_time_pattern_expr
+    *> optional_part
+      (unit_char 's' *> skip_space *> Second.seconds_time_pattern_expr)
     >>= fun seconds ->
     return
       {
@@ -1358,12 +1361,16 @@ module Of_string = struct
         seconds;
         unix_seconds = [];
       }
+end
+
+module Of_string = struct
+  open CCParse
 
   let time_pattern_of_cron_string (s : string) : (time_pattern, string) result =
-    parse_string (cron_expr <* eoi) s
+    parse_string (Parser.cron_expr <* eoi) s
 
   let time_pattern_of_string (s : string) : (time_pattern, string) result =
-    parse_string (time_pattern_expr <* eoi) s
+    parse_string (Parser.time_pattern_expr <* eoi) s
 end
 
 module To_string = struct

@@ -128,6 +128,10 @@ module Equal : sig
   val equal : time_pattern -> time_pattern -> bool
 end
 
+module Parser : sig
+  val time_pattern_expr : time_pattern CCParse.t
+end
+
 module Of_string : sig
   val time_pattern_of_cron_string : string -> (time_pattern, string) result
 
