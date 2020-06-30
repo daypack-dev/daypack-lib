@@ -25,3 +25,6 @@ val search_using_tz_offset_s_of_search_param :
 
 val push_search_param_to_later_start :
   start:int64 -> t -> (t, unit) result
+
+val start_date_time_and_search_years_ahead_of_search_param :
+  t -> (Time.date_time * int) option

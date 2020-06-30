@@ -61,3 +61,34 @@ let push_search_param_to_later_start ~(start : int64)
         |> Result.map (fun start ->
             Years_ahead_start_date_time
               { search_using_tz_offset_s; start; search_years_ahead }) )
+
+let start_date_time_and_search_years_ahead_of_search_param
+    (search_param : t) : (Time.date_time * int) option =
+  match search_param with
+  | Time_slots { search_using_tz_offset_s; time_slots } -> (
+      match Time_slots.Bound.min_start_and_max_end_exc_list time_slots with
+      | None -> None
+      | Some (start, end_exc) ->
+        let start =
+          Time.date_time_of_unix_second
+            ~tz_offset_s_of_date_time:search_using_tz_offset_s start
+          |> Result.get_ok
+        in
+        let end_exc =
+          Time.date_time_of_unix_second
+            ~tz_offset_s_of_date_time:search_using_tz_offset_s end_exc
+          |> Result.get_ok
+        in
+        let search_years_ahead = end_exc.year - start.year + 1 in
+        Some (start, search_years_ahead) )
+  | Years_ahead_start_unix_second
+      { search_using_tz_offset_s; start; search_years_ahead } ->
+    let start =
+      Time.date_time_of_unix_second
+        ~tz_offset_s_of_date_time:search_using_tz_offset_s start
+      |> Result.get_ok
+    in
+    Some (start, search_years_ahead)
+  | Years_ahead_start_date_time
+      { search_using_tz_offset_s = _; start; search_years_ahead } ->
+    Some (start, search_years_ahead)
