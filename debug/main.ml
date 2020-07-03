@@ -834,6 +834,45 @@ let debug_time_range_pattern_matching_time_slots () =
             ~display_using_tz_offset_s:None end_exc
           |> Result.get_ok ))
 
+let debug_time_expr_matching_time_slots () =
+  print_endline
+    "Debug print for Time_pattern.matching_time_slots_time_expr";
+  (* let date_time =
+   *   Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
+   * in *)
+  let search_param =
+    Daypack_lib.Search_param.Years_ahead_start_unix_second
+      {
+        search_using_tz_offset_s = Ptime_clock.current_tz_offset_s ();
+        start = Daypack_lib.Time.Current.cur_unix_second ();
+        search_years_ahead = 2;
+      }
+  in
+  let s =
+    Daypack_lib.Time_expr.Of_string.of_string
+      "2020 jul 4 11:00"
+    |> Result.get_ok
+    |> Daypack_lib.Time_expr.matching_time_slots search_param
+    |> Result.get_ok
+  in
+  s
+  |> OSeq.take 100
+  |> Seq.iter (fun (x, y) ->
+      let x =
+        Daypack_lib.Time.To_string
+        .yyyymondd_hhmmss_string_of_unix_second
+          ~display_using_tz_offset_s:None x
+        |> Result.get_ok
+      in
+      let y =
+        Daypack_lib.Time.To_string
+        .yyyymondd_hhmmss_string_of_unix_second
+          ~display_using_tz_offset_s:None y
+        |> Result.get_ok
+      in
+      Printf.printf "[%s, %s)" x y
+    )
+
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
   let start = Time.Current.cur_unix_second () in
@@ -1057,8 +1096,12 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_pattern_matching_time_slots ();
  *   print_newline () *)
 
+(* let () =
+ *   debug_time_range_pattern_matching_time_slots ();
+ *   print_newline () *)
+
 let () =
-  debug_time_range_pattern_matching_time_slots ();
+  debug_time_expr_matching_time_slots ();
   print_newline ()
 
 (* let () =
