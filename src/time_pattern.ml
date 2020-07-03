@@ -510,7 +510,7 @@ module Matching_years = struct
         else
           ( {
             acc with
-            year = y;
+            year = x;
             month = `Jan;
             day = 1;
             hour = 0;
@@ -535,7 +535,7 @@ module Matching_years = struct
         else
           ( {
             acc with
-            year = y;
+            year = x;
             month = `Jan;
             day = 1;
             hour = 0;
