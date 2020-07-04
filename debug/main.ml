@@ -850,7 +850,7 @@ let debug_time_expr_matching_time_slots () =
       }
   in
   let s =
-    Daypack_lib.Time_expr.Of_string.of_string "4 11:00"
+    Daypack_lib.Time_expr.Of_string.of_string "10am to 11am"
     |> Result.get_ok
     |> Daypack_lib.Time_expr.matching_time_slots search_param
     |> Result.get_ok
