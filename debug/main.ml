@@ -835,8 +835,7 @@ let debug_time_range_pattern_matching_time_slots () =
           |> Result.get_ok ))
 
 let debug_time_expr_matching_time_slots () =
-  print_endline
-    "Debug print for Time_pattern.matching_time_slots_time_expr";
+  print_endline "Debug print for Time_pattern.matching_time_slots_time_expr";
   (* let date_time =
    *   Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
    * in *)
@@ -851,8 +850,7 @@ let debug_time_expr_matching_time_slots () =
       }
   in
   let s =
-    Daypack_lib.Time_expr.Of_string.of_string
-      "4 11:00"
+    Daypack_lib.Time_expr.Of_string.of_string "4 11:00"
     |> Result.get_ok
     |> Daypack_lib.Time_expr.matching_time_slots search_param
     |> Result.get_ok
@@ -861,19 +859,16 @@ let debug_time_expr_matching_time_slots () =
   |> OSeq.take 100
   |> Seq.iter (fun (x, y) ->
       let x =
-        Daypack_lib.Time.To_string
-        .yyyymondd_hhmmss_string_of_unix_second
+        Daypack_lib.Time.To_string.yyyymondd_hhmmss_string_of_unix_second
           ~display_using_tz_offset_s x
         |> Result.get_ok
       in
       let y =
-        Daypack_lib.Time.To_string
-        .yyyymondd_hhmmss_string_of_unix_second
+        Daypack_lib.Time.To_string.yyyymondd_hhmmss_string_of_unix_second
           ~display_using_tz_offset_s y
         |> Result.get_ok
       in
-      Printf.printf "[%s, %s)\n" x y
-    )
+      Printf.printf "[%s, %s)\n" x y)
 
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";

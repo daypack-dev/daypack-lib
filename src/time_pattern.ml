@@ -482,13 +482,13 @@ module Matching_years = struct
     | pat_year_list ->
       pat_year_list
       |> List.to_seq
-      |> Seq.filter (fun pat_year -> start.year <= pat_year && pat_year < start.year
-                     + search_years_ahead)
+      |> Seq.filter (fun pat_year ->
+          start.year <= pat_year
+          && pat_year < start.year + search_years_ahead)
       |> Seq.map (fun year -> { start with year })
 
   let matching_year_ranges ~search_years_ahead (t : time_pattern)
-      (start : Time.date_time) :
-    Time.date_time Range.range Seq.t =
+      (start : Time.date_time) : Time.date_time Range.range Seq.t =
     match t.years with
     | [] ->
       Seq.return
