@@ -840,17 +840,19 @@ let debug_time_expr_matching_time_slots () =
   (* let date_time =
    *   Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
    * in *)
+  let search_using_tz_offset_s = Ptime_clock.current_tz_offset_s () in
+  let display_using_tz_offset_s = search_using_tz_offset_s in
   let search_param =
     Daypack_lib.Search_param.Years_ahead_start_unix_second
       {
-        search_using_tz_offset_s = Ptime_clock.current_tz_offset_s ();
+        search_using_tz_offset_s;
         start = Daypack_lib.Time.Current.cur_unix_second ();
-        search_years_ahead = 2;
+        search_years_ahead = 5;
       }
   in
   let s =
     Daypack_lib.Time_expr.Of_string.of_string
-      "2020 jul 4 11:00"
+      "4 11:00"
     |> Result.get_ok
     |> Daypack_lib.Time_expr.matching_time_slots search_param
     |> Result.get_ok
@@ -861,16 +863,16 @@ let debug_time_expr_matching_time_slots () =
       let x =
         Daypack_lib.Time.To_string
         .yyyymondd_hhmmss_string_of_unix_second
-          ~display_using_tz_offset_s:None x
+          ~display_using_tz_offset_s x
         |> Result.get_ok
       in
       let y =
         Daypack_lib.Time.To_string
         .yyyymondd_hhmmss_string_of_unix_second
-          ~display_using_tz_offset_s:None y
+          ~display_using_tz_offset_s y
         |> Result.get_ok
       in
-      Printf.printf "[%s, %s)" x y
+      Printf.printf "[%s, %s)\n" x y
     )
 
 let debug_time_profile_matching_time_slots_of_periods () =
