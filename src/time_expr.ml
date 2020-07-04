@@ -1253,7 +1253,12 @@ module Time_slots_expr = struct
           match e with
           | Tse_name _ -> failwith "Unexpected case"
           | Explicit_time_slots l -> (
-              match l with [] -> OSeq.take 0 | _ -> OSeq.take 1 )
+              match l with
+              | [] -> OSeq.take 0
+              | _ -> (
+                  match Option.value ~default:bound force_bound with
+                  | `Next -> OSeq.take 1
+                  | `Every -> fun x -> x ) )
           | Month_days_and_hour_minute_second_ranges _
           | Weekdays_and_hour_minute_second_ranges _
           | Months_and_month_days_and_hour_minute_second_ranges _

@@ -473,31 +473,32 @@ end
 
 module Matching_years = struct
   let matching_years ~search_years_ahead (t : time_pattern)
-      (start : Time.date_time) (acc : Time.date_time) : Time.date_time Seq.t =
+      (start : Time.date_time) : Time.date_time Seq.t =
     match t.years with
     | [] ->
       Seq.map
-        (fun year -> { acc with year })
+        (fun year -> { start with year })
         OSeq.(start.year --^ (start.year + search_years_ahead))
     | pat_year_list ->
       pat_year_list
       |> List.to_seq
-      |> Seq.filter (fun pat_year -> start.year <= pat_year)
-      |> Seq.map (fun year -> { acc with year })
+      |> Seq.filter (fun pat_year ->
+          start.year <= pat_year
+          && pat_year < start.year + search_years_ahead)
+      |> Seq.map (fun year -> { start with year })
 
   let matching_year_ranges ~search_years_ahead (t : time_pattern)
-      (start : Time.date_time) (acc : Time.date_time) :
-    Time.date_time Range.range Seq.t =
+      (start : Time.date_time) : Time.date_time Range.range Seq.t =
     match t.years with
     | [] ->
       Seq.return
         (`Range_inc
-           (start, { acc with year = start.year + search_years_ahead - 1 }))
+           (start, { start with year = start.year + search_years_ahead - 1 }))
     | l ->
       let f_inc (x, y) =
         let end_inc =
           {
-            acc with
+            start with
             year = y;
             month = `Dec;
             day = 31;
@@ -509,7 +510,7 @@ module Matching_years = struct
         if x = start.year then (start, end_inc)
         else
           ( {
-            acc with
+            start with
             year = x;
             month = `Jan;
             day = 1;
@@ -522,7 +523,7 @@ module Matching_years = struct
       let f_exc (x, y) =
         let end_exc =
           {
-            acc with
+            start with
             year = y;
             month = `Jan;
             day = 1;
@@ -534,7 +535,7 @@ module Matching_years = struct
         if x = start.year then (start, end_exc)
         else
           ( {
-            acc with
+            start with
             year = x;
             month = `Jan;
             day = 1;
@@ -610,7 +611,7 @@ module Single_pattern = struct
             Search_param.search_using_tz_offset_s_of_search_param
               search_param
           in
-          Matching_years.matching_years ~search_years_ahead t start start
+          Matching_years.matching_years ~search_years_ahead t start
           |> Seq.flat_map (Matching_months.matching_months t start)
           |> Seq.flat_map (Matching_days.matching_days t start)
           |> Seq.flat_map (Matching_hours.matching_hours t start)
@@ -658,25 +659,24 @@ module Single_pattern = struct
           |> Result.ok
         | _years, [], [], [], [], [], [], [] ->
           Matching_years.matching_year_ranges ~search_years_ahead t start
-            start
           |> Result.ok
         | _years, _months, [], [], [], [], [], [] ->
-          Matching_years.matching_years ~search_years_ahead t start start
+          Matching_years.matching_years ~search_years_ahead t start
           |> Seq.flat_map (Matching_months.matching_month_ranges t start)
           |> Result.ok
         | _years, _months, _month_days, _weekdays, [], [], [], [] ->
-          Matching_years.matching_years ~search_years_ahead t start start
+          Matching_years.matching_years ~search_years_ahead t start
           |> Seq.flat_map (Matching_months.matching_months t start)
           |> Seq.flat_map (Matching_days.matching_day_ranges t start)
           |> Result.ok
         | _years, _months, _month_days, _weekdays, _hours, [], [], [] ->
-          Matching_years.matching_years ~search_years_ahead t start start
+          Matching_years.matching_years ~search_years_ahead t start
           |> Seq.flat_map (Matching_months.matching_months t start)
           |> Seq.flat_map (Matching_days.matching_days t start)
           |> Seq.flat_map (Matching_hours.matching_hour_ranges t start)
           |> Result.ok
         | _years, _months, _month_days, _weekdays, _hours, _minutes, [], [] ->
-          Matching_years.matching_years ~search_years_ahead t start start
+          Matching_years.matching_years ~search_years_ahead t start
           |> Seq.flat_map (Matching_months.matching_months t start)
           |> Seq.flat_map (Matching_days.matching_days t start)
           |> Seq.flat_map (Matching_hours.matching_hours t start)
@@ -690,7 +690,7 @@ module Single_pattern = struct
             _minutes,
             _seconds,
             [] ) ->
-          Matching_years.matching_years ~search_years_ahead t start start
+          Matching_years.matching_years ~search_years_ahead t start
           |> Seq.flat_map (Matching_months.matching_months t start)
           |> Seq.flat_map (Matching_days.matching_days t start)
           |> Seq.flat_map (Matching_hours.matching_hours t start)
@@ -705,7 +705,7 @@ module Single_pattern = struct
             _minutes,
             _seconds,
             _unix_seconds ) ->
-          Matching_years.matching_years ~search_years_ahead t start start
+          Matching_years.matching_years ~search_years_ahead t start
           |> Seq.flat_map (Matching_months.matching_months t start)
           |> Seq.flat_map (Matching_days.matching_days t start)
           |> Seq.flat_map (Matching_hours.matching_hours t start)
