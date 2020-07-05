@@ -139,7 +139,7 @@ module Matching_seconds = struct
       && acc.day = start.day
       && acc.hour = start.hour
       && acc.minute = start.minute
-    then start.minute
+    then start.second
     else 0
 
   let matching_seconds (t : time_pattern) (start : Time.date_time)
@@ -150,7 +150,7 @@ module Matching_seconds = struct
     | pat_sec_list ->
       pat_sec_list
       |> List.to_seq
-      |> Seq.filter (fun pat_sec -> start_sec <= pat_sec)
+      |> Seq.filter (fun pat_sec -> start_sec <= pat_sec && pat_sec < 60)
       |> Seq.map (fun pat_sec -> { acc with second = pat_sec })
 
   let matching_second_ranges (t : time_pattern) (start : Time.date_time)
@@ -204,21 +204,19 @@ module Matching_minutes = struct
            ( { acc with minute = start_min; second = start_sec },
              { acc with minute = 60; second = 0 } ))
     | l ->
-      let f_inc (x, y) =
+      let get_start_dt ~x =
         if x = start_min then
-          ( { acc with minute = x; second = start_sec },
-            { acc with minute = y; second = 59 } )
+          { acc with minute = x; second = start_sec }
         else
-          ( { acc with minute = x; second = 0 },
-            { acc with minute = y; second = 59 } )
+          { acc with minute = x; second = 0 }
+      in
+      let f_inc (x, y) =
+        ( get_start_dt ~x,
+          { acc with minute = y; second = 59 })
       in
       let f_exc (x, y) =
-        if x = start_min then
-          ( { acc with minute = x; second = start_sec },
-            { acc with minute = y; second = 0 } )
-        else
-          ( { acc with minute = x; second = 0 },
-            { acc with minute = y; second = 0 } )
+        ( get_start_dt ~x,
+         { acc with minute = y; second = 0 })
       in
       List.filter (fun pat_min -> start_min <= pat_min) l
       |> List.sort_uniq compare
