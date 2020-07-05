@@ -1028,7 +1028,7 @@ let sched_ver_history =
 
 let date_time_testable : (module Alcotest.TESTABLE) =
   ( module struct
-    type t = Daypack_lib.Time.date_time
+    type t = Daypack_lib.Time.Date_time.t
 
     let pp =
       Fmt.using Daypack_lib.Time.To_string.yyyymondd_hhmmss_string_of_date_time

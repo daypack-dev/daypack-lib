@@ -741,9 +741,9 @@ let debug_time_pattern_matching_time_slots () =
   let date_time =
     Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
   in
-  let start = Time.unix_second_of_date_time date_time |> Result.get_ok in
+  let start = Time.Date_time.to_unix_second date_time |> Result.get_ok in
   let end_exc =
-    Time.unix_second_of_date_time { date_time with year = date_time.year + 1 }
+    Time.Date_time.to_unix_second { date_time with year = date_time.year + 1 }
     |> Result.get_ok
   in
   let time_slots = [ (start, end_exc) ] in
@@ -785,9 +785,9 @@ let debug_time_range_pattern_matching_time_slots () =
   let date_time =
     Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
   in
-  let start = Time.unix_second_of_date_time date_time |> Result.get_ok in
+  let start = Time.Date_time.to_unix_second date_time |> Result.get_ok in
   let end_exc =
-    Time.unix_second_of_date_time { date_time with year = date_time.year + 1 }
+    Time.Date_time.to_unix_second { date_time with year = date_time.year + 1 }
     |> Result.get_ok
   in
   let time_slots = [ (start, end_exc) ] in

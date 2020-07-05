@@ -10,7 +10,7 @@ type t =
     }
   | Years_ahead_start_date_time of {
       search_using_tz_offset_s : Time.tz_offset_s option;
-      start : Time.date_time;
+      start : Time.Date_time.t;
       search_years_ahead : int;
     }
 
@@ -52,30 +52,30 @@ let push_search_param_to_later_start ~(start : int64) (search_param : t) :
          { search_using_tz_offset_s; start; search_years_ahead })
   | Years_ahead_start_date_time
       { search_using_tz_offset_s; start = start'; search_years_ahead } -> (
-      match Time.unix_second_of_date_time start' with
+      match Time.Date_time.to_unix_second start' with
       | Error () -> Error ()
       | Ok start' ->
         let start = max start' start in
-        Time.date_time_of_unix_second
+        Time.Date_time.of_unix_second
           ~tz_offset_s_of_date_time:search_using_tz_offset_s start
         |> Result.map (fun start ->
             Years_ahead_start_date_time
               { search_using_tz_offset_s; start; search_years_ahead }) )
 
 let start_date_time_and_search_years_ahead_of_search_param (search_param : t) :
-  (Time.date_time * int) option =
+  (Time.Date_time.t * int) option =
   match search_param with
   | Time_slots { search_using_tz_offset_s; time_slots } -> (
       match Time_slots.Bound.min_start_and_max_end_exc_list time_slots with
       | None -> None
       | Some (start, end_exc) ->
         let start =
-          Time.date_time_of_unix_second
+          Time.Date_time.of_unix_second
             ~tz_offset_s_of_date_time:search_using_tz_offset_s start
           |> Result.get_ok
         in
         let end_exc =
-          Time.date_time_of_unix_second
+          Time.Date_time.of_unix_second
             ~tz_offset_s_of_date_time:search_using_tz_offset_s end_exc
           |> Result.get_ok
         in
@@ -84,7 +84,7 @@ let start_date_time_and_search_years_ahead_of_search_param (search_param : t) :
   | Years_ahead_start_unix_second
       { search_using_tz_offset_s; start; search_years_ahead } ->
     let start =
-      Time.date_time_of_unix_second
+      Time.Date_time.of_unix_second
         ~tz_offset_s_of_date_time:search_using_tz_offset_s start
       |> Result.get_ok
     in
@@ -101,9 +101,9 @@ module Check = struct
         List.for_all
           (fun (x, y) ->
              Time_slot.Check.is_valid (x, y)
-             && Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None x
+             && Time.Date_time.of_unix_second ~tz_offset_s_of_date_time:None x
                 |> Result.is_ok
-             && Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None y
+             && Time.Date_time.of_unix_second ~tz_offset_s_of_date_time:None y
                 |> Result.is_ok)
           time_slots
       then Ok ()
@@ -111,20 +111,20 @@ module Check = struct
     | Years_ahead_start_unix_second
         { search_using_tz_offset_s; start; search_years_ahead } -> (
         match
-          Time.date_time_of_unix_second
+          Time.Date_time.of_unix_second
             ~tz_offset_s_of_date_time:search_using_tz_offset_s start
         with
         | Error () -> Error Invalid_start
         | Ok start ->
           if search_years_ahead <= 0 then Error Invalid_search_years_ahead
-          else if start.year + search_years_ahead > Time.max.year then
+          else if start.year + search_years_ahead > Time.Date_time.max.year then
             Error Too_far_into_future
           else Ok () )
     | Years_ahead_start_date_time
         { search_using_tz_offset_s = _; start; search_years_ahead } ->
       if Time.Check.date_time_is_valid start then
         if search_years_ahead <= 0 then Error Invalid_search_years_ahead
-        else if start.year + search_years_ahead > Time.max.year then
+        else if start.year + search_years_ahead > Time.Date_time.max.year then
           Error Too_far_into_future
         else Ok ()
       else Error Invalid_start

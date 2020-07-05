@@ -27,16 +27,6 @@ type month =
   | `Dec
   ]
 
-type date_time = {
-  year : int;
-  month : month;
-  day : int;
-  hour : int;
-  minute : int;
-  second : int;
-  tz_offset_s : int;
-}
-
 type weekday_range = weekday Range.range
 
 type month_day_range = int Range.range
@@ -44,10 +34,6 @@ type month_day_range = int Range.range
 type day_range =
   | Weekday_range of weekday_range
   | Month_day_range of month_day_range
-
-val min : date_time
-
-val max : date_time
 
 val first_mday : int
 
@@ -59,17 +45,35 @@ val hour_to_second_multiplier : int64
 
 val day_to_second_multiplier : int64
 
-val date_time_of_ptime_date_time :
-  Ptime.date * Ptime.time -> (date_time, unit) result
+module Date_time : sig
+  type t = {
+    year : int;
+    month : month;
+    day : int;
+    hour : int;
+    minute : int;
+    second : int;
+    tz_offset_s : int;
+  }
 
-val ptime_date_time_of_date_time : date_time -> Ptime.date * Ptime.time
+  val of_ptime_date_time :
+    Ptime.date * Ptime.time -> (t, unit) result
 
-val unix_second_of_date_time : date_time -> (int64, unit) result
+  val to_ptime_date_time : t -> Ptime.date * Ptime.time
 
-val date_time_of_unix_second :
-  tz_offset_s_of_date_time:tz_offset_s option ->
-  int64 ->
-  (date_time, unit) result
+  val to_unix_second : t -> (int64, unit) result
+
+  val of_unix_second :
+    tz_offset_s_of_date_time:tz_offset_s option ->
+    int64 ->
+    (t, unit) result
+
+  val min : t
+
+  val max : t
+
+  val compare : t -> t -> int
+end
 
 module Check : sig
   val unix_second_is_valid : int64 -> bool
@@ -80,7 +84,7 @@ module Check : sig
 
   val hour_minute_second_is_valid : hour:int -> minute:int -> second:int -> bool
 
-  val date_time_is_valid : date_time -> bool
+  val date_time_is_valid : Date_time.t -> bool
 end
 
 val next_hour_minute : hour:int -> minute:int -> (int * int, unit) result
@@ -163,7 +167,7 @@ module Current : sig
   val cur_unix_second : unit -> int64
 
   val cur_date_time :
-    tz_offset_s_of_date_time:tz_offset_s option -> (date_time, unit) result
+    tz_offset_s_of_date_time:tz_offset_s option -> (Date_time.t, unit) result
 
   val cur_tm_local : unit -> Unix.tm
 
@@ -196,7 +200,7 @@ module To_string : sig
   val string_of_month : month -> string
 
   (* val yyyymondd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result *)
-  val yyyymondd_hhmmss_string_of_date_time : date_time -> string
+  val yyyymondd_hhmmss_string_of_date_time : Date_time.t -> string
 
   val yyyymondd_hhmmss_string_of_unix_second :
     display_using_tz_offset_s:tz_offset_s option ->
@@ -204,7 +208,7 @@ module To_string : sig
     (string, unit) result
 
   (* val yyyymmdd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result *)
-  val yyyymmdd_hhmmss_string_of_date_time : date_time -> string
+  val yyyymmdd_hhmmss_string_of_date_time : Date_time.t -> string
 
   val yyyymmdd_hhmmss_string_of_unix_second :
     display_using_tz_offset_s:tz_offset_s option ->
@@ -212,7 +216,7 @@ module To_string : sig
     (string, unit) result
 
   (* val yyyymondd_hhmm_string_of_tm : Unix.tm -> (string, unit) result *)
-  val yyyymondd_hhmm_string_of_date_time : date_time -> string
+  val yyyymondd_hhmm_string_of_date_time : Date_time.t -> string
 
   val yyyymondd_hhmm_string_of_unix_second :
     display_using_tz_offset_s:tz_offset_s option ->
@@ -220,7 +224,7 @@ module To_string : sig
     (string, unit) result
 
   (* val yyyymmdd_hhmm_string_of_tm : Unix.tm -> (string, unit) result *)
-  val yyyymmdd_hhmm_string_of_date_time : date_time -> string
+  val yyyymmdd_hhmm_string_of_date_time : Date_time.t -> string
 
   val yyyymmdd_hhmm_string_of_unix_second :
     display_using_tz_offset_s:tz_offset_s option ->
@@ -236,4 +240,4 @@ module Print : sig
     unit
 end
 
-module Date_time_set : Set.S with type elt = date_time
+module Date_time_set : Set.S with type elt = Date_time.t
