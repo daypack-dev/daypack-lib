@@ -407,15 +407,15 @@ module Date_time = struct
   let set_to_first_day_hour_min_sec (x : t) : t =
     { x with day = 1 } |> set_to_first_hour_min_sec
 
-  let set_to_last_day_hour_min_sec ~year ~month (x : t) : t =
-    { x with day = day_count_of_month ~year ~month } |> set_to_last_hour_min_sec
+  let set_to_last_day_hour_min_sec (x : t) : t =
+    { x with day = day_count_of_month ~year:x.year ~month:x.month } |> set_to_last_hour_min_sec
 
   let set_to_first_month_day_hour_min_sec (x : t) : t =
     { x with month = `Jan } |> set_to_first_day_hour_min_sec
 
   let set_to_last_month_day_hour_min_sec (x : t) : t =
     { x with month = `Dec }
-    |> set_to_last_day_hour_min_sec ~year:2000 ~month:`Dec
+    |> set_to_last_day_hour_min_sec
 end
 
 module Check = struct

@@ -85,7 +85,7 @@ module Date_time : sig
 
   val set_to_first_day_hour_min_sec : t -> t
 
-  val set_to_last_day_hour_min_sec : year:int -> month:month -> t -> t
+  val set_to_last_day_hour_min_sec : t -> t
 
   val set_to_first_month_day_hour_min_sec : t -> t
 
