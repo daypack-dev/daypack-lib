@@ -409,42 +409,34 @@ module Matching_years = struct
     else Time.Date_time.set_to_first_month_day_hour_min_sec cur_branch
 
   let matching_years ~search_years_ahead (t : time_pattern)
-      (start : Time.Date_time.t) : Time.Date_time.t Seq.t =
+      ~(overall_search_start : Time.Date_time.t) : Time.Date_time.t Seq.t =
     match t.years with
     | [] ->
+      OSeq.(overall_search_start.year --^ (overall_search_start.year + search_years_ahead))
+      |>
       Seq.map
-        (fun year -> { start with year })
-        OSeq.(start.year --^ (start.year + search_years_ahead))
+        (fun year -> { overall_search_start with year })
     | pat_year_list ->
       pat_year_list
       |> List.to_seq
       |> Seq.filter (fun year ->
-          start.year <= year
-          && year < start.year + search_years_ahead)
-      |> Seq.map (fun year -> { start with year })
+          overall_search_start.year <= year
+          && year < overall_search_start.year + search_years_ahead)
+      |> Seq.map (fun year -> { overall_search_start with year })
 
   let matching_year_ranges ~search_years_ahead (t : time_pattern)
-      (start : Time.Date_time.t) : Time.Date_time.t Range.range Seq.t =
+      ~(overall_search_start : Time.Date_time.t) : Time.Date_time.t Range.range Seq.t =
     match t.years with
     | [] ->
       Seq.return
         (`Range_inc
-           (start, { start with year = start.year + search_years_ahead - 1 }))
+           (overall_search_start,
+            Time.Date_time.set_to_last_month_day_hour_min_sec { overall_search_start with year = overall_search_start.year + search_years_ahead - 1 }))
     | l ->
       let f_inc (x, y) =
-        (
+        ( overall_search_start,
+          Time.Date_time.set_to_last_month_day_hour_min_sec overall_search_start
         )
-        let end_inc =
-          {
-            start with
-            year = y;
-            month = `Dec;
-            day = 31;
-            hour = 23;
-            minute = 59;
-            second = 59;
-          }
-        in
         if x = start.year then (start, end_inc)
         else
           ( {
@@ -484,7 +476,11 @@ module Matching_years = struct
             end_exc )
       in
       List.sort_uniq compare l
-      |> Time.Year_ranges.Of_list.range_seq_of_list
+      |> List.to_seq
+      |> Seq.filter (fun year ->
+          overall_search_start.year <= year
+          && year < overall_search_start.year + search_years_ahead)
+      |> Time.Year_ranges.Of_seq.range_seq_of_seq
       |> Seq.map (Range.map ~f_inc ~f_exc)
 end
 
