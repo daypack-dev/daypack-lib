@@ -128,7 +128,7 @@ let of_unix_second ~(tz_offset_s_of_time_pattern : Time.tz_offset_s option)
    | Time_slots { search_in_time_zone; _ } -> search_in_time_zone
    | Years_ahead_start_unix_second { search_in_time_zone; _ } ->
     search_in_time_zone
-   | Years_ahead_start_tm { search_in_time_zone; _ } -> search_in_time_zone
+   | Years_ahead_start_dt { search_in_time_zone; _ } -> search_in_time_zone
 *)
 
 module Matching_seconds = struct
@@ -249,25 +249,25 @@ module Matching_hours = struct
   let matching_hour_ranges (t : time_pattern) (start : Time.date_time)
       (acc : Time.date_time) : Time.date_time Range.range Seq.t =
     let start_hour, start_min, start_sec = get_start_hour_min_sec ~start ~acc in
-    let start_tm =
+    let start_dt =
       { acc with hour = start_hour; minute = start_min; second = start_sec }
     in
     match t.hours with
     | [] ->
       Seq.return
         (`Range_exc
-           (start_tm, { acc with hour = 23; minute = 0; second = 0 }))
+           (start_dt, { acc with hour = 23; minute = 0; second = 0 }))
     | l ->
       let f_inc (x, y) =
         if x = start_hour then
-          (start_tm, { acc with hour = y; minute = 59; second = 59 })
+          (start_dt, { acc with hour = y; minute = 59; second = 59 })
         else
           ( { acc with hour = x; minute = 0; second = 0 },
             { acc with hour = y; minute = 59; second = 59 } )
       in
       let f_exc (x, y) =
         if x = start_hour then
-          (start_tm, { acc with hour = y; minute = 0; second = 0 })
+          (start_dt, { acc with hour = y; minute = 0; second = 0 })
         else
           ( { acc with hour = x; minute = 0; second = 0 },
             { acc with hour = y; minute = 0; second = 0 } )
@@ -341,7 +341,7 @@ module Matching_days = struct
     let year = acc.year in
     let month = acc.month in
     let day_count = Time.day_count_of_month ~year ~month in
-    let start_tm =
+    let start_dt =
       {
         acc with
         day = start_mday;
@@ -351,20 +351,20 @@ module Matching_days = struct
       }
     in
     let f_inc (x, y) =
-      let end_tm = { acc with day = y; hour = 23; minute = 59; second = 59 } in
-      if x = start_mday then (start_tm, end_tm)
-      else ({ acc with day = x; hour = 0; minute = 0; second = 0 }, end_tm)
+      let end_dt = { acc with day = y; hour = 23; minute = 59; second = 59 } in
+      if x = start_mday then (start_dt, end_dt)
+      else ({ acc with day = x; hour = 0; minute = 0; second = 0 }, end_dt)
     in
     let f_exc (x, y) =
-      let end_tm = { acc with day = y; hour = 0; minute = 0; second = 0 } in
-      if x = start_mday then (start_tm, end_tm)
-      else ({ acc with day = x; hour = 0; minute = 0; second = 0 }, end_tm)
+      let end_dt = { acc with day = y; hour = 0; minute = 0; second = 0 } in
+      if x = start_mday then (start_dt, end_dt)
+      else ({ acc with day = x; hour = 0; minute = 0; second = 0 }, end_dt)
     in
     match (t.month_days, t.weekdays) with
     | [], [] ->
       Seq.return
         (`Range_inc
-           ( start_tm,
+           ( start_dt,
              { acc with day = day_count; hour = 0; minute = 0; second = 0 } ))
     | [], _weekdays ->
       month_days_of_matching_weekdays t start acc
