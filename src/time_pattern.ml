@@ -296,7 +296,7 @@ module Matching_days = struct
     match t.weekdays with
     | [] -> OSeq.(start_mday -- day_count)
     | l ->
-      OSeq.(start_mday --^ day_count)
+      OSeq.(start_mday -- day_count)
       |> Seq.filter (fun mday ->
           match Time.weekday_of_month_day ~year ~month ~mday with
           | Ok wday -> List.mem wday l
