@@ -70,6 +70,26 @@ module Date_time : sig
   val max : t
 
   val compare : t -> t -> int
+
+  val set_to_first_sec : t -> t
+
+  val set_to_last_sec : t -> t
+
+  val set_to_first_min_sec : t -> t
+
+  val set_to_last_min_sec : t -> t
+
+  val set_to_first_hour_min_sec : t -> t
+
+  val set_to_last_hour_min_sec : t -> t
+
+  val set_to_first_day_hour_min_sec : t -> t
+
+  val set_to_last_day_hour_min_sec : year:int -> month:month -> t -> t
+
+  val set_to_first_month_day_hour_min_sec : t -> t
+
+  val set_to_last_month_day_hour_min_sec : t -> t
 end
 
 module Check : sig
