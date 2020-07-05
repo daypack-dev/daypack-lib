@@ -389,7 +389,7 @@ module Matching_months = struct
         start.hour,
         start.minute,
         start.second )
-    else (Time.human_int_of_month `Jan, 0, 0, 0, 0)
+    else (Time.human_int_of_month `Jan, 1, 0, 0, 0)
 
   let matching_months (t : time_pattern) (start : Time.date_time)
       (acc : Time.date_time) : Time.date_time Seq.t =
