@@ -170,20 +170,16 @@ module Date_time = struct
     match Ptime.of_float_s (Int64.to_float x) with
     | None -> Error ()
     | Some x ->
-      let tz_offset_s = resolve_current_tz_offset_s tz_offset_s_of_date_time in
+      let tz_offset_s =
+        resolve_current_tz_offset_s tz_offset_s_of_date_time
+      in
       x |> Ptime.to_date_time ~tz_offset_s |> of_ptime_date_time
 
   let min =
-    Ptime.min
-    |> Ptime.to_date_time
-    |> of_ptime_date_time
-    |> Result.get_ok
+    Ptime.min |> Ptime.to_date_time |> of_ptime_date_time |> Result.get_ok
 
   let max =
-    Ptime.max
-    |> Ptime.to_date_time
-    |> of_ptime_date_time
-    |> Result.get_ok
+    Ptime.max |> Ptime.to_date_time |> of_ptime_date_time |> Result.get_ok
 
   let compare (x : t) (y : t) : int =
     match compare x.year y.year with

@@ -56,17 +56,14 @@ module Date_time : sig
     tz_offset_s : int;
   }
 
-  val of_ptime_date_time :
-    Ptime.date * Ptime.time -> (t, unit) result
+  val of_ptime_date_time : Ptime.date * Ptime.time -> (t, unit) result
 
   val to_ptime_date_time : t -> Ptime.date * Ptime.time
 
   val to_unix_second : t -> (int64, unit) result
 
   val of_unix_second :
-    tz_offset_s_of_date_time:tz_offset_s option ->
-    int64 ->
-    (t, unit) result
+    tz_offset_s_of_date_time:tz_offset_s option -> int64 -> (t, unit) result
 
   val min : t
 

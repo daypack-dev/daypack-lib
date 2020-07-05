@@ -205,18 +205,14 @@ module Matching_minutes = struct
              { acc with minute = 60; second = 0 } ))
     | l ->
       let get_start_dt ~x =
-        if x = start_min then
-          { acc with minute = x; second = start_sec }
-        else
-          { acc with minute = x; second = 0 }
+        if x = start_min then { acc with minute = x; second = start_sec }
+        else { acc with minute = x; second = 0 }
       in
       let f_inc (x, y) =
-        ( get_start_dt ~x,
-          { acc with minute = y; second = 59 })
+        (get_start_dt ~x, { acc with minute = y; second = 59 })
       in
       let f_exc (x, y) =
-        ( get_start_dt ~x,
-         { acc with minute = y; second = 0 })
+        (get_start_dt ~x, { acc with minute = y; second = 0 })
       in
       List.filter (fun pat_min -> start_min <= pat_min) l
       |> List.sort_uniq compare
@@ -225,8 +221,8 @@ module Matching_minutes = struct
 end
 
 module Matching_hours = struct
-  let get_start_hour_min_sec ~(start : Time.Date_time.t) ~(acc : Time.Date_time.t) :
-    int * int * int =
+  let get_start_hour_min_sec ~(start : Time.Date_time.t)
+      ~(acc : Time.Date_time.t) : int * int * int =
     if acc.year = start.year && acc.month = start.month && acc.day = start.day
     then (start.hour, start.minute, start.second)
     else (0, 0, 0)
@@ -571,8 +567,8 @@ end
 
 module Single_pattern = struct
   let filter_using_matching_unix_seconds ~search_using_tz_offset_s
-      (t : time_pattern) start (s : Time.Date_time.t Seq.t) : Time.Date_time.t Seq.t
-    =
+      (t : time_pattern) start (s : Time.Date_time.t Seq.t) :
+    Time.Date_time.t Seq.t =
     let matching_unix_seconds =
       Matching_unix_seconds.matching_unix_seconds ~search_using_tz_offset_s t
         start
