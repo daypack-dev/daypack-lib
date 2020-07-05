@@ -160,7 +160,8 @@ module Matching_seconds = struct
     | [] ->
       Seq.return
         (`Range_inc
-           ({ acc with second = start_sec }, { acc with second = 59 }))
+           ({ acc with second = start_sec },
+            Time.Date_time.set_to_last_sec acc))
     | l ->
       List.sort_uniq compare l
       |> Time.Second_ranges.Of_list.range_seq_of_list
@@ -197,22 +198,22 @@ module Matching_minutes = struct
   let matching_minute_ranges (t : time_pattern) (start : Time.Date_time.t)
       (acc : Time.Date_time.t) : Time.Date_time.t Range.range Seq.t =
     let start_min, start_sec = get_start_min_sec ~start ~acc in
+    let get_start_dt ~time_slot_start_min =
+      if time_slot_start_min = start_min then { acc with minute = time_slot_start_min; second = start_sec }
+      else Time.Date_time.set_to_first_sec { acc with minute = time_slot_start_min }
+    in
     match t.minutes with
     | [] ->
       Seq.return
-        (`Range_exc
-           ( { acc with minute = start_min; second = start_sec },
-             { acc with minute = 60; second = 0 } ))
+        (`Range_inc
+           ( get_start_dt ~time_slot_start_min:start_min,
+             Time.Date_time.set_to_last_min_sec acc ))
     | l ->
-      let get_start_dt ~x =
-        if x = start_min then { acc with minute = x; second = start_sec }
-        else { acc with minute = x; second = 0 }
-      in
       let f_inc (x, y) =
-        (get_start_dt ~x, { acc with minute = y; second = 59 })
+        (get_start_dt ~time_slot_start_min:x, Time.Date_time.set_to_last_sec { acc with minute = y })
       in
       let f_exc (x, y) =
-        (get_start_dt ~x, { acc with minute = y; second = 0 })
+        (get_start_dt ~time_slot_start_min:x, Time.Date_time.set_to_first_sec { acc with minute = y })
       in
       List.filter (fun pat_min -> start_min <= pat_min) l
       |> List.sort_uniq compare
@@ -237,36 +238,36 @@ module Matching_hours = struct
     | pat_hour_list ->
       pat_hour_list
       |> List.to_seq
-      |> Seq.filter (fun pat_hour -> start_hour <= pat_hour)
+      |> Seq.filter (fun pat_hour -> start_hour <= pat_hour && pat_hour < 24)
       |> Seq.map (fun pat_hour -> { acc with hour = pat_hour })
 
   let matching_hour_ranges (t : time_pattern) (start : Time.Date_time.t)
       (acc : Time.Date_time.t) : Time.Date_time.t Range.range Seq.t =
     let start_hour, start_min, start_sec = get_start_hour_min_sec ~start ~acc in
-    let start_dt =
-      { acc with hour = start_hour; minute = start_min; second = start_sec }
+    let get_start_dt ~time_slot_start_hour =
+      if time_slot_start_hour = start_hour then
+        { acc with hour = start_hour; minute = start_min; second = start_sec }
+      else
+        Time.Date_time.set_to_first_min_sec { acc with hour = time_slot_start_hour }
     in
     match t.hours with
     | [] ->
       Seq.return
-        (`Range_exc
-           (start_dt, { acc with hour = 23; minute = 0; second = 0 }))
+        (`Range_inc
+           (get_start_dt ~time_slot_start_hour:start_hour,
+            Time.Date_time.set_to_last_hour_min_sec acc ))
     | l ->
       let f_inc (x, y) =
-        if x = start_hour then
-          (start_dt, { acc with hour = y; minute = 59; second = 59 })
-        else
-          ( { acc with hour = x; minute = 0; second = 0 },
-            { acc with hour = y; minute = 59; second = 59 } )
+        (get_start_dt ~time_slot_start_hour:x,
+         Time.Date_time.set_to_last_min_sec { acc with hour = y }
+        )
       in
       let f_exc (x, y) =
-        if x = start_hour then
-          (start_dt, { acc with hour = y; minute = 0; second = 0 })
-        else
-          ( { acc with hour = x; minute = 0; second = 0 },
-            { acc with hour = y; minute = 0; second = 0 } )
+        (get_start_dt ~time_slot_start_hour:x,
+         Time.Date_time.set_to_first_min_sec { acc with hour = y }
+        )
       in
-      List.filter (fun hour -> start_hour <= hour) l
+      List.filter (fun hour -> start_hour <= hour && hour < 24) l
       |> List.sort_uniq compare
       |> Time.Hour_ranges.Of_list.range_seq_of_list
       |> Seq.map (Range.map ~f_inc ~f_exc)
@@ -307,7 +308,7 @@ module Matching_days = struct
     match t.month_days with
     | [] -> OSeq.(start_mday -- day_count)
     | l ->
-      List.filter (fun pat_mday -> start_mday <= pat_mday) l
+      List.filter (fun pat_mday -> start_mday <= pat_mday && pat_mday <= day_count) l
       |> List.sort_uniq compare
       |> List.to_seq
 
@@ -334,32 +335,35 @@ module Matching_days = struct
     in
     let year = acc.year in
     let month = acc.month in
-    let day_count = Time.day_count_of_month ~year ~month in
-    let start_dt =
-      {
-        acc with
-        day = start_mday;
-        hour = start_hour;
-        minute = start_min;
-        second = start_sec;
-      }
+    let get_start_dt ~time_slot_start_day =
+      if time_slot_start_day = start_mday then
+        {
+          acc with
+          day = start_mday;
+          hour = start_hour;
+          minute = start_min;
+          second = start_sec;
+        }
+      else
+        Time.Date_time.set_to_first_hour_min_sec { acc with day = time_slot_start_day }
     in
     let f_inc (x, y) =
-      let end_dt = { acc with day = y; hour = 23; minute = 59; second = 59 } in
-      if x = start_mday then (start_dt, end_dt)
-      else ({ acc with day = x; hour = 0; minute = 0; second = 0 }, end_dt)
+      (get_start_dt ~time_slot_start_day:x,
+       Time.Date_time.set_to_last_hour_min_sec { acc with day = y }
+      )
     in
     let f_exc (x, y) =
-      let end_dt = { acc with day = y; hour = 0; minute = 0; second = 0 } in
-      if x = start_mday then (start_dt, end_dt)
-      else ({ acc with day = x; hour = 0; minute = 0; second = 0 }, end_dt)
+      (get_start_dt ~time_slot_start_day:x,
+       Time.Date_time.set_to_first_hour_min_sec { acc with day = y }
+      )
     in
     match (t.month_days, t.weekdays) with
     | [], [] ->
       Seq.return
         (`Range_inc
-           ( start_dt,
-             { acc with day = day_count; hour = 0; minute = 0; second = 0 } ))
+           ( get_start_dt ~time_slot_start_day:start_mday,
+             Time.Date_time.set_to_last_day_hour_min_sec ~year ~month acc
+              ))
     | [], _weekdays ->
       month_days_of_matching_weekdays t start acc
       |> Time.Month_day_ranges.Of_seq.range_seq_of_seq
@@ -399,7 +403,7 @@ module Matching_months = struct
       pat_mon_list
       |> List.to_seq
       |> Seq.map Time.human_int_of_month
-      |> Seq.filter (fun pat_mon -> start_mon <= pat_mon)
+      |> Seq.filter (fun pat_mon -> start_mon <= pat_mon && pat_mon <= 12)
       |> Seq.map (fun month -> Time.month_of_human_int month |> Result.get_ok)
       |> Seq.map (fun month -> { acc with month })
 
@@ -408,21 +412,25 @@ module Matching_months = struct
     let start_mon, start_mday, start_hour, start_min, start_sec =
       get_start_mon_mday_hour_min_sec ~start ~acc
     in
-    let start =
-      {
-        acc with
-        month = Time.month_of_human_int start_mon |> Result.get_ok;
-        day = start_mday;
-        hour = start_hour;
-        minute = start_min;
-        second = start_sec;
-      }
+    let get_start_dt ~time_slot_start_month =
+      if time_slot_start_month = start_mon then
+        {
+          acc with
+          month = Time.month_of_human_int start_mon |> Result.get_ok;
+          day = start_mday;
+          hour = start_hour;
+          minute = start_min;
+          second = start_sec;
+        }
+      else
+        Time.Date_time.set_to_first_day_hour_min_sec
+          { acc with month = Time.month_of_human_int start_mon |> Result.get_ok }
     in
     match t.months with
     | [] ->
       Seq.return
         (`Range_inc
-           ( start,
+           ( get_start_dt,
              {
                acc with
                month = `Dec;
