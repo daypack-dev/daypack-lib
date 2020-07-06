@@ -37,8 +37,16 @@ module Check : sig
 end
 
 module Single_pattern : sig
+  val matching_date_times :
+    Search_param.t -> time_pattern -> (Time.Date_time.t Seq.t, error) result
+
   val matching_unix_seconds :
     Search_param.t -> time_pattern -> (int64 Seq.t, error) result
+
+  val matching_date_time_ranges :
+    Search_param.t ->
+    time_pattern ->
+    (Time.Date_time.t Range.range Seq.t, error) result
 
   val matching_time_slots :
     Search_param.t -> time_pattern -> (Time_slot.t Seq.t, error) result
