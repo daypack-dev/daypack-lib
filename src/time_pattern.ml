@@ -146,7 +146,9 @@ module Matching_seconds = struct
   let matching_seconds (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Seq.t =
-    let start = get_search_start_in_cur_branch ~overall_search_start cur_branch in
+    let start =
+      get_search_start_in_cur_branch ~overall_search_start cur_branch
+    in
     match t.seconds with
     | [] ->
       Seq.map
@@ -161,7 +163,9 @@ module Matching_seconds = struct
   let matching_second_ranges (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
-    let start = get_search_start_in_cur_branch ~overall_search_start cur_branch in
+    let start =
+      get_search_start_in_cur_branch ~overall_search_start cur_branch
+    in
     match t.seconds with
     | [] ->
       Seq.return
@@ -191,7 +195,9 @@ module Matching_minutes = struct
   let matching_minutes (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Seq.t =
-    let start = get_search_start_in_cur_branch ~overall_search_start cur_branch in
+    let start =
+      get_search_start_in_cur_branch ~overall_search_start cur_branch
+    in
     match t.minutes with
     | [] ->
       Seq.map
@@ -206,7 +212,9 @@ module Matching_minutes = struct
   let matching_minute_ranges (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
-    let start = get_search_start_in_cur_branch ~overall_search_start cur_branch in
+    let start =
+      get_search_start_in_cur_branch ~overall_search_start cur_branch
+    in
     match t.minutes with
     | [] ->
       Seq.return
@@ -241,7 +249,9 @@ module Matching_hours = struct
   let matching_hours (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Seq.t =
-    let start = get_search_start_in_cur_branch ~overall_search_start cur_branch in
+    let start =
+      get_search_start_in_cur_branch ~overall_search_start cur_branch
+    in
     match t.hours with
     | [] ->
       Seq.map (fun hour -> { cur_branch with hour }) OSeq.(start.hour --^ 24)
@@ -254,7 +264,9 @@ module Matching_hours = struct
   let matching_hour_ranges (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
-    let start = get_search_start_in_cur_branch ~overall_search_start cur_branch in
+    let start =
+      get_search_start_in_cur_branch ~overall_search_start cur_branch
+    in
     match t.hours with
     | [] ->
       Seq.return
@@ -397,7 +409,9 @@ module Matching_months = struct
   let matching_months (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Seq.t =
-    let start = get_search_start_in_cur_branch ~overall_search_start cur_branch in
+    let start =
+      get_search_start_in_cur_branch ~overall_search_start cur_branch
+    in
     let start_month_int = Time.human_int_of_month start.month in
     match t.months with
     | [] ->
@@ -415,7 +429,9 @@ module Matching_months = struct
   let matching_month_ranges (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
-    let start = get_search_start_in_cur_branch ~overall_search_start cur_branch in
+    let start =
+      get_search_start_in_cur_branch ~overall_search_start cur_branch
+    in
     let start_month_int = Time.human_int_of_month start.month in
     match t.months with
     | [] ->
