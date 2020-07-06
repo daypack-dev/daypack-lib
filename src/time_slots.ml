@@ -16,6 +16,11 @@ module Check = struct
       ~f_exn:(fun _ _ -> Time_slots_are_not_sorted)
       time_slots
 
+  let check_if_sorted_rev (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
+    Seq_utils.check_if_f_holds_for_immediate_neighbors ~f:Time_slot.ge
+      ~f_exn:(fun _ _ -> Time_slots_are_not_sorted)
+      time_slots
+
   let check_if_disjoint (time_slots : Time_slot.t Seq.t) : Time_slot.t Seq.t =
     Seq_utils.check_if_f_holds_for_immediate_neighbors
       ~f:(fun x y ->
@@ -225,7 +230,7 @@ module Slice = struct
           s
           |> Check.check_if_valid
           |> Check.check_if_disjoint
-          |> Check.check_if_sorted)
+          |> Check.check_if_sorted_rev)
     |> (fun s ->
         match start with
         | None -> s
