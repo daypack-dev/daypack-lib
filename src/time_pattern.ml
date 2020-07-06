@@ -599,17 +599,14 @@ module Single_pattern = struct
 
   let matching_unix_seconds (search_param : Search_param.t) (t : time_pattern) :
     (int64 Seq.t, error) result =
-    match Check.check_search_param_and_time_pattern search_param t with
-    | Error msg -> Error msg
-    | Ok () ->
-      matching_date_times search_param t
-      |> Result.map (fun s ->
-          Seq.filter_map
-            (fun x ->
-               match Time.Date_time.to_unix_second x with
-               | Ok x -> Some x
-               | Error () -> None)
-            s)
+    matching_date_times search_param t
+    |> Result.map (fun s ->
+        Seq.filter_map
+          (fun x ->
+             match Time.Date_time.to_unix_second x with
+             | Ok x -> Some x
+             | Error () -> None)
+          s)
 
   let matching_date_time_ranges (search_param : Search_param.t)
       (t : time_pattern) : (Time.Date_time.t Range.range Seq.t, error) result =
