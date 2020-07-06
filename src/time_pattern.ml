@@ -610,117 +610,123 @@ module Single_pattern = struct
 
   let matching_date_time_ranges (search_param : Search_param.t)
       (t : time_pattern) : (Time.Date_time.t Range.range Seq.t, error) result =
-    match
-      Search_param.start_date_time_and_search_years_ahead_of_search_param
-        search_param
-    with
-    | None -> Ok Seq.empty
-    | Some (overall_search_start, search_years_ahead) -> (
-        let search_using_tz_offset_s =
-          Search_param.search_using_tz_offset_s_of_search_param search_param
-        in
+    match Check.check_search_param_and_time_pattern search_param t with
+    | Error msg -> Error msg
+    | Ok () -> (
         match
-          ( t.years,
-            t.months,
-            t.month_days,
-            t.weekdays,
-            t.hours,
-            t.minutes,
-            t.seconds,
-            t.unix_seconds )
+          Search_param.start_date_time_and_search_years_ahead_of_search_param
+            search_param
         with
-        | _years, [], [], [], [], [], [], [] ->
-          Matching_years.matching_year_ranges ~search_years_ahead t
-            ~overall_search_start
-          |> Result.ok
-        | _years, _months, [], [], [], [], [], [] ->
-          Matching_years.matching_years ~search_years_ahead t
-            ~overall_search_start
-          |> Seq.flat_map
-            (Matching_months.matching_month_ranges t ~overall_search_start)
-          |> Result.ok
-        | _years, _months, _month_days, _weekdays, [], [], [], [] ->
-          Matching_years.matching_years ~search_years_ahead t
-            ~overall_search_start
-          |> Seq.flat_map
-            (Matching_months.matching_months t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_days.matching_day_ranges t ~overall_search_start)
-          |> Result.ok
-        | _years, _months, _month_days, _weekdays, _hours, [], [], [] ->
-          Matching_years.matching_years ~search_years_ahead t
-            ~overall_search_start
-          |> Seq.flat_map
-            (Matching_months.matching_months t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_days.matching_days t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_hours.matching_hour_ranges t ~overall_search_start)
-          |> Result.ok
-        | _years, _months, _month_days, _weekdays, _hours, _minutes, [], [] ->
-          Matching_years.matching_years ~search_years_ahead t
-            ~overall_search_start
-          |> Seq.flat_map
-            (Matching_months.matching_months t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_days.matching_days t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_hours.matching_hours t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_minutes.matching_minute_ranges t
-               ~overall_search_start)
-          |> Result.ok
-        | ( _years,
-            _months,
-            _month_days,
-            _weekdays,
-            _hours,
-            _minutes,
-            _seconds,
-            [] ) ->
-          Matching_years.matching_years ~search_years_ahead t
-            ~overall_search_start
-          |> Seq.flat_map
-            (Matching_months.matching_months t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_days.matching_days t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_hours.matching_hours t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_minutes.matching_minutes t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_seconds.matching_second_ranges t
-               ~overall_search_start)
-          |> Result.ok
-        | [], [], [], [], [], [], [], unix_seconds ->
-          unix_seconds
-          |> List.to_seq
-          |> date_time_range_seq_of_unix_seconds ~search_using_tz_offset_s
-          |> Result.ok
-        | ( _years,
-            _months,
-            _month_days,
-            _weekdays,
-            _hours,
-            _minutes,
-            _seconds,
-            _unix_seconds ) ->
-          Matching_years.matching_years ~search_years_ahead t
-            ~overall_search_start
-          |> Seq.flat_map
-            (Matching_months.matching_months t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_days.matching_days t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_hours.matching_hours t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_minutes.matching_minutes t ~overall_search_start)
-          |> Seq.flat_map
-            (Matching_seconds.matching_seconds t ~overall_search_start)
-          |> filter_using_matching_unix_seconds ~search_using_tz_offset_s t
-            ~overall_search_start
-          |> Seq.map (fun x -> `Range_inc (x, x))
-          |> Result.ok )
+        | None -> Ok Seq.empty
+        | Some (overall_search_start, search_years_ahead) -> (
+            let search_using_tz_offset_s =
+              Search_param.search_using_tz_offset_s_of_search_param search_param
+            in
+            match
+              ( t.years,
+                t.months,
+                t.month_days,
+                t.weekdays,
+                t.hours,
+                t.minutes,
+                t.seconds,
+                t.unix_seconds )
+            with
+            | _years, [], [], [], [], [], [], [] ->
+              Matching_years.matching_year_ranges ~search_years_ahead t
+                ~overall_search_start
+              |> Result.ok
+            | _years, _months, [], [], [], [], [], [] ->
+              Matching_years.matching_years ~search_years_ahead t
+                ~overall_search_start
+              |> Seq.flat_map
+                (Matching_months.matching_month_ranges t
+                   ~overall_search_start)
+              |> Result.ok
+            | _years, _months, _month_days, _weekdays, [], [], [], [] ->
+              Matching_years.matching_years ~search_years_ahead t
+                ~overall_search_start
+              |> Seq.flat_map
+                (Matching_months.matching_months t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_days.matching_day_ranges t ~overall_search_start)
+              |> Result.ok
+            | _years, _months, _month_days, _weekdays, _hours, [], [], [] ->
+              Matching_years.matching_years ~search_years_ahead t
+                ~overall_search_start
+              |> Seq.flat_map
+                (Matching_months.matching_months t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_days.matching_days t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_hours.matching_hour_ranges t
+                   ~overall_search_start)
+              |> Result.ok
+            | _years, _months, _month_days, _weekdays, _hours, _minutes, [], []
+              ->
+              Matching_years.matching_years ~search_years_ahead t
+                ~overall_search_start
+              |> Seq.flat_map
+                (Matching_months.matching_months t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_days.matching_days t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_hours.matching_hours t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_minutes.matching_minute_ranges t
+                   ~overall_search_start)
+              |> Result.ok
+            | ( _years,
+                _months,
+                _month_days,
+                _weekdays,
+                _hours,
+                _minutes,
+                _seconds,
+                [] ) ->
+              Matching_years.matching_years ~search_years_ahead t
+                ~overall_search_start
+              |> Seq.flat_map
+                (Matching_months.matching_months t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_days.matching_days t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_hours.matching_hours t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_minutes.matching_minutes t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_seconds.matching_second_ranges t
+                   ~overall_search_start)
+              |> Result.ok
+            | [], [], [], [], [], [], [], unix_seconds ->
+              unix_seconds
+              |> List.to_seq
+              |> date_time_range_seq_of_unix_seconds ~search_using_tz_offset_s
+              |> Result.ok
+            | ( _years,
+                _months,
+                _month_days,
+                _weekdays,
+                _hours,
+                _minutes,
+                _seconds,
+                _unix_seconds ) ->
+              Matching_years.matching_years ~search_years_ahead t
+                ~overall_search_start
+              |> Seq.flat_map
+                (Matching_months.matching_months t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_days.matching_days t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_hours.matching_hours t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_minutes.matching_minutes t ~overall_search_start)
+              |> Seq.flat_map
+                (Matching_seconds.matching_seconds t ~overall_search_start)
+              |> filter_using_matching_unix_seconds ~search_using_tz_offset_s
+                t ~overall_search_start
+              |> Seq.map (fun x -> `Range_inc (x, x))
+              |> Result.ok ) )
 
   let matching_time_slots (search_param : Search_param.t) (t : time_pattern) :
     (Time_slot.t Seq.t, error) result =
