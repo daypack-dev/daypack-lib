@@ -629,11 +629,6 @@ module Single_pattern = struct
             t.seconds,
             t.unix_seconds )
         with
-        | [], [], [], [], [], [], [], unix_seconds ->
-          unix_seconds
-          |> List.to_seq
-          |> date_time_range_seq_of_unix_seconds ~search_using_tz_offset_s
-          |> Result.ok
         | _years, [], [], [], [], [], [], [] ->
           Matching_years.matching_year_ranges ~search_years_ahead t
             ~overall_search_start
@@ -696,6 +691,11 @@ module Single_pattern = struct
           |> Seq.flat_map
             (Matching_seconds.matching_second_ranges t
                ~overall_search_start)
+          |> Result.ok
+        | [], [], [], [], [], [], [], unix_seconds ->
+          unix_seconds
+          |> List.to_seq
+          |> date_time_range_seq_of_unix_seconds ~search_using_tz_offset_s
           |> Result.ok
         | ( _years,
             _months,
