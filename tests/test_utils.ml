@@ -64,7 +64,7 @@ let int64_bound_gen bound =
   let open QCheck.Gen in
   map
     (fun (pos, x) ->
-       x |> min bound |> fun x -> if pos then x else Int64.mul (-1L) x)
+       x |> max 0L |> min bound |> fun x -> if pos then x else Int64.mul (-1L) x)
     (pair bool ui64)
 
 let pos_int64_bound_gen bound =
