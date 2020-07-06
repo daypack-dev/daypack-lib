@@ -846,11 +846,11 @@ let debug_time_expr_matching_time_slots () =
       {
         search_using_tz_offset_s;
         start = Daypack_lib.Time.Current.cur_unix_second ();
-        search_years_ahead = 5;
+        search_years_ahead = 100;
       }
   in
   let s =
-    Daypack_lib.Time_expr.Of_string.of_string "m[feb]d[29]h[13]m"
+    Daypack_lib.Time_expr.Of_string.of_string "m[feb]d[29]hm"
     |> Result.get_ok
     |> Daypack_lib.Time_expr.matching_time_slots search_param
     |> Result.get_ok
@@ -1089,17 +1089,17 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_pattern_matching_tm_seq ();
  *   print_newline () *)
 
-let () =
-  debug_time_pattern_matching_time_slots ();
-  print_newline ()
+(* let () =
+ *   debug_time_pattern_matching_time_slots ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_range_pattern_matching_time_slots ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_expr_matching_time_slots ();
- *   print_newline () *)
+let () =
+  debug_time_expr_matching_time_slots ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
