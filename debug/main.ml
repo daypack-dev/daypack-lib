@@ -752,9 +752,9 @@ let debug_time_pattern_matching_time_slots () =
     {
       years = [];
       months = [ `Feb ];
-      month_days = [29];
+      month_days = [ 29 ];
       weekdays = [];
-      hours = [ ];
+      hours = [];
       minutes = [];
       seconds = [];
       unix_seconds = [];

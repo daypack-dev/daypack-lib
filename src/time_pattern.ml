@@ -323,14 +323,19 @@ module Matching_days = struct
   let matching_int_month_days (t : time_pattern)
       ~(current_search_start : Time.Date_time.t) : int Seq.t =
     let matching_month_days =
-      direct_matching_int_month_days t ~current_search_start |> List.of_seq
+      direct_matching_int_month_days t ~current_search_start
+      |> List.of_seq
       |> List.sort_uniq compare
     in
     let month_days_of_matching_weekdays =
-      int_month_days_of_matching_weekdays t ~current_search_start |> List.of_seq
+      int_month_days_of_matching_weekdays t ~current_search_start
+      |> List.of_seq
       |> List.sort_uniq compare
     in
-    OSeq.(1 -- 31) |> Seq.filter (fun mday -> List.mem mday matching_month_days && List.mem mday month_days_of_matching_weekdays)
+    OSeq.(1 -- 31)
+    |> Seq.filter (fun mday ->
+        List.mem mday matching_month_days
+        && List.mem mday month_days_of_matching_weekdays)
 
   let matching_days (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
