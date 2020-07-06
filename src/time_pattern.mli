@@ -52,7 +52,7 @@ module Single_pattern : sig
     Search_param.t -> time_pattern list -> (Time_slot.t Seq.t, error) result
 
   val next_match_date_time :
-    Search_param.t -> time_pattern -> (Time.date_time option, error) result
+    Search_param.t -> time_pattern -> (Time.Date_time.t option, error) result
 
   val next_match_unix_second :
     Search_param.t -> time_pattern -> (int64 option, error) result

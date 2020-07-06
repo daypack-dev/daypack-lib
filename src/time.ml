@@ -27,16 +27,6 @@ type month =
   | `Dec
   ]
 
-type date_time = {
-  year : int;
-  month : month;
-  day : int;
-  hour : int;
-  minute : int;
-  second : int;
-  tz_offset_s : int;
-}
-
 type weekday_range = weekday Range.range
 
 type month_day_range = int Range.range
@@ -147,66 +137,6 @@ let weekday_gt d1 d2 = tm_int_of_weekday d1 > tm_int_of_weekday d2
 let weekday_ge d1 d2 = tm_int_of_weekday d1 >= tm_int_of_weekday d2
 
 let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
-
-let ptime_date_time_of_date_time (x : date_time) : Ptime.date * Ptime.time =
-  ( (x.year, human_int_of_month x.month, x.day),
-    ((x.hour, x.minute, x.second), x.tz_offset_s) )
-
-let date_time_of_ptime_date_time
-    (((year, month, day), ((hour, minute, second), tz_offset_s)) :
-       Ptime.date * Ptime.time) : (date_time, unit) result =
-  match month_of_human_int month with
-  | Ok month -> Ok { year; month; day; hour; minute; second; tz_offset_s }
-  | Error () -> Error ()
-
-let unix_second_of_date_time (x : date_time) : (int64, unit) result =
-  match Ptime.of_date_time (ptime_date_time_of_date_time x) with
-  | None -> Error ()
-  | Some x -> x |> Ptime.to_float_s |> Int64.of_float |> Result.ok
-
-let date_time_of_unix_second ~(tz_offset_s_of_date_time : tz_offset_s option)
-    (x : int64) : (date_time, unit) result =
-  match Ptime.of_float_s (Int64.to_float x) with
-  | None -> Error ()
-  | Some x ->
-    let tz_offset_s = resolve_current_tz_offset_s tz_offset_s_of_date_time in
-    x |> Ptime.to_date_time ~tz_offset_s |> date_time_of_ptime_date_time
-
-let min =
-  Ptime.min
-  |> Ptime.to_date_time
-  |> date_time_of_ptime_date_time
-  |> Result.get_ok
-
-let max =
-  Ptime.max
-  |> Ptime.to_date_time
-  |> date_time_of_ptime_date_time
-  |> Result.get_ok
-
-module Check = struct
-  let unix_second_is_valid (x : int64) : bool =
-    match date_time_of_unix_second ~tz_offset_s_of_date_time:None x with
-    | Ok _ -> true
-    | Error () -> false
-
-  let second_is_valid ~(second : int) : bool = 0 <= second && second < 60
-
-  let minute_second_is_valid ~(minute : int) ~(second : int) : bool =
-    0 <= minute && minute < 60 && second_is_valid ~second
-
-  let hour_minute_second_is_valid ~(hour : int) ~(minute : int) ~(second : int)
-    : bool =
-    (0 <= hour && hour < 24) && minute_second_is_valid ~minute ~second
-
-  let date_time_is_valid (x : date_time) : bool =
-    match unix_second_of_date_time x with Ok _ -> true | Error () -> false
-end
-
-let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
-  if Check.hour_minute_second_is_valid ~hour ~minute ~second:0 then
-    if minute < 59 then Ok (hour, succ minute) else Ok (succ hour mod 24, 0)
-  else Error ()
 
 (* let tm_of_date_time (x : date_time) : Unix.tm =
    {
@@ -396,11 +326,127 @@ module Year_ranges = Ranges_small.Make (struct
     let of_int x = x
   end)
 
+module Date_time = struct
+  type t = {
+    year : int;
+    month : month;
+    day : int;
+    hour : int;
+    minute : int;
+    second : int;
+    tz_offset_s : int;
+  }
+
+  let to_ptime_date_time (x : t) : Ptime.date * Ptime.time =
+    ( (x.year, human_int_of_month x.month, x.day),
+      ((x.hour, x.minute, x.second), x.tz_offset_s) )
+
+  let of_ptime_date_time
+      (((year, month, day), ((hour, minute, second), tz_offset_s)) :
+         Ptime.date * Ptime.time) : (t, unit) result =
+    match month_of_human_int month with
+    | Ok month -> Ok { year; month; day; hour; minute; second; tz_offset_s }
+    | Error () -> Error ()
+
+  let to_unix_second (x : t) : (int64, unit) result =
+    match Ptime.of_date_time (to_ptime_date_time x) with
+    | None -> Error ()
+    | Some x -> x |> Ptime.to_float_s |> Int64.of_float |> Result.ok
+
+  let of_unix_second ~(tz_offset_s_of_date_time : tz_offset_s option)
+      (x : int64) : (t, unit) result =
+    match Ptime.of_float_s (Int64.to_float x) with
+    | None -> Error ()
+    | Some x ->
+      let tz_offset_s =
+        resolve_current_tz_offset_s tz_offset_s_of_date_time
+      in
+      x |> Ptime.to_date_time ~tz_offset_s |> of_ptime_date_time
+
+  let min =
+    Ptime.min |> Ptime.to_date_time |> of_ptime_date_time |> Result.get_ok
+
+  let max =
+    Ptime.max |> Ptime.to_date_time |> of_ptime_date_time |> Result.get_ok
+
+  let compare (x : t) (y : t) : int =
+    match compare x.year y.year with
+    | 0 -> (
+        match
+          compare (human_int_of_month x.month) (human_int_of_month y.month)
+        with
+        | 0 -> (
+            match compare x.day y.day with
+            | 0 -> (
+                match compare x.hour y.hour with
+                | 0 -> (
+                    match compare x.minute y.minute with
+                    | 0 -> compare x.second y.second
+                    | n -> n )
+                | n -> n )
+            | n -> n )
+        | n -> n )
+    | n -> n
+
+  let set_to_first_sec (x : t) : t = { x with second = 0 }
+
+  let set_to_last_sec (x : t) : t = { x with second = 59 }
+
+  let set_to_first_min_sec (x : t) : t =
+    { x with minute = 0 } |> set_to_first_sec
+
+  let set_to_last_min_sec (x : t) : t =
+    { x with minute = 59 } |> set_to_last_sec
+
+  let set_to_first_hour_min_sec (x : t) : t =
+    { x with hour = 0 } |> set_to_first_min_sec
+
+  let set_to_last_hour_min_sec (x : t) : t =
+    { x with hour = 23 } |> set_to_last_min_sec
+
+  let set_to_first_day_hour_min_sec (x : t) : t =
+    { x with day = 1 } |> set_to_first_hour_min_sec
+
+  let set_to_last_day_hour_min_sec (x : t) : t =
+    { x with day = day_count_of_month ~year:x.year ~month:x.month }
+    |> set_to_last_hour_min_sec
+
+  let set_to_first_month_day_hour_min_sec (x : t) : t =
+    { x with month = `Jan } |> set_to_first_day_hour_min_sec
+
+  let set_to_last_month_day_hour_min_sec (x : t) : t =
+    { x with month = `Dec } |> set_to_last_day_hour_min_sec
+end
+
+module Check = struct
+  let unix_second_is_valid (x : int64) : bool =
+    match Date_time.of_unix_second ~tz_offset_s_of_date_time:None x with
+    | Ok _ -> true
+    | Error () -> false
+
+  let second_is_valid ~(second : int) : bool = 0 <= second && second < 60
+
+  let minute_second_is_valid ~(minute : int) ~(second : int) : bool =
+    0 <= minute && minute < 60 && second_is_valid ~second
+
+  let hour_minute_second_is_valid ~(hour : int) ~(minute : int) ~(second : int)
+    : bool =
+    (0 <= hour && hour < 24) && minute_second_is_valid ~minute ~second
+
+  let date_time_is_valid (x : Date_time.t) : bool =
+    match Date_time.to_unix_second x with Ok _ -> true | Error () -> false
+end
+
+let next_hour_minute ~(hour : int) ~(minute : int) : (int * int, unit) result =
+  if Check.hour_minute_second_is_valid ~hour ~minute ~second:0 then
+    if minute < 59 then Ok (hour, succ minute) else Ok (succ hour mod 24, 0)
+  else Error ()
+
 module Current = struct
   let cur_unix_second () : int64 = Unix.time () |> Int64.of_float
 
-  let cur_date_time ~tz_offset_s_of_date_time : (date_time, unit) result =
-    cur_unix_second () |> date_time_of_unix_second ~tz_offset_s_of_date_time
+  let cur_date_time ~tz_offset_s_of_date_time : (Date_time.t, unit) result =
+    cur_unix_second () |> Date_time.of_unix_second ~tz_offset_s_of_date_time
 
   let cur_tm_local () : Unix.tm = Unix.time () |> Unix.localtime
 
@@ -445,25 +491,6 @@ module Of_string = struct
     | [ (_, x) ] -> Ok x
     | _ -> Error ()
 end
-
-let compare_date_time (x : date_time) (y : date_time) : int =
-  match compare x.year y.year with
-  | 0 -> (
-      match
-        compare (human_int_of_month x.month) (human_int_of_month y.month)
-      with
-      | 0 -> (
-          match compare x.day y.day with
-          | 0 -> (
-              match compare x.hour y.hour with
-              | 0 -> (
-                  match compare x.minute y.minute with
-                  | 0 -> compare x.second y.second
-                  | n -> n )
-              | n -> n )
-          | n -> n )
-      | n -> n )
-  | n -> n
 
 module Add = struct
   let add_days_unix_second ~(days : int) (x : int64) : int64 =
@@ -518,7 +545,7 @@ module To_string = struct
            mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec)
     | Error () -> Error ()
 
-  let yyyymondd_hhmmss_string_of_date_time (x : date_time) : string =
+  let yyyymondd_hhmmss_string_of_date_time (x : Date_time.t) : string =
     let mon = string_of_month x.month in
     Printf.sprintf "%04d %s %02d %02d:%02d:%02d" x.year mon x.day x.hour
       x.minute x.second
@@ -526,7 +553,7 @@ module To_string = struct
   let yyyymondd_hhmmss_string_of_unix_second
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
     (string, unit) result =
-    date_time_of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
+    Date_time.of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
       time
     |> Result.map yyyymondd_hhmmss_string_of_date_time
 
@@ -540,7 +567,7 @@ module To_string = struct
             mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec)
      | Error () -> Error () *)
 
-  let yyyymmdd_hhmmss_string_of_date_time (x : date_time) : string =
+  let yyyymmdd_hhmmss_string_of_date_time (x : Date_time.t) : string =
     let mon = human_int_of_month x.month in
     Printf.sprintf "%04d-%02d-%02d %02d:%02d:%02d" x.year mon x.day x.hour
       x.minute x.second
@@ -548,7 +575,7 @@ module To_string = struct
   let yyyymmdd_hhmmss_string_of_unix_second
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
     (string, unit) result =
-    date_time_of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
+    Date_time.of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
       time
     |> Result.map yyyymmdd_hhmmss_string_of_date_time
 
@@ -563,14 +590,14 @@ module To_string = struct
     | Error () -> Error ()
   *)
 
-  let yyyymondd_hhmm_string_of_date_time (x : date_time) : string =
+  let yyyymondd_hhmm_string_of_date_time (x : Date_time.t) : string =
     let mon = string_of_month x.month in
     Printf.sprintf "%04d %s %02d %02d:%02d" x.year mon x.day x.hour x.minute
 
   let yyyymondd_hhmm_string_of_unix_second
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
     (string, unit) result =
-    date_time_of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
+    Date_time.of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
       time
     |> Result.map yyyymondd_hhmm_string_of_date_time
 
@@ -584,14 +611,14 @@ module To_string = struct
             mon tm.tm_mday tm.tm_hour tm.tm_min)
      | Error () -> Error () *)
 
-  let yyyymmdd_hhmm_string_of_date_time (x : date_time) : string =
+  let yyyymmdd_hhmm_string_of_date_time (x : Date_time.t) : string =
     let mon = human_int_of_month x.month in
     Printf.sprintf "%04d-%02d-%02d %02d:%02d" x.year mon x.day x.hour x.minute
 
   let yyyymmdd_hhmm_string_of_unix_second
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
     (string, unit) result =
-    date_time_of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
+    Date_time.of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
       time
     |> Result.map yyyymmdd_hhmm_string_of_date_time
 
@@ -615,7 +642,7 @@ module Print = struct
 end
 
 module Date_time_set = Set.Make (struct
-    type t = date_time
+    type t = Date_time.t
 
-    let compare = compare_date_time
+    let compare = Date_time.compare
   end)

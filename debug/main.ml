@@ -741,9 +741,9 @@ let debug_time_pattern_matching_time_slots () =
   let date_time =
     Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
   in
-  let start = Time.unix_second_of_date_time date_time |> Result.get_ok in
+  let start = Time.Date_time.to_unix_second date_time |> Result.get_ok in
   let end_exc =
-    Time.unix_second_of_date_time { date_time with year = date_time.year + 1 }
+    Time.Date_time.to_unix_second { date_time with year = date_time.year + 100 }
     |> Result.get_ok
   in
   let time_slots = [ (start, end_exc) ] in
@@ -752,9 +752,9 @@ let debug_time_pattern_matching_time_slots () =
     {
       years = [];
       months = [ `Feb ];
-      month_days = [];
+      month_days = [ 29 ];
       weekdays = [];
-      hours = [ 13 ];
+      hours = [];
       minutes = [];
       seconds = [];
       unix_seconds = [];
@@ -785,9 +785,9 @@ let debug_time_range_pattern_matching_time_slots () =
   let date_time =
     Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
   in
-  let start = Time.unix_second_of_date_time date_time |> Result.get_ok in
+  let start = Time.Date_time.to_unix_second date_time |> Result.get_ok in
   let end_exc =
-    Time.unix_second_of_date_time { date_time with year = date_time.year + 1 }
+    Time.Date_time.to_unix_second { date_time with year = date_time.year + 1 }
     |> Result.get_ok
   in
   let time_slots = [ (start, end_exc) ] in
@@ -846,11 +846,11 @@ let debug_time_expr_matching_time_slots () =
       {
         search_using_tz_offset_s;
         start = Daypack_lib.Time.Current.cur_unix_second ();
-        search_years_ahead = 5;
+        search_years_ahead = 100;
       }
   in
   let s =
-    Daypack_lib.Time_expr.Of_string.of_string "10am to 11am"
+    Daypack_lib.Time_expr.Of_string.of_string "m[feb]d[29]hm"
     |> Result.get_ok
     |> Daypack_lib.Time_expr.matching_time_slots search_param
     |> Result.get_ok

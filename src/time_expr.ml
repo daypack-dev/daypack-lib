@@ -128,7 +128,7 @@ module Check = struct
           List.filter
             (fun x ->
                Result.is_error
-                 (Time.date_time_of_unix_second ~tz_offset_s_of_date_time:None x))
+                 (Time.Date_time.of_unix_second ~tz_offset_s_of_date_time:None x))
             l
         in
         match invalid_unix_seconds with [] -> Ok () | _ -> Error () )
@@ -1191,20 +1191,20 @@ end
 module Time_slots_expr = struct
   let get_first_or_last_n_matches_of_same_month_date_time_pair_seq
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
-      (s : (Time.date_time * Time.date_time) Seq.t) :
-    (Time.date_time * Time.date_time) Seq.t =
+      (s : (Time.Date_time.t * Time.Date_time.t) Seq.t) :
+    (Time.Date_time.t * Time.Date_time.t) Seq.t =
     let flush_acc first_or_last (n : int)
-        (acc : (Time.date_time * Time.date_time) list) :
-      (Time.date_time * Time.date_time) Seq.t =
+        (acc : (Time.Date_time.t * Time.Date_time.t) list) :
+      (Time.Date_time.t * Time.Date_time.t) Seq.t =
       ( match first_or_last with
         | `First -> acc |> List.rev |> Misc_utils.take_first_n_list n
         | `Last -> acc |> List.rev |> Misc_utils.take_last_n_list n )
       |> List.to_seq
     in
     let rec aux first_or_last (n : int)
-        (acc : (Time.date_time * Time.date_time) list)
-        (s : (Time.date_time * Time.date_time) Seq.t) :
-      (Time.date_time * Time.date_time) Seq.t =
+        (acc : (Time.Date_time.t * Time.Date_time.t) list)
+        (s : (Time.Date_time.t * Time.Date_time.t) Seq.t) :
+      (Time.Date_time.t * Time.Date_time.t) Seq.t =
       match s () with
       | Seq.Nil -> flush_acc first_or_last n acc
       | Seq.Cons ((start, end_exc), rest) -> (
@@ -1229,15 +1229,15 @@ module Time_slots_expr = struct
     in
     s
     |> Seq.map (fun (x, y) ->
-        ( Time.date_time_of_unix_second ~tz_offset_s_of_date_time x
+        ( Time.Date_time.of_unix_second ~tz_offset_s_of_date_time x
           |> Result.get_ok,
-          Time.date_time_of_unix_second ~tz_offset_s_of_date_time y
+          Time.Date_time.of_unix_second ~tz_offset_s_of_date_time y
           |> Result.get_ok ))
     |> get_first_or_last_n_matches_of_same_month_date_time_pair_seq
       ~first_or_last ~n
     |> Seq.map (fun (x, y) ->
-        ( Time.unix_second_of_date_time x |> Result.get_ok,
-          Time.unix_second_of_date_time y |> Result.get_ok ))
+        ( Time.Date_time.to_unix_second x |> Result.get_ok,
+          Time.Date_time.to_unix_second y |> Result.get_ok ))
 
   let matching_time_slots ~(force_bound : Time_expr_ast.bound option)
       ~f_resolve_tpe_name ~f_resolve_tse_name (search_param : Search_param.t)

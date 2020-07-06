@@ -10,7 +10,7 @@ type t =
     }
   | Years_ahead_start_date_time of {
       search_using_tz_offset_s : Time.tz_offset_s option;
-      start : Time.date_time;
+      start : Time.Date_time.t;
       search_years_ahead : int;
     }
 
@@ -25,7 +25,7 @@ val search_using_tz_offset_s_of_search_param : t -> Time.tz_offset_s option
 val push_search_param_to_later_start : start:int64 -> t -> (t, unit) result
 
 val start_date_time_and_search_years_ahead_of_search_param :
-  t -> (Time.date_time * int) option
+  t -> (Time.Date_time.t * int) option
 
 module Check : sig
   val check_search_param : t -> (unit, error) result

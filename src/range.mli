@@ -15,6 +15,9 @@ val map :
 
 val int64_range_of_range : to_int64:('a -> int64) -> 'a range -> int64 range
 
+val int64_inc_range_of_range :
+  to_int64:('a -> int64) -> 'a range -> int64 * int64
+
 val int64_exc_range_of_range :
   to_int64:('a -> int64) -> 'a range -> int64 * int64
 
@@ -63,6 +66,8 @@ module type S = sig
   type t
 
   val int64_range_of_range : t range -> int64 range
+
+  val int64_inc_range_of_range : t range -> int64 * int64
 
   val int64_exc_range_of_range : t range -> int64 * int64
 

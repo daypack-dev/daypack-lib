@@ -22,6 +22,12 @@ let int64_range_of_range (type a) ~(to_int64 : a -> int64) (x : a range) :
   let f (x, y) = (to_int64 x, to_int64 y) in
   map ~f_inc:f ~f_exc:f x
 
+let int64_inc_range_of_range (type a) ~(to_int64 : a -> int64) (x : a range) :
+  int64 * int64 =
+  match x with
+  | `Range_inc (x, y) -> (to_int64 x, to_int64 y)
+  | `Range_exc (x, y) -> (to_int64 x, y |> to_int64 |> Int64.pred)
+
 let int64_exc_range_of_range (type a) ~(to_int64 : a -> int64) (x : a range) :
   int64 * int64 =
   match x with
@@ -111,6 +117,8 @@ module type S = sig
 
   val int64_range_of_range : t range -> int64 range
 
+  val int64_inc_range_of_range : t range -> int64 * int64
+
   val int64_exc_range_of_range : t range -> int64 * int64
 
   val inc_range_of_range : t range -> t * t
@@ -133,6 +141,9 @@ module Make (B : B) : S with type t := B.t = struct
 
   let int64_range_of_range (x : t range) : int64 range =
     int64_range_of_range ~to_int64 x
+
+  let int64_inc_range_of_range (x : t range) : int64 * int64 =
+    int64_inc_range_of_range ~to_int64 x
 
   let int64_exc_range_of_range (x : t range) : int64 * int64 =
     int64_exc_range_of_range ~to_int64 x
