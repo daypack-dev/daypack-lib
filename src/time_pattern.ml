@@ -157,20 +157,24 @@ module Matching_seconds = struct
     | pat_sec_list ->
       pat_sec_list
       |> List.to_seq
-      |> Seq.filter (fun second -> cur_branch_search_start.second <= second && second < 60)
+      |> Seq.filter (fun second ->
+          cur_branch_search_start.second <= second && second < 60)
       |> Seq.map (fun second -> { cur_branch with second })
 
   let matching_second_ranges (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
     let range_map_start ~(cur_branch_search_start : Time.Date_time.t) x =
-      if x = cur_branch_search_start.second then cur_branch_search_start else { cur_branch_search_start with second = x }
+      if x = cur_branch_search_start.second then cur_branch_search_start
+      else { cur_branch_search_start with second = x }
     in
     let range_map_inc ~(cur_branch_search_start : Time.Date_time.t) (x, y) =
-      range_map_start ~cur_branch_search_start x, { cur_branch_search_start with second = y }
+      ( range_map_start ~cur_branch_search_start x,
+        { cur_branch_search_start with second = y } )
     in
     let range_map_exc ~(cur_branch_search_start : Time.Date_time.t) (x, y) =
-      range_map_start ~cur_branch_search_start x, { cur_branch_search_start with second = y }
+      ( range_map_start ~cur_branch_search_start x,
+        { cur_branch_search_start with second = y } )
     in
     let cur_branch_search_start =
       get_cur_branch_search_start ~overall_search_start cur_branch
@@ -178,11 +182,15 @@ module Matching_seconds = struct
     match t.seconds with
     | [] ->
       Seq.return
-        (`Range_inc (cur_branch_search_start, Time.Date_time.set_to_last_sec cur_branch))
+        (`Range_inc
+           (cur_branch_search_start, Time.Date_time.set_to_last_sec cur_branch))
     | l ->
       List.sort_uniq compare l
       |> Time.Second_ranges.Of_list.range_seq_of_list
-      |> Seq.map (Range.map ~f_inc:(range_map_inc ~cur_branch_search_start) ~f_exc:(range_map_exc ~cur_branch_search_start))
+      |> Seq.map
+        (Range.map
+           ~f_inc:(range_map_inc ~cur_branch_search_start)
+           ~f_exc:(range_map_exc ~cur_branch_search_start))
 end
 
 module Matching_minutes = struct
@@ -210,7 +218,8 @@ module Matching_minutes = struct
     | pat_min_list ->
       pat_min_list
       |> List.to_seq
-      |> Seq.filter (fun minute -> cur_branch_search_start.minute <= minute && minute < 60)
+      |> Seq.filter (fun minute ->
+          cur_branch_search_start.minute <= minute && minute < 60)
       |> Seq.map (fun minute -> { cur_branch_search_start with minute })
 
   let matching_minute_ranges (t : time_pattern)
@@ -218,13 +227,19 @@ module Matching_minutes = struct
     : Time.Date_time.t Range.range Seq.t =
     let range_map_start ~(cur_branch_search_start : Time.Date_time.t) x =
       if x = cur_branch_search_start.minute then cur_branch_search_start
-      else Time.Date_time.set_to_first_sec { cur_branch_search_start with minute = x }
+      else
+        Time.Date_time.set_to_first_sec
+          { cur_branch_search_start with minute = x }
     in
     let range_map_inc ~(cur_branch_search_start : Time.Date_time.t) (x, y) =
-      (range_map_start ~cur_branch_search_start x, Time.Date_time.set_to_last_sec { cur_branch_search_start with minute = y })
+      ( range_map_start ~cur_branch_search_start x,
+        Time.Date_time.set_to_last_sec
+          { cur_branch_search_start with minute = y } )
     in
     let range_map_exc ~(cur_branch_search_start : Time.Date_time.t) (x, y) =
-      (range_map_start ~cur_branch_search_start x, Time.Date_time.set_to_first_sec { cur_branch_search_start with minute = y })
+      ( range_map_start ~cur_branch_search_start x,
+        Time.Date_time.set_to_first_sec
+          { cur_branch_search_start with minute = y } )
     in
     let cur_branch_search_start =
       get_cur_branch_search_start ~overall_search_start cur_branch
@@ -232,12 +247,17 @@ module Matching_minutes = struct
     match t.minutes with
     | [] ->
       Seq.return
-        (`Range_inc (cur_branch_search_start, Time.Date_time.set_to_last_min_sec cur_branch_search_start))
+        (`Range_inc
+           ( cur_branch_search_start,
+             Time.Date_time.set_to_last_min_sec cur_branch_search_start ))
     | l ->
       List.filter (fun min -> cur_branch_search_start.minute <= min) l
       |> List.sort_uniq compare
       |> Time.Minute_ranges.Of_list.range_seq_of_list
-      |> Seq.map (Range.map ~f_inc:(range_map_inc ~cur_branch_search_start) ~f_exc:(range_map_exc ~cur_branch_search_start))
+      |> Seq.map
+        (Range.map
+           ~f_inc:(range_map_inc ~cur_branch_search_start)
+           ~f_exc:(range_map_exc ~cur_branch_search_start))
 end
 
 module Matching_hours = struct
@@ -258,11 +278,14 @@ module Matching_hours = struct
     in
     match t.hours with
     | [] ->
-      Seq.map (fun hour -> { cur_branch with hour }) OSeq.(cur_branch_search_start.hour --^ 24)
+      Seq.map
+        (fun hour -> { cur_branch with hour })
+        OSeq.(cur_branch_search_start.hour --^ 24)
     | pat_hour_list ->
       pat_hour_list
       |> List.to_seq
-      |> Seq.filter (fun hour -> cur_branch_search_start.hour <= hour && hour < 24)
+      |> Seq.filter (fun hour ->
+          cur_branch_search_start.hour <= hour && hour < 24)
       |> Seq.map (fun hour -> { cur_branch with hour })
 
   let matching_hour_ranges (t : time_pattern)
@@ -270,14 +293,19 @@ module Matching_hours = struct
     : Time.Date_time.t Range.range Seq.t =
     let range_map_start ~(cur_branch_search_start : Time.Date_time.t) x =
       if x = cur_branch_search_start.hour then cur_branch_search_start
-      else Time.Date_time.set_to_first_min_sec { cur_branch_search_start with hour = x }
+      else
+        Time.Date_time.set_to_first_min_sec
+          { cur_branch_search_start with hour = x }
     in
-    let range_map_inc ~(cur_branch_search_start : Time.Date_time.t)(x, y) =
-      (range_map_start ~cur_branch_search_start x, Time.Date_time.set_to_last_min_sec { cur_branch_search_start with hour = y })
-    in
-    let range_map_exc ~(cur_branch_search_start : Time.Date_time.t)(x, y) =
+    let range_map_inc ~(cur_branch_search_start : Time.Date_time.t) (x, y) =
       ( range_map_start ~cur_branch_search_start x,
-        Time.Date_time.set_to_first_min_sec { cur_branch_search_start with hour = y } )
+        Time.Date_time.set_to_last_min_sec
+          { cur_branch_search_start with hour = y } )
+    in
+    let range_map_exc ~(cur_branch_search_start : Time.Date_time.t) (x, y) =
+      ( range_map_start ~cur_branch_search_start x,
+        Time.Date_time.set_to_first_min_sec
+          { cur_branch_search_start with hour = y } )
     in
     let cur_branch_search_start =
       get_cur_branch_search_start ~overall_search_start cur_branch
@@ -286,12 +314,18 @@ module Matching_hours = struct
     | [] ->
       Seq.return
         (`Range_inc
-           (cur_branch_search_start, Time.Date_time.set_to_last_hour_min_sec cur_branch))
+           ( cur_branch_search_start,
+             Time.Date_time.set_to_last_hour_min_sec cur_branch ))
     | l ->
-      List.filter (fun hour -> cur_branch_search_start.hour <= hour && hour < 24) l
+      List.filter
+        (fun hour -> cur_branch_search_start.hour <= hour && hour < 24)
+        l
       |> List.sort_uniq compare
       |> Time.Hour_ranges.Of_list.range_seq_of_list
-      |> Seq.map (Range.map ~f_inc:(range_map_inc ~cur_branch_search_start) ~f_exc:(range_map_exc ~cur_branch_search_start))
+      |> Seq.map
+        (Range.map
+           ~f_inc:(range_map_inc ~cur_branch_search_start)
+           ~f_exc:(range_map_exc ~cur_branch_search_start))
 end
 
 module Matching_days = struct
@@ -365,7 +399,7 @@ module Matching_days = struct
   let matching_day_ranges (t : time_pattern)
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
-    let range_map_start ~(cur_branch_search_start : Time.Date_time.t)x =
+    let range_map_start ~(cur_branch_search_start : Time.Date_time.t) x =
       if x = cur_branch_search_start.day then cur_branch_search_start
       else
         Time.Date_time.set_to_first_hour_min_sec
@@ -418,7 +452,9 @@ module Matching_months = struct
     let cur_branch_search_start =
       get_cur_branch_search_start ~overall_search_start cur_branch
     in
-    let start_month_int = Time.human_int_of_month cur_branch_search_start.month in
+    let start_month_int =
+      Time.human_int_of_month cur_branch_search_start.month
+    in
     match t.months with
     | [] ->
       OSeq.(start_month_int -- 12)
@@ -443,8 +479,8 @@ module Matching_months = struct
     in
     let range_map_inc ~(cur_branch_search_start : Time.Date_time.t) (x, y) =
       ( range_map_start ~cur_branch_search_start x,
-        Time.Date_time.set_to_last_day_hour_min_sec { cur_branch_search_start with month = y }
-      )
+        Time.Date_time.set_to_last_day_hour_min_sec
+          { cur_branch_search_start with month = y } )
     in
     let range_map_exc ~(cur_branch_search_start : Time.Date_time.t) (x, y) =
       ( range_map_start ~cur_branch_search_start x,
@@ -454,12 +490,16 @@ module Matching_months = struct
     let cur_branch_search_start =
       get_cur_branch_search_start ~overall_search_start cur_branch
     in
-    let start_month_int = Time.human_int_of_month cur_branch_search_start.month in
+    let start_month_int =
+      Time.human_int_of_month cur_branch_search_start.month
+    in
     match t.months with
     | [] ->
       Seq.return
         (`Range_inc
-           (cur_branch_search_start, Time.Date_time.set_to_last_month_day_hour_min_sec cur_branch_search_start))
+           ( cur_branch_search_start,
+             Time.Date_time.set_to_last_month_day_hour_min_sec
+               cur_branch_search_start ))
     | l ->
       l
       |> List.sort_uniq Time.compare_month
@@ -468,7 +508,10 @@ module Matching_months = struct
       |> Seq.filter (fun month -> start_month_int <= month && month <= 12)
       |> Seq.map (fun month -> Time.month_of_human_int month |> Result.get_ok)
       |> Time.Month_ranges.Of_seq.range_seq_of_seq
-      |> Seq.map (Range.map ~f_inc:(range_map_inc ~cur_branch_search_start) ~f_exc:(range_map_exc ~cur_branch_search_start))
+      |> Seq.map
+        (Range.map
+           ~f_inc:(range_map_inc ~cur_branch_search_start)
+           ~f_exc:(range_map_exc ~cur_branch_search_start))
 end
 
 module Matching_years = struct
@@ -524,7 +567,10 @@ module Matching_years = struct
           overall_search_start.year <= year
           && year < overall_search_start.year + search_years_ahead)
       |> Time.Year_ranges.Of_seq.range_seq_of_seq
-      |> Seq.map (Range.map ~f_inc:(range_map_inc ~overall_search_start) ~f_exc:(range_map_exc ~overall_search_start))
+      |> Seq.map
+        (Range.map
+           ~f_inc:(range_map_inc ~overall_search_start)
+           ~f_exc:(range_map_exc ~overall_search_start))
 end
 
 module Matching_unix_seconds = struct
