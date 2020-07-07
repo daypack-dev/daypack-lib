@@ -132,7 +132,7 @@ let of_unix_second ~(tz_offset_s_of_time_pattern : Time.tz_offset_s option)
 *)
 
 module Matching_seconds = struct
-  let get_search_start_in_cur_branch ~(overall_search_start : Time.Date_time.t)
+  let get_search_start_of_cur_branch ~(overall_search_start : Time.Date_time.t)
       (cur_branch : Time.Date_time.t) : Time.Date_time.t =
     if
       cur_branch.year = overall_search_start.year
@@ -147,7 +147,7 @@ module Matching_seconds = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Seq.t =
     let start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     match t.seconds with
     | [] ->
@@ -164,7 +164,7 @@ module Matching_seconds = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
     let start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     match t.seconds with
     | [] ->
@@ -182,7 +182,7 @@ module Matching_seconds = struct
 end
 
 module Matching_minutes = struct
-  let get_search_start_in_cur_branch ~(overall_search_start : Time.Date_time.t)
+  let get_search_start_of_cur_branch ~(overall_search_start : Time.Date_time.t)
       (cur_branch : Time.Date_time.t) : Time.Date_time.t =
     if
       cur_branch.year = overall_search_start.year
@@ -196,7 +196,7 @@ module Matching_minutes = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Seq.t =
     let start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     match t.minutes with
     | [] ->
@@ -213,7 +213,7 @@ module Matching_minutes = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
     let start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     match t.minutes with
     | [] ->
@@ -237,7 +237,7 @@ module Matching_minutes = struct
 end
 
 module Matching_hours = struct
-  let get_search_start_in_cur_branch ~(overall_search_start : Time.Date_time.t)
+  let get_search_start_of_cur_branch ~(overall_search_start : Time.Date_time.t)
       (cur_branch : Time.Date_time.t) : Time.Date_time.t =
     if
       cur_branch.year = overall_search_start.year
@@ -250,7 +250,7 @@ module Matching_hours = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Seq.t =
     let start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     match t.hours with
     | [] ->
@@ -265,7 +265,7 @@ module Matching_hours = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
     let start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     match t.hours with
     | [] ->
@@ -291,7 +291,7 @@ module Matching_hours = struct
 end
 
 module Matching_days = struct
-  let get_search_start_in_cur_branch ~(overall_search_start : Time.Date_time.t)
+  let get_search_start_of_cur_branch ~(overall_search_start : Time.Date_time.t)
       (cur_branch : Time.Date_time.t) : Time.Date_time.t =
     if
       cur_branch.year = overall_search_start.year
@@ -353,7 +353,7 @@ module Matching_days = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Seq.t =
     let current_search_start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     matching_int_month_days t ~current_search_start
     |> Seq.map (fun day -> { current_search_start with day })
@@ -362,7 +362,7 @@ module Matching_days = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
     let current_search_start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     let f_start x =
       if x = current_search_start.day then current_search_start
@@ -401,7 +401,7 @@ module Matching_days = struct
 end
 
 module Matching_months = struct
-  let get_search_start_in_cur_branch ~(overall_search_start : Time.Date_time.t)
+  let get_search_start_of_cur_branch ~(overall_search_start : Time.Date_time.t)
       (cur_branch : Time.Date_time.t) : Time.Date_time.t =
     if cur_branch.year = overall_search_start.year then overall_search_start
     else Time.Date_time.set_to_first_month_day_hour_min_sec cur_branch
@@ -410,7 +410,7 @@ module Matching_months = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Seq.t =
     let start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     let start_month_int = Time.human_int_of_month start.month in
     match t.months with
@@ -430,7 +430,7 @@ module Matching_months = struct
       ~(overall_search_start : Time.Date_time.t) (cur_branch : Time.Date_time.t)
     : Time.Date_time.t Range.range Seq.t =
     let start =
-      get_search_start_in_cur_branch ~overall_search_start cur_branch
+      get_search_start_of_cur_branch ~overall_search_start cur_branch
     in
     let start_month_int = Time.human_int_of_month start.month in
     match t.months with
