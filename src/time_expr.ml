@@ -681,7 +681,7 @@ module Of_string = struct
   let round_robin_select :
     (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     skip_space
-    *> ( try_ (char ',')
+    *> ( try_ (string "|>")
          *> skip_space
          *> return (fun a b ->
              Time_expr_ast.Time_slots_round_robin_select [ a; b ]) )
@@ -729,7 +729,9 @@ module Of_string = struct
           <|> atom
         in
         let term = chainl1 factor inter in
-        chainl1 term union)
+        let term' = chainl1 term round_robin_select in
+        chainl1 term' union)
+    >>= fun e -> return (flatten_round_robin_select e)
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string (time_expr <* skip_space <* eoi) s
