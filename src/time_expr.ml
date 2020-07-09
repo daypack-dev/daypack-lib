@@ -173,7 +173,7 @@ module Check = struct
   let check_unbounded_time_slots_expr
       (e : Time_expr_ast.unbounded_time_slots_expr) : (unit, unit) result =
     let open Time_expr_ast in
-    let rec aux e =
+    let aux e =
       match e with
       | Tse_name _ -> Ok ()
       | Explicit_time_slot (x, y) ->
@@ -181,9 +181,6 @@ module Check = struct
           Result.is_ok (check_unbounded_time_points_expr x)
           && Result.is_ok (check_unbounded_time_points_expr y)
         then Ok ()
-        else Error ()
-      | Round_robin_select l ->
-        if List.for_all (fun x -> Result.is_ok (aux x)) l then Ok ()
         else Error ()
       | Month_days_and_hour_minute_second_ranges
           { month_days; hour_minute_second_ranges } ->
@@ -681,15 +678,41 @@ module Of_string = struct
          *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (Union, a, b))
        )
 
-  (* let round_robin_union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
-   *   skip_space
-   *   *> (try_ (char ',')
-   *       *> skip_space
-   *       *> return (fun a b ->
-   *           match a with
-   *           | 
-   *         )
-   *      ) *)
+  let round_robin_select : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
+    skip_space
+    *> (try_ (char ',')
+        *> skip_space
+        *> return (fun a b ->
+            Time_expr_ast.Time_slots_round_robin_select [a; b]
+          )
+       )
+
+  let flatten_round_robin_select (e : Time_expr_ast.t) : Time_expr_ast.t =
+    let open Time_expr_ast in
+    let rec aux e =
+      match e with
+      | Time_points_expr _ -> e
+      | Time_slots_expr _ -> e
+      | Time_pattern _ -> e
+      | Time_slots_unary_op (op, e) ->
+        Time_slots_unary_op (op, aux e)
+      | Time_slots_binary_op (op, e1, e2) ->
+        Time_slots_binary_op (op, aux e1, aux e2)
+      | Time_slots_round_robin_select l ->
+        l
+        |> List.to_seq
+        |> Seq.map aux
+        |> Seq.flat_map (fun e ->
+            match e with
+            | Time_slots_round_robin_select l ->
+              List.to_seq l
+            | _ ->
+              Seq.return e
+          )
+        |> List.of_seq
+        |> fun l -> Time_slots_round_robin_select l
+    in
+    aux e
 
   let time_expr : Time_expr_ast.t t =
     let open Time_expr_ast in
@@ -710,8 +733,7 @@ module Of_string = struct
                 >>= fun e -> return (Time_slots_unary_op (Not, e)) )
           <|> atom
         in
-        let term' = chainl1 factor inter in
-        let term = chainl1 term' round_robin_union in
+        let term = chainl1 factor inter in
         chainl1 term union
       )
 
@@ -958,7 +980,7 @@ module To_time_pattern_lossy = struct
       (e : Time_expr_ast.unbounded_time_slots_expr) :
     (Time_pattern.time_range_pattern list, string) result =
     let open Time_expr_ast in
-    let rec aux e =
+    let aux e =
       match e with
       | Tse_name _ -> failwith "Unexpected case"
       | Explicit_time_slot (start, end_exc) -> (
@@ -973,11 +995,6 @@ module To_time_pattern_lossy = struct
               with
               | Error msg -> raise (Invalid_time_expr msg)
               | Ok end_exc -> [ `Range_exc (start, end_exc) ] ) )
-      | Round_robin_select l ->
-        l
-        |> List.to_seq
-        |> Seq.flat_map (fun x -> aux x |> List.to_seq)
-        |> List.of_seq
       | Month_days_and_hour_minute_second_ranges
           { month_days; hour_minute_second_ranges } ->
         (* check_hour_minute_second_ranges hour_minute_second_ranges; *)
@@ -1260,13 +1277,6 @@ module Time_slots_expr = struct
               match Option.value ~default:bound force_bound with
               | `Next -> OSeq.take 1
               | `Every -> fun x -> x )
-          | Round_robin_select l -> (
-              match l with
-              | [] -> OSeq.take 0
-              | _ -> (
-                  match Option.value ~default:bound force_bound with
-                  | `Next -> OSeq.take 1
-                  | `Every -> fun x -> x ) )
           | Month_days_and_hour_minute_second_ranges _
           | Weekdays_and_hour_minute_second_ranges _
           | Months_and_month_days_and_hour_minute_second_ranges _
@@ -1283,7 +1293,7 @@ module Time_slots_expr = struct
         let flat_selector =
           match e with
           | Tse_name _ -> failwith "Unexpected case"
-          | Explicit_time_slot _ | Round_robin_select _
+          | Explicit_time_slot _
           | Month_days_and_hour_minute_second_ranges _
           | Weekdays_and_hour_minute_second_ranges _
           | Months_and_month_days_and_hour_minute_second_ranges _
@@ -1372,5 +1382,17 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
                 ( match op with
                   | Union -> Time_slots.Union.union ~skip_check:true s1 s2
                   | Inter -> Time_slots.inter ~skip_check:true s1 s2 ) ) )
+    | Time_slots_round_robin_select l ->
+      l
+      |> List.map aux
+      |> Misc_utils.get_ok_error_list
+      |> fun x ->
+      match x with
+      | Ok l ->
+        l
+        |> List.to_seq
+        |> Time_slots.Round_robin.merge_multi_seq_round_robin_non_decreasing
+        |> Result.ok
+      | Error x -> Error x
   in
   aux e
