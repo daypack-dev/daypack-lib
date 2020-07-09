@@ -650,13 +650,13 @@ module Of_string = struct
            { years; months; month_days; hour_minute_second_ranges })
 
     let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
-          ts_name
-          <|> try_ ts_explicit_time_slot
-          <|> try_ ts_days_hour_minute_second_ranges
-          <|> try_ ts_months_mdays_hour_minute_second
-          <|> try_ ts_months_wdays_hour_minute_second
-          <|> try_ ts_months_wday_hour_minute_second
-          <|> try_ ts_years_months_mdays_hour_minute_second
+      ts_name
+      <|> try_ ts_explicit_time_slot
+      <|> try_ ts_days_hour_minute_second_ranges
+      <|> try_ ts_months_mdays_hour_minute_second
+      <|> try_ ts_months_wdays_hour_minute_second
+      <|> try_ ts_months_wday_hour_minute_second
+      <|> try_ ts_years_months_mdays_hour_minute_second
 
     let time_slots_expr : Time_expr_ast.time_slots_expr t =
       bound
@@ -678,14 +678,13 @@ module Of_string = struct
          *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (Union, a, b))
        )
 
-  let round_robin_select : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
+  let round_robin_select :
+    (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     skip_space
-    *> (try_ (char ',')
-        *> skip_space
-        *> return (fun a b ->
-            Time_expr_ast.Time_slots_round_robin_select [a; b]
-          )
-       )
+    *> ( try_ (char ',')
+         *> skip_space
+         *> return (fun a b ->
+             Time_expr_ast.Time_slots_round_robin_select [ a; b ]) )
 
   let flatten_round_robin_select (e : Time_expr_ast.t) : Time_expr_ast.t =
     let open Time_expr_ast in
@@ -694,8 +693,7 @@ module Of_string = struct
       | Time_points_expr _ -> e
       | Time_slots_expr _ -> e
       | Time_pattern _ -> e
-      | Time_slots_unary_op (op, e) ->
-        Time_slots_unary_op (op, aux e)
+      | Time_slots_unary_op (op, e) -> Time_slots_unary_op (op, aux e)
       | Time_slots_binary_op (op, e1, e2) ->
         Time_slots_binary_op (op, aux e1, aux e2)
       | Time_slots_round_robin_select l ->
@@ -704,11 +702,8 @@ module Of_string = struct
         |> Seq.map aux
         |> Seq.flat_map (fun e ->
             match e with
-            | Time_slots_round_robin_select l ->
-              List.to_seq l
-            | _ ->
-              Seq.return e
-          )
+            | Time_slots_round_robin_select l -> List.to_seq l
+            | _ -> Seq.return e)
         |> List.of_seq
         |> fun l -> Time_slots_round_robin_select l
     in
@@ -734,8 +729,7 @@ module Of_string = struct
           <|> atom
         in
         let term = chainl1 factor inter in
-        chainl1 term union
-      )
+        chainl1 term union)
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string (time_expr <* skip_space <* eoi) s
@@ -1293,8 +1287,7 @@ module Time_slots_expr = struct
         let flat_selector =
           match e with
           | Tse_name _ -> failwith "Unexpected case"
-          | Explicit_time_slot _
-          | Month_days_and_hour_minute_second_ranges _
+          | Explicit_time_slot _ | Month_days_and_hour_minute_second_ranges _
           | Weekdays_and_hour_minute_second_ranges _
           | Months_and_month_days_and_hour_minute_second_ranges _
           | Months_and_weekdays_and_hour_minute_second_ranges _
@@ -1382,17 +1375,17 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
                 ( match op with
                   | Union -> Time_slots.Union.union ~skip_check:true s1 s2
                   | Inter -> Time_slots.inter ~skip_check:true s1 s2 ) ) )
-    | Time_slots_round_robin_select l ->
-      l
-      |> List.map aux
-      |> Misc_utils.get_ok_error_list
-      |> fun x ->
-      match x with
-      | Ok l ->
+    | Time_slots_round_robin_select l -> (
         l
-        |> List.to_seq
-        |> Time_slots.Round_robin.merge_multi_seq_round_robin_non_decreasing
-        |> Result.ok
-      | Error x -> Error x
+        |> List.map aux
+        |> Misc_utils.get_ok_error_list
+        |> fun x ->
+        match x with
+        | Ok l ->
+          l
+          |> List.to_seq
+          |> Time_slots.Round_robin.merge_multi_seq_round_robin_non_decreasing
+          |> Result.ok
+        | Error x -> Error x )
   in
   aux e
