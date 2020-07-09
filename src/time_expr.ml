@@ -653,17 +653,13 @@ module Of_string = struct
            { years; months; month_days; hour_minute_second_ranges })
 
     let unbounded_time_slots_expr : Time_expr_ast.unbounded_time_slots_expr t =
-      fix (fun expr ->
           ts_name
           <|> try_ ts_explicit_time_slot
-          <|> try_
-            ( sep_by_comma1 expr
-              >>= fun l -> return (Time_expr_ast.Round_robin_select l) )
           <|> try_ ts_days_hour_minute_second_ranges
           <|> try_ ts_months_mdays_hour_minute_second
           <|> try_ ts_months_wdays_hour_minute_second
           <|> try_ ts_months_wday_hour_minute_second
-          <|> try_ ts_years_months_mdays_hour_minute_second)
+          <|> try_ ts_years_months_mdays_hour_minute_second
 
     let time_slots_expr : Time_expr_ast.time_slots_expr t =
       bound
@@ -685,6 +681,16 @@ module Of_string = struct
          *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (Union, a, b))
        )
 
+  (* let round_robin_union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
+   *   skip_space
+   *   *> (try_ (char ',')
+   *       *> skip_space
+   *       *> return (fun a b ->
+   *           match a with
+   *           | 
+   *         )
+   *      ) *)
+
   let time_expr : Time_expr_ast.t t =
     let open Time_expr_ast in
     fix (fun expr ->
@@ -704,8 +710,10 @@ module Of_string = struct
                 >>= fun e -> return (Time_slots_unary_op (Not, e)) )
           <|> atom
         in
-        let term = chainl1 factor inter in
-        chainl1 term union)
+        let term' = chainl1 factor inter in
+        let term = chainl1 term' round_robin_union in
+        chainl1 term union
+      )
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string (time_expr <* skip_space <* eoi) s
