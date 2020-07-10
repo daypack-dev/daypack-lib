@@ -290,7 +290,7 @@ module Of_string = struct
         >>= fun y -> return (`Range_exc (x, y)) )
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
-  let symbols = "()[]&|"
+  let symbols = "()[]&|>"
 
   let ranges_expr (p : 'a Range.range t) : 'a Range.range list t =
     sep_by_comma1 p
