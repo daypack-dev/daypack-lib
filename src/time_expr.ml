@@ -244,7 +244,7 @@ let check_time_expr (e : Time_expr_ast.t) : (unit, unit) result =
     | Time_unary_op (_op, e') -> aux e'
     | Time_binary_op (_op, e1, e2) -> (
         match aux e1 with Error () -> Error () | Ok () -> aux e2 )
-    | Time_slots_round_robin_select l ->
+    | Time_round_robin_select l ->
       l
       |> List.map aux
       |> Misc_utils.get_ok_error_list
@@ -699,7 +699,7 @@ module Of_string = struct
     *> ( try_ (string "|>")
          *> skip_space
          *> return (fun a b ->
-             Time_expr_ast.Time_slots_round_robin_select [ a; b ]) )
+             Time_expr_ast.Time_round_robin_select [ a; b ]) )
 
   let flatten_round_robin_select (e : Time_expr_ast.t) : Time_expr_ast.t =
     let open Time_expr_ast in
@@ -711,16 +711,16 @@ module Of_string = struct
       | Time_unary_op (op, e) -> Time_unary_op (op, aux e)
       | Time_binary_op (op, e1, e2) ->
         Time_binary_op (op, aux e1, aux e2)
-      | Time_slots_round_robin_select l ->
+      | Time_round_robin_select l ->
         l
         |> List.to_seq
         |> Seq.map aux
         |> Seq.flat_map (fun e ->
             match e with
-            | Time_slots_round_robin_select l -> List.to_seq l
+            | Time_round_robin_select l -> List.to_seq l
             | _ -> Seq.return e)
         |> List.of_seq
-        |> fun l -> Time_slots_round_robin_select l
+        |> fun l -> Time_round_robin_select l
     in
     aux e
 
@@ -1371,7 +1371,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
                 ( match op with
                   | Union -> Time_slots.Union.union ~skip_check:true s1 s2
                   | Inter -> Time_slots.inter ~skip_check:true s1 s2 ) ) )
-    | Time_slots_round_robin_select l -> (
+    | Time_round_robin_select l -> (
         l
         |> List.map aux
         |> Misc_utils.get_ok_error_list
