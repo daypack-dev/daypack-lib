@@ -13,9 +13,7 @@ val to_seconds : t -> int64
 
 val normalize : t -> t
 
-module Of_string : sig
-  val of_string : string -> (t, string) result
-end
+val of_string : string -> (t, string) result
 
 module To_string : sig
   val human_readable_string_of_duration : t -> string
