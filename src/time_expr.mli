@@ -8,13 +8,13 @@ type f_resolve_tse_name =
 type f_resolve_tpe_name =
   string -> Time_expr_ast.unbounded_time_points_expr option
 
-module Check : sig
+(* module Check : sig *)
   (* val check_unbounded_time_points_expr :
    *   Time_expr_ast.unbounded_time_points_expr -> (unit, unit) result
    * 
    * val check_unbounded_time_slots_expr :
    *   Time_expr_ast.unbounded_time_slots_expr -> (unit, unit) result *)
-end
+(* end *)
 
 val check_time_expr : Time_expr_ast.t -> (unit, unit) result
 
@@ -68,15 +68,15 @@ module To_string : sig
     Time_expr_ast.hour_minute_second_expr -> string
 end
 
-module Of_string : sig
-  val of_string : string -> (Time_expr_ast.t, string) result
-
+(* module Of_string : sig *)
   (* val time_points_expr_of_string :
    *   string -> (Time_expr_ast.time_points_expr, string) result
    * 
    * val time_slots_expr_of_string :
    *   string -> (Time_expr_ast.time_slots_expr, string) result *)
-end
+(* end *)
+
+val of_string : string -> (Time_expr_ast.t, string) result
 
 (* module To_time_pattern_lossy : sig *)
 (* val time_pattern_of_time_points_expr :
