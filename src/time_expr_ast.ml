@@ -62,7 +62,7 @@ type month_weekday_mode =
   | First_n of int
   | Last_n of int
 
-type unbounded_time_slots_expr =
+type unbounded_time_slot_expr =
   | Tse_name of string
   | Explicit_time_slot of
       (unbounded_time_point_expr * unbounded_time_point_expr)
@@ -97,7 +97,7 @@ type unbounded_time_slots_expr =
       hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
 
-type time_slots_expr = bound * unbounded_time_slots_expr
+type time_slot_expr = bound * unbounded_time_slot_expr
 
 type unary_op = Not
 
@@ -107,7 +107,7 @@ type binary_op =
 
 type t =
   | Time_point_expr of time_point_expr
-  | Time_slots_expr of time_slots_expr
+  | Time_slot_expr of time_slot_expr
   | Time_pattern of Time_pattern.time_pattern
   | Time_slots_unary_op of unary_op * t
   | Time_slots_binary_op of binary_op * t * t
