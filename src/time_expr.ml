@@ -292,11 +292,6 @@ module Of_string = struct
 
   let symbols = "()[]&|"
 
-  (* let ranges_expr ~(to_int : 'a -> int) ~(of_int : int -> 'a) (p : 'a Range.range t) : 'a Range.range list t =
-   *   sep_by_comma1 p >>| fun l ->
-   *   l |> List.to_seq |>
-   *   Ranges_small.normalize ~to_int ~of_int |> List.of_seq *)
-
   let ranges_expr (p : 'a Range.range t) : 'a Range.range list t =
     sep_by_comma1 p
 
@@ -1179,18 +1174,6 @@ module To_time_pattern_lossy = struct
 end
 
 module Time_points_expr = struct
-  (* let next_match_unix_second ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-   *     (search_param : search_param) (e : Time_expr_ast.time_points_expr) :
-   *   (int64 option, string) result =
-   *   match
-   *     To_time_pattern_lossy.time_pattern_of_time_points_expr ~f_resolve_tpe_name
-   *       e
-   *   with
-   *   | Error msg -> Error msg
-   *   | Ok pat ->
-   *     Time_pattern.Single_pattern.next_match_unix_second search_param pat
-   *     |> Result.map_error Time_pattern.To_string.string_of_error *)
-
   let matching_unix_seconds ~(force_bound : Time_expr_ast.bound option)
       ~f_resolve_tpe_name (search_param : Search_param.t)
       ((bound, e) : Time_expr_ast.time_points_expr) :
