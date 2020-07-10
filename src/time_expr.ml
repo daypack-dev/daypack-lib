@@ -290,7 +290,7 @@ module Of_string = struct
         >>= fun y -> return (`Range_exc (x, y)) )
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
-  let symbols = "()[]&|"
+  let symbols = "()[]&|>"
 
   let ranges_expr (p : 'a Range.range t) : 'a Range.range list t =
     sep_by_comma1 p
@@ -679,23 +679,17 @@ module Of_string = struct
   end
 
   let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
-    skip_space
-    *> ( try_ (string "&&")
-         *> skip_space
-         *> return (fun a b -> Time_expr_ast.Time_binary_op (Inter, a, b)) )
+    string "&&"
+    *> return (fun a b -> Time_expr_ast.Time_binary_op (Inter, a, b))
 
   let union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
-    skip_space
-    *> ( try_ (string "||")
-         *> skip_space
-         *> return (fun a b -> Time_expr_ast.Time_binary_op (Union, a, b)) )
+    string "||"
+    *> return (fun a b -> Time_expr_ast.Time_binary_op (Union, a, b))
 
   let round_robin_select :
     (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
-    skip_space
-    *> ( try_ (string "|>")
-         *> skip_space
-         *> return (fun a b -> Time_expr_ast.Time_round_robin_select [ a; b ]) )
+    string ">>"
+    *> return (fun a b -> Time_expr_ast.Time_round_robin_select [ a; b ])
 
   let flatten_round_robin_select (e : Time_expr_ast.t) : Time_expr_ast.t =
     let open Time_expr_ast in
