@@ -241,7 +241,7 @@ let check_time_expr (e : Time_expr_ast.t) : (unit, unit) result =
     | Time_pattern p ->
       Time_pattern.Check.check_time_pattern p
       |> Result.map_error (fun _ -> ())
-    | Time_slots_unary_op (_op, e') -> aux e'
+    | Time_unary_op (_op, e') -> aux e'
     | Time_slots_binary_op (_op, e1, e2) -> (
         match aux e1 with Error () -> Error () | Ok () -> aux e2 )
     | Time_slots_round_robin_select l ->
@@ -708,7 +708,7 @@ module Of_string = struct
       | Time_point_expr _ -> e
       | Time_slot_expr _ -> e
       | Time_pattern _ -> e
-      | Time_slots_unary_op (op, e) -> Time_slots_unary_op (op, aux e)
+      | Time_unary_op (op, e) -> Time_unary_op (op, aux e)
       | Time_slots_binary_op (op, e1, e2) ->
         Time_slots_binary_op (op, aux e1, aux e2)
       | Time_slots_round_robin_select l ->
@@ -740,7 +740,7 @@ module Of_string = struct
           <* skip_space
           <* char ')'
           <|> ( try_ not_string *> skip_space *> expr
-                >>= fun e -> return (Time_slots_unary_op (Not, e)) )
+                >>= fun e -> return (Time_unary_op (Not, e)) )
           <|> atom
         in
         let term = chainl1 factor inter in
@@ -1347,7 +1347,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     | Time_pattern pat ->
       Time_pattern.Single_pattern.matching_time_slots search_param pat
       |> Result.map_error Time_pattern.To_string.string_of_error
-    | Time_slots_unary_op (op, e) -> (
+    | Time_unary_op (op, e) -> (
         match aux e with
         | Error x -> Error x
         | Ok not_mem_of -> (

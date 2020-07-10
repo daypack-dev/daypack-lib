@@ -109,6 +109,6 @@ type t =
   | Time_point_expr of time_point_expr
   | Time_slot_expr of time_slot_expr
   | Time_pattern of Time_pattern.time_pattern
-  | Time_slots_unary_op of unary_op * t
+  | Time_unary_op of unary_op * t
   | Time_slots_binary_op of binary_op * t * t
   | Time_slots_round_robin_select of t list
