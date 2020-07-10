@@ -16,6 +16,9 @@ module Check : sig
    *   Time_expr_ast.unbounded_time_slots_expr -> (unit, unit) result *)
 end
 
+val check_time_expr :
+  Time_expr_ast.t -> (unit, unit) result
+
 (* module Time_points_expr : sig
  *   val next_match_unix_second :
  *     ?f_resolve_tpe_name:f_resolve_tpe_name ->
