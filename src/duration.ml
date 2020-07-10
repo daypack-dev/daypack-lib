@@ -138,6 +138,8 @@ module Of_string = struct
     parse_string duration_expr s
 end
 
+let of_string = Of_string.of_string
+
 module To_string = struct
   let human_readable_string_of_duration ({ days; hours; minutes; seconds } : t)
     : string =

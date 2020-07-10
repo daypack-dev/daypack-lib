@@ -850,13 +850,15 @@ let debug_time_expr_matching_time_slots () =
       }
   in
   let s =
-    Daypack_lib.Time_expr.Of_string.of_string "m[feb]d[29]hm"
-    |> Result.get_ok
-    |> Daypack_lib.Time_expr.matching_time_slots search_param
-    |> Result.get_ok
+    match Daypack_lib.Time_expr.of_string "7pm || 12am" with
+    | Error msg -> failwith (Printf.sprintf "Error: %s" msg)
+    | Ok e ->
+      e
+      |> Daypack_lib.Time_expr.matching_time_slots search_param
+      |> Result.get_ok
   in
   s
-  |> OSeq.take 100
+  |> OSeq.take 30
   |> Seq.iter (fun (x, y) ->
       let x =
         Daypack_lib.Time.To_string.yyyymondd_hhmmss_string_of_unix_second

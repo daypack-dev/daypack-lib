@@ -1,5 +1,3 @@
-open Test_utils
-
 module Int64_range = Daypack_lib.Range.Make (struct
     type t = int64
 

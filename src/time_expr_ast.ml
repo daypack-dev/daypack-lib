@@ -34,7 +34,7 @@ type month_expr = Time.month
 
 type year_expr = int
 
-type unbounded_time_points_expr =
+type unbounded_time_point_expr =
   | Tpe_name of string
   | Tpe_unix_seconds of int64 list
   | Second of second_expr
@@ -56,16 +56,15 @@ type unbounded_time_points_expr =
       hour_minute_second : hour_minute_second_expr;
     }
 
-type time_points_expr = bound * unbounded_time_points_expr
+type time_point_expr = bound * unbounded_time_point_expr
 
 type month_weekday_mode =
   | First_n of int
   | Last_n of int
 
-type unbounded_time_slots_expr =
+type unbounded_time_slot_expr =
   | Tse_name of string
-  | Explicit_time_slots of
-      (unbounded_time_points_expr * unbounded_time_points_expr) list
+  | Explicit_time_slot of (unbounded_time_point_expr * unbounded_time_point_expr)
   | Month_days_and_hour_minute_second_ranges of {
       month_days : int Range.range list;
       hour_minute_second_ranges : hour_minute_second_range_expr list;
@@ -97,7 +96,7 @@ type unbounded_time_slots_expr =
       hour_minute_second_ranges : hour_minute_second_range_expr list;
     }
 
-type time_slots_expr = bound * unbounded_time_slots_expr
+type time_slot_expr = bound * unbounded_time_slot_expr
 
 type unary_op = Not
 
@@ -106,8 +105,9 @@ type binary_op =
   | Inter
 
 type t =
-  | Time_points_expr of time_points_expr
-  | Time_slots_expr of time_slots_expr
+  | Time_point_expr of time_point_expr
+  | Time_slot_expr of time_slot_expr
   | Time_pattern of Time_pattern.time_pattern
-  | Time_slots_unary_op of unary_op * t
-  | Time_slots_binary_op of binary_op * t * t
+  | Time_unary_op of unary_op * t
+  | Time_binary_op of binary_op * t * t
+  | Time_round_robin_select of t list

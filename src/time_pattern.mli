@@ -23,9 +23,9 @@ type error =
 
 type time_range_pattern = time_pattern Range.range
 
-type single_or_ranges =
-  | Single_time_pattern of time_pattern
-  | Time_range_patterns of time_range_pattern list
+(* type single_or_ranges =
+ *   | Single_time_pattern of time_pattern
+ *   | Time_range_patterns of time_range_pattern list *)
 
 val empty : time_pattern
 
@@ -97,19 +97,19 @@ module Range_pattern : sig
     (Time_slot.t Seq.t, error) result
 end
 
-module Single_or_ranges : sig
-  val matching_time_slots :
-    Search_param.t -> single_or_ranges -> (Time_slot.t Seq.t, error) result
-
-  val next_match_time_slot :
-    Search_param.t -> single_or_ranges -> (Time_slot.t option, error) result
-
-  val matching_time_slots_round_robin_non_decreasing :
-    Search_param.t -> single_or_ranges -> (Time_slot.t list Seq.t, error) result
-
-  val matching_time_slots_round_robin_non_decreasing_flat :
-    Search_param.t -> single_or_ranges -> (Time_slot.t Seq.t, error) result
-end
+(* module Single_or_ranges : sig
+ *   val matching_time_slots :
+ *     Search_param.t -> single_or_ranges -> (Time_slot.t Seq.t, error) result
+ * 
+ *   val next_match_time_slot :
+ *     Search_param.t -> single_or_ranges -> (Time_slot.t option, error) result
+ * 
+ *   val matching_time_slots_round_robin_non_decreasing :
+ *     Search_param.t -> single_or_ranges -> (Time_slot.t list Seq.t, error) result
+ * 
+ *   val matching_time_slots_round_robin_non_decreasing_flat :
+ *     Search_param.t -> single_or_ranges -> (Time_slot.t Seq.t, error) result
+ * end *)
 
 module Equal : sig
   val equal : time_pattern -> time_pattern -> bool
@@ -138,8 +138,8 @@ module To_string : sig
   val debug_string_of_time_range_pattern :
     ?indent_level:int -> ?buffer:Buffer.t -> time_range_pattern -> string
 
-  val debug_string_of_single_or_ranges :
-    ?indent_level:int -> ?buffer:Buffer.t -> single_or_ranges -> string
+  (* val debug_string_of_single_or_ranges :
+   *   ?indent_level:int -> ?buffer:Buffer.t -> single_or_ranges -> string *)
 end
 
 module Print : sig
@@ -148,8 +148,8 @@ module Print : sig
   val debug_print_time_range_pattern :
     ?indent_level:int -> time_range_pattern -> unit
 
-  val debug_print_single_or_ranges :
-    ?indent_level:int -> single_or_ranges -> unit
+  (* val debug_print_single_or_ranges :
+   *   ?indent_level:int -> single_or_ranges -> unit *)
 end
 
 module Serialize : sig
