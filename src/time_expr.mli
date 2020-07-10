@@ -119,3 +119,10 @@ val matching_time_slots :
   Search_param.t ->
   Time_expr_ast.t ->
   (Time_slot.t Seq.t, string) result
+
+val next_match_time_slot :
+  ?f_resolve_tpe_name:f_resolve_tpe_name ->
+  ?f_resolve_tse_name:f_resolve_tse_name ->
+  Search_param.t ->
+  Time_expr_ast.t ->
+  (Time_slot.t option, string) result

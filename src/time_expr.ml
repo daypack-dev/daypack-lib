@@ -1323,17 +1323,6 @@ module Time_slots_expr = struct
               |> Seq.flat_map List.to_seq
               |> flat_selector
               |> Result.ok ) )
-
-  (* let next_match_time_slot ?(f_resolve_tse_name = default_f_resolve_tse_name)
-   *     ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-   *     (search_param : search_param) (e : Time_expr_ast.time_slots_expr) :
-   *   ((int64 * int64) option, string) result =
-   *   match
-   *     matching_time_slots ~f_resolve_tse_name ~f_resolve_tpe_name search_param e
-   *   with
-   *   | Error msg -> Error msg
-   *   | Ok seq -> (
-   *       match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) ) *)
 end
 
 let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
@@ -1391,3 +1380,15 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
         | Error x -> Error x )
   in
   aux e
+
+let next_match_time_slot
+    ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+    ?(f_resolve_tse_name = default_f_resolve_tse_name)
+    (search_param : Search_param.t) (e : Time_expr_ast.t) :
+  (Time_slot.t option, string) result =
+  match
+    matching_time_slots ~f_resolve_tse_name ~f_resolve_tpe_name search_param e
+  with
+  | Error msg -> Error msg
+  | Ok seq -> (
+      match seq () with Seq.Nil -> Ok None | Seq.Cons (x, _) -> Ok (Some x) )
