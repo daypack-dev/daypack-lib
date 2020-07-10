@@ -236,20 +236,14 @@ let check_time_expr (e : Time_expr_ast.t) : (unit, unit) result =
   let open Time_expr_ast in
   let rec aux e =
     match e with
-    | Time_points_expr (_, e') ->
-      Check.check_unbounded_time_points_expr e'
-    | Time_slots_expr (_, e') ->
-      Check.check_unbounded_time_slots_expr e'
+    | Time_points_expr (_, e') -> Check.check_unbounded_time_points_expr e'
+    | Time_slots_expr (_, e') -> Check.check_unbounded_time_slots_expr e'
     | Time_pattern p ->
       Time_pattern.Check.check_time_pattern p
       |> Result.map_error (fun _ -> ())
-    | Time_slots_unary_op (_op, e') ->
-      aux e'
-    | Time_slots_binary_op (_op, e1, e2) ->
-      (match aux e1 with
-       | Error () -> Error ()
-       | Ok () -> aux e2
-      )
+    | Time_slots_unary_op (_op, e') -> aux e'
+    | Time_slots_binary_op (_op, e1, e2) -> (
+        match aux e1 with Error () -> Error () | Ok () -> aux e2 )
     | Time_slots_round_robin_select l ->
       l
       |> List.map aux
