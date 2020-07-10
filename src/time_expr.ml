@@ -693,7 +693,7 @@ module Of_string = struct
   let round_robin_select :
     (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     skip_space
-    *> ( try_ (string "|>")
+    *> ( try_ (string ">>")
          *> skip_space
          *> return (fun a b -> Time_expr_ast.Time_round_robin_select [ a; b ]) )
 
