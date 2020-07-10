@@ -1372,6 +1372,9 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
         | Error x -> Error x )
   in
   aux e
+  |> Result.map
+    (Time_slots.Normalize.normalize ~skip_filter_invalid:true
+       ~skip_filter_empty:true ~skip_sort:true)
 
 let next_match_time_slot ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     ?(f_resolve_tse_name = default_f_resolve_tse_name)
