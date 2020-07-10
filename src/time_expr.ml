@@ -1,19 +1,19 @@
 type error =
-  | Invalid_time_points_expr
+  | Invalid_time_point_expr
   | Invalid_time_slots_expr
 
 type f_resolve_tse_name =
   string -> Time_expr_ast.unbounded_time_slots_expr option
 
 type f_resolve_tpe_name =
-  string -> Time_expr_ast.unbounded_time_points_expr option
+  string -> Time_expr_ast.unbounded_time_point_expr option
 
 let default_f_resolve_tse_name (_ : string) :
   Time_expr_ast.unbounded_time_slots_expr option =
   None
 
 let default_f_resolve_tpe_name (_ : string) :
-  Time_expr_ast.unbounded_time_points_expr option =
+  Time_expr_ast.unbounded_time_point_expr option =
   None
 
 module To_string = struct
@@ -28,10 +28,10 @@ exception Invalid_time_expr of string
 let max_resolve_depth = 1000
 
 module Resolve = struct
-  let resolve_unbounded_time_points_expr
+  let resolve_unbounded_time_point_expr
       ~(f_resolve_tpe_name : f_resolve_tpe_name)
-      (e : Time_expr_ast.unbounded_time_points_expr) :
-    (Time_expr_ast.unbounded_time_points_expr, string) result =
+      (e : Time_expr_ast.unbounded_time_point_expr) :
+    (Time_expr_ast.unbounded_time_point_expr, string) result =
     let rec aux f_resolve_tpe_name remaining_resolve_depth name e =
       if remaining_resolve_depth <= 0 then Error "Maximum resolve depth reached"
       else
@@ -79,13 +79,13 @@ module Resolve = struct
               Ok
                 (Time_expr_ast.Explicit_time_slot
                    ( match
-                       resolve_unbounded_time_points_expr ~f_resolve_tpe_name
+                       resolve_unbounded_time_point_expr ~f_resolve_tpe_name
                          start
                      with
                      | Error msg -> raise (Invalid_time_expr msg)
                      | Ok start -> (
                          match
-                           resolve_unbounded_time_points_expr ~f_resolve_tpe_name
+                           resolve_unbounded_time_point_expr ~f_resolve_tpe_name
                              end_exc
                          with
                          | Error msg -> raise (Invalid_time_expr msg)
@@ -115,8 +115,8 @@ module Check = struct
              ~minute:y.minute ~second:y.second)
       l
 
-  let check_unbounded_time_points_expr
-      (e : Time_expr_ast.unbounded_time_points_expr) : (unit, unit) result =
+  let check_unbounded_time_point_expr
+      (e : Time_expr_ast.unbounded_time_point_expr) : (unit, unit) result =
     let open Time_expr_ast in
     match e with
     | Tpe_name _ -> Ok ()
@@ -178,8 +178,8 @@ module Check = struct
       | Tse_name _ -> Ok ()
       | Explicit_time_slot (x, y) ->
         if
-          Result.is_ok (check_unbounded_time_points_expr x)
-          && Result.is_ok (check_unbounded_time_points_expr y)
+          Result.is_ok (check_unbounded_time_point_expr x)
+          && Result.is_ok (check_unbounded_time_point_expr y)
         then Ok ()
         else Error ()
       | Month_days_and_hour_minute_second_ranges
@@ -236,7 +236,7 @@ let check_time_expr (e : Time_expr_ast.t) : (unit, unit) result =
   let open Time_expr_ast in
   let rec aux e =
     match e with
-    | Time_points_expr (_, e') -> Check.check_unbounded_time_points_expr e'
+    | Time_point_expr (_, e') -> Check.check_unbounded_time_point_expr e'
     | Time_slots_expr (_, e') -> Check.check_unbounded_time_slots_expr e'
     | Time_pattern p ->
       Time_pattern.Check.check_time_pattern p
@@ -453,7 +453,7 @@ module Of_string = struct
     let year_ranges_expr = sep_by_comma1 year_range_expr
   end
 
-  module Time_points_expr = struct
+  module Time_point_expr = struct
     let tp_name =
       try_ (string "at:") *> ident_string
       >>= fun s -> return (Time_expr_ast.Tpe_name s)
@@ -534,7 +534,7 @@ module Of_string = struct
     let tp_second =
       Second.second_expr >>= fun second -> return (Time_expr_ast.Second second)
 
-    let unbounded_time_points_expr : Time_expr_ast.unbounded_time_points_expr t
+    let unbounded_time_point_expr : Time_expr_ast.unbounded_time_point_expr t
       =
       tp_name
       <|> tp_ymd_hour_minute_second
@@ -546,11 +546,11 @@ module Of_string = struct
       <|> tp_minute_second
       <|> tp_second
 
-    let time_points_expr : Time_expr_ast.time_points_expr t =
+    let time_point_expr : Time_expr_ast.time_point_expr t =
       bound
       >>= fun bound ->
       skip_space
-      *> ( unbounded_time_points_expr
+      *> ( unbounded_time_point_expr
            >>= fun e ->
            extraneous_text_check ~end_markers:symbols *> return (bound, e) )
       <|> ( get_cnum
@@ -564,12 +564,12 @@ module Of_string = struct
       >>= fun s -> return (Time_expr_ast.Tse_name s)
 
     let ts_explicit_time_slot =
-      Time_points_expr.unbounded_time_points_expr
+      Time_point_expr.unbounded_time_point_expr
       >>= fun start ->
       skip_space
       *> to_string
       *> skip_space
-      *> Time_points_expr.unbounded_time_points_expr
+      *> Time_point_expr.unbounded_time_point_expr
       >>= fun end_exc ->
       return (Time_expr_ast.Explicit_time_slot (start, end_exc))
 
@@ -705,7 +705,7 @@ module Of_string = struct
     let open Time_expr_ast in
     let rec aux e =
       match e with
-      | Time_points_expr _ -> e
+      | Time_point_expr _ -> e
       | Time_slots_expr _ -> e
       | Time_pattern _ -> e
       | Time_slots_unary_op (op, e) -> Time_slots_unary_op (op, aux e)
@@ -732,8 +732,8 @@ module Of_string = struct
           >>= (fun e -> return (Time_expr_ast.Time_pattern e))
               <|> ( Time_slots_expr.time_slots_expr
                     >>= fun e -> return (Time_expr_ast.Time_slots_expr e) )
-              <|> ( Time_points_expr.time_points_expr
-                    >>= fun e -> return (Time_expr_ast.Time_points_expr e) )
+              <|> ( Time_point_expr.time_point_expr
+                    >>= fun e -> return (Time_expr_ast.Time_point_expr e) )
         in
         let factor =
           try_ (char '(') *> skip_space *> expr
@@ -751,9 +751,9 @@ module Of_string = struct
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string (time_expr <* skip_space <* eoi) s
 
-  (* let time_points_expr_of_string (s : string) :
-   *   (Time_expr_ast.time_points_expr, string) result =
-   *   parse_string Time_points_expr.time_points_expr s
+  (* let time_point_expr_of_string (s : string) :
+   *   (Time_expr_ast.time_point_expr, string) result =
+   *   parse_string Time_point_expr.time_point_expr s
    * 
    * let time_slots_expr_of_string (s : string) :
    *   (Time_expr_ast.time_slots_expr, string) result =
@@ -932,13 +932,13 @@ module To_time_pattern_lossy = struct
       update_time_pattern_using_unix_seconds l Time_pattern.empty
   end
 
-  let time_pattern_of_unbounded_time_points_expr
+  let time_pattern_of_unbounded_time_point_expr
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-      (e : Time_expr_ast.unbounded_time_points_expr) :
+      (e : Time_expr_ast.unbounded_time_point_expr) :
     (Time_pattern.time_pattern, string) result =
     try
       match
-        Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e
+        Resolve.resolve_unbounded_time_point_expr ~f_resolve_tpe_name e
       with
       | Error msg -> Error msg
       | Ok e ->
@@ -981,11 +981,11 @@ module To_time_pattern_lossy = struct
                 Time_pattern.empty )
     with Invalid_time_expr msg -> Error msg
 
-  let time_pattern_of_time_points_expr
+  let time_pattern_of_time_point_expr
       ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
-      ((_, e) : Time_expr_ast.time_points_expr) :
+      ((_, e) : Time_expr_ast.time_point_expr) :
     (Time_pattern.time_pattern, string) result =
-    time_pattern_of_unbounded_time_points_expr ~f_resolve_tpe_name e
+    time_pattern_of_unbounded_time_point_expr ~f_resolve_tpe_name e
 
   let time_range_patterns_of_unbounded_time_slots_expr
       ?(f_resolve_tse_name = default_f_resolve_tse_name)
@@ -998,12 +998,12 @@ module To_time_pattern_lossy = struct
       | Tse_name _ -> failwith "Unexpected case"
       | Explicit_time_slot (start, end_exc) -> (
           match
-            time_pattern_of_unbounded_time_points_expr ~f_resolve_tpe_name start
+            time_pattern_of_unbounded_time_point_expr ~f_resolve_tpe_name start
           with
           | Error msg -> raise (Invalid_time_expr msg)
           | Ok start -> (
               match
-                time_pattern_of_unbounded_time_points_expr ~f_resolve_tpe_name
+                time_pattern_of_unbounded_time_point_expr ~f_resolve_tpe_name
                   end_exc
               with
               | Error msg -> raise (Invalid_time_expr msg)
@@ -1119,8 +1119,8 @@ module To_time_pattern_lossy = struct
    *     ?(f_resolve_tpe_name = default_f_resolve_tpe_name) (e : Time_expr_ast.t) :
    *   (Time_pattern.single_or_ranges, string) result =
    *   match e with
-   *   | Time_expr_ast.Time_points_expr e -> (
-   *       match time_pattern_of_time_points_expr ~f_resolve_tpe_name e with
+   *   | Time_expr_ast.Time_point_expr e -> (
+   *       match time_pattern_of_time_point_expr ~f_resolve_tpe_name e with
    *       | Ok x -> Ok (Single_time_pattern x)
    *       | Error msg -> Error msg )
    *   | Time_expr_ast.Time_slots_expr e -> (
@@ -1175,19 +1175,19 @@ module To_time_pattern_lossy = struct
    *   | Error msg -> Error msg *)
 end
 
-module Time_points_expr = struct
+module Time_point_expr = struct
   let matching_unix_seconds ~(force_bound : Time_expr_ast.bound option)
       ~f_resolve_tpe_name (search_param : Search_param.t)
-      ((bound, e) : Time_expr_ast.time_points_expr) :
+      ((bound, e) : Time_expr_ast.time_point_expr) :
     (int64 Seq.t, string) result =
     match
-      To_time_pattern_lossy.time_pattern_of_unbounded_time_points_expr
+      To_time_pattern_lossy.time_pattern_of_unbounded_time_point_expr
         ~f_resolve_tpe_name e
     with
     | Error msg -> Error msg
     | Ok pat -> (
         match
-          Resolve.resolve_unbounded_time_points_expr ~f_resolve_tpe_name e
+          Resolve.resolve_unbounded_time_point_expr ~f_resolve_tpe_name e
         with
         | Error msg -> Error msg
         | Ok e -> (
@@ -1337,8 +1337,8 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
   let rec aux e =
     let open Time_expr_ast in
     match e with
-    | Time_points_expr e ->
-      Time_points_expr.matching_unix_seconds ~force_bound:None
+    | Time_point_expr e ->
+      Time_point_expr.matching_unix_seconds ~force_bound:None
         ~f_resolve_tpe_name search_param e
       |> Result.map (Seq.map (fun x -> (x, Int64.succ x)))
     | Time_slots_expr e ->
