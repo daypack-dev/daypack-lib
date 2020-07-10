@@ -101,7 +101,7 @@ let sep_fail_on_first_fail ~by ~end_markers (p : 'a t) : 'a list t =
   | Error s -> fail s
 
 let chainl1 x op =
-  let rec aux a = op >>= (fun f -> x >>= fun b -> aux (f a b)) <|> return a in
+  let rec aux a = (try_ (skip_space *> op <* skip_space) >>= (fun f -> x >>= fun b -> aux (f a b))) <|> return a in
   x >>= aux
 
 let invalid_syntax ~text ~cnum = failf "Invalid syntax: %s, pos: %d" text cnum

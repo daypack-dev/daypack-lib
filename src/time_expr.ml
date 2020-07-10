@@ -679,22 +679,16 @@ module Of_string = struct
   end
 
   let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
-    skip_space
-    *> ( try_ (string "&&")
-         *> skip_space
+    ( string "&&"
          *> return (fun a b -> Time_expr_ast.Time_binary_op (Inter, a, b)) )
 
   let union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
-    skip_space
-    *> ( try_ (string "||")
-         *> skip_space
+    ( string "||"
          *> return (fun a b -> Time_expr_ast.Time_binary_op (Union, a, b)) )
 
   let round_robin_select :
     (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
-    skip_space
-    *> ( try_ (string ">>")
-         *> skip_space
+    ( string ">>"
          *> return (fun a b -> Time_expr_ast.Time_round_robin_select [ a; b ]) )
 
   let flatten_round_robin_select (e : Time_expr_ast.t) : Time_expr_ast.t =
