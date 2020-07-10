@@ -1381,8 +1381,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
   in
   aux e
 
-let next_match_time_slot
-    ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
+let next_match_time_slot ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     ?(f_resolve_tse_name = default_f_resolve_tse_name)
     (search_param : Search_param.t) (e : Time_expr_ast.t) :
   (Time_slot.t option, string) result =
