@@ -242,7 +242,7 @@ let check_time_expr (e : Time_expr_ast.t) : (unit, unit) result =
       Time_pattern.Check.check_time_pattern p
       |> Result.map_error (fun _ -> ())
     | Time_unary_op (_op, e') -> aux e'
-    | Time_slots_binary_op (_op, e1, e2) -> (
+    | Time_binary_op (_op, e1, e2) -> (
         match aux e1 with Error () -> Error () | Ok () -> aux e2 )
     | Time_slots_round_robin_select l ->
       l
@@ -683,14 +683,14 @@ module Of_string = struct
     skip_space
     *> ( try_ (string "&&")
          *> skip_space
-         *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (Inter, a, b))
+         *> return (fun a b -> Time_expr_ast.Time_binary_op (Inter, a, b))
        )
 
   let union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     skip_space
     *> ( try_ (string "||")
          *> skip_space
-         *> return (fun a b -> Time_expr_ast.Time_slots_binary_op (Union, a, b))
+         *> return (fun a b -> Time_expr_ast.Time_binary_op (Union, a, b))
        )
 
   let round_robin_select :
@@ -709,8 +709,8 @@ module Of_string = struct
       | Time_slot_expr _ -> e
       | Time_pattern _ -> e
       | Time_unary_op (op, e) -> Time_unary_op (op, aux e)
-      | Time_slots_binary_op (op, e1, e2) ->
-        Time_slots_binary_op (op, aux e1, aux e2)
+      | Time_binary_op (op, e1, e2) ->
+        Time_binary_op (op, aux e1, aux e2)
       | Time_slots_round_robin_select l ->
         l
         |> List.to_seq
@@ -1360,7 +1360,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
                 | Error x -> Error (Time_pattern.To_string.string_of_error x)
                 | Ok s -> Ok (Time_slots.relative_complement ~not_mem_of s) ) )
       )
-    | Time_slots_binary_op (op, e1, e2) -> (
+    | Time_binary_op (op, e1, e2) -> (
         match aux e1 with
         | Error x -> Error x
         | Ok s1 -> (
