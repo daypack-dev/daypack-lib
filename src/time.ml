@@ -50,9 +50,9 @@ end
 module Float_multipliers = struct
   let minute_to_seconds = Int64.to_float Int64_multipliers.minute_to_seconds
 
-  let hour_to_seconds = Int64.to_float Int64_multipliers.minute_to_seconds
+  let hour_to_seconds = Int64.to_float Int64_multipliers.hour_to_seconds
 
-  let day_to_seconds = Int64.to_float Int64_multipliers.hour_to_seconds
+  let day_to_seconds = Int64.to_float Int64_multipliers.day_to_seconds
 end
 
 let resolve_current_tz_offset_s (x : tz_offset_s option) : tz_offset_s =
