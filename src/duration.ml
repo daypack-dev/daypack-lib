@@ -126,8 +126,7 @@ module Of_string = struct
     let term' num p =
       try_ (num <* skip_space <* p)
       >>= (fun n -> return (Some n))
-          <|> ( try_ (num <* skip_space <* eoi)
-                >>= fun n -> return (Some n) )
+          <|> (try_ (num <* skip_space <* eoi) >>= fun n -> return (Some n))
           <|> return None
     in
     term' float_non_neg days_string
