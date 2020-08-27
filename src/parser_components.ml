@@ -31,12 +31,8 @@ let nat_zero : int t =
 let float_non_neg : float t =
   chars1_if (function '0' .. '9' -> true | _ -> false)
   >>= fun x ->
-  (
-  (try_ (char '.' *>
-         chars1_if (function '0' .. '9' -> true | _ -> false)))
-  <|>
-  return "0"
-)
+  try_ (char '.' *> chars1_if (function '0' .. '9' -> true | _ -> false))
+  <|> return "0"
   >>= fun y ->
   let s = x ^ "." ^ y in
   try return (float_of_string s)

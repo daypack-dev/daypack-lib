@@ -44,9 +44,9 @@ let to_seconds (t : t) : int64 =
   +^ seconds
 
 let seconds_of_raw (r : raw) : int64 =
-  (r.days *. (Int64.to_float Time.day_to_second_multiplier))
-  +. (r.hours *. (Int64.to_float Time.hour_to_second_multiplier))
-  +. (r.minutes *. (Int64.to_float Time.minute_to_second_multiplier))
+  (r.days *. Int64.to_float Time.day_to_second_multiplier)
+  +. (r.hours *. Int64.to_float Time.hour_to_second_multiplier)
+  +. (r.minutes *. Int64.to_float Time.minute_to_second_multiplier)
   +. r.seconds
   |> Int64.of_float
 
@@ -126,7 +126,8 @@ module Of_string = struct
     let term' p =
       try_ (float_non_neg <* skip_space <* p)
       >>= (fun n -> return (Some n))
-          <|> (try_ (float_non_neg <* skip_space <* eoi) >>= fun n -> return (Some n))
+          <|> ( try_ (float_non_neg <* skip_space <* eoi)
+                >>= fun n -> return (Some n) )
           <|> return None
     in
     term' days_string
@@ -140,17 +141,16 @@ module Of_string = struct
     skip_space
     *> check_for_unused_term days hours minutes seconds
     *> return
-      (
-         ({
-           days = Option.value ~default:0.0 days;
-           hours = Option.value ~default:0.0 hours;
-           minutes = Option.value ~default:0.0 minutes;
-           seconds = Option.value ~default:0.0 seconds;
-         } : raw)
-         |> seconds_of_raw
-         |> of_seconds
-         |> Result.get_ok
-       )
+      ( ( {
+            days = Option.value ~default:0.0 days;
+            hours = Option.value ~default:0.0 hours;
+            minutes = Option.value ~default:0.0 minutes;
+            seconds = Option.value ~default:0.0 seconds;
+          }
+            : raw )
+        |> seconds_of_raw
+        |> of_seconds
+        |> Result.get_ok )
 
   let of_string (s : string) : (duration, string) result =
     parse_string duration_expr s
