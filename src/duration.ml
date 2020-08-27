@@ -38,15 +38,15 @@ let to_seconds (t : t) : int64 =
   let hours = Int64.of_int t.hours in
   let minutes = Int64.of_int t.minutes in
   let seconds = Int64.of_int t.seconds in
-  (days *^ Time.day_to_second_multiplier)
-  +^ (hours *^ Time.hour_to_second_multiplier)
-  +^ (minutes *^ Time.minute_to_second_multiplier)
+  (days *^ Time.Int64_multipliers.day_to_seconds)
+  +^ (hours *^ Time.Int64_multipliers.hour_to_seconds)
+  +^ (minutes *^ Time.Int64_multipliers.minute_to_seconds)
   +^ seconds
 
 let seconds_of_raw (r : raw) : int64 =
-  (r.days *. Int64.to_float Time.day_to_second_multiplier)
-  +. (r.hours *. Int64.to_float Time.hour_to_second_multiplier)
-  +. (r.minutes *. Int64.to_float Time.minute_to_second_multiplier)
+  (r.days *. Time.Float_multipliers.day_to_seconds)
+  +. (r.hours *. Time.Float_multipliers.hour_to_seconds)
+  +. (r.minutes *. Time.Float_multipliers.minute_to_seconds)
   +. r.seconds
   |> Int64.of_float
 
