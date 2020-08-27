@@ -28,6 +28,20 @@ let nat_zero : int t =
   try return (int_of_string s)
   with _ -> fail (Printf.sprintf "Integer %s is out of range" s)
 
+let float_non_neg : float t =
+  chars1_if (function '0' .. '9' -> true | _ -> false)
+  >>= fun x ->
+  (
+  (try_ (char '.' *>
+         chars1_if (function '0' .. '9' -> true | _ -> false)))
+  <|>
+  return "0"
+)
+  >>= fun y ->
+  let s = x ^ "." ^ y in
+  try return (float_of_string s)
+  with _ -> fail (Printf.sprintf "Float %s is out of range" s)
+
 let comma = char ','
 
 let dot = char '.'
