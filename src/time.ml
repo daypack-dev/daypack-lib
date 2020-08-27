@@ -39,11 +39,21 @@ let first_mday = 1
 
 let tm_year_offset = 1900
 
-let minute_to_second_multiplier = 60L
+module Int64_multipliers = struct
+  let minute_to_seconds = 60L
 
-let hour_to_second_multiplier = Int64.mul 60L minute_to_second_multiplier
+  let hour_to_seconds = Int64.mul 60L minute_to_seconds
 
-let day_to_second_multiplier = Int64.mul 24L hour_to_second_multiplier
+  let day_to_seconds = Int64.mul 24L hour_to_seconds
+end
+
+module Float_multipliers = struct
+  let minute_to_seconds = Int64.to_float Int64_multipliers.minute_to_seconds
+
+  let hour_to_seconds = Int64.to_float Int64_multipliers.minute_to_seconds
+
+  let day_to_seconds = Int64.to_float Int64_multipliers.hour_to_seconds
+end
 
 let resolve_current_tz_offset_s (x : tz_offset_s option) : tz_offset_s =
   Option.value ~default:0 x
@@ -494,7 +504,7 @@ end
 
 module Add = struct
   let add_days_unix_second ~(days : int) (x : int64) : int64 =
-    Int64.add (Int64.mul (Int64.of_int days) day_to_second_multiplier) x
+    Int64.add (Int64.mul (Int64.of_int days) Int64_multipliers.day_to_seconds) x
 end
 
 module Serialize = struct

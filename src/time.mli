@@ -39,11 +39,21 @@ val first_mday : int
 
 val tm_year_offset : int
 
-val minute_to_second_multiplier : int64
+module Int64_multipliers : sig
+  val minute_to_seconds : int64
 
-val hour_to_second_multiplier : int64
+  val hour_to_seconds : int64
 
-val day_to_second_multiplier : int64
+  val day_to_seconds : int64
+end
+
+module Float_multipliers : sig
+  val minute_to_seconds : float
+
+  val hour_to_seconds : float
+
+  val day_to_seconds : float
+end
 
 module Date_time : sig
   type t = {
