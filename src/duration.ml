@@ -4,7 +4,7 @@ type raw = {
   days : float;
   hours : float;
   minutes : float;
-  seconds : float;
+  seconds : int;
 }
 
 type t = {
@@ -47,8 +47,8 @@ let seconds_of_raw (r : raw) : int64 =
   (r.days *. Time.Float_multipliers.day_to_seconds)
   +. (r.hours *. Time.Float_multipliers.hour_to_seconds)
   +. (r.minutes *. Time.Float_multipliers.minute_to_seconds)
-  +. r.seconds
   |> Int64.of_float
+  |> Int64.add (Int64.of_int r.seconds)
 
 let normalize (t : t) : t = t |> to_seconds |> of_seconds |> Result.get_ok
 
@@ -123,20 +123,20 @@ module Of_string = struct
               *> if s = "" then nop else failf "Invalid syntax: %s, pos: %d" s cnum )
 
   let duration_expr : duration t =
-    let term' p =
-      try_ (float_non_neg <* skip_space <* p)
+    let term' num p =
+      try_ (num <* skip_space <* p)
       >>= (fun n -> return (Some n))
-          <|> ( try_ (float_non_neg <* skip_space <* eoi)
+          <|> ( try_ (num <* skip_space <* eoi)
                 >>= fun n -> return (Some n) )
           <|> return None
     in
-    term' days_string
+    term' float_non_neg days_string
     >>= fun days ->
-    skip_space *> term' hours_string
+    skip_space *> term' float_non_neg hours_string
     >>= fun hours ->
-    skip_space *> term' minutes_string
+    skip_space *> term' float_non_neg minutes_string
     >>= fun minutes ->
-    skip_space *> term' seconds_string
+    skip_space *> term' nat_zero seconds_string
     >>= fun seconds ->
     skip_space
     *> check_for_unused_term days hours minutes seconds
@@ -145,7 +145,7 @@ module Of_string = struct
             days = Option.value ~default:0.0 days;
             hours = Option.value ~default:0.0 hours;
             minutes = Option.value ~default:0.0 minutes;
-            seconds = Option.value ~default:0.0 seconds;
+            seconds = Option.value ~default:0 seconds;
           }
             : raw )
         |> seconds_of_raw
