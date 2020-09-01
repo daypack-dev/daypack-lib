@@ -537,7 +537,7 @@ module Matching_years = struct
     let range_map_start ~(overall_search_start : Time.Date_time.t) x =
       if x = overall_search_start.year then overall_search_start
       else
-        Time.Date_time.set_to_last_month_day_hour_min_sec
+        Time.Date_time.set_to_first_month_day_hour_min_sec
           { overall_search_start with year = x }
     in
     let range_map_inc ~(overall_search_start : Time.Date_time.t) (x, y) =
