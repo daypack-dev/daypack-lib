@@ -24,6 +24,6 @@ depends: [
   "containers"
 ]
 build: [
-  ["dune" "build" "-p" name "-j" jobs ]
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 install: ["dune" "build" "@install"]
