@@ -582,9 +582,8 @@ let task_seg_places =
 let task_seg_place_map_gen =
   let open QCheck.Gen in
   map
-    (fun l ->
-       ( l |> List.to_seq |> Daypack_lib.Int64_map.of_seq
-         : Daypack_lib.Sched.task_seg_place_map ))
+    (fun l : Daypack_lib.Sched.task_seg_place_map ->
+       l |> List.to_seq |> Daypack_lib.Int64_map.of_seq)
     (list_size (int_bound 10) (pair small_nz_pos_int64_gen task_seg_id_set_gen))
 
 let task_seg_place_map =

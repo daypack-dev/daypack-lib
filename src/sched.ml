@@ -3192,20 +3192,20 @@ module Overdue = struct
     in
     let sched_req_data_seq =
       leftover_task_segs
-      |> Seq.map (fun (task_seg_id, task_seg_size) ->
-          ( let task_inst_id =
-              Task_.Id.task_inst_id_of_task_seg_id task_seg_id
-            in
-            [
-              Sched_req_data_unit_skeleton.Shift
-                {
-                  task_seg_related_data_list =
-                    [ (task_inst_id, task_seg_size) ];
-                  time_slots = [ (start, end_exc) ];
-                  incre = 1L;
-                };
-            ]
-            : Sched_req_.sched_req_data ))
+      |> Seq.map
+        (fun (task_seg_id, task_seg_size) : Sched_req_.sched_req_data ->
+           let task_inst_id =
+             Task_.Id.task_inst_id_of_task_seg_id task_seg_id
+           in
+           [
+             Sched_req_data_unit_skeleton.Shift
+               {
+                 task_seg_related_data_list =
+                   [ (task_inst_id, task_seg_size) ];
+                 time_slots = [ (start, end_exc) ];
+                 incre = 1L;
+               };
+           ])
     in
     Seq.fold_left
       (fun sched sched_req_data ->

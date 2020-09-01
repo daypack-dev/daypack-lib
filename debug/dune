@@ -3,6 +3,6 @@
  (name main)
  (libraries daypack_lib
             ptime.clock.os
-            core
+            ; core
             )
  )

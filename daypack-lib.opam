@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "daypack-lib"
-version: "0.0.2"
+version: "0.0.3"
 synopsis: "A schedule, time and time slots handling library"
 description: """
 Daypack-lib is WIP and subject to drastic changes between versions, do not use it for anything serious
@@ -24,6 +24,6 @@ depends: [
   "containers"
 ]
 build: [
-  ["dune" "build" "-p" name "-j" jobs ]
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 install: ["dune" "build" "@install"]

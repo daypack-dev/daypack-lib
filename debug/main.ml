@@ -463,6 +463,7 @@ let debug_sched_agenda_range () =
   |> Seq.iter (fun task_seg_place ->
       Task.Print.debug_print_task_seg_place task_seg_place)
 
+(*
 let debug_sched_usage_simulation () =
   let add_task ~parent_user_id task_data task_inst_data_list t : unit =
     let task, _task_inst_list, ar =
@@ -625,7 +626,7 @@ let debug_sched_usage_simulation () =
   print_endline "Recording prgress";
   Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history;
   (* Sched_ver_history.In_place_head.move_task_seg_to_completed
-   *   (0L, 1L, 0L, 0L, None) sched_ver_history; *)
+ *   (0L, 1L, 0L, 0L, None) sched_ver_history; *)
   Sched_ver_history.In_place_head.Task_inst.Move.move_task_inst_to_completed
     (0L, 1L, 0L) sched_ver_history
   |> Sched_ver_history.Print.debug_print_action_record;
@@ -690,15 +691,16 @@ let debug_sched_usage_simulation () =
   print_endline "=====";
   (* Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history; *)
   (* ( match
-   *     Sched_ver_history.Maybe_append_to_head.sched ~start:100L ~end_exc:200L
-   *       ~include_sched_reqs_partially_within_time_slot:true
-   *       ~up_to_sched_req_id_inc:None sched_ver_history
-   *   with
-   *   | Ok () ->
-   *     print_endline "Scheduled successfully";
-   *     Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history
-   *   | Error () -> print_endline "Scheduling failed" ); *)
+ *     Sched_ver_history.Maybe_append_to_head.sched ~start:100L ~end_exc:200L
+ *       ~include_sched_reqs_partially_within_time_slot:true
+ *       ~up_to_sched_req_id_inc:None sched_ver_history
+ *   with
+ *   | Ok () ->
+ *     print_endline "Scheduled successfully";
+ *     Sched_ver_history.Print.debug_print_sched_ver_history sched_ver_history
+ *   | Error () -> print_endline "Scheduling failed" ); *)
   print_newline ()
+ *)
 
 (* let debug_time_pattern_matching_date_time_seq () =
  *   print_endline "Debug print for Time_pattern.matching_date_time_seq";
@@ -850,7 +852,7 @@ let debug_time_expr_matching_time_slots () =
       }
   in
   let s =
-    match Daypack_lib.Time_expr.of_string "6pm >> 9am" with
+    match Daypack_lib.Time_expr.of_string "* * * * * *" with
     | Error msg -> failwith (Printf.sprintf "Error: %s" msg)
     | Ok e ->
       e
