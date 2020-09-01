@@ -1300,9 +1300,7 @@ module Parser = struct
         unix_seconds = [];
       }
 
-  let time_pattern_expr =
-    try_ time_pattern_core_expr
-    <|> cron_expr
+  let time_pattern_expr = try_ time_pattern_core_expr <|> cron_expr
 end
 
 module Of_string = struct

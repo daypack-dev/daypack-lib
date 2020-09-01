@@ -7,19 +7,18 @@ let of_profile_list profiles =
 
 let matching_time_slots_of_profile =
   let cache : (string, Time_slot.t list) Hashtbl.t = Hashtbl.create 20 in
-  fun ~start ~end_exc ~(profile : string) (t : t) ->
-    ( match Hashtbl.find_opt cache profile with
-      | None ->
-        String_map.find_opt profile t.profiles
-        |> Option.map (fun data ->
-            let time_slots =
-              Time_profile.matching_time_slots_of_data ~start ~end_exc data
-              |> List.of_seq
-            in
-            Hashtbl.add cache profile time_slots;
-            time_slots)
-      | Some time_slots -> Some time_slots
-                           : Time_slot.t list option )
+  fun ~start ~end_exc ~(profile : string) (t : t) : Time_slot.t list option ->
+    match Hashtbl.find_opt cache profile with
+    | None ->
+      String_map.find_opt profile t.profiles
+      |> Option.map (fun data ->
+          let time_slots =
+            Time_profile.matching_time_slots_of_data ~start ~end_exc data
+            |> List.of_seq
+          in
+          Hashtbl.add cache profile time_slots;
+          time_slots)
+    | Some time_slots -> Some time_slots
 
 let add_profile ~(profile : string) (data : Time_profile.data) (t : t) : unit =
   t.profiles <- String_map.add profile data t.profiles
