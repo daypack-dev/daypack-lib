@@ -1260,7 +1260,7 @@ module Parser = struct
 
   let optional_part p = option [] (try_ p)
 
-  let time_pattern_expr =
+  let time_pattern_core_expr =
     optional_part (unit_char 'y' *> skip_space *> Year.years_time_pattern_expr)
     >>= fun years ->
     skip_space
@@ -1299,6 +1299,10 @@ module Parser = struct
         seconds;
         unix_seconds = [];
       }
+
+  let time_pattern_expr =
+    try_ time_pattern_core_expr
+    <|> cron_expr
 end
 
 module Of_string = struct
@@ -1308,7 +1312,7 @@ module Of_string = struct
     parse_string (Parser.cron_expr <* eoi) s
 
   let time_pattern_of_string (s : string) : (time_pattern, string) result =
-    parse_string (Parser.time_pattern_expr <* eoi) s
+    parse_string (Parser.time_pattern_expr <* skip_space <* eoi) s
 end
 
 module To_string = struct
