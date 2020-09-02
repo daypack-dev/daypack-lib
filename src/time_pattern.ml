@@ -620,10 +620,64 @@ module Single_pattern = struct
     |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
     |> Seq.filter_map Range_utils.result_range_get
 
-  let matching_date_times (search_param : Search_param.t) (t : time_pattern) :
+  let override_search_param_possibly ~allow_search_param_override (search_param : Search_param.t)
+      (t : time_pattern) : Search_param.t =
+    if allow_search_param_override then
+    match t.years with
+    | [] -> search_param
+    | l ->
+      let l = List.sort_uniq compare l in
+      let start_year =
+        List.hd l
+      in
+      let end_inc_year =
+        List.hd (List.rev l)
+      in
+      let search_using_tz_offset_s =
+        Search_param.search_using_tz_offset_s_of_search_param search_param
+        |> Option.value ~default:0
+      in
+      let start_date_time =
+        Time.Date_time.({ min with year = start_year; tz_offset_s = search_using_tz_offset_s } |> set_to_first_month_day_hour_min_sec)
+      in
+      match
+        Search_param.start_date_time_and_search_years_ahead_of_search_param
+          search_param
+      with
+      | None ->
+        Search_param.Years_ahead_start_date_time {
+          search_using_tz_offset_s = Some search_using_tz_offset_s;
+          start = start_date_time;
+          search_years_ahead = end_inc_year - start_year + 1;
+        }
+      | Some (start_date_time', search_years_ahead') ->
+        let cmp_value = Time.Date_time.compare start_date_time start_date_time' in
+        let end_inc_year =
+          max (start_date_time'.year + search_years_ahead')
+            end_inc_year
+        in
+        let start_date_time =
+          if cmp_value <= 0 then
+            start_date_time
+          else
+            start_date_time'
+        in
+        Search_param.Years_ahead_start_date_time {
+          search_using_tz_offset_s = Some search_using_tz_offset_s;
+          start = start_date_time;
+          search_years_ahead = end_inc_year - start_date_time.year + 1;
+        }
+    else
+      search_param
+
+  let matching_date_times ~(allow_search_param_override : bool)
+      (search_param : Search_param.t) (t : time_pattern) :
     (Time.Date_time.t Seq.t, error) result =
     Check.check_search_param_and_time_pattern search_param t
     |> Result.map (fun () ->
+        let search_param =
+            override_search_param_possibly ~allow_search_param_override search_param t
+        in
         match
           Search_param.start_date_time_and_search_years_ahead_of_search_param
             search_param
@@ -649,9 +703,10 @@ module Single_pattern = struct
           |> filter_using_matching_unix_seconds ~search_using_tz_offset_s t
             ~overall_search_start)
 
-  let matching_unix_seconds (search_param : Search_param.t) (t : time_pattern) :
+  let matching_unix_seconds ~(allow_search_param_override : bool)
+      (search_param : Search_param.t) (t : time_pattern) :
     (int64 Seq.t, error) result =
-    matching_date_times search_param t
+    matching_date_times ~allow_search_param_override search_param t
     |> Result.map (fun s ->
         Seq.filter_map
           (fun x ->
@@ -660,11 +715,15 @@ module Single_pattern = struct
              | Error () -> None)
           s)
 
-  let matching_date_time_ranges (search_param : Search_param.t)
+  let matching_date_time_ranges ~(allow_search_param_override : bool)
+      (search_param : Search_param.t)
       (t : time_pattern) : (Time.Date_time.t Range.range Seq.t, error) result =
     match Check.check_search_param_and_time_pattern search_param t with
     | Error msg -> Error msg
     | Ok () -> (
+        let search_param =
+          override_search_param_possibly ~allow_search_param_override search_param t
+        in
         match
           Search_param.start_date_time_and_search_years_ahead_of_search_param
             search_param
@@ -780,12 +839,12 @@ module Single_pattern = struct
               |> Seq.map (fun x -> `Range_inc (x, x))
               |> Result.ok ) )
 
-  let matching_time_slots (search_param : Search_param.t) (t : time_pattern) :
+  let matching_time_slots ~allow_search_param_override (search_param : Search_param.t) (t : time_pattern) :
     (Time_slot.t Seq.t, error) result =
     let f (x, y) =
       (Time.Date_time.to_unix_second x, Time.Date_time.to_unix_second y)
     in
-    matching_date_time_ranges search_param t
+    matching_date_time_ranges ~allow_search_param_override search_param t
     |> Result.map (fun s ->
         s
         |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
@@ -812,9 +871,10 @@ module Single_pattern = struct
             ~skip_sort:true)
 
   let matching_time_slots_round_robin_non_decreasing
+      ~allow_search_param_override 
       (search_param : Search_param.t) (l : time_pattern list) :
     (Time_slot.t list Seq.t, error) result =
-    let l = List.map (matching_time_slots search_param) l in
+    let l = List.map (matching_time_slots ~allow_search_param_override search_param) l in
     match List.find_opt Result.is_error l with
     | Some e -> Error (Result.get_error e)
     | None ->
@@ -827,20 +887,20 @@ module Single_pattern = struct
       |> Result.ok
 
   let matching_time_slots_round_robin_non_decreasing_flat
-      (search_param : Search_param.t) (l : time_pattern list) :
+      ~allow_search_param_override (search_param : Search_param.t) (l : time_pattern list) :
     (Time_slot.t Seq.t, error) result =
-    matching_time_slots_round_robin_non_decreasing search_param l
+    matching_time_slots_round_robin_non_decreasing ~allow_search_param_override search_param l
     |> Result.map (Seq.flat_map List.to_seq)
 
-  let next_match_date_time (search_param : Search_param.t) (t : time_pattern) :
+  let next_match_date_time ~(allow_search_param_override : bool)(search_param : Search_param.t) (t : time_pattern) :
     (Time.Date_time.t option, error) result =
-    matching_date_times search_param t
+    matching_date_times ~allow_search_param_override search_param t
     |> Result.map (fun s ->
         match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x)
 
-  let next_match_unix_second (search_param : Search_param.t) (t : time_pattern)
+  let next_match_unix_second ~(allow_search_param_override : bool)(search_param : Search_param.t) (t : time_pattern)
     : (int64 option, error) result =
-    next_match_date_time search_param t
+    next_match_date_time ~allow_search_param_override search_param t
     |> Result.map (fun x ->
         match x with
         | None -> None
@@ -849,15 +909,15 @@ module Single_pattern = struct
             | Error () -> None
             | Ok x -> Some x ))
 
-  let next_match_time_slot (search_param : Search_param.t) (t : time_pattern) :
+  let next_match_time_slot ~(allow_search_param_override : bool)(search_param : Search_param.t) (t : time_pattern) :
     (Time_slot.t option, error) result =
-    matching_time_slots search_param t
+    matching_time_slots ~allow_search_param_override search_param t
     |> Result.map (fun s ->
         match s () with Seq.Nil -> None | Seq.Cons (x, _) -> Some x)
 end
 
 module Range_pattern = struct
-  let matching_time_slots (search_param : Search_param.t)
+  let matching_time_slots ~allow_search_param_override (search_param : Search_param.t)
       (range : time_range_pattern) : (Time_slot.t Seq.t, error) result =
     let search_and_get_start (search_param : Search_param.t) (t : time_pattern)
         ((start, _) : Time_slot.t) : Time_slot.t option =
@@ -866,7 +926,7 @@ module Range_pattern = struct
         |> Result.get_ok
       in
       match
-        Single_pattern.next_match_time_slot search_param t |> Result.get_ok
+        Single_pattern.next_match_time_slot ~allow_search_param_override:false search_param t |> Result.get_ok
       with
       | None -> None
       | Some (start', _) -> Some (start, start')
@@ -878,7 +938,7 @@ module Range_pattern = struct
         |> Result.get_ok
       in
       match
-        Single_pattern.next_match_time_slot search_param t |> Result.get_ok
+        Single_pattern.next_match_time_slot ~allow_search_param_override:false search_param t |> Result.get_ok
       with
       | None -> None
       | Some (_, end_exc') -> Some (start, end_exc')
@@ -889,7 +949,7 @@ module Range_pattern = struct
     Check.check_search_param_and_time_range_pattern search_param range
     |> Result.map (fun () ->
         let s =
-          Single_pattern.matching_time_slots search_param start_pat
+          Single_pattern.matching_time_slots ~allow_search_param_override search_param start_pat
           |> Result.get_ok
         in
         match range with
@@ -898,17 +958,17 @@ module Range_pattern = struct
         | `Range_exc (_, t2) ->
           Seq.filter_map (search_and_get_start search_param t2) s)
 
-  let next_match_time_slot (search_param : Search_param.t)
+  let next_match_time_slot ~allow_search_param_override (search_param : Search_param.t)
       (range : time_range_pattern) : ((int64 * int64) option, error) result =
-    matching_time_slots search_param range
+    matching_time_slots ~allow_search_param_override search_param range
     |> Result.map (fun s ->
         match s () with
         | Seq.Nil -> None
         | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc))
 
-  let matching_time_slots_multi (search_param : Search_param.t)
+  let matching_time_slots_multi ~allow_search_param_override (search_param : Search_param.t)
       (l : time_range_pattern list) : (Time_slot.t Seq.t, error) result =
-    let l = List.map (matching_time_slots search_param) l in
+    let l = List.map (matching_time_slots ~allow_search_param_override search_param) l in
     match List.find_opt Result.is_error l with
     | Some e -> Error (Result.get_error e)
     | None ->
@@ -917,18 +977,18 @@ module Range_pattern = struct
       |> Time_slots.Merge.merge_multi_list ~skip_check:true
       |> Result.ok
 
-  let next_match_time_slot_multi (search_param : Search_param.t)
+  let next_match_time_slot_multi ~allow_search_param_override (search_param : Search_param.t)
       (l : time_range_pattern list) : ((int64 * int64) option, error) result =
-    matching_time_slots_multi search_param l
+    matching_time_slots_multi ~allow_search_param_override search_param l
     |> Result.map (fun s ->
         match s () with
         | Seq.Nil -> None
         | Seq.Cons ((start, end_exc), _) -> Some (start, end_exc))
 
-  let matching_time_slots_round_robin_non_decreasing
+  let matching_time_slots_round_robin_non_decreasing~allow_search_param_override 
       (search_param : Search_param.t) (l : time_range_pattern list) :
     (Time_slot.t list Seq.t, error) result =
-    let l = List.map (matching_time_slots search_param) l in
+    let l = List.map (matching_time_slots ~allow_search_param_override search_param) l in
     match List.find_opt Result.is_error l with
     | Some e -> Error (Result.get_error e)
     | None ->
@@ -940,10 +1000,10 @@ module Range_pattern = struct
       |> Seq.map (List.map Option.get)
       |> Result.ok
 
-  let matching_time_slots_round_robin_non_decreasing_flat
+  let matching_time_slots_round_robin_non_decreasing_flat~allow_search_param_override 
       (search_param : Search_param.t) (l : time_range_pattern list) :
     (Time_slot.t Seq.t, error) result =
-    matching_time_slots_round_robin_non_decreasing search_param l
+    matching_time_slots_round_robin_non_decreasing ~allow_search_param_override search_param l
     |> Result.map (Seq.flat_map List.to_seq)
 end
 
