@@ -594,6 +594,53 @@ module Matching_unix_seconds = struct
       |> Time.Date_time_set.of_seq
 end
 
+let override_search_param_possibly ~allow_search_param_override
+    (search_param : Search_param.t) (t : time_pattern) : Search_param.t =
+  if allow_search_param_override then
+    match t.years with
+    | [] -> search_param
+    | l -> (
+        let l = List.sort_uniq compare l in
+        let start_year = List.hd l in
+        let end_inc_year = List.hd (List.rev l) in
+        let search_using_tz_offset_s =
+          Search_param.search_using_tz_offset_s_of_search_param search_param
+          |> Option.value ~default:0
+        in
+        let start_date_time =
+          let open Time.Date_time in
+          { min with year = start_year; tz_offset_s = search_using_tz_offset_s }
+          |> set_to_first_month_day_hour_min_sec
+        in
+        match
+          Search_param.start_date_time_and_search_years_ahead_of_search_param
+            search_param
+        with
+        | None ->
+          Search_param.Years_ahead_start_date_time
+            {
+              search_using_tz_offset_s = Some search_using_tz_offset_s;
+              start = start_date_time;
+              search_years_ahead = end_inc_year - start_year + 1;
+            }
+        | Some (start_date_time', search_years_ahead') ->
+          let cmp_value =
+            Time.Date_time.compare start_date_time start_date_time'
+          in
+          let end_inc_year =
+            max (start_date_time'.year + search_years_ahead') end_inc_year
+          in
+          let start_date_time =
+            if cmp_value <= 0 then start_date_time else start_date_time'
+          in
+          Search_param.Years_ahead_start_date_time
+            {
+              search_using_tz_offset_s = Some search_using_tz_offset_s;
+              start = start_date_time;
+              search_years_ahead = end_inc_year - start_date_time.year + 1;
+            } )
+  else search_param
+
 module Single_pattern = struct
   let filter_using_matching_unix_seconds ~search_using_tz_offset_s
       (t : time_pattern) ~overall_search_start (s : Time.Date_time.t Seq.t) :
@@ -619,57 +666,6 @@ module Single_pattern = struct
       ~of_int64:(fun x -> x)
     |> Seq.map (Range.map ~f_inc:f ~f_exc:f)
     |> Seq.filter_map Range_utils.result_range_get
-
-  let override_search_param_possibly ~allow_search_param_override
-      (search_param : Search_param.t) (t : time_pattern) : Search_param.t =
-    if allow_search_param_override then
-      match t.years with
-      | [] -> search_param
-      | l -> (
-          let l = List.sort_uniq compare l in
-          let start_year = List.hd l in
-          let end_inc_year = List.hd (List.rev l) in
-          let search_using_tz_offset_s =
-            Search_param.search_using_tz_offset_s_of_search_param search_param
-            |> Option.value ~default:0
-          in
-          let start_date_time =
-            let open Time.Date_time in
-            {
-              min with
-              year = start_year;
-              tz_offset_s = search_using_tz_offset_s;
-            }
-            |> set_to_first_month_day_hour_min_sec
-          in
-          match
-            Search_param.start_date_time_and_search_years_ahead_of_search_param
-              search_param
-          with
-          | None ->
-            Search_param.Years_ahead_start_date_time
-              {
-                search_using_tz_offset_s = Some search_using_tz_offset_s;
-                start = start_date_time;
-                search_years_ahead = end_inc_year - start_year + 1;
-              }
-          | Some (start_date_time', search_years_ahead') ->
-            let cmp_value =
-              Time.Date_time.compare start_date_time start_date_time'
-            in
-            let end_inc_year =
-              max (start_date_time'.year + search_years_ahead') end_inc_year
-            in
-            let start_date_time =
-              if cmp_value <= 0 then start_date_time else start_date_time'
-            in
-            Search_param.Years_ahead_start_date_time
-              {
-                search_using_tz_offset_s = Some search_using_tz_offset_s;
-                start = start_date_time;
-                search_years_ahead = end_inc_year - start_date_time.year + 1;
-              } )
-    else search_param
 
   let matching_date_times ~(allow_search_param_override : bool)
       (search_param : Search_param.t) (t : time_pattern) :
@@ -929,6 +925,13 @@ module Range_pattern = struct
   let matching_time_slots ~allow_search_param_override
       (search_param : Search_param.t) (range : time_range_pattern) :
     (Time_slot.t Seq.t, error) result =
+    let start_pat =
+      match range with `Range_inc (t1, _) | `Range_exc (t1, _) -> t1
+    in
+    let search_param =
+      override_search_param_possibly ~allow_search_param_override search_param
+        start_pat
+    in
     let search_and_get_start (search_param : Search_param.t) (t : time_pattern)
         ((start, _) : Time_slot.t) : Time_slot.t option =
       let search_param =
@@ -957,14 +960,11 @@ module Range_pattern = struct
       | None -> None
       | Some (_, end_exc') -> Some (start, end_exc')
     in
-    let start_pat =
-      match range with `Range_inc (t1, _) | `Range_exc (t1, _) -> t1
-    in
     Check.check_search_param_and_time_range_pattern search_param range
     |> Result.map (fun () ->
         let s =
-          Single_pattern.matching_time_slots ~allow_search_param_override
-            search_param start_pat
+          Single_pattern.matching_time_slots
+            ~allow_search_param_override:false search_param start_pat
           |> Result.get_ok
         in
         match range with
