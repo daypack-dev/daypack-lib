@@ -609,11 +609,7 @@ let override_search_param_possibly ~allow_search_param_override
         in
         let start_date_time =
           let open Time.Date_time in
-          {
-            min with
-            year = start_year;
-            tz_offset_s = search_using_tz_offset_s;
-          }
+          { min with year = start_year; tz_offset_s = search_using_tz_offset_s }
           |> set_to_first_month_day_hour_min_sec
         in
         match
@@ -933,8 +929,8 @@ module Range_pattern = struct
       match range with `Range_inc (t1, _) | `Range_exc (t1, _) -> t1
     in
     let search_param =
-      override_search_param_possibly ~allow_search_param_override
-        search_param start_pat
+      override_search_param_possibly ~allow_search_param_override search_param
+        start_pat
     in
     let search_and_get_start (search_param : Search_param.t) (t : time_pattern)
         ((start, _) : Time_slot.t) : Time_slot.t option =
@@ -967,8 +963,8 @@ module Range_pattern = struct
     Check.check_search_param_and_time_range_pattern search_param range
     |> Result.map (fun () ->
         let s =
-          Single_pattern.matching_time_slots ~allow_search_param_override:false
-            search_param start_pat
+          Single_pattern.matching_time_slots
+            ~allow_search_param_override:false search_param start_pat
           |> Result.get_ok
         in
         match range with
