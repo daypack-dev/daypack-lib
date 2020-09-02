@@ -854,7 +854,7 @@ let debug_time_expr_matching_time_slots () =
       }
   in
   let s =
-    match Daypack_lib.Time_expr.of_string "y[2021]hm" with
+    match Daypack_lib.Time_expr.of_string "2020 jun 1 00:00 to jun 2 00:00" with
     | Error msg -> failwith (Printf.sprintf "Error: %s" msg)
     | Ok e ->
       e
