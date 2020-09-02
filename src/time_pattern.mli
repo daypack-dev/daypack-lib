@@ -115,7 +115,11 @@ module Equal : sig
   val equal : time_pattern -> time_pattern -> bool
 end
 
-module Parser : sig
+module Parsers : sig
+  val cron_expr : time_pattern CCParse.t
+
+  val time_pattern_core_expr : time_pattern CCParse.t
+
   val time_pattern_expr : time_pattern CCParse.t
 end
 
