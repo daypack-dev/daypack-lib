@@ -26,14 +26,14 @@ let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
   |> List.to_seq
   |> Seq.map (fun (start_pat, end_exc_pat) ->
       let start_seq =
-        Time_pattern.Single_pattern.matching_time_slots
+        Time_pattern.Single_pattern.matching_time_slots ~allow_search_param_override:true
           (Time_slots { search_using_tz_offset_s = None; time_slots })
           start_pat
         |> Result.get_ok
         |> Seq.map (fun (x, _) -> x)
       in
       let end_exc_seq =
-        Time_pattern.Single_pattern.matching_time_slots
+        Time_pattern.Single_pattern.matching_time_slots~allow_search_param_override:true
           (Time_slots { search_using_tz_offset_s = None; time_slots })
           end_exc_pat
         |> Result.get_ok
