@@ -1190,7 +1190,8 @@ module Time_point_expr = struct
                   | `Every -> fun x -> x )
             in
             match
-              Time_pattern.Single_pattern.matching_time_slots search_param pat
+              Time_pattern.Single_pattern.matching_time_slots
+                ~allow_search_param_override:true search_param pat
             with
             | Error e -> Error (Time_pattern.To_string.string_of_error e)
             | Ok s -> s |> Seq.map (fun (x, _) -> x) |> selector |> Result.ok )
@@ -1306,7 +1307,8 @@ module Time_slot_expr = struct
         | Ok l -> (
             match
               Time_pattern.Range_pattern
-              .matching_time_slots_round_robin_non_decreasing search_param l
+              .matching_time_slots_round_robin_non_decreasing
+                ~allow_search_param_override:true search_param l
             with
             | Error e -> Error (Time_pattern.To_string.string_of_error e)
             | Ok s ->
@@ -1332,7 +1334,8 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       Time_slot_expr.matching_time_slots ~force_bound:None ~f_resolve_tpe_name
         ~f_resolve_tse_name search_param e
     | Time_pattern pat ->
-      Time_pattern.Single_pattern.matching_time_slots search_param pat
+      Time_pattern.Single_pattern.matching_time_slots
+        ~allow_search_param_override:true search_param pat
       |> Result.map_error Time_pattern.To_string.string_of_error
     | Time_unary_op (op, e) -> (
         match aux e with
@@ -1341,7 +1344,8 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
             match op with
             | Not -> (
                 match
-                  Time_pattern.Single_pattern.matching_time_slots search_param
+                  Time_pattern.Single_pattern.matching_time_slots
+                    ~allow_search_param_override:true search_param
                     Time_pattern.empty
                 with
                 | Error x -> Error (Time_pattern.To_string.string_of_error x)

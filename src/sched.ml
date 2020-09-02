@@ -3070,6 +3070,7 @@ module Recur = struct
         | Task_.Time_pattern_match
             (pattern, { task_inst_data; sched_req_template }) ->
           Time_pattern.Single_pattern.matching_time_slots
+            ~allow_search_param_override:true
             (Time_slots
                {
                  search_using_tz_offset_s = None;

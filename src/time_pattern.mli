@@ -38,60 +38,93 @@ end
 
 module Single_pattern : sig
   val matching_date_times :
-    Search_param.t -> time_pattern -> (Time.Date_time.t Seq.t, error) result
+    allow_search_param_override:bool ->
+    Search_param.t ->
+    time_pattern ->
+    (Time.Date_time.t Seq.t, error) result
 
   val matching_unix_seconds :
-    Search_param.t -> time_pattern -> (int64 Seq.t, error) result
+    allow_search_param_override:bool ->
+    Search_param.t ->
+    time_pattern ->
+    (int64 Seq.t, error) result
 
   val matching_date_time_ranges :
+    allow_search_param_override:bool ->
     Search_param.t ->
     time_pattern ->
     (Time.Date_time.t Range.range Seq.t, error) result
 
   val matching_time_slots :
-    Search_param.t -> time_pattern -> (Time_slot.t Seq.t, error) result
+    allow_search_param_override:bool ->
+    Search_param.t ->
+    time_pattern ->
+    (Time_slot.t Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing :
+    allow_search_param_override:bool ->
     Search_param.t ->
     time_pattern list ->
     (Time_slot.t list Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing_flat :
-    Search_param.t -> time_pattern list -> (Time_slot.t Seq.t, error) result
+    allow_search_param_override:bool ->
+    Search_param.t ->
+    time_pattern list ->
+    (Time_slot.t Seq.t, error) result
 
   val next_match_date_time :
-    Search_param.t -> time_pattern -> (Time.Date_time.t option, error) result
+    allow_search_param_override:bool ->
+    Search_param.t ->
+    time_pattern ->
+    (Time.Date_time.t option, error) result
 
   val next_match_unix_second :
-    Search_param.t -> time_pattern -> (int64 option, error) result
+    allow_search_param_override:bool ->
+    Search_param.t ->
+    time_pattern ->
+    (int64 option, error) result
 
   val next_match_time_slot :
-    Search_param.t -> time_pattern -> (Time_slot.t option, error) result
+    allow_search_param_override:bool ->
+    Search_param.t ->
+    time_pattern ->
+    (Time_slot.t option, error) result
 end
 
 module Range_pattern : sig
   val matching_time_slots :
-    Search_param.t -> time_range_pattern -> (Time_slot.t Seq.t, error) result
+    allow_search_param_override:bool ->
+    Search_param.t ->
+    time_range_pattern ->
+    (Time_slot.t Seq.t, error) result
 
   val next_match_time_slot :
-    Search_param.t -> time_range_pattern -> (Time_slot.t option, error) result
+    allow_search_param_override:bool ->
+    Search_param.t ->
+    time_range_pattern ->
+    (Time_slot.t option, error) result
 
   val matching_time_slots_multi :
+    allow_search_param_override:bool ->
     Search_param.t ->
     time_range_pattern list ->
     (Time_slot.t Seq.t, error) result
 
   val next_match_time_slot_multi :
+    allow_search_param_override:bool ->
     Search_param.t ->
     time_range_pattern list ->
     ((int64 * int64) option, error) result
 
   val matching_time_slots_round_robin_non_decreasing :
+    allow_search_param_override:bool ->
     Search_param.t ->
     time_range_pattern list ->
     (Time_slot.t list Seq.t, error) result
 
   val matching_time_slots_round_robin_non_decreasing_flat :
+    allow_search_param_override:bool ->
     Search_param.t ->
     time_range_pattern list ->
     (Time_slot.t Seq.t, error) result

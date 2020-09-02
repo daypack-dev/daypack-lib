@@ -10,6 +10,8 @@
 
 - Adjusted `Time_pattern` module interface
 
+- Added code to automatically adjust search parameter during time pattern search when applicable
+
 ## 0.0.2
 
 - Added non-integer support for numbers in duration string at day, hour, minute level
