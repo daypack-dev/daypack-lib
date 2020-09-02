@@ -764,7 +764,8 @@ let debug_time_pattern_matching_time_slots () =
   in
   Daypack_lib.Time_pattern.Print.debug_print_time_pattern pattern;
   let s =
-    Daypack_lib.Time_pattern.Single_pattern.matching_time_slots~allow_search_param_override:true
+    Daypack_lib.Time_pattern.Single_pattern.matching_time_slots
+      ~allow_search_param_override:true
       (Time_slots { search_using_tz_offset_s = None; time_slots })
       pattern
     |> Result.get_ok
@@ -819,7 +820,8 @@ let debug_time_range_pattern_matching_time_slots () =
   in
   Daypack_lib.Time_pattern.Print.debug_print_time_range_pattern pattern;
   let s =
-    Daypack_lib.Time_pattern.Range_pattern.matching_time_slots~allow_search_param_override:true
+    Daypack_lib.Time_pattern.Range_pattern.matching_time_slots
+      ~allow_search_param_override:true
       (Time_slots { search_using_tz_offset_s = None; time_slots })
       pattern
     |> Result.get_ok
