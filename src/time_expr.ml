@@ -717,7 +717,7 @@ module Of_string = struct
     let open Time_expr_ast in
     fix (fun expr ->
         let atom =
-          try_ Time_pattern.Parser.time_pattern_expr
+          try_ Time_pattern.Parsers.time_pattern_expr
           >>= (fun e -> return (Time_expr_ast.Time_pattern e))
               <|> ( Time_slot_expr.time_slot_expr
                     >>= fun e -> return (Time_expr_ast.Time_slot_expr e) )
