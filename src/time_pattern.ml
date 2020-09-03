@@ -1262,9 +1262,6 @@ module Parsers = struct
       ranges_expr ~allow_empty ~f_flatten:Time.Year_ranges.Flatten.flatten_list
         year_expr
 
-    let years_cron_expr =
-      try_ (char '*' *> return []) <|> years_expr ~allow_empty:false
-
     let years_time_pattern_expr =
       time_pattern_ranges_expr (years_expr ~allow_empty:true)
   end
@@ -1317,14 +1314,12 @@ module Parsers = struct
     >>= fun month_days ->
     skip_space1 *> Month.months_cron_expr
     >>= fun months ->
-    skip_space1 *> Year.years_cron_expr
-    >>= fun years ->
     skip_space1 *> Weekday.weekdays_cron_expr
     >>= fun weekdays ->
     eoi
     *> return
       {
-        years;
+        years = [];
         months;
         month_days;
         weekdays;
