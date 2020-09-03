@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.0.3
+## 0.0.4
+
+- Removed year field from cron expression. The year field was previously incorrectly present.
+
+## 0.0.3 (unpublished)
 
 - Extended time pattern expression to include cron expression
 
