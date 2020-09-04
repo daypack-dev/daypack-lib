@@ -272,7 +272,7 @@ module Of_string = struct
         <|> char '!' *> return `Every )
 
   let ident_string =
-    ident_string ~reserved_words:[ "to"; "first"; "lasst"; "coming"; "every" ]
+    ident_string ~reserved_words:[ "to"; "first"; "last"; "coming"; "every" ]
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
     try_
