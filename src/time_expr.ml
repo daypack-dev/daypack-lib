@@ -552,9 +552,9 @@ module Of_string = struct
       <|> tp_md_hour_minute_second
       <|> tp_mond_hour_minute_second
       <|> tp_d_hour_minute_second
-      <|> tp_hour_minute_second
-      <|> tp_minute_second
       <|> tp_second
+      <|> tp_minute_second
+      <|> tp_hour_minute_second
   end
 
   module Time_slot_expr = struct
@@ -563,11 +563,18 @@ module Of_string = struct
       >>= fun s -> return (Time_expr_ast.Tse_name s)
 
     let ts_explicit_time_slot =
-      Time_point_expr.time_point_expr
+      try_ (Time_point_expr.time_point_expr
       >>= fun start ->
-      skip_space *> to_string *> skip_space *> Time_point_expr.time_point_expr
-      >>= fun end_exc ->
-      return (Time_expr_ast.Explicit_time_slot (start, end_exc))
+      skip_space *> to_string *> return start) >>=
+      fun start -> skip_space *>
+                   get_pos >>= fun pos ->
+                   (
+                   (try_ Time_point_expr.time_point_expr
+                    >>= fun end_exc ->
+                    return (Time_expr_ast.Explicit_time_slot (start, end_exc)))
+                   <|>
+                   failf "Expected time point expression at %s" (pos_string pos)
+                 )
 
     let ts_days_hour_minute_second_ranges =
       try_
@@ -662,7 +669,7 @@ module Of_string = struct
 
     let time_slot_expr : Time_expr_ast.time_slot_expr t =
       ts_name
-      <|> try_ ts_explicit_time_slot
+      <|> ts_explicit_time_slot
       <|> try_ ts_days_hour_minute_second_ranges
       <|> try_ ts_months_mdays_hour_minute_second
       <|> try_ ts_months_wdays_hour_minute_second
