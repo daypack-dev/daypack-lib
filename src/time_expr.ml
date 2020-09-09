@@ -256,12 +256,12 @@ module Of_string = struct
 
   let last_string = string "last"
 
-  let bound =
-    option `Every
-      ( try_ (string "coming" *> return `Next)
-        <|> try_ (char '?' *> return `Next)
-        <|> try_ (string "every" *> return `Every)
-        <|> char '!' *> return `Every )
+  (* let bound =
+   *   option `Every
+   *     ( try_ (string "coming" *> return `Next)
+   *       <|> try_ (char '?' *> return `Next)
+   *       <|> try_ (string "every" *> return `Every)
+   *       <|> char '!' *> return `Every ) *)
 
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "last"; "coming"; "every" ]
@@ -485,7 +485,8 @@ module Of_string = struct
         ( nat_zero
           >>= fun year ->
           skip_space *> Month.direct_pick_month_expr
-          >>= fun month ->
+          >>= fun month -> return (year, month)) >>=
+      (fun (year, month) ->
           skip_space *> Month_day.month_day_expr
           >>= fun month_day -> return (year, month, month_day) )
       >>= fun (year, month, month_day) ->
@@ -541,7 +542,8 @@ module Of_string = struct
       return (Time_expr_ast.Minute_second minute_second)
 
     let tp_second =
-      Second.second_expr >>= fun second -> return (Time_expr_ast.Second second)
+      Second.second_expr
+      >>= fun second -> return (Time_expr_ast.Second second)
 
     let time_point_expr : Time_expr_ast.time_point_expr t =
       tp_name
