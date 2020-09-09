@@ -323,9 +323,9 @@ module Of_string = struct
         ( try_ (string "am" *> return `Hour_in_AM)
           <|> string "pm" *> return `Hour_in_PM )
 
-    let handle_time_with_mode ~hour_pos ~(hour : int) ~(minute : int) ~(second : int) mode
-      =
-      let pos = (pos_string hour_pos) in
+    let handle_time_with_mode ~hour_pos ~(hour : int) ~(minute : int)
+        ~(second : int) mode =
+      let pos = pos_string hour_pos in
       match mode with
       | `Hour_in_24_hours ->
         if hour >= 24 then failf "Invalid hour: %d, pos: %s" hour pos
@@ -342,27 +342,34 @@ module Of_string = struct
         else failf "Invalid hour: %d, pos %s" hour pos
 
     let hour_minute_second_expr : Time_expr_ast.hour_minute_second_expr t =
-      get_pos >>= fun hour_pos ->
+      get_pos
+      >>= fun hour_pos ->
       try_ (nat_zero <* char ':')
       >>= (fun hour ->
-          get_pos >>= fun minute_pos ->
+          get_pos
+          >>= fun minute_pos ->
           nat_zero
           >>= fun minute ->
-          if minute >= 60 then failf "Invalid minute: %d, pos: %s" minute (pos_string minute_pos)
+          if minute >= 60 then
+            failf "Invalid minute: %d, pos: %s" minute (pos_string minute_pos)
           else
-            get_pos >>= fun second_pos ->
+            get_pos
+            >>= fun second_pos ->
             option 0 (char ':' *> nat_zero)
             >>= fun second ->
             if second >= 60 then
-              fail (Printf.sprintf "Invalid second: %d, pos: %s" second (pos_string second_pos))
+              fail
+                (Printf.sprintf "Invalid second: %d, pos: %s" second
+                   (pos_string second_pos))
             else
               skip_space *> hour_minute_second_mode_expr
-              >>= fun mode -> handle_time_with_mode ~hour_pos ~hour ~minute ~second mode)
+              >>= fun mode ->
+              handle_time_with_mode ~hour_pos ~hour ~minute ~second mode)
           <|> ( nat_zero
                 >>= fun hour ->
                 skip_space *> hour_minute_second_mode_expr
-                >>= fun mode -> handle_time_with_mode ~hour_pos ~hour ~minute:0 ~second:0 mode
-              )
+                >>= fun mode ->
+                handle_time_with_mode ~hour_pos ~hour ~minute:0 ~second:0 mode )
 
     let hour_minute_second_range_expr :
       Time_expr_ast.hour_minute_second_range_expr t =
@@ -375,11 +382,14 @@ module Of_string = struct
 
   module Month_day = struct
     let month_day_expr : int t =
-      get_pos >>= fun pos ->
+      get_pos
+      >>= fun pos ->
       nat_zero
       >>= fun x ->
       if 1 <= x && x <= 31 then return x
-      else fail (Printf.sprintf "Invalid month day: %d, pos: %s" x (pos_string pos))
+      else
+        fail
+          (Printf.sprintf "Invalid month day: %d, pos: %s" x (pos_string pos))
 
     let month_day_range_expr : int Range.range t = range_inc_expr month_day_expr
 
@@ -461,8 +471,8 @@ module Of_string = struct
           >>= fun year ->
           hyphen *> Month.human_int_month_expr
           >>= fun month ->
-          hyphen *> Month_day.month_day_expr >>= fun month_day -> return (year, month, month_day)
-        )
+          hyphen *> Month_day.month_day_expr
+          >>= fun month_day -> return (year, month, month_day) )
       >>= fun (year, month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
@@ -489,7 +499,8 @@ module Of_string = struct
       try_
         ( Month.month_expr
           >>= fun month ->
-          hyphen *> Month_day.month_day_expr >>= fun month_day -> return (month, month_day) )
+          hyphen *> Month_day.month_day_expr
+          >>= fun month_day -> return (month, month_day) )
       >>= fun (month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
@@ -501,7 +512,8 @@ module Of_string = struct
       try_
         ( Month.direct_pick_month_expr
           >>= fun month ->
-          skip_space *> Month_day.month_day_expr >>= fun month_day -> return (month, month_day) )
+          skip_space *> Month_day.month_day_expr
+          >>= fun month_day -> return (month, month_day) )
       >>= fun (month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
@@ -695,15 +707,14 @@ module Of_string = struct
     let open Time_expr_ast in
     fix (fun expr ->
         let atom =
-          skip_space *>
-          (
-          try_ Time_pattern.Parsers.time_pattern_expr
-          >>= (fun e -> return (Time_expr_ast.Time_pattern e))
-              <|> ( Time_slot_expr.time_slot_expr
-                    >>= fun e -> return (Time_expr_ast.Time_slot_expr e) )
-              <|> ( Time_point_expr.time_point_expr
-                    >>= fun e -> return (Time_expr_ast.Time_point_expr e) )
-        ) <* skip_space
+          skip_space
+          *> ( try_ Time_pattern.Parsers.time_pattern_expr
+               >>= (fun e -> return (Time_expr_ast.Time_pattern e))
+                   <|> ( Time_slot_expr.time_slot_expr
+                         >>= fun e -> return (Time_expr_ast.Time_slot_expr e) )
+                   <|> ( Time_point_expr.time_point_expr
+                         >>= fun e -> return (Time_expr_ast.Time_point_expr e) ) )
+          <* skip_space
         in
         let factor =
           try_ (char '(') *> skip_space *> expr

@@ -118,9 +118,12 @@ let chainl1 x op =
   in
   x >>= aux
 
-let pos_string pos = let (lnum, cnum) = pos in Printf.sprintf "%d:%d" lnum cnum
+let pos_string pos =
+  let lnum, cnum = pos in
+  Printf.sprintf "%d:%d" lnum cnum
 
-let invalid_syntax ~text ~pos = failf "Invalid syntax: %s, pos: %s" text (pos_string pos)
+let invalid_syntax ~text ~pos =
+  failf "Invalid syntax: %s, pos: %s" text (pos_string pos)
 
 let extraneous_text_check ~end_markers =
   skip_space *> get_pos
