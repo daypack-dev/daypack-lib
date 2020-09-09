@@ -2,11 +2,9 @@ type error =
   | Invalid_time_point_expr
   | Invalid_time_slot_expr
 
-type f_resolve_tse_name =
-  string -> Time_expr_ast.time_slot_expr option
+type f_resolve_tse_name = string -> Time_expr_ast.time_slot_expr option
 
-type f_resolve_tpe_name =
-  string -> Time_expr_ast.time_point_expr option
+type f_resolve_tpe_name = string -> Time_expr_ast.time_point_expr option
 
 (* module Check : sig *)
 (* val check_unbounded_time_point_expr :
