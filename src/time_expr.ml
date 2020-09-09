@@ -485,10 +485,10 @@ module Of_string = struct
         ( nat_zero
           >>= fun year ->
           skip_space *> Month.direct_pick_month_expr
-          >>= fun month -> return (year, month)) >>=
-      (fun (year, month) ->
+          >>= fun month -> return (year, month) )
+      >>= (fun (year, month) ->
           skip_space *> Month_day.month_day_expr
-          >>= fun month_day -> return (year, month, month_day) )
+          >>= fun month_day -> return (year, month, month_day))
       >>= fun (year, month, month_day) ->
       skip_space *> Hour_minute_second.hour_minute_second_expr
       >>= fun hour_minute_second ->
@@ -542,8 +542,7 @@ module Of_string = struct
       return (Time_expr_ast.Minute_second minute_second)
 
     let tp_second =
-      Second.second_expr
-      >>= fun second -> return (Time_expr_ast.Second second)
+      Second.second_expr >>= fun second -> return (Time_expr_ast.Second second)
 
     let time_point_expr : Time_expr_ast.time_point_expr t =
       tp_name
@@ -563,18 +562,16 @@ module Of_string = struct
       >>= fun s -> return (Time_expr_ast.Tse_name s)
 
     let ts_explicit_time_slot =
-      try_ (Time_point_expr.time_point_expr
+      try_
+        ( Time_point_expr.time_point_expr
+          >>= fun start -> skip_space *> to_string *> return start )
       >>= fun start ->
-      skip_space *> to_string *> return start) >>=
-      fun start -> skip_space *>
-                   get_pos >>= fun pos ->
-                   (
-                   (try_ Time_point_expr.time_point_expr
-                    >>= fun end_exc ->
-                    return (Time_expr_ast.Explicit_time_slot (start, end_exc)))
-                   <|>
-                   failf "Expected time point expression at %s" (pos_string pos)
-                 )
+      skip_space *> get_pos
+      >>= fun pos ->
+      try_ Time_point_expr.time_point_expr
+      >>= (fun end_exc ->
+          return (Time_expr_ast.Explicit_time_slot (start, end_exc)))
+          <|> failf "Expected time point expression at %s" (pos_string pos)
 
     let ts_days_hour_minute_second_ranges =
       try_
