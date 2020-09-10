@@ -3,15 +3,15 @@
 ## Syntax
 
 ```
-<hms> ::=
-  | <hour>
-  | <hour> : <minute>
-  | <hour> : <minute> : <second>
-
 <hms_mode> ::=
   | "am"
   | "pm"
   | ... (all other variants with different casing of above)
+
+<hms> ::=
+  | <hour>                       [<hms_mode>]
+  | <hour> : <minute>            [<hms_mode>]
+  | <hour> : <minute> : <second> [<hms_mode>]
 
 <weekday> ::=
   | "monday"
@@ -57,18 +57,39 @@
 <year> ::=
   | "0" | ... | "9999" (or whatever the exact numbers that are representable in Ptime, TODO)
 
-<time_point_expr> ::=
-  | <hms> [<hms_mode>]
-  | <day> <hms> [<hms_mode>]
-  | <month> <month_day> <hms> [<hms_mode>]
-  | <year> <direct_pick_month> <month_day> <hms> [<hms_mode>]
-  | <year> '-' <human_int_month> '-' <month_day> <hms> [<hms_mode>]
-
 <hms_range> ::=
   | <hms> "to" <hms>
 
 <hms_ranges> ::=
   | <hms_range> [, <hms_ranges>]
+
+<hmss> ::=
+  | <hms> [',' <hmss>]
+
+<time_point_expr> ::=
+  |                                                <hms>
+  |                                    <day>       <hms>
+  |            <month>                 <month_day> <hms>
+  | <year>     <direct_pick_month>     <month_day> <hms>
+  | <year> '-' <human_int_month>   '-' <month_day> <hms>
+
+<branch_bound> ::=
+  | "next-batch"
+  | "next-" <nat> "-batch"
+  | "every-batch"
+
+<unbounded_branching_time_point_expr> ::=
+  |                          <weekdays>   '.' <hmss>
+  |                          <month_days> '.' <hmss>
+  |             <months> '.' <month_days> '.' <hmss>
+  | <years> '.' <months> '.' <month_days> '.' <hmss>
+  | <hmss> "of" <weekdays>
+  | <hmss> "of" <month_days>
+  | <hmss> "of" <month_days> "of" <months>
+  | <hmss> "of" <month_days> "of" <months> "of" <years>
+
+<branching_time_point_expr> ::=
+  | [<branch_bound>] <unbounded_branching_time_point_expr>
 
 <month_day_range> ::=
   | <month_day> "to" <month_day>
@@ -98,15 +119,21 @@
   | <year> [',' <years>]
   | <year_range> [',' <years>]
 
-<unbounded_time_slot_expr> ::=
+<time_slot_expr> ::=
   | <time_point_expr> "to" <time_point_expr>
-  |                            <weekdays> '.' <hms_ranges>
+
+<unbounded_branching_time_slot_expr>
+  |                          <weekdays>   '.' <hms_ranges>
   |                          <month_days> '.' <hms_ranges>
   |             <months> '.' <month_days> '.' <hms_ranges>
   | <years> '.' <months> '.' <month_days> '.' <hms_ranges>
+  | <hms_ranges> "of" <weekdays>
+  | <hms_ranges> "of" <month_days>
+  | <hms_ranges> "of" <month_days> "of" <months>
+  | <hms_ranges> "of" <month_days> "of" <months> "of" <years>
 
-<time_slot_expr> ::=
-  | ["next-batch"] <unbounded_time_slot_expr>
+<branching_time_slot_expr> ::=
+  | [ <branch_bound> <unbounded_branching_time_slot_expr>
 
 <cron_expr> ::=
   TODO
@@ -131,9 +158,12 @@
 
 <time_expr_inter_part> ::=
   | <time_expr_group>
-  | "not" <time_expr_inter_part>
-  | "next" <time_expr_inter_part>
-  | "every" <time_expr_inter_part>
+  | "not"                  <time_expr_inter_part>
+  | "next-slot"            <time_expr_inter_part>
+  | "next-point"           <time_expr_inter_part>
+  | "next-" <nat> "-slot"  <time_expr_inter_part>
+  | "next-" <nat> "-point" <time_expr_inter_part>
+  | "every"                <time_expr_inter_part>
 
 <time_expr_group> ::=
   | <time_expr_atom>
