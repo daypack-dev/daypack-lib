@@ -126,14 +126,14 @@
   | <time_expr> "||" <time_expr_union_part>
 
 <time_expr_union_part> ::=
-  | <time_expr_unary_part>
-  | <time_expr_union_part> "&&" <time_expr_unary_part>
+  | <time_expr_inter_part>
+  | <time_expr_union_part> "&&" <time_expr_inter_part>
 
-<time_expr_unary_part> ::=
+<time_expr_inter_part> ::=
   | <time_expr_group>
-  | "not" <time_expr_unary_part>
-  | "next" <time_expr_unary_part>
-  | "every" <time_expr_unary_part>
+  | "not" <time_expr_inter_part>
+  | "next" <time_expr_inter_part>
+  | "every" <time_expr_inter_part>
 
 <time_expr_group> ::=
   | <time_expr_atom>
