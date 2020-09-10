@@ -122,15 +122,27 @@
     [ 's' [ '[' <seconds>    ']' ] ]
 
 <time_expr> ::=
+  | <time_expr_union_part>
+  | <time_expr> "||" <time_expr_union_part>
+
+<time_expr_union_part> ::=
+  | <time_expr_unary_part>
+  | <time_expr_union_part> "&&" <time_expr_unary_part>
+
+<time_expr_unary_part> ::=
+  | <time_expr_group>
+  | "not" <time_expr_unary_part>
+  | "next" <time_expr_unary_part>
+  | "every" <time_expr_unary_part>
+
+<time_expr_group> ::=
+  | <time_expr_atom>
+  | '(' <time_expr> ')'
+
+<time_expr_atom> ::=
   | <time_point_expr>
   | <time_slot_expr>
   | <time_pattern>
-  | "not" <time_expr>
-  | <time_expr> "&&" <time_expr>
-  | <time_expr> "||" <time_expr>
-  | '(' <time_expr> ')'
-  | "next" <time_expr>
-  | "every" <time_expr>
 ```
 
 ## Semantics
