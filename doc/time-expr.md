@@ -98,12 +98,15 @@
   | <year> [',' <years>]
   | <year_range> [',' <years>]
 
-<time_slot_expr> ::=
+<unbounded_time_slot_expr> ::=
   | <time_point_expr> "to" <time_point_expr>
-  |                          <month_days> '.' <hms_ranges>
   |                            <weekdays> '.' <hms_ranges>
+  |                          <month_days> '.' <hms_ranges>
   |             <months> '.' <month_days> '.' <hms_ranges>
   | <years> '.' <months> '.' <month_days> '.' <hms_ranges>
+
+<time_slot_expr> ::=
+  | ["next-batch"] <unbounded_time_slot_expr>
 
 <cron_expr> ::=
   TODO
@@ -125,6 +128,9 @@
   | "not" <time_expr>
   | <time_expr> "&&" <time_expr>
   | <time_expr> "||" <time_expr>
+  | '(' <time_expr> ')'
+  | "next" <time_expr>
+  | "every" <time_expr>
 ```
 
 ## Semantics
