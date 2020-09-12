@@ -237,6 +237,10 @@ let check_time_expr (e : Time_expr_ast.t) : (unit, unit) result =
     match e with
     | Time_point_expr e' -> Check.check_time_point_expr e'
     | Time_slot_expr e' -> Check.check_time_slot_expr e'
+    | Branching_time_point_expr e' -> failwith "Unimplemented"
+                                        (* Check.check_branching_time_point_expr e' *)
+    | Branching_time_slot_expr e' -> failwith "Unimplemented"
+                                       (* Check.check_branching_time_slot_expr e' *)
     | Time_pattern p ->
       Time_pattern.Check.check_time_pattern p
       |> Result.map_error (fun _ -> ())
@@ -724,6 +728,8 @@ module Of_string = struct
       match e with
       | Time_point_expr _ -> e
       | Time_slot_expr _ -> e
+      | Branching_time_point_expr _ -> e
+      | Branching_time_slot_expr _ -> e
       | Time_pattern _ -> e
       | Time_unary_op (op, e) -> Time_unary_op (op, aux e)
       | Time_binary_op (op, e1, e2) -> Time_binary_op (op, aux e1, aux e2)
@@ -755,17 +761,21 @@ module Of_string = struct
                          >>= fun e -> return (Time_expr_ast.Time_point_expr e) ) )
           <* skip_space
         in
-        let factor =
+        let group =
           try_ (char '(') *> skip_space *> expr
           <* skip_space
           <* char ')'
-          <|> ( try_ not_string *> skip_space *> expr
-                >>= fun e -> return (Time_unary_op (Not, e)) )
           <|> atom
         in
-        let term = chainl1 factor inter in
-        let term' = chainl1 term round_robin_select in
-        chainl1 term' union)
+        let inter_part =
+          ( try_ not_string *> skip_space *> expr
+                >>= fun e -> return (Time_unary_op (Not, e)) )
+          <|> group
+        in
+        let ordered_select_part = chainl1 inter_part round_robin_select in
+        let union_part = chainl1 ordered_select_part inter in
+        chainl1 union_part union
+      )
     >>= fun e -> return (flatten_round_robin_select e)
 
   let of_string (s : string) : (Time_expr_ast.t, string) result =

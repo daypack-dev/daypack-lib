@@ -153,8 +153,12 @@
   | <time_expr> "||" <time_expr_union_part>
 
 <time_expr_union_part> ::=
+  | <time_expr_ordered_select_part>
+  | <time_expr_union_part> "&&" <time_expr_ordered_select_part>
+
+<time_expr_ordered_select_part> ::=
   | <time_expr_inter_part>
-  | <time_expr_union_part> "&&" <time_expr_inter_part>
+  | <time_expr_ordered_select_part> "||" <time_expr_inter_part>
 
 <time_expr_inter_part> ::=
   | <time_expr_group>
