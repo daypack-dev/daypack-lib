@@ -118,10 +118,15 @@ let chainl1 x op =
   in
   x >>= aux
 
-let invalid_syntax ~text ~cnum = failf "Invalid syntax: %s, pos: %d" text cnum
+let pos_string pos =
+  let lnum, cnum = pos in
+  Printf.sprintf "%d:%d" lnum cnum
+
+let invalid_syntax ~text ~pos =
+  failf "Invalid syntax: %s, pos: %s" text (pos_string pos)
 
 let extraneous_text_check ~end_markers =
-  skip_space *> get_cnum
-  >>= fun cnum ->
+  skip_space *> get_pos
+  >>= fun pos ->
   chars_if (fun c -> not (String.contains end_markers c))
-  >>= fun s -> match s with "" -> nop | text -> invalid_syntax ~text ~cnum
+  >>= fun s -> match s with "" -> nop | text -> invalid_syntax ~text ~pos

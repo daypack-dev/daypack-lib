@@ -2,11 +2,9 @@ type error =
   | Invalid_time_point_expr
   | Invalid_time_slot_expr
 
-type f_resolve_tse_name =
-  string -> Time_expr_ast.unbounded_time_slot_expr option
+type f_resolve_tse_name = string -> Time_expr_ast.time_slot_expr option
 
-type f_resolve_tpe_name =
-  string -> Time_expr_ast.unbounded_time_point_expr option
+type f_resolve_tpe_name = string -> Time_expr_ast.time_point_expr option
 
 (* module Check : sig *)
 (* val check_unbounded_time_point_expr :
@@ -64,19 +62,18 @@ val check_time_expr : Time_expr_ast.t -> (unit, unit) result
  * end *)
 
 module To_string : sig
-  val debug_string_of_hour_minute_second_ranges :
-    Time_expr_ast.hour_minute_second_expr -> string
+  val debug_string_of_hms_ranges : Time_expr_ast.hms_expr -> string
 end
 
-(* module Of_string : sig *)
-(* val time_point_expr_of_string :
- *   string -> (Time_expr_ast.time_point_expr, string) result
- * 
- * val time_slot_expr_of_string :
- *   string -> (Time_expr_ast.time_slot_expr, string) result *)
-(* end *)
+module Of_string : sig
+  val of_string : string -> (Time_expr_ast.t, string) result
 
-val of_string : string -> (Time_expr_ast.t, string) result
+  val time_point_expr_of_string :
+    string -> (Time_expr_ast.time_point_expr, string) result
+
+  val time_slot_expr_of_string :
+    string -> (Time_expr_ast.time_slot_expr, string) result
+end
 
 (* module To_time_pattern_lossy : sig *)
 (* val time_pattern_of_time_point_expr :
