@@ -1271,12 +1271,11 @@ module Time_slot_expr = struct
 end
 
 module Branching_time_slot_expr = struct
-  let matching_time_slots
-      (search_param : Search_param.t) (e : Time_expr_ast.branching_time_slot_expr) :
+  let matching_time_slots (search_param : Search_param.t)
+      (e : Time_expr_ast.branching_time_slot_expr) :
     (Time_slot.t Seq.t, string) result =
     match
-      To_time_pattern_lossy.time_range_patterns_of_branching_time_slot_expr
-        e
+      To_time_pattern_lossy.time_range_patterns_of_branching_time_slot_expr e
     with
     | Error msg -> Error msg
     | Ok l -> (
@@ -1286,10 +1285,7 @@ module Branching_time_slot_expr = struct
             ~allow_search_param_override:true search_param l
         with
         | Error e -> Error (Time_pattern.To_string.string_of_error e)
-        | Ok s ->
-          s
-          |> Seq.flat_map List.to_seq
-          |> Result.ok )
+        | Ok s -> s |> Seq.flat_map List.to_seq |> Result.ok )
 end
 
 let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
@@ -1307,8 +1303,8 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
         ~f_resolve_tse_name search_param e
     | Branching_time_point_expr e ->
       failwith "Unimplemented"
-      (* Time_point_expr.matching_unix_seconds ~f_resolve_tpe_name search_param e
-       * |> Result.map (Seq.map (fun x -> (x, Int64.succ x))) *)
+    (* Time_point_expr.matching_unix_seconds ~f_resolve_tpe_name search_param e
+     * |> Result.map (Seq.map (fun x -> (x, Int64.succ x))) *)
     | Branching_time_slot_expr e ->
       Branching_time_slot_expr.matching_time_slots search_param e
     | Time_pattern pat ->
