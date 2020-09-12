@@ -243,6 +243,8 @@ module Of_string = struct
 
   let not_string = string "not"
 
+  let of_str = string "of"
+
   let to_string = string "to"
 
   let first_string = string "first"
@@ -565,7 +567,7 @@ module Of_string = struct
   end
 
   module Branching_time_slot_expr = struct
-    let ts_days_hms_ranges =
+    let bts_days_hms_ranges =
       try_
         ( Month_day.month_day_ranges_expr
           >>= fun month_days ->
@@ -581,7 +583,23 @@ module Of_string = struct
             return
               (Time_expr_ast.Weekdays_and_hms_ranges { weekdays; hms_ranges }) )
 
-    let ts_months_mdays_hms =
+    let bts_hms_ranges_days =
+      try_
+        ( Hms.hms_ranges
+          >>= fun hms_ranges ->
+          skip_space *> of_str *> skip_space *> Month_day.month_day_ranges_expr
+          >>= fun month_days ->
+          return
+            (Time_expr_ast.Month_days_and_hms_ranges { month_days; hms_ranges })
+        )
+      <|> ( Hms.hms_ranges
+            >>= fun hms_ranges ->
+            skip_space *> of_str *> skip_space *> Weekday.weekday_ranges_expr
+            >>= fun weekdays ->
+            return
+              (Time_expr_ast.Weekdays_and_hms_ranges { weekdays; hms_ranges }) )
+
+    let bts_months_mdays_hms_ranges =
       Month.month_ranges_expr
       >>= fun months ->
       skip_space *> dot *> skip_space *> Month_day.month_day_ranges_expr
@@ -592,7 +610,18 @@ module Of_string = struct
         (Time_expr_ast.Months_and_month_days_and_hms_ranges
            { months; month_days; hms_ranges })
 
-    let ts_months_wdays_hms =
+    let bts_hms_ranges_mdays_months =
+      Hms.hms_ranges
+      >>= fun hms_ranges ->
+      skip_space *> of_str *> skip_space *> Month_day.month_day_ranges_expr
+      >>= fun month_days ->
+      skip_space *> of_str *> skip_space *> Month.month_ranges_expr
+      >>= fun months ->
+      return
+        (Time_expr_ast.Months_and_month_days_and_hms_ranges
+           { months; month_days; hms_ranges })
+
+    let bts_months_wdays_hms_ranges =
       Month.month_ranges_expr
       >>= fun months ->
       skip_space *> dot *> skip_space *> Weekday.weekday_ranges_expr
@@ -610,7 +639,7 @@ module Of_string = struct
       <|> ( last_string *> skip_space *> nat_zero
             >>= fun n -> return (Some (Time_expr_ast.Last_n n)) )
 
-    let ts_months_wday_hms =
+    let bts_months_wday_hms_ranges =
       Month.month_ranges_expr
       >>= fun months ->
       skip_space *> dot *> skip_space *> month_weekday_mode_expr
@@ -623,7 +652,7 @@ module Of_string = struct
         (Time_expr_ast.Months_and_weekday_and_hms_ranges
            { months; weekday; hms_ranges; month_weekday_mode })
 
-    let ts_years_months_mdays_hms =
+    let bts_years_months_mdays_hms_ranges =
       Year.year_ranges_expr
       >>= fun years ->
       skip_space *> dot *> skip_space *> Month.month_ranges_expr
@@ -636,13 +665,29 @@ module Of_string = struct
         (Time_expr_ast.Years_and_months_and_month_days_and_hms_ranges
            { years; months; month_days; hms_ranges })
 
+    let bts_hms_ranges_mdays_months_years =
+      Hms.hms_ranges
+      >>= fun hms_ranges ->
+      skip_space *> of_str *> skip_space *> Month_day.month_day_ranges_expr
+      >>= fun month_days ->
+      skip_space *> of_str *> skip_space *> Month.month_ranges_expr
+      >>= fun months ->
+      skip_space *> of_str *> skip_space *> Year.year_ranges_expr
+      >>= fun years ->
+      return
+        (Time_expr_ast.Years_and_months_and_month_days_and_hms_ranges
+           { years; months; month_days; hms_ranges })
+
     let unbounded_branching_time_slot_expr :
       Time_expr_ast.unbounded_branching_time_slot_expr t =
-      try_ ts_days_hms_ranges
-      <|> try_ ts_months_mdays_hms
-      <|> try_ ts_months_wdays_hms
-      <|> try_ ts_months_wday_hms
-      <|> try_ ts_years_months_mdays_hms
+      try_ bts_days_hms_ranges
+      <|> try_ bts_months_mdays_hms_ranges
+      <|> try_ bts_months_wdays_hms_ranges
+      <|> try_ bts_months_wday_hms_ranges
+      <|> try_ bts_years_months_mdays_hms_ranges
+      <|> try_ bts_hms_ranges_mdays_months_years
+      <|> try_ bts_hms_ranges_mdays_months
+      <|> try_ bts_hms_ranges_days
 
     let branching_time_slot_expr : Time_expr_ast.branching_time_slot_expr t =
       branch_bound
@@ -970,8 +1015,6 @@ module To_time_pattern_lossy = struct
     with Invalid_time_expr msg -> Error msg
 
   let time_range_patterns_of_unbounded_branching_time_slot_expr
-      ?(f_resolve_tse_name = default_f_resolve_tse_name)
-      ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
       (e : Time_expr_ast.unbounded_branching_time_slot_expr) :
     (Time_pattern.time_range_pattern list, string) result =
     let open Time_expr_ast in
@@ -1057,6 +1100,11 @@ module To_time_pattern_lossy = struct
         |> List.of_seq
     in
     try Ok (aux e) with Invalid_time_expr msg -> Error msg
+
+  let time_range_patterns_of_branching_time_slot_expr
+      ((_, e) : Time_expr_ast.branching_time_slot_expr) :
+    (Time_pattern.time_range_pattern list, string) result =
+    time_range_patterns_of_unbounded_branching_time_slot_expr e
 end
 
 module Time_point_expr = struct
@@ -1222,6 +1270,28 @@ module Time_slot_expr = struct
               |> Result.ok ) )
 end
 
+module Branching_time_slot_expr = struct
+  let matching_time_slots
+      (search_param : Search_param.t) (e : Time_expr_ast.branching_time_slot_expr) :
+    (Time_slot.t Seq.t, string) result =
+    match
+      To_time_pattern_lossy.time_range_patterns_of_branching_time_slot_expr
+        e
+    with
+    | Error msg -> Error msg
+    | Ok l -> (
+        match
+          Time_pattern.Range_pattern
+          .matching_time_slots_round_robin_non_decreasing
+            ~allow_search_param_override:true search_param l
+        with
+        | Error e -> Error (Time_pattern.To_string.string_of_error e)
+        | Ok s ->
+          s
+          |> Seq.flat_map List.to_seq
+          |> Result.ok )
+end
+
 let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     ?(f_resolve_tse_name = default_f_resolve_tse_name)
     (search_param : Search_param.t) (e : Time_expr_ast.t) :
@@ -1235,6 +1305,12 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     | Time_slot_expr e ->
       Time_slot_expr.matching_time_slots ~f_resolve_tpe_name
         ~f_resolve_tse_name search_param e
+    | Branching_time_point_expr e ->
+      failwith "Unimplemented"
+      (* Time_point_expr.matching_unix_seconds ~f_resolve_tpe_name search_param e
+       * |> Result.map (Seq.map (fun x -> (x, Int64.succ x))) *)
+    | Branching_time_slot_expr e ->
+      Branching_time_slot_expr.matching_time_slots search_param e
     | Time_pattern pat ->
       Time_pattern.Single_pattern.matching_time_slots
         ~allow_search_param_override:true search_param pat
