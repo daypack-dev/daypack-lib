@@ -19,6 +19,7 @@ let () = Jbuild_plugin.V1.send @@ {|
             atdgen-runtime
             containers
             re
+            dyp
  )
 |}
 ^ preprocess ^
@@ -168,4 +169,11 @@ let () = Jbuild_plugin.V1.send @@ {|
           time_profile_store_j.mli)
  (deps    time_profile_store.atd)
  (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets time_expr_parser.ml
+          )
+ (deps    (:input-file time_expr_parser.dyp))
+ (action  (run %{bin:dypgen} --noemit-token-type --no-pp --no-obj-type --no-mli %{input-file}))
+)
 |}
