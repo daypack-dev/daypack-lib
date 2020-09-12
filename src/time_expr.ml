@@ -722,16 +722,14 @@ module Of_string = struct
   let of_string (s : string) : (Time_expr_ast.t, string) result =
     parse_string (time_expr <* skip_space <* eoi) s
 
-  (* let time_point_expr_of_string (s : string) :
-   *   (Time_expr_ast.time_point_expr, string) result =
-   *   parse_string Time_point_expr.time_point_expr s
-   * 
-   * let time_slot_expr_of_string (s : string) :
-   *   (Time_expr_ast.time_slot_expr, string) result =
-   *   parse_string Time_slot_expr.time_slot_expr s *)
-end
+  let time_point_expr_of_string (s : string) :
+    (Time_expr_ast.time_point_expr, string) result =
+    parse_string Time_point_expr.time_point_expr s
 
-let of_string = Of_string.of_string
+  let time_slot_expr_of_string (s : string) :
+    (Time_expr_ast.time_slot_expr, string) result =
+    parse_string Time_slot_expr.time_slot_expr s
+end
 
 module To_time_pattern_lossy = struct
   module Second = struct

@@ -65,15 +65,15 @@ module To_string : sig
   val debug_string_of_hms_ranges : Time_expr_ast.hms_expr -> string
 end
 
-(* module Of_string : sig *)
-(* val time_point_expr_of_string :
- *   string -> (Time_expr_ast.time_point_expr, string) result
- * 
- * val time_slot_expr_of_string :
- *   string -> (Time_expr_ast.time_slot_expr, string) result *)
-(* end *)
+module Of_string : sig
+  val of_string : string -> (Time_expr_ast.t, string) result
 
-val of_string : string -> (Time_expr_ast.t, string) result
+  val time_point_expr_of_string :
+    string -> (Time_expr_ast.time_point_expr, string) result
+
+  val time_slot_expr_of_string :
+    string -> (Time_expr_ast.time_slot_expr, string) result
+end
 
 (* module To_time_pattern_lossy : sig *)
 (* val time_pattern_of_time_point_expr :

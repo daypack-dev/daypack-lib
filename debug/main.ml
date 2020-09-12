@@ -854,7 +854,7 @@ let debug_time_expr_matching_time_slots () =
       }
   in
   let s =
-    match Daypack_lib.Time_expr.of_string "5pm || 6pm && 7pm" with
+    match Daypack_lib.Time_expr.Of_string.of_string "5pm || 6pm && 7pm" with
     | Error msg -> failwith (Printf.sprintf "Error: %s" msg)
     | Ok e ->
       e
