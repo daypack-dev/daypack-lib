@@ -1301,8 +1301,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     | Time_slot_expr e ->
       Time_slot_expr.matching_time_slots ~f_resolve_tpe_name
         ~f_resolve_tse_name search_param e
-    | Branching_time_point_expr e ->
-      failwith "Unimplemented"
+    | Branching_time_point_expr e -> failwith "Unimplemented"
     (* Time_point_expr.matching_unix_seconds ~f_resolve_tpe_name search_param e
      * |> Result.map (Seq.map (fun x -> (x, Int64.succ x))) *)
     | Branching_time_slot_expr e ->
