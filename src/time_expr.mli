@@ -62,8 +62,8 @@ val check_time_expr : Time_expr_ast.t -> (unit, unit) result
  * end *)
 
 module To_string : sig
-  val debug_string_of_hour_minute_second_ranges :
-    Time_expr_ast.hour_minute_second_expr -> string
+  val debug_string_of_hms_ranges :
+    Time_expr_ast.hms_expr -> string
 end
 
 (* module Of_string : sig *)
