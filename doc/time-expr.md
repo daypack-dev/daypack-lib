@@ -171,7 +171,9 @@
 
 <time_expr_atom> ::=
   | <time_point_expr>
+  | <branching_time_point_expr>
   | <time_slot_expr>
+  | <branching_time_slot_expr>
   | <time_pattern>
 ```
 
