@@ -1,7 +1,6 @@
-type bound =
-  [ `Every
-  | `Next
-  ]
+type branch_bound =
+  | Next_n_batch of int
+  | Every_batch
 
 type second_expr = int
 
@@ -92,10 +91,6 @@ type unbounded_branching_time_point_expr =
       hmss : hms_range_expr list;
     }
 
-type branch_bound =
-  | Next_n_batch of int
-  | Every_batch
-
 type branching_time_point_expr =
   branch_bound * unbounded_branching_time_point_expr
 
@@ -138,7 +133,11 @@ type unbounded_branching_time_slot_expr =
 type branching_time_slot_expr =
   branch_bound * unbounded_branching_time_slot_expr
 
-type unary_op = Not
+type unary_op =
+  | Not
+  | Every
+  | Next_n_sec of int
+  | Next_n_slot of int
 
 type binary_op =
   | Union
@@ -147,6 +146,8 @@ type binary_op =
 type t =
   | Time_point_expr of time_point_expr
   | Time_slot_expr of time_slot_expr
+  | Branching_time_point_expr of branching_time_point_expr
+  | Branching_time_slot_expr of branching_time_slot_expr
   | Time_pattern of Time_pattern.time_pattern
   | Time_unary_op of unary_op * t
   | Time_binary_op of binary_op * t * t

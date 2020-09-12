@@ -264,14 +264,22 @@ module Of_string = struct
   let last_string = string "last"
 
   (* let bound =
-   *   option `Every
-   *     ( try_ (string "coming" *> return `Next)
-   *       <|> try_ (char '?' *> return `Next)
-   *       <|> try_ (string "every" *> return `Every)
-   *       <|> char '!' *> return `Every ) *)
+   *   let open Time_expr_ast in
+   *   option Every
+   *     ( try_ (string "next-slot" *> return (Next_n_slot 1))
+   *       <|> try_ (string "next-point" *> return Every)
+   *       <|> (string "every" *> return Every)
+   *     ) *)
+
+  let branch_bound =
+    let open Time_expr_ast in
+    option Every_batch
+      ( try_ (string "next-batch" *> return (Next_n_batch 1))
+        <|> try_ (string "every-batch" *> return (Every_batch))
+      )
 
   let ident_string =
-    ident_string ~reserved_words:[ "to"; "first"; "last"; "coming"; "every" ]
+    ident_string ~reserved_words:[ "to"; "first"; "last"; "next"; "every" ]
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
     try_
@@ -690,6 +698,11 @@ module Of_string = struct
       <|> try_ ts_months_wdays_hms
       <|> try_ ts_months_wday_hms
       <|> try_ ts_years_months_mdays_hms
+
+    let branching_time_slot_expr : Time_expr_ast.branching_time_slot_expr t =
+      branch_bound >>= fun bound ->
+      unbounded_branching_time_slot_expr >>= fun e ->
+      return (bound, e)
   end
 
   let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
@@ -734,6 +747,8 @@ module Of_string = struct
           skip_space
           *> ( try_ Time_pattern.Parsers.time_pattern_expr
                >>= (fun e -> return (Time_expr_ast.Time_pattern e))
+                   <|> ( Branching_time_slot_expr.branching_time_slot_expr
+                         >>= fun e -> return (Time_expr_ast.Branching_time_slot_expr e) )
                    <|> ( Time_slot_expr.time_slot_expr
                          >>= fun e -> return (Time_expr_ast.Time_slot_expr e) )
                    <|> ( Time_point_expr.time_point_expr
