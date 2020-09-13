@@ -550,15 +550,12 @@ module Of_string = struct
           >>= fun month_days ->
           skip_space *> dot *> skip_space *> Hms.hmss
           >>= fun hmss ->
-          return
-            (Time_expr_ast.Month_days_and_hmss { month_days; hmss })
-        )
+          return (Time_expr_ast.Month_days_and_hmss { month_days; hmss }) )
       <|> ( Weekday.weekday_ranges_expr
             >>= fun weekdays ->
             skip_space *> dot *> skip_space *> Hms.hmss
             >>= fun hmss ->
-            return
-              (Time_expr_ast.Weekdays_and_hmss { weekdays; hmss }) )
+            return (Time_expr_ast.Weekdays_and_hmss { weekdays; hmss }) )
 
     let btp_hmss_days =
       try_
@@ -566,15 +563,12 @@ module Of_string = struct
           >>= fun hmss ->
           skip_space *> of_str *> skip_space *> Month_day.month_day_ranges_expr
           >>= fun month_days ->
-          return
-            (Time_expr_ast.Month_days_and_hmss { month_days; hmss })
-        )
+          return (Time_expr_ast.Month_days_and_hmss { month_days; hmss }) )
       <|> ( Hms.hmss
             >>= fun hmss ->
             skip_space *> of_str *> skip_space *> Weekday.weekday_ranges_expr
             >>= fun weekdays ->
-            return
-              (Time_expr_ast.Weekdays_and_hmss { weekdays; hmss }) )
+            return (Time_expr_ast.Weekdays_and_hmss { weekdays; hmss }) )
 
     let btp_months_mdays_hmss =
       Month.month_ranges_expr
@@ -606,8 +600,7 @@ module Of_string = struct
       skip_space *> dot *> skip_space *> Hms.hmss
       >>= fun hmss ->
       return
-        (Time_expr_ast.Months_and_weekdays_and_hmss
-           { months; weekdays; hmss })
+        (Time_expr_ast.Months_and_weekdays_and_hmss { months; weekdays; hmss })
 
     let month_weekday_mode_expr =
       try_
@@ -1004,13 +997,10 @@ module To_time_pattern_lossy = struct
           time_range_pattern_of_hms_range_expr_and_base_time_pattern e base)
 
     let time_patterns_of_hmss_and_base_time_pattern
-        (l : Time_expr_ast.hms_expr list)
-        (base : Time_pattern.time_pattern) :
+        (l : Time_expr_ast.hms_expr list) (base : Time_pattern.time_pattern) :
       Time_pattern.time_pattern Seq.t =
       List.to_seq l
-      |> Seq.map (fun e ->
-          update_time_pattern_using_hms_expr
-          e base)
+      |> Seq.map (fun e -> update_time_pattern_using_hms_expr e base)
   end
 
   module Month_day = struct
@@ -1165,21 +1155,16 @@ module To_time_pattern_lossy = struct
         |> List.to_seq
         |> Time.Month_day_ranges.Flatten.flatten
         |> Seq.map Month_day.time_pattern_of_month_day_expr
-        |> Seq.flat_map
-          (Hms.time_patterns_of_hmss_and_base_time_pattern
-             hmss)
+        |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
       | Weekdays_and_hmss { weekdays; hmss } ->
         weekdays
         |> List.to_seq
         |> Time.Weekday_ranges.Flatten.flatten
         |> Seq.map Weekday.time_pattern_of_weekday_expr
-        |> Seq.flat_map
-          (Hms.time_patterns_of_hmss_and_base_time_pattern
-             hmss)
+        |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
-      | Months_and_month_days_and_hmss { months; month_days; hmss }
-        ->
+      | Months_and_month_days_and_hmss { months; month_days; hmss } ->
         let month_days =
           Time.Month_tm_int_ranges.Flatten.flatten_list month_days
         in
@@ -1190,9 +1175,7 @@ module To_time_pattern_lossy = struct
         |> Seq.flat_map
           (Month_day.time_patterns_of_month_days_and_base_time_pattern
              month_days)
-        |> Seq.flat_map
-          (Hms.time_patterns_of_hmss_and_base_time_pattern
-             hmss)
+        |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
       | Months_and_weekdays_and_hmss { months; weekdays; hmss } ->
         let weekdays = Time.Weekday_ranges.Flatten.flatten_list weekdays in
@@ -1203,9 +1186,7 @@ module To_time_pattern_lossy = struct
         |> Seq.flat_map
           (Weekday.time_patterns_of_weekdays_and_base_time_pattern
              weekdays)
-        |> Seq.flat_map
-          (Hms.time_patterns_of_hmss_and_base_time_pattern
-             hmss)
+        |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
       | Months_and_weekday_and_hmss
           { months; weekday; hmss; month_weekday_mode = _ } ->
@@ -1214,9 +1195,7 @@ module To_time_pattern_lossy = struct
         |> Time.Month_ranges.Flatten.flatten
         |> Seq.map Month.time_pattern_of_month_expr
         |> Seq.map (Weekday.update_time_pattern_using_weekday_expr weekday)
-        |> Seq.flat_map
-          (Hms.time_patterns_of_hmss_and_base_time_pattern
-             hmss)
+        |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
       | Years_and_months_and_month_days_and_hmss
           { years; months; month_days; hmss } ->
@@ -1233,9 +1212,7 @@ module To_time_pattern_lossy = struct
         |> Seq.flat_map
           (Month_day.time_patterns_of_month_days_and_base_time_pattern
              month_days)
-        |> Seq.flat_map
-          (Hms.time_patterns_of_hmss_and_base_time_pattern
-             hmss)
+        |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
     in
     try Ok (aux e) with Invalid_time_expr msg -> Error msg
@@ -1572,9 +1549,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
                 with
                 | Error x -> Error (Time_pattern.To_string.string_of_error x)
                 | Ok s -> Ok (Time_slots.relative_complement ~not_mem_of s) )
-            | _ -> failwith "Unimplemented"
-          )
-      )
+            | _ -> failwith "Unimplemented" ) )
     | Time_binary_op (op, e1, e2) -> (
         match aux e1 with
         | Error x -> Error x
