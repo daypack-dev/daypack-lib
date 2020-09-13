@@ -62,33 +62,33 @@ type time_point_expr =
 type unbounded_branching_time_point_expr =
   | Month_days_and_hmss of {
       month_days : int Range.range list;
-      hmss : hms_range_expr list;
+      hmss : hms_expr list;
     }
   | Weekdays_and_hmss of {
       weekdays : Time.weekday Range.range list;
-      hmss : hms_range_expr list;
+      hmss : hms_expr list;
     }
   | Months_and_month_days_and_hmss of {
       months : month_expr Range.range list;
       month_days : int Range.range list;
-      hmss : hms_range_expr list;
+      hmss : hms_expr list;
     }
   | Months_and_weekdays_and_hmss of {
       months : month_expr Range.range list;
       weekdays : Time.weekday Range.range list;
-      hmss : hms_range_expr list;
+      hmss : hms_expr list;
     }
   | Months_and_weekday_and_hmss of {
       months : month_expr Range.range list;
       weekday : Time.weekday;
-      hmss : hms_range_expr list;
+      hmss : hms_expr list;
       month_weekday_mode : month_weekday_mode option;
     }
   | Years_and_months_and_month_days_and_hmss of {
       years : int Range.range list;
       months : month_expr Range.range list;
       month_days : int Range.range list;
-      hmss : hms_range_expr list;
+      hmss : hms_expr list;
     }
 
 type branching_time_point_expr =
