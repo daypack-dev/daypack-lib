@@ -6,6 +6,23 @@ type f_resolve_tse_name = string -> Time_expr_ast.time_slot_expr option
 
 type f_resolve_tpe_name = string -> Time_expr_ast.time_point_expr option
 
+type lang_fragment =
+  [ `Time_point_expr
+  | `Time_slot_expr
+  | `Branching_time_point_expr
+  | `Branching_time_slot_expr
+  | `Time_pattern
+  ]
+
+let all_lang_fragments =
+  [
+    `Time_point_expr;
+    `Time_slot_expr;
+    `Branching_time_point_expr;
+    `Branching_time_slot_expr;
+    `Time_pattern;
+  ]
+
 let default_f_resolve_tse_name (_ : string) :
   Time_expr_ast.time_slot_expr option =
   None
@@ -852,25 +869,61 @@ module Of_string = struct
     in
     aux e
 
-  let time_expr : Time_expr_ast.t t =
+  let time_expr ~(enabled_fragments : lang_fragment list) : Time_expr_ast.t t =
     let open Time_expr_ast in
+    let atom_parsers =
+      [
+        ( if List.mem `Time_pattern enabled_fragments then
+            Some
+              ( try_ Time_pattern.Parsers.time_pattern_expr
+                >>= fun e -> return (Time_expr_ast.Time_pattern e) )
+          else None );
+        ( if List.mem `Branching_time_point_expr enabled_fragments then
+            Some
+              ( Branching_time_point_expr.branching_time_point_expr
+                >>= fun e -> return (Time_expr_ast.Branching_time_point_expr e) )
+          else None );
+        ( if List.mem `Branching_time_slot_expr enabled_fragments then
+            Some
+              ( Branching_time_slot_expr.branching_time_slot_expr
+                >>= fun e -> return (Time_expr_ast.Branching_time_slot_expr e) )
+          else None );
+        ( if List.mem `Time_slot_expr enabled_fragments then
+            Some
+              ( Time_slot_expr.time_slot_expr
+                >>= fun e -> return (Time_expr_ast.Time_slot_expr e) )
+          else None );
+        ( if List.mem `Time_point_expr enabled_fragments then
+            Some
+              ( Time_point_expr.time_point_expr
+                >>= fun e -> return (Time_expr_ast.Time_point_expr e) )
+          else None );
+      ]
+      |> List.filter_map (fun x -> x)
+    in
+    let rec make_atom l =
+      match l with
+      | [] -> failf "Not sure what to do"
+      | x :: xs -> x <|> make_atom xs
+    in
+    let atom = skip_space *> make_atom atom_parsers <* skip_space in
     fix (fun expr ->
-        let atom =
-          skip_space
-          *> ( try_ Time_pattern.Parsers.time_pattern_expr
-               >>= (fun e -> return (Time_expr_ast.Time_pattern e))
-                   <|> ( Branching_time_point_expr.branching_time_point_expr
-                         >>= fun e -> return (Time_expr_ast.Branching_time_point_expr e)
-                       )
-                   <|> ( Branching_time_slot_expr.branching_time_slot_expr
-                         >>= fun e -> return (Time_expr_ast.Branching_time_slot_expr e)
-                       )
-                   <|> ( Time_slot_expr.time_slot_expr
-                         >>= fun e -> return (Time_expr_ast.Time_slot_expr e) )
-                   <|> ( Time_point_expr.time_point_expr
-                         >>= fun e -> return (Time_expr_ast.Time_point_expr e) ) )
-          <* skip_space
-        in
+        (* let atom =
+         *   skip_space
+         *   *> ( try_ Time_pattern.Parsers.time_pattern_expr
+         *        >>= (fun e -> return (Time_expr_ast.Time_pattern e))
+         *            <|> ( Branching_time_point_expr.branching_time_point_expr
+         *                  >>= fun e -> return (Time_expr_ast.Branching_time_point_expr e)
+         *                )
+         *            <|> ( Branching_time_slot_expr.branching_time_slot_expr
+         *                  >>= fun e -> return (Time_expr_ast.Branching_time_slot_expr e)
+         *                )
+         *            <|> ( Time_slot_expr.time_slot_expr
+         *                  >>= fun e -> return (Time_expr_ast.Time_slot_expr e) )
+         *            <|> ( Time_point_expr.time_point_expr
+         *                  >>= fun e -> return (Time_expr_ast.Time_point_expr e) ) )
+         *   <* skip_space
+         * in *)
         let group =
           try_ (char '(') *> skip_space *> expr
           <* skip_space
@@ -887,17 +940,12 @@ module Of_string = struct
         chainl1 union_part union)
     >>= fun e -> return (flatten_round_robin_select e)
 
-  let of_string (s : string) : (Time_expr_ast.t, string) result =
-    parse_string (time_expr <* skip_space <* eoi) s
-
-  let time_point_expr_of_string (s : string) :
-    (Time_expr_ast.time_point_expr, string) result =
-    parse_string Time_point_expr.time_point_expr s
-
-  let time_slot_expr_of_string (s : string) :
-    (Time_expr_ast.time_slot_expr, string) result =
-    parse_string Time_slot_expr.time_slot_expr s
+  let of_string ?(enabled_fragments = all_lang_fragments) (s : string) :
+    (Time_expr_ast.t, string) result =
+    parse_string (time_expr ~enabled_fragments <* skip_space <* eoi) s
 end
+
+let of_string = Of_string.of_string
 
 module To_time_pattern_lossy = struct
   module Second = struct
