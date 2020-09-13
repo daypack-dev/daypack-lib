@@ -6,6 +6,14 @@ type f_resolve_tse_name = string -> Time_expr_ast.time_slot_expr option
 
 type f_resolve_tpe_name = string -> Time_expr_ast.time_point_expr option
 
+type lang_fragment =
+  [ `Time_point_expr
+  | `Time_slot_expr
+  | `Branching_time_point_expr
+  | `Branching_time_slot_expr
+  | `Time_pattern
+  ]
+
 (* module Check : sig *)
 (* val check_unbounded_time_point_expr :
  *   Time_expr_ast.unbounded_time_point_expr -> (unit, unit) result
@@ -65,15 +73,10 @@ module To_string : sig
   val debug_string_of_hms_ranges : Time_expr_ast.hms_expr -> string
 end
 
-module Of_string : sig
-  val of_string : string -> (Time_expr_ast.t, string) result
-
-  val time_point_expr_of_string :
-    string -> (Time_expr_ast.time_point_expr, string) result
-
-  val time_slot_expr_of_string :
-    string -> (Time_expr_ast.time_slot_expr, string) result
-end
+val of_string :
+  ?enabled_fragments:lang_fragment list ->
+  string ->
+  (Time_expr_ast.t, string) result
 
 (* module To_time_pattern_lossy : sig *)
 (* val time_pattern_of_time_point_expr :
