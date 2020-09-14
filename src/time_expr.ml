@@ -941,22 +941,18 @@ module Of_string = struct
           <|> atom
         in
         let unary_op =
-          (try_ not_str *> return Not)
-          <|> (try_ next_slot_str *> return (Next_n_slots 1))
-          <|> (try_ next_point_str *> return (Next_n_points 1))
-          <|> (try_ (next_str *> hyphen *> nat_zero <*
-               hyphen <* slots_str)
-                 >>= fun n ->
-               return (Next_n_slots n))
-          <|> (try_ (next_str *> hyphen *> nat_zero <*
-                     hyphen <* points_str) >>=
-               fun n ->
-               return (Next_n_points n))
+          try_ not_str *> return Not
+          <|> try_ next_slot_str *> return (Next_n_slots 1)
+          <|> try_ next_point_str *> return (Next_n_points 1)
+          <|> ( try_ (next_str *> hyphen *> nat_zero <* hyphen <* slots_str)
+                >>= fun n -> return (Next_n_slots n) )
+          <|> ( try_ (next_str *> hyphen *> nat_zero <* hyphen <* points_str)
+                >>= fun n -> return (Next_n_points n) )
         in
         let inter_part =
-          (try_ unary_op >>= fun op -> skip_space *> expr
-          >>= (fun e -> return (Time_unary_op (op, e)))
-          )
+          try_ unary_op
+          >>= (fun op ->
+              skip_space *> expr >>= fun e -> return (Time_unary_op (op, e)))
               <|> group
         in
         let ordered_select_part = chainl1 inter_part round_robin_select in
@@ -1622,20 +1618,14 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
                 | Error x -> Error (Time_pattern.To_string.string_of_error x)
                 | Ok s -> Ok (Time_slots.relative_complement ~not_mem_of:s' s) )
             | Every -> Ok s'
-            | Next_n_slots n -> (
-                s'
-                |> OSeq.take n
-                |> Result.ok
-              )
-            | Next_n_points n -> (
-                s'
-                |> Time_slots.chunk ~skip_check:true ~chunk_size:1L
-                |> OSeq.take n
-                |> Time_slots.Normalize.normalize ~skip_filter_invalid:true
-                  ~skip_filter_empty:true ~skip_sort:true
-                |> Result.ok
-              )
-          ) )
+            | Next_n_slots n -> s' |> OSeq.take n |> Result.ok
+            | Next_n_points n ->
+              s'
+              |> Time_slots.chunk ~skip_check:true ~chunk_size:1L
+              |> OSeq.take n
+              |> Time_slots.Normalize.normalize ~skip_filter_invalid:true
+                ~skip_filter_empty:true ~skip_sort:true
+              |> Result.ok ) )
     | Time_binary_op (op, e1, e2) -> (
         match aux e1 with
         | Error x -> Error x
