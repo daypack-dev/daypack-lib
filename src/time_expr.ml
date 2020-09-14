@@ -677,13 +677,9 @@ module Of_string = struct
         (Time_expr_ast.Btp_years_and_months_and_month_days_and_hmss
            { years; months; month_days; hmss })
 
-    let branching_time_point_expr :
+    let branching_time_point_expr_atom :
       Time_expr_ast.branching_time_point_expr t =
-      fix (fun expr ->
-          try_ (branch_unary_op >>= fun op -> skip_space *> expr >>= fun e ->
-                                                    return (Time_expr_ast.Btp_unary_op (op, e))
-                                                    )
-          <|> try_ btp_days_hmss
+          try_ btp_days_hmss
           <|> try_ btp_months_mdays_hmss
           <|> try_ btp_months_wdays_hmss
           <|> try_ btp_months_wday_hmss
@@ -691,7 +687,14 @@ module Of_string = struct
           <|> try_ btp_hmss_mdays_months_years
           <|> try_ btp_hmss_mdays_months
           <|> try_ btp_hmss_days
-        )
+
+    let branching_time_point_expr :
+      Time_expr_ast.branching_time_point_expr t =
+
+          try_ (branch_unary_op >>= fun op -> skip_space *> branching_time_point_expr_atom >>= fun e ->
+                                                    return (Time_expr_ast.Btp_unary_op (op, e))
+                                                    )
+          <|> branching_time_point_expr_atom
   end
 
   module Time_slot_expr = struct
@@ -827,13 +830,9 @@ module Of_string = struct
         (Time_expr_ast.Bts_years_and_months_and_month_days_and_hms_ranges
            { years; months; month_days; hms_ranges })
 
-    let branching_time_slot_expr :
+    let branching_time_slot_expr_atom :
       Time_expr_ast.branching_time_slot_expr t =
-      fix (fun expr ->
-          try_ (branch_unary_op >>= fun op -> skip_space *> expr >>= fun e ->
-                return (Time_expr_ast.Bts_unary_op (op, e))
-               )
-          <|> try_ bts_days_hms_ranges
+          try_ bts_days_hms_ranges
           <|> try_ bts_months_mdays_hms_ranges
           <|> try_ bts_months_wdays_hms_ranges
           <|> try_ bts_months_wday_hms_ranges
@@ -841,7 +840,13 @@ module Of_string = struct
           <|> try_ bts_hms_ranges_mdays_months_years
           <|> try_ bts_hms_ranges_mdays_months
           <|> try_ bts_hms_ranges_days
-        )
+
+    let branching_time_slot_expr :
+      Time_expr_ast.branching_time_slot_expr t =
+          try_ (branch_unary_op >>= fun op -> skip_space *> branching_time_slot_expr_atom >>= fun e ->
+                return (Time_expr_ast.Bts_unary_op (op, e))
+               )
+        <|> branching_time_slot_expr_atom
   end
 
   let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
