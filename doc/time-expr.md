@@ -73,12 +73,12 @@
   | <year>     <direct_pick_month>     <month_day> <hms>
   | <year> '-' <human_int_month>   '-' <month_day> <hms>
 
-<branch_bound> ::=
+<branch_op> ::=
   | "next-batch"
   | "next-" <nat> "-batch"
   | "every-batch"
 
-<unbounded_branching_time_point_expr> ::=
+<branching_time_point_expr_atom> ::=
   |                          <weekdays>   '.' <hmss>
   |                          <month_days> '.' <hmss>
   |             <months> '.' <month_days> '.' <hmss>
@@ -89,7 +89,8 @@
   | <hmss> "of" <month_days> "of" <months> "of" <years>
 
 <branching_time_point_expr> ::=
-  | [<branch_bound>] <unbounded_branching_time_point_expr>
+  |             <branching_time_point_expr_atom>
+  | <branch_op> <branching_time_point_expr_atom>
 
 <month_day_range> ::=
   | <month_day> "to" <month_day>
@@ -122,7 +123,7 @@
 <time_slot_expr> ::=
   | <time_point_expr> "to" <time_point_expr>
 
-<unbounded_branching_time_slot_expr>
+<branching_time_slot_expr_atom>
   |                          <weekdays>   '.' <hms_ranges>
   |                          <month_days> '.' <hms_ranges>
   |             <months> '.' <month_days> '.' <hms_ranges>
@@ -133,7 +134,8 @@
   | <hms_ranges> "of" <month_days> "of" <months> "of" <years>
 
 <branching_time_slot_expr> ::=
-  | [ <branch_bound> <unbounded_branching_time_slot_expr>
+  |             <branching_time_slot_expr>
+  | <branch_op> <branching_time_slot_expr>
 
 <cron_expr> ::=
   TODO
