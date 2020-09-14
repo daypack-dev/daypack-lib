@@ -1,5 +1,5 @@
-type branch_bound =
-  | Next_n_batch of int
+type branch_unary_op =
+  | Next_n_batches of int
   | Every_batch
 
 type second_expr = int
@@ -59,85 +59,81 @@ type time_point_expr =
       hms : hms_expr;
     }
 
-type unbounded_branching_time_point_expr =
-  | Month_days_and_hmss of {
+type branching_time_point_expr =
+  | Btp_unary_op of branch_unary_op * branching_time_point_expr
+  | Btp_month_days_and_hmss of {
       month_days : int Range.range list;
       hmss : hms_expr list;
     }
-  | Weekdays_and_hmss of {
+  | Btp_weekdays_and_hmss of {
       weekdays : Time.weekday Range.range list;
       hmss : hms_expr list;
     }
-  | Months_and_month_days_and_hmss of {
+  | Btp_months_and_month_days_and_hmss of {
       months : month_expr Range.range list;
       month_days : int Range.range list;
       hmss : hms_expr list;
     }
-  | Months_and_weekdays_and_hmss of {
+  | Btp_months_and_weekdays_and_hmss of {
       months : month_expr Range.range list;
       weekdays : Time.weekday Range.range list;
       hmss : hms_expr list;
     }
-  | Months_and_weekday_and_hmss of {
+  | Btp_months_and_weekday_and_hmss of {
       months : month_expr Range.range list;
       weekday : Time.weekday;
       hmss : hms_expr list;
       month_weekday_mode : month_weekday_mode option;
     }
-  | Years_and_months_and_month_days_and_hmss of {
+  | Btp_years_and_months_and_month_days_and_hmss of {
       years : int Range.range list;
       months : month_expr Range.range list;
       month_days : int Range.range list;
       hmss : hms_expr list;
     }
-
-type branching_time_point_expr =
-  branch_bound * unbounded_branching_time_point_expr
 
 type time_slot_expr =
   | Tse_name of string
   | Explicit_time_slot of (time_point_expr * time_point_expr)
 
-type unbounded_branching_time_slot_expr =
-  | Month_days_and_hms_ranges of {
+type branching_time_slot_expr =
+  | Bts_unary_op of branch_unary_op * branching_time_slot_expr
+  | Bts_month_days_and_hms_ranges of {
       month_days : int Range.range list;
       hms_ranges : hms_range_expr list;
     }
-  | Weekdays_and_hms_ranges of {
+  | Bts_weekdays_and_hms_ranges of {
       weekdays : Time.weekday Range.range list;
       hms_ranges : hms_range_expr list;
     }
-  | Months_and_month_days_and_hms_ranges of {
+  | Bts_months_and_month_days_and_hms_ranges of {
       months : month_expr Range.range list;
       month_days : int Range.range list;
       hms_ranges : hms_range_expr list;
     }
-  | Months_and_weekdays_and_hms_ranges of {
+  | Bts_months_and_weekdays_and_hms_ranges of {
       months : month_expr Range.range list;
       weekdays : Time.weekday Range.range list;
       hms_ranges : hms_range_expr list;
     }
-  | Months_and_weekday_and_hms_ranges of {
+  | Bts_months_and_weekday_and_hms_ranges of {
       months : month_expr Range.range list;
       weekday : Time.weekday;
       hms_ranges : hms_range_expr list;
       month_weekday_mode : month_weekday_mode option;
     }
-  | Years_and_months_and_month_days_and_hms_ranges of {
+  | Bts_years_and_months_and_month_days_and_hms_ranges of {
       years : int Range.range list;
       months : month_expr Range.range list;
       month_days : int Range.range list;
       hms_ranges : hms_range_expr list;
     }
 
-type branching_time_slot_expr =
-  branch_bound * unbounded_branching_time_slot_expr
-
 type unary_op =
   | Not
   | Every
-  | Next_n_sec of int
-  | Next_n_slot of int
+  | Next_n_points of int
+  | Next_n_slots of int
 
 type binary_op =
   | Union
