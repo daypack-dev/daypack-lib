@@ -160,14 +160,17 @@
   | <time_expr_inter_part>
   | <time_expr_ordered_select_part> "||" <time_expr_inter_part>
 
+<unary_op> ::=
+  | "not"
+  | "next-slot"
+  | "next-point"
+  | "next-" <nat> "-slot"
+  | "next-" <nat> "-point"
+  | "every"
+
 <time_expr_inter_part> ::=
   | <time_expr_group>
-  | "not"                  <time_expr_inter_part>
-  | "next-slot"            <time_expr_inter_part>
-  | "next-point"           <time_expr_inter_part>
-  | "next-" <nat> "-slot"  <time_expr_inter_part>
-  | "next-" <nat> "-point" <time_expr_inter_part>
-  | "every"                <time_expr_inter_part>
+  | <unary_op> <time_expr_inter_part>
 
 <time_expr_group> ::=
   | <time_expr_atom>

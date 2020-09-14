@@ -1,5 +1,5 @@
 type branch_bound =
-  | Next_n_batch of int
+  | Next_n_batches of int
   | Every_batch
 
 type second_expr = int
@@ -136,8 +136,8 @@ type branching_time_slot_expr =
 type unary_op =
   | Not
   | Every
-  | Next_n_sec of int
-  | Next_n_slot of int
+  | Next_n_points of int
+  | Next_n_slots of int
 
 type binary_op =
   | Union

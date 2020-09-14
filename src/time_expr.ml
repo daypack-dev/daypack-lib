@@ -258,15 +258,25 @@ module Of_string = struct
   open CCParse
   open Parser_components
 
-  let not_string = string "not"
+  let not_str = string "not"
+
+  let next_slot_str = string "next-slot"
+
+  let next_point_str = string "next-point"
+
+  let next_str = string "next"
+
+  let points_str = string "points"
+
+  let slots_str = string "slots"
 
   let of_str = string "of"
 
-  let to_string = string "to"
+  let to_str = string "to"
 
-  let first_string = string "first"
+  let first_str = string "first"
 
-  let last_string = string "last"
+  let last_str = string "last"
 
   (* let bound =
    *   let open Time_expr_ast in
@@ -279,7 +289,7 @@ module Of_string = struct
   let branch_bound =
     let open Time_expr_ast in
     option Every_batch
-      ( try_ (string "next-batch" *> return (Next_n_batch 1))
+      ( try_ (string "next-batch" *> return (Next_n_batches 1))
         <|> try_ (string "every-batch" *> return Every_batch) )
 
   let ident_string =
@@ -289,7 +299,7 @@ module Of_string = struct
     try_
       ( p
         >>= fun x ->
-        skip_space *> to_string *> skip_space *> p
+        skip_space *> to_str *> skip_space *> p
         >>= fun y -> return (`Range_inc (x, y)) )
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
@@ -297,7 +307,7 @@ module Of_string = struct
     try_
       ( p
         >>= fun x ->
-        skip_space *> to_string *> skip_space *> p
+        skip_space *> to_str *> skip_space *> p
         >>= fun y -> return (`Range_exc (x, y)) )
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
@@ -621,9 +631,9 @@ module Of_string = struct
 
     let month_weekday_mode_expr =
       try_
-        ( first_string *> skip_space *> nat_zero
+        ( first_str *> skip_space *> nat_zero
           >>= fun n -> return (Some (Time_expr_ast.First_n n)) )
-      <|> ( last_string *> skip_space *> nat_zero
+      <|> ( last_str *> skip_space *> nat_zero
             >>= fun n -> return (Some (Time_expr_ast.Last_n n)) )
 
     let btp_months_wday_hmss =
@@ -690,7 +700,7 @@ module Of_string = struct
     let ts_explicit_time_slot =
       try_
         ( Time_point_expr.time_point_expr
-          >>= fun start -> skip_space *> to_string *> return start )
+          >>= fun start -> skip_space *> to_str *> return start )
       >>= fun start ->
       skip_space *> get_pos
       >>= fun pos ->
@@ -771,9 +781,9 @@ module Of_string = struct
 
     let month_weekday_mode_expr =
       try_
-        ( first_string *> skip_space *> nat_zero
+        ( first_str *> skip_space *> nat_zero
           >>= fun n -> return (Some (Time_expr_ast.First_n n)) )
-      <|> ( last_string *> skip_space *> nat_zero
+      <|> ( last_str *> skip_space *> nat_zero
             >>= fun n -> return (Some (Time_expr_ast.Last_n n)) )
 
     let bts_months_wday_hms_ranges =
@@ -930,9 +940,23 @@ module Of_string = struct
           <* char ')'
           <|> atom
         in
+        let unary_op =
+          (try_ not_str *> return Not)
+          <|> (try_ next_slot_str *> return (Next_n_slots 1))
+          <|> (try_ next_point_str *> return (Next_n_points 1))
+          <|> (try_ (next_str *> hyphen *> nat_zero <*
+               hyphen <* slots_str)
+                 >>= fun n ->
+               return (Next_n_slots n))
+          <|> (try_ (next_str *> hyphen *> nat_zero <*
+                     hyphen <* points_str) >>=
+               fun n ->
+               return (Next_n_points n))
+        in
         let inter_part =
-          try_ not_string *> skip_space *> expr
-          >>= (fun e -> return (Time_unary_op (Not, e)))
+          (try_ unary_op >>= fun op -> skip_space *> expr
+          >>= (fun e -> return (Time_unary_op (op, e)))
+          )
               <|> group
         in
         let ordered_select_part = chainl1 inter_part round_robin_select in
@@ -1587,7 +1611,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     | Time_unary_op (op, e) -> (
         match aux e with
         | Error x -> Error x
-        | Ok not_mem_of -> (
+        | Ok s' -> (
             match op with
             | Not -> (
                 match
@@ -1596,8 +1620,22 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
                     Time_pattern.empty
                 with
                 | Error x -> Error (Time_pattern.To_string.string_of_error x)
-                | Ok s -> Ok (Time_slots.relative_complement ~not_mem_of s) )
-            | _ -> failwith "Unimplemented" ) )
+                | Ok s -> Ok (Time_slots.relative_complement ~not_mem_of:s' s) )
+            | Every -> Ok s'
+            | Next_n_slots n -> (
+                s'
+                |> OSeq.take n
+                |> Result.ok
+              )
+            | Next_n_points n -> (
+                s'
+                |> Time_slots.chunk ~skip_check:true ~chunk_size:1L
+                |> OSeq.take n
+                |> Time_slots.Normalize.normalize ~skip_filter_invalid:true
+                  ~skip_filter_empty:true ~skip_sort:true
+                |> Result.ok
+              )
+          ) )
     | Time_binary_op (op, e1, e2) -> (
         match aux e1 with
         | Error x -> Error x
