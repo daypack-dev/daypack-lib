@@ -183,42 +183,45 @@ module Check = struct
     in
     aux e
 
-  let check_unbounded_branching_time_slot_expr
-      (e : Time_expr_ast.unbounded_branching_time_slot_expr) :
+  let check_branching_time_slot_expr
+      (e : Time_expr_ast.branching_time_slot_expr) :
     (unit, unit) result =
     let open Time_expr_ast in
-    let aux e =
+    let rec aux e =
       match e with
-      | Month_days_and_hms_ranges { month_days; hms_ranges } ->
+      | Bts_unary_op (op, e) -> (
+          aux e
+        )
+      | Bts_month_days_and_hms_ranges { month_days; hms_ranges } ->
         if
           Time.Month_day_ranges.Check.list_is_valid month_days
           && hms_ranges_are_valid hms_ranges
         then Ok ()
         else Error ()
-      | Weekdays_and_hms_ranges { weekdays = _; hms_ranges } ->
+      | Bts_weekdays_and_hms_ranges { weekdays = _; hms_ranges } ->
         if hms_ranges_are_valid hms_ranges then Ok () else Error ()
-      | Months_and_month_days_and_hms_ranges
+      | Bts_months_and_month_days_and_hms_ranges
           { months = _; month_days; hms_ranges } ->
         if
           Time.Month_day_ranges.Check.list_is_valid month_days
           && hms_ranges_are_valid hms_ranges
         then Ok ()
         else Error ()
-      | Months_and_weekdays_and_hms_ranges { months; weekdays = _; hms_ranges }
+      | Bts_months_and_weekdays_and_hms_ranges { months; weekdays = _; hms_ranges }
         ->
         if
           Time.Month_ranges.Check.list_is_valid months
           && hms_ranges_are_valid hms_ranges
         then Ok ()
         else Error ()
-      | Months_and_weekday_and_hms_ranges
+      | Bts_months_and_weekday_and_hms_ranges
           { months; weekday = _; hms_ranges; month_weekday_mode = _ } ->
         if
           Time.Month_ranges.Check.list_is_valid months
           && hms_ranges_are_valid hms_ranges
         then Ok ()
         else Error ()
-      | Years_and_months_and_month_days_and_hms_ranges
+      | Bts_years_and_months_and_month_days_and_hms_ranges
           { years = _; months; month_days; hms_ranges } ->
         if
           Time.Month_ranges.Check.list_is_valid months
@@ -286,9 +289,8 @@ module Of_string = struct
    *       <|> (string "every" *> return Every)
    *     ) *)
 
-  let branch_bound =
+  let branch_unary_op =
     let open Time_expr_ast in
-    option Every_batch
       ( try_ (string "next-batch" *> return (Next_n_batches 1))
         <|> try_ (string "every-batch" *> return Every_batch) )
 
@@ -577,12 +579,12 @@ module Of_string = struct
           >>= fun month_days ->
           skip_space *> dot *> skip_space *> Hms.hmss
           >>= fun hmss ->
-          return (Time_expr_ast.Month_days_and_hmss { month_days; hmss }) )
+          return (Time_expr_ast.Btp_month_days_and_hmss { month_days; hmss }) )
       <|> ( Weekday.weekday_ranges_expr
             >>= fun weekdays ->
             skip_space *> dot *> skip_space *> Hms.hmss
             >>= fun hmss ->
-            return (Time_expr_ast.Weekdays_and_hmss { weekdays; hmss }) )
+            return (Time_expr_ast.Btp_weekdays_and_hmss { weekdays; hmss }) )
 
     let btp_hmss_days =
       try_
@@ -590,12 +592,12 @@ module Of_string = struct
           >>= fun hmss ->
           skip_space *> of_str *> skip_space *> Month_day.month_day_ranges_expr
           >>= fun month_days ->
-          return (Time_expr_ast.Month_days_and_hmss { month_days; hmss }) )
+          return (Time_expr_ast.Btp_month_days_and_hmss { month_days; hmss }) )
       <|> ( Hms.hmss
             >>= fun hmss ->
             skip_space *> of_str *> skip_space *> Weekday.weekday_ranges_expr
             >>= fun weekdays ->
-            return (Time_expr_ast.Weekdays_and_hmss { weekdays; hmss }) )
+            return (Time_expr_ast.Btp_weekdays_and_hmss { weekdays; hmss }) )
 
     let btp_months_mdays_hmss =
       Month.month_ranges_expr
@@ -605,7 +607,7 @@ module Of_string = struct
       skip_space *> dot *> skip_space *> Hms.hmss
       >>= fun hmss ->
       return
-        (Time_expr_ast.Months_and_month_days_and_hmss
+        (Time_expr_ast.Btp_months_and_month_days_and_hmss
            { months; month_days; hmss })
 
     let btp_hmss_mdays_months =
@@ -616,7 +618,7 @@ module Of_string = struct
       skip_space *> of_str *> skip_space *> Month.month_ranges_expr
       >>= fun months ->
       return
-        (Time_expr_ast.Months_and_month_days_and_hmss
+        (Time_expr_ast.Btp_months_and_month_days_and_hmss
            { months; month_days; hmss })
 
     let btp_months_wdays_hmss =
@@ -627,7 +629,7 @@ module Of_string = struct
       skip_space *> dot *> skip_space *> Hms.hmss
       >>= fun hmss ->
       return
-        (Time_expr_ast.Months_and_weekdays_and_hmss { months; weekdays; hmss })
+        (Time_expr_ast.Btp_months_and_weekdays_and_hmss { months; weekdays; hmss })
 
     let month_weekday_mode_expr =
       try_
@@ -646,7 +648,7 @@ module Of_string = struct
       skip_space *> dot *> skip_space *> Hms.hmss
       >>= fun hmss ->
       return
-        (Time_expr_ast.Months_and_weekday_and_hmss
+        (Time_expr_ast.Btp_months_and_weekday_and_hmss
            { months; weekday; hmss; month_weekday_mode })
 
     let btp_years_months_mdays_hmss =
@@ -659,7 +661,7 @@ module Of_string = struct
       skip_space *> dot *> skip_space *> Hms.hmss
       >>= fun hmss ->
       return
-        (Time_expr_ast.Years_and_months_and_month_days_and_hmss
+        (Time_expr_ast.Btp_years_and_months_and_month_days_and_hmss
            { years; months; month_days; hmss })
 
     let btp_hmss_mdays_months_years =
@@ -672,24 +674,24 @@ module Of_string = struct
       skip_space *> of_str *> skip_space *> Year.year_ranges_expr
       >>= fun years ->
       return
-        (Time_expr_ast.Years_and_months_and_month_days_and_hmss
+        (Time_expr_ast.Btp_years_and_months_and_month_days_and_hmss
            { years; months; month_days; hmss })
 
-    let unbounded_branching_time_point_expr :
-      Time_expr_ast.unbounded_branching_time_point_expr t =
-      try_ btp_days_hmss
-      <|> try_ btp_months_mdays_hmss
-      <|> try_ btp_months_wdays_hmss
-      <|> try_ btp_months_wday_hmss
-      <|> try_ btp_years_months_mdays_hmss
-      <|> try_ btp_hmss_mdays_months_years
-      <|> try_ btp_hmss_mdays_months
-      <|> try_ btp_hmss_days
-
-    let branching_time_point_expr : Time_expr_ast.branching_time_point_expr t =
-      branch_bound
-      >>= fun bound ->
-      unbounded_branching_time_point_expr >>= fun e -> return (bound, e)
+    let branching_time_point_expr :
+      Time_expr_ast.branching_time_point_expr t =
+      fix (fun expr ->
+          try_ (branch_unary_op >>= fun op -> skip_space *> expr >>= fun e ->
+                                                    return (Time_expr_ast.Btp_unary_op (op, e))
+                                                    )
+          <|> try_ btp_days_hmss
+          <|> try_ btp_months_mdays_hmss
+          <|> try_ btp_months_wdays_hmss
+          <|> try_ btp_months_wday_hmss
+          <|> try_ btp_years_months_mdays_hmss
+          <|> try_ btp_hmss_mdays_months_years
+          <|> try_ btp_hmss_mdays_months
+          <|> try_ btp_hmss_days
+        )
   end
 
   module Time_slot_expr = struct
@@ -721,14 +723,14 @@ module Of_string = struct
           skip_space *> dot *> skip_space *> Hms.hms_ranges
           >>= fun hms_ranges ->
           return
-            (Time_expr_ast.Month_days_and_hms_ranges { month_days; hms_ranges })
+            (Time_expr_ast.Bts_month_days_and_hms_ranges { month_days; hms_ranges })
         )
       <|> ( Weekday.weekday_ranges_expr
             >>= fun weekdays ->
             skip_space *> dot *> skip_space *> Hms.hms_ranges
             >>= fun hms_ranges ->
             return
-              (Time_expr_ast.Weekdays_and_hms_ranges { weekdays; hms_ranges }) )
+              (Time_expr_ast.Bts_weekdays_and_hms_ranges { weekdays; hms_ranges }) )
 
     let bts_hms_ranges_days =
       try_
@@ -737,14 +739,14 @@ module Of_string = struct
           skip_space *> of_str *> skip_space *> Month_day.month_day_ranges_expr
           >>= fun month_days ->
           return
-            (Time_expr_ast.Month_days_and_hms_ranges { month_days; hms_ranges })
+            (Time_expr_ast.Bts_month_days_and_hms_ranges { month_days; hms_ranges })
         )
       <|> ( Hms.hms_ranges
             >>= fun hms_ranges ->
             skip_space *> of_str *> skip_space *> Weekday.weekday_ranges_expr
             >>= fun weekdays ->
             return
-              (Time_expr_ast.Weekdays_and_hms_ranges { weekdays; hms_ranges }) )
+              (Time_expr_ast.Bts_weekdays_and_hms_ranges { weekdays; hms_ranges }) )
 
     let bts_months_mdays_hms_ranges =
       Month.month_ranges_expr
@@ -754,7 +756,7 @@ module Of_string = struct
       skip_space *> dot *> skip_space *> Hms.hms_ranges
       >>= fun hms_ranges ->
       return
-        (Time_expr_ast.Months_and_month_days_and_hms_ranges
+        (Time_expr_ast.Bts_months_and_month_days_and_hms_ranges
            { months; month_days; hms_ranges })
 
     let bts_hms_ranges_mdays_months =
@@ -765,7 +767,7 @@ module Of_string = struct
       skip_space *> of_str *> skip_space *> Month.month_ranges_expr
       >>= fun months ->
       return
-        (Time_expr_ast.Months_and_month_days_and_hms_ranges
+        (Time_expr_ast.Bts_months_and_month_days_and_hms_ranges
            { months; month_days; hms_ranges })
 
     let bts_months_wdays_hms_ranges =
@@ -776,7 +778,7 @@ module Of_string = struct
       skip_space *> dot *> skip_space *> Hms.hms_ranges
       >>= fun hms_ranges ->
       return
-        (Time_expr_ast.Months_and_weekdays_and_hms_ranges
+        (Time_expr_ast.Bts_months_and_weekdays_and_hms_ranges
            { months; weekdays; hms_ranges })
 
     let month_weekday_mode_expr =
@@ -796,7 +798,7 @@ module Of_string = struct
       skip_space *> dot *> skip_space *> Hms.hms_ranges
       >>= fun hms_ranges ->
       return
-        (Time_expr_ast.Months_and_weekday_and_hms_ranges
+        (Time_expr_ast.Bts_months_and_weekday_and_hms_ranges
            { months; weekday; hms_ranges; month_weekday_mode })
 
     let bts_years_months_mdays_hms_ranges =
@@ -809,7 +811,7 @@ module Of_string = struct
       skip_space *> dot *> skip_space *> Hms.hms_ranges
       >>= fun hms_ranges ->
       return
-        (Time_expr_ast.Years_and_months_and_month_days_and_hms_ranges
+        (Time_expr_ast.Bts_years_and_months_and_month_days_and_hms_ranges
            { years; months; month_days; hms_ranges })
 
     let bts_hms_ranges_mdays_months_years =
@@ -822,24 +824,24 @@ module Of_string = struct
       skip_space *> of_str *> skip_space *> Year.year_ranges_expr
       >>= fun years ->
       return
-        (Time_expr_ast.Years_and_months_and_month_days_and_hms_ranges
+        (Time_expr_ast.Bts_years_and_months_and_month_days_and_hms_ranges
            { years; months; month_days; hms_ranges })
 
-    let unbounded_branching_time_slot_expr :
-      Time_expr_ast.unbounded_branching_time_slot_expr t =
-      try_ bts_days_hms_ranges
-      <|> try_ bts_months_mdays_hms_ranges
-      <|> try_ bts_months_wdays_hms_ranges
-      <|> try_ bts_months_wday_hms_ranges
-      <|> try_ bts_years_months_mdays_hms_ranges
-      <|> try_ bts_hms_ranges_mdays_months_years
-      <|> try_ bts_hms_ranges_mdays_months
-      <|> try_ bts_hms_ranges_days
-
-    let branching_time_slot_expr : Time_expr_ast.branching_time_slot_expr t =
-      branch_bound
-      >>= fun bound ->
-      unbounded_branching_time_slot_expr >>= fun e -> return (bound, e)
+    let branching_time_slot_expr :
+      Time_expr_ast.branching_time_slot_expr t =
+      fix (fun expr ->
+          try_ (branch_unary_op >>= fun op -> skip_space *> expr >>= fun e ->
+                return (Time_expr_ast.Bts_unary_op (op, e))
+               )
+          <|> try_ bts_days_hms_ranges
+          <|> try_ bts_months_mdays_hms_ranges
+          <|> try_ bts_months_wdays_hms_ranges
+          <|> try_ bts_months_wday_hms_ranges
+          <|> try_ bts_years_months_mdays_hms_ranges
+          <|> try_ bts_hms_ranges_mdays_months_years
+          <|> try_ bts_hms_ranges_mdays_months
+          <|> try_ bts_hms_ranges_days
+        )
   end
 
   let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
@@ -1211,13 +1213,14 @@ module To_time_pattern_lossy = struct
       | Ok e -> Ok (aux e)
     with Invalid_time_expr msg -> Error msg
 
-  let time_patterns_of_unbounded_branching_time_point_expr
-      (e : Time_expr_ast.unbounded_branching_time_point_expr) :
+  let time_patterns_of_branching_time_point_expr
+      (e : Time_expr_ast.branching_time_point_expr) :
     (Time_pattern.time_pattern list, string) result =
     let open Time_expr_ast in
-    let aux e =
+    let rec aux e =
       match e with
-      | Month_days_and_hmss { month_days; hmss } ->
+      | Btp_unary_op (_, e) -> aux e
+      | Btp_month_days_and_hmss { month_days; hmss } ->
         (* check_hmss hmss; *)
         month_days
         |> List.to_seq
@@ -1225,14 +1228,14 @@ module To_time_pattern_lossy = struct
         |> Seq.map Month_day.time_pattern_of_month_day_expr
         |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
-      | Weekdays_and_hmss { weekdays; hmss } ->
+      | Btp_weekdays_and_hmss { weekdays; hmss } ->
         weekdays
         |> List.to_seq
         |> Time.Weekday_ranges.Flatten.flatten
         |> Seq.map Weekday.time_pattern_of_weekday_expr
         |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
-      | Months_and_month_days_and_hmss { months; month_days; hmss } ->
+      | Btp_months_and_month_days_and_hmss { months; month_days; hmss } ->
         let month_days =
           Time.Month_tm_int_ranges.Flatten.flatten_list month_days
         in
@@ -1245,7 +1248,7 @@ module To_time_pattern_lossy = struct
              month_days)
         |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
-      | Months_and_weekdays_and_hmss { months; weekdays; hmss } ->
+      | Btp_months_and_weekdays_and_hmss { months; weekdays; hmss } ->
         let weekdays = Time.Weekday_ranges.Flatten.flatten_list weekdays in
         months
         |> List.to_seq
@@ -1256,7 +1259,7 @@ module To_time_pattern_lossy = struct
              weekdays)
         |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
-      | Months_and_weekday_and_hmss
+      | Btp_months_and_weekday_and_hmss
           { months; weekday; hmss; month_weekday_mode = _ } ->
         months
         |> List.to_seq
@@ -1265,7 +1268,7 @@ module To_time_pattern_lossy = struct
         |> Seq.map (Weekday.update_time_pattern_using_weekday_expr weekday)
         |> Seq.flat_map (Hms.time_patterns_of_hmss_and_base_time_pattern hmss)
         |> List.of_seq
-      | Years_and_months_and_month_days_and_hmss
+      | Btp_years_and_months_and_month_days_and_hmss
           { years; months; month_days; hmss } ->
         let months = Time.Month_ranges.Flatten.flatten_list months in
         let month_days =
@@ -1285,18 +1288,14 @@ module To_time_pattern_lossy = struct
     in
     try Ok (aux e) with Invalid_time_expr msg -> Error msg
 
-  let time_patterns_of_branching_time_point_expr
-      ((_, e) : Time_expr_ast.branching_time_point_expr) :
-    (Time_pattern.time_pattern list, string) result =
-    time_patterns_of_unbounded_branching_time_point_expr e
-
-  let time_range_patterns_of_unbounded_branching_time_slot_expr
-      (e : Time_expr_ast.unbounded_branching_time_slot_expr) :
+  let time_range_patterns_of_branching_time_slot_expr
+      (e : Time_expr_ast.branching_time_slot_expr) :
     (Time_pattern.time_range_pattern list, string) result =
     let open Time_expr_ast in
-    let aux e =
+    let rec aux e =
       match e with
-      | Month_days_and_hms_ranges { month_days; hms_ranges } ->
+      | Bts_unary_op (_, e) -> aux e
+      | Bts_month_days_and_hms_ranges { month_days; hms_ranges } ->
         (* check_hms_ranges hms_ranges; *)
         month_days
         |> List.to_seq
@@ -1306,7 +1305,7 @@ module To_time_pattern_lossy = struct
           (Hms.time_range_patterns_of_hms_ranges_and_base_time_pattern
              hms_ranges)
         |> List.of_seq
-      | Weekdays_and_hms_ranges { weekdays; hms_ranges } ->
+      | Bts_weekdays_and_hms_ranges { weekdays; hms_ranges } ->
         weekdays
         |> List.to_seq
         |> Time.Weekday_ranges.Flatten.flatten
@@ -1315,7 +1314,7 @@ module To_time_pattern_lossy = struct
           (Hms.time_range_patterns_of_hms_ranges_and_base_time_pattern
              hms_ranges)
         |> List.of_seq
-      | Months_and_month_days_and_hms_ranges { months; month_days; hms_ranges }
+      | Bts_months_and_month_days_and_hms_ranges { months; month_days; hms_ranges }
         ->
         let month_days =
           Time.Month_tm_int_ranges.Flatten.flatten_list month_days
@@ -1331,7 +1330,7 @@ module To_time_pattern_lossy = struct
           (Hms.time_range_patterns_of_hms_ranges_and_base_time_pattern
              hms_ranges)
         |> List.of_seq
-      | Months_and_weekdays_and_hms_ranges { months; weekdays; hms_ranges } ->
+      | Bts_months_and_weekdays_and_hms_ranges { months; weekdays; hms_ranges } ->
         let weekdays = Time.Weekday_ranges.Flatten.flatten_list weekdays in
         months
         |> List.to_seq
@@ -1344,7 +1343,7 @@ module To_time_pattern_lossy = struct
           (Hms.time_range_patterns_of_hms_ranges_and_base_time_pattern
              hms_ranges)
         |> List.of_seq
-      | Months_and_weekday_and_hms_ranges
+      | Bts_months_and_weekday_and_hms_ranges
           { months; weekday; hms_ranges; month_weekday_mode = _ } ->
         months
         |> List.to_seq
@@ -1355,7 +1354,7 @@ module To_time_pattern_lossy = struct
           (Hms.time_range_patterns_of_hms_ranges_and_base_time_pattern
              hms_ranges)
         |> List.of_seq
-      | Years_and_months_and_month_days_and_hms_ranges
+      | Bts_years_and_months_and_month_days_and_hms_ranges
           { years; months; month_days; hms_ranges } ->
         let months = Time.Month_ranges.Flatten.flatten_list months in
         let month_days =
@@ -1376,11 +1375,6 @@ module To_time_pattern_lossy = struct
         |> List.of_seq
     in
     try Ok (aux e) with Invalid_time_expr msg -> Error msg
-
-  let time_range_patterns_of_branching_time_slot_expr
-      ((_, e) : Time_expr_ast.branching_time_slot_expr) :
-    (Time_pattern.time_range_pattern list, string) result =
-    time_range_patterns_of_unbounded_branching_time_slot_expr e
 end
 
 module Time_point_expr = struct
