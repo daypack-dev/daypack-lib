@@ -317,16 +317,18 @@ module Of_string = struct
 
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =
-      try_ (string "::") *> get_cnum
-      >>= fun cnum ->
+      try_ (string "::") *> get_pos
+      >>= fun pos ->
       try_ nat_zero
       >>= (fun second ->
-          if second >= 60 then failf "Invalid second: %d, pos: %d" second cnum
+          if second >= 60 then
+            failf "Invalid second: %d, pos: %s" second (string_of_pos pos)
           else return second)
           <|> ( non_space_string
                 >>= fun s ->
-                if s = "" then failf "Missing second after ::, pos: %d" cnum
-                else failf "Invalid second: %s, pos: %d" s cnum )
+                if s = "" then
+                  failf "Missing second after ::, pos: %s" (string_of_pos pos)
+                else failf "Invalid second: %s, pos: %s" s (string_of_pos pos) )
   end
 
   module Minute_second = struct
@@ -353,7 +355,7 @@ module Of_string = struct
 
     let handle_time_with_mode ~hour_pos ~(hour : int) ~(minute : int)
         ~(second : int) mode =
-      let pos = pos_string hour_pos in
+      let pos = string_of_pos hour_pos in
       match mode with
       | `Hour_in_24_hours ->
         if hour >= 24 then failf "Invalid hour: %d, pos: %s" hour pos
@@ -379,7 +381,8 @@ module Of_string = struct
           nat_zero
           >>= fun minute ->
           if minute >= 60 then
-            failf "Invalid minute: %d, pos: %s" minute (pos_string minute_pos)
+            failf "Invalid minute: %d, pos: %s" minute
+              (string_of_pos minute_pos)
           else
             get_pos
             >>= fun second_pos ->
@@ -388,7 +391,7 @@ module Of_string = struct
             if second >= 60 then
               fail
                 (Printf.sprintf "Invalid second: %d, pos: %s" second
-                   (pos_string second_pos))
+                   (string_of_pos second_pos))
             else
               skip_space *> hms_mode
               >>= fun mode ->
@@ -416,7 +419,8 @@ module Of_string = struct
       if 1 <= x && x <= 31 then return x
       else
         fail
-          (Printf.sprintf "Invalid month day: %d, pos: %s" x (pos_string pos))
+          (Printf.sprintf "Invalid month day: %d, pos: %s" x
+             (string_of_pos pos))
 
     let month_day_range_expr : int Range.range t = range_inc_expr month_day_expr
 
@@ -710,7 +714,7 @@ module Of_string = struct
       try_ Time_point_expr.time_point_expr
       >>= (fun end_exc ->
           return (Time_expr_ast.Explicit_time_slot (start, end_exc)))
-          <|> failf "Expected time point expression at %s" (pos_string pos)
+          <|> failf "Expected time point expression at %s" (string_of_pos pos)
 
     let time_slot_expr : Time_expr_ast.time_slot_expr t =
       ts_name <|> ts_explicit_time_slot
@@ -921,7 +925,10 @@ module Of_string = struct
     in
     let rec make_atom l =
       match l with
-      | [] -> failf "Not sure what to do"
+      | [] ->
+        get_pos
+        >>= fun pos ->
+        failf "Failed to parse expression, pos: %s" (string_of_pos pos)
       | x :: xs -> x <|> make_atom xs
     in
     let atom = skip_space *> make_atom atom_parsers <* skip_space in
@@ -1551,36 +1558,57 @@ module Branching_time_point_expr = struct
   let matching_unix_seconds (search_param : Search_param.t)
       (e : Time_expr_ast.branching_time_point_expr) :
     (int64 Seq.t, string) result =
-    match
-      To_time_pattern_lossy.time_patterns_of_branching_time_point_expr e
-    with
-    | Error msg -> Error msg
-    | Ok l -> (
-        match
-          Time_pattern.Single_pattern
-          .matching_time_slots_round_robin_non_decreasing
-            ~allow_search_param_override:true search_param l
-        with
-        | Error e -> Error (Time_pattern.To_string.string_of_error e)
-        | Ok s -> s |> Seq.flat_map List.to_seq |> Seq.map fst |> Result.ok )
+    let rec aux (e : Time_expr_ast.branching_time_point_expr) :
+      (Time_slot.t list Seq.t, string) result =
+      let open Time_expr_ast in
+      match e with
+      | Btp_unary_op (op, e) ->
+        aux e
+        |> Result.map (fun s ->
+            match op with
+            | Next_n_batches n -> OSeq.take n s
+            | Every_batch -> s)
+      | _ -> (
+          match
+            To_time_pattern_lossy.time_patterns_of_branching_time_point_expr e
+          with
+          | Error msg -> Error msg
+          | Ok l ->
+            Time_pattern.Single_pattern
+            .matching_time_slots_round_robin_non_decreasing
+              ~allow_search_param_override:true search_param l
+            |> Result.map_error Time_pattern.To_string.string_of_error )
+    in
+    aux e |> Result.map (fun s -> s |> Seq.flat_map List.to_seq |> Seq.map fst)
 end
 
 module Branching_time_slot_expr = struct
   let matching_time_slots (search_param : Search_param.t)
       (e : Time_expr_ast.branching_time_slot_expr) :
     (Time_slot.t Seq.t, string) result =
-    match
-      To_time_pattern_lossy.time_range_patterns_of_branching_time_slot_expr e
-    with
-    | Error msg -> Error msg
-    | Ok l -> (
-        match
-          Time_pattern.Range_pattern
-          .matching_time_slots_round_robin_non_decreasing
-            ~allow_search_param_override:true search_param l
-        with
-        | Error e -> Error (Time_pattern.To_string.string_of_error e)
-        | Ok s -> s |> Seq.flat_map List.to_seq |> Result.ok )
+    let rec aux (e : Time_expr_ast.branching_time_slot_expr) :
+      (Time_slot.t list Seq.t, string) result =
+      let open Time_expr_ast in
+      match e with
+      | Bts_unary_op (op, e) ->
+        aux e
+        |> Result.map (fun s ->
+            match op with
+            | Next_n_batches n -> OSeq.take n s
+            | Every_batch -> s)
+      | _ -> (
+          match
+            To_time_pattern_lossy
+            .time_range_patterns_of_branching_time_slot_expr e
+          with
+          | Error msg -> Error msg
+          | Ok l ->
+            Time_pattern.Range_pattern
+            .matching_time_slots_round_robin_non_decreasing
+              ~allow_search_param_override:true search_param l
+            |> Result.map_error Time_pattern.To_string.string_of_error )
+    in
+    aux e |> Result.map (fun s -> s |> Seq.flat_map List.to_seq)
 end
 
 let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
