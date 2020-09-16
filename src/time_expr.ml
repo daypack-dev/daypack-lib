@@ -321,11 +321,13 @@ module Of_string = struct
       >>= fun pos ->
       try_ nat_zero
       >>= (fun second ->
-          if second >= 60 then failf "Invalid second: %d, pos: %s" second (string_of_pos pos)
+          if second >= 60 then
+            failf "Invalid second: %d, pos: %s" second (string_of_pos pos)
           else return second)
           <|> ( non_space_string
                 >>= fun s ->
-                if s = "" then failf "Missing second after ::, pos: %s" (string_of_pos pos)
+                if s = "" then
+                  failf "Missing second after ::, pos: %s" (string_of_pos pos)
                 else failf "Invalid second: %s, pos: %s" s (string_of_pos pos) )
   end
 
@@ -379,7 +381,8 @@ module Of_string = struct
           nat_zero
           >>= fun minute ->
           if minute >= 60 then
-            failf "Invalid minute: %d, pos: %s" minute (string_of_pos minute_pos)
+            failf "Invalid minute: %d, pos: %s" minute
+              (string_of_pos minute_pos)
           else
             get_pos
             >>= fun second_pos ->
@@ -416,7 +419,8 @@ module Of_string = struct
       if 1 <= x && x <= 31 then return x
       else
         fail
-          (Printf.sprintf "Invalid month day: %d, pos: %s" x (string_of_pos pos))
+          (Printf.sprintf "Invalid month day: %d, pos: %s" x
+             (string_of_pos pos))
 
     let month_day_range_expr : int Range.range t = range_inc_expr month_day_expr
 
@@ -921,7 +925,10 @@ module Of_string = struct
     in
     let rec make_atom l =
       match l with
-      | [] -> get_pos >>= fun pos -> failf "Failed to parse expression, pos: %s" (string_of_pos pos)
+      | [] ->
+        get_pos
+        >>= fun pos ->
+        failf "Failed to parse expression, pos: %s" (string_of_pos pos)
       | x :: xs -> x <|> make_atom xs
     in
     let atom = skip_space *> make_atom atom_parsers <* skip_space in
