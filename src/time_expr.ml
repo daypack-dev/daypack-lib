@@ -266,9 +266,17 @@ module Of_string = struct
 
   let next_str = string "next"
 
+  let point_str = string "point"
+
+  let slot_str = string "slot"
+
   let points_str = string "points"
 
   let slots_str = string "slots"
+
+  let batch_str = string "batch"
+
+  let batches_str = string "batches"
 
   let of_str = string "of"
 
@@ -290,6 +298,11 @@ module Of_string = struct
     let open Time_expr_ast in
     try_ (string "next-batch" *> return (Next_n_batches 1))
     <|> try_ (string "every-batch" *> return Every_batch)
+    <|> try_
+      ( next_str *> hyphen *> nat_zero
+        <* hyphen
+        <* (try_ batches_str <|> batch_str)
+        >>= fun n -> return (Next_n_batches n) )
 
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "last"; "next"; "every" ]
@@ -959,9 +972,15 @@ module Of_string = struct
           try_ not_str *> return Not
           <|> try_ next_slot_str *> return (Next_n_slots 1)
           <|> try_ next_point_str *> return (Next_n_points 1)
-          <|> ( try_ (next_str *> hyphen *> nat_zero <* hyphen <* slots_str)
+          <|> ( try_
+                  ( next_str *> hyphen *> nat_zero
+                    <* hyphen
+                    <* (try_ slots_str <|> slot_str) )
                 >>= fun n -> return (Next_n_slots n) )
-          <|> ( try_ (next_str *> hyphen *> nat_zero <* hyphen <* points_str)
+          <|> ( try_
+                  ( next_str *> hyphen *> nat_zero
+                    <* hyphen
+                    <* (try_ points_str <|> point_str) )
                 >>= fun n -> return (Next_n_points n) )
         in
         let inter_part =
