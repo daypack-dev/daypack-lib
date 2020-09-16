@@ -1558,18 +1558,37 @@ module Branching_time_point_expr = struct
   let matching_unix_seconds (search_param : Search_param.t)
       (e : Time_expr_ast.branching_time_point_expr) :
     (int64 Seq.t, string) result =
-    match
-      To_time_pattern_lossy.time_patterns_of_branching_time_point_expr e
-    with
-    | Error msg -> Error msg
-    | Ok l -> (
-        match
-          Time_pattern.Single_pattern
-          .matching_time_slots_round_robin_non_decreasing
-            ~allow_search_param_override:true search_param l
-        with
-        | Error e -> Error (Time_pattern.To_string.string_of_error e)
-        | Ok s -> s |> Seq.flat_map List.to_seq |> Seq.map fst |> Result.ok )
+    let rec aux (e : Time_expr_ast.branching_time_point_expr) : (Time_slot.t list Seq.t, string) result =
+      let open Time_expr_ast in
+      (match e with
+       | Btp_unary_op (op, e) -> (
+           aux e
+           |> Result.map (fun s ->
+             match op with
+              | Next_n_batches n ->
+                OSeq.take n s
+              | Every_batch -> s
+             )
+         )
+       | _ ->
+         match
+           To_time_pattern_lossy.time_patterns_of_branching_time_point_expr e
+         with
+         | Error msg -> Error msg
+         | Ok l ->
+           match
+             Time_pattern.Single_pattern
+             .matching_time_slots_round_robin_non_decreasing
+               ~allow_search_param_override:true search_param l
+           with
+           | Error e -> Error (Time_pattern.To_string.string_of_error e)
+           | Ok s -> Ok s
+      )
+    in
+    aux e
+    |> Result.map (fun s ->
+        s |> Seq.flat_map List.to_seq |> Seq.map fst
+      )
 end
 
 module Branching_time_slot_expr = struct
