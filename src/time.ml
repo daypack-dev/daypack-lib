@@ -212,7 +212,7 @@ let zero_tm_sec tm = Unix.{ tm with tm_sec = 0 }
     tm_of_unix_second ~time_zone_of_tm:to_time_zone time *)
 
 let is_leap_year ~year =
-  assert (year > 0);
+  assert (year >= 0);
   let divisible_by_4 = year mod 4 = 0 in
   let divisible_by_100 = year mod 100 = 0 in
   let divisible_by_400 = year mod 400 = 0 in
