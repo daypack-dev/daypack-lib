@@ -1491,7 +1491,7 @@ module Time_slot_expr = struct
       (search_param : Search_param.t) (s : Time_slot.t Seq.t) :
     Time_slot.t Seq.t =
     let tz_offset_s_of_date_time =
-      Search_param.search_using_tz_offset_s_of_search_param search_param
+      search_param.search_using_tz_offset_s
     in
     s
     |> Seq.map (fun (x, y) ->

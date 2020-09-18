@@ -604,8 +604,7 @@ let override_search_param_possibly ~allow_search_param_override
         let start_year = List.hd l in
         let end_inc_year = List.hd (List.rev l) in
         let search_using_tz_offset_s =
-          Search_param.search_using_tz_offset_s_of_search_param search_param
-          |> Option.value ~default:0
+          Option.value ~default:0 search_param.search_using_tz_offset_s
         in
         let start_date_time =
           let open Time.Date_time in
@@ -617,12 +616,15 @@ let override_search_param_possibly ~allow_search_param_override
             search_param
         with
         | None ->
-          Search_param.Years_ahead_start_date_time
-            {
-              search_using_tz_offset_s = Some search_using_tz_offset_s;
-              start = start_date_time;
-              search_years_ahead = end_inc_year - start_year + 1;
-            }
+          Search_param.{
+            search_using_tz_offset_s = Some search_using_tz_offset_s;
+            typ =
+              Years_ahead
+                {
+                  start = `Date_time start_date_time;
+                  years_ahead = end_inc_year - start_year + 1;
+                }
+          }
         | Some (start_date_time', search_years_ahead') ->
           let cmp_value =
             Time.Date_time.compare start_date_time start_date_time'
@@ -633,12 +635,14 @@ let override_search_param_possibly ~allow_search_param_override
           let start_date_time =
             if cmp_value <= 0 then start_date_time else start_date_time'
           in
-          Search_param.Years_ahead_start_date_time
-            {
-              search_using_tz_offset_s = Some search_using_tz_offset_s;
-              start = start_date_time;
-              search_years_ahead = end_inc_year - start_date_time.year + 1;
-            } )
+          Search_param.{
+            search_using_tz_offset_s = Some search_using_tz_offset_s;
+            typ = Years_ahead
+                {
+                  start = `Date_time start_date_time;
+                  years_ahead = end_inc_year - start_date_time.year + 1;
+                }
+          })
   else search_param
 
 module Single_pattern = struct
@@ -683,8 +687,7 @@ module Single_pattern = struct
         | None -> Seq.empty
         | Some (overall_search_start, search_years_ahead) ->
           let search_using_tz_offset_s =
-            Search_param.search_using_tz_offset_s_of_search_param
-              search_param
+              search_param.search_using_tz_offset_s
           in
           Matching_years.matching_years ~search_years_ahead t
             ~overall_search_start
@@ -730,7 +733,7 @@ module Single_pattern = struct
         | None -> Ok Seq.empty
         | Some (overall_search_start, search_years_ahead) -> (
             let search_using_tz_offset_s =
-              Search_param.search_using_tz_offset_s_of_search_param search_param
+              search_param.search_using_tz_offset_s
             in
             match
               ( t.years,
@@ -855,8 +858,8 @@ module Single_pattern = struct
             | `Range_exc (x, y) -> (x, y))
         |> fun l ->
         let time_slots =
-          match search_param with
-          | Time_slots { time_slots; _ } ->
+          match search_param.typ with
+          | Time_slots time_slots ->
             let time_slots =
               time_slots |> Time_slots.Normalize.normalize_list_in_seq_out
             in

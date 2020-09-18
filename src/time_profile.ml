@@ -28,7 +28,7 @@ let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
       let start_seq =
         Time_pattern.Single_pattern.matching_time_slots
           ~allow_search_param_override:true
-          (Time_slots { search_using_tz_offset_s = None; time_slots })
+          (Search_param.make_using_time_slots ~search_using_tz_offset_s:0 time_slots |> Result.get_ok)
           start_pat
         |> Result.get_ok
         |> Seq.map (fun (x, _) -> x)
@@ -36,7 +36,7 @@ let matching_time_slots_of_periods ~start ~end_exc (periods : period list) :
       let end_exc_seq =
         Time_pattern.Single_pattern.matching_time_slots
           ~allow_search_param_override:true
-          (Time_slots { search_using_tz_offset_s = None; time_slots })
+          (Search_param.make_using_time_slots ~search_using_tz_offset_s:0 time_slots |> Result.get_ok)
           end_exc_pat
         |> Result.get_ok
         |> Seq.map (fun (_, y) -> y)
