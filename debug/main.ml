@@ -766,7 +766,7 @@ let debug_time_pattern_matching_time_slots () =
   let s =
     Daypack_lib.Time_pattern.Single_pattern.matching_time_slots
       ~allow_search_param_override:true
-      (Time_slots { search_using_tz_offset_s = None; time_slots })
+      { search_using_tz_offset_s = None; typ = Time_slots time_slots }
       pattern
     |> Result.get_ok
   in
@@ -822,7 +822,7 @@ let debug_time_range_pattern_matching_time_slots () =
   let s =
     Daypack_lib.Time_pattern.Range_pattern.matching_time_slots
       ~allow_search_param_override:true
-      (Time_slots { search_using_tz_offset_s = None; time_slots })
+      { search_using_tz_offset_s = None; typ = Time_slots time_slots }
       pattern
     |> Result.get_ok
   in
@@ -843,15 +843,13 @@ let debug_time_expr_matching_time_slots () =
   (* let date_time =
    *   Time.Current.cur_date_time ~tz_offset_s_of_date_time:None |> Result.get_ok
    * in *)
-  let search_using_tz_offset_s = Ptime_clock.current_tz_offset_s () in
-  let display_using_tz_offset_s = search_using_tz_offset_s in
+  let search_using_tz_offset_s =
+    Ptime_clock.current_tz_offset_s () |> Option.get
+  in
+  let display_using_tz_offset_s = Some search_using_tz_offset_s in
   let search_param =
-    Daypack_lib.Search_param.Years_ahead_start_unix_second
-      {
-        search_using_tz_offset_s;
-        start = Daypack_lib.Time.Current.cur_unix_second ();
-        search_years_ahead = 100;
-      }
+    Search_param.make_using_years_ahead ~search_using_tz_offset_s 100
+    |> Result.get_ok
   in
   let s =
     match
