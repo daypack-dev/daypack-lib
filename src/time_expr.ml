@@ -1490,9 +1490,7 @@ module Time_slot_expr = struct
       ~(first_or_last : [ `First | `Last ]) ~(n : int)
       (search_param : Search_param.t) (s : Time_slot.t Seq.t) :
     Time_slot.t Seq.t =
-    let tz_offset_s_of_date_time =
-      search_param.search_using_tz_offset_s
-    in
+    let tz_offset_s_of_date_time = search_param.search_using_tz_offset_s in
     s
     |> Seq.map (fun (x, y) ->
         ( Time.Date_time.of_unix_second ~tz_offset_s_of_date_time x

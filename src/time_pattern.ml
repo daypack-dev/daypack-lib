@@ -616,14 +616,15 @@ let override_search_param_possibly ~allow_search_param_override
             search_param
         with
         | None ->
-          Search_param.{
+          let open Search_param in
+          {
             search_using_tz_offset_s = Some search_using_tz_offset_s;
             typ =
               Years_ahead
                 {
                   start = `Date_time start_date_time;
                   years_ahead = end_inc_year - start_year + 1;
-                }
+                };
           }
         | Some (start_date_time', search_years_ahead') ->
           let cmp_value =
@@ -635,14 +636,16 @@ let override_search_param_possibly ~allow_search_param_override
           let start_date_time =
             if cmp_value <= 0 then start_date_time else start_date_time'
           in
-          Search_param.{
+          let open Search_param in
+          {
             search_using_tz_offset_s = Some search_using_tz_offset_s;
-            typ = Years_ahead
+            typ =
+              Years_ahead
                 {
                   start = `Date_time start_date_time;
                   years_ahead = end_inc_year - start_date_time.year + 1;
-                }
-          })
+                };
+          } )
   else search_param
 
 module Single_pattern = struct
@@ -687,7 +690,7 @@ module Single_pattern = struct
         | None -> Seq.empty
         | Some (overall_search_start, search_years_ahead) ->
           let search_using_tz_offset_s =
-              search_param.search_using_tz_offset_s
+            search_param.search_using_tz_offset_s
           in
           Matching_years.matching_years ~search_years_ahead t
             ~overall_search_start

@@ -3071,10 +3071,10 @@ module Recur = struct
             (pattern, { task_inst_data; sched_req_template }) ->
           Time_pattern.Single_pattern.matching_time_slots
             ~allow_search_param_override:true
-            ({
+            {
               search_using_tz_offset_s = None;
               typ = Time_slots usable_time_slot_list;
-            })
+            }
             pattern
           |> Result.get_ok
           |> Seq.map (fun (start', _end_exc) ->
