@@ -8,6 +8,8 @@
 
 - Added ability to pick fragments to enable in time expr API
 
+- Refactored `Search_param` module
+
 ## 0.0.4
 
 - Removed year field from cron expression. The year field was previously incorrectly present.
