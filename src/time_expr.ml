@@ -996,7 +996,9 @@ module Of_string = struct
 
   let of_string ?(enabled_fragments = all_lang_fragments) (s : string) :
     (Time_expr_ast.t, string) result =
-    parse_string (time_expr ~enabled_fragments <* skip_space <* eoi) s
+    match enabled_fragments with
+    | [] -> Error "No language fragments are enabled"
+    | _ -> parse_string (time_expr ~enabled_fragments <* skip_space <* eoi) s
 end
 
 let of_string = Of_string.of_string
