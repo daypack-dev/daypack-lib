@@ -246,6 +246,9 @@ license your work under the MIT license.
 
   - The underlying architecture was independently designed and developed however
 
+- Many thanks to [Gabriel 'Drup' Radanne](https://github.com/Drup) for his review and suggestions on the design and implementation of time expression,
+  and also other parts of the library
+
 ## LICENSE
 
 MIT
