@@ -1001,6 +1001,9 @@ module Of_string = struct
     | _ -> parse_string (time_expr ~enabled_fragments <* skip_space <* eoi) s
 end
 
+let time_expr_parser ?(enabled_fragments = all_lang_fragments) =
+  Of_string.time_expr ~enabled_fragments
+
 let of_string = Of_string.of_string
 
 module To_time_pattern_lossy = struct

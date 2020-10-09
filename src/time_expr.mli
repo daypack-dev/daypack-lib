@@ -73,6 +73,9 @@ module To_string : sig
   val debug_string_of_hms_ranges : Time_expr_ast.hms_expr -> string
 end
 
+val time_expr_parser :
+  ?enabled_fragments:lang_fragment list -> Time_expr_ast.t CCParse.t
+
 val of_string :
   ?enabled_fragments:lang_fragment list ->
   string ->

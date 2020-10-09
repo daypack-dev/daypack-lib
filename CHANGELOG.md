@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.6
+
+- Add `time_expr_parser` to time expr API
+
 ## 0.0.5
 
 - Fixed leap year definition
