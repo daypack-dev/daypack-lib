@@ -913,15 +913,15 @@ module Of_string = struct
               ( try_ Time_pattern.Parsers.time_pattern_expr
                 >>= fun e -> return (Time_expr_ast.Time_pattern e) )
           else None );
-        ( if List.mem `Branching_time_point_expr enabled_fragments then
-            Some
-              ( Branching_time_point_expr.branching_time_point_expr
-                >>= fun e -> return (Time_expr_ast.Branching_time_point_expr e) )
-          else None );
         ( if List.mem `Branching_time_slot_expr enabled_fragments then
             Some
               ( Branching_time_slot_expr.branching_time_slot_expr
                 >>= fun e -> return (Time_expr_ast.Branching_time_slot_expr e) )
+          else None );
+        ( if List.mem `Branching_time_point_expr enabled_fragments then
+            Some
+              ( Branching_time_point_expr.branching_time_point_expr
+                >>= fun e -> return (Time_expr_ast.Branching_time_point_expr e) )
           else None );
         ( if List.mem `Time_slot_expr enabled_fragments then
             Some

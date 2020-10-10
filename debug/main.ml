@@ -852,9 +852,7 @@ let debug_time_expr_matching_time_slots () =
     |> Result.get_ok
   in
   let s =
-    match
-      Daypack_lib.Time_expr.of_string "next-batch 5pm to 6pm, 7pm of 20, 21"
-    with
+    match Daypack_lib.Time_expr.of_string "next-batch 20 . 5pm" with
     | Error msg -> failwith (Printf.sprintf "Error: %s" msg)
     | Ok e ->
       e
