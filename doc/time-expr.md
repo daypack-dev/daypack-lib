@@ -58,6 +58,7 @@
   | "0" | ... | "9999" (or whatever the exact numbers that are representable in Ptime, TODO)
 
 <hms_range> ::=
+  | <hms>
   | <hms> "to" <hms>
 
 <hms_ranges> ::=
@@ -78,7 +79,7 @@
   | "next-" <nat> "-batch"
   | "every-batch"
 
-<branching_time_point_expr_atom> ::=
+(* <branching_time_point_expr_atom> ::=
   |                          <weekdays>   '.' <hmss>
   |                          <month_days> '.' <hmss>
   |             <months> '.' <month_days> '.' <hmss>
@@ -87,10 +88,12 @@
   | <hmss> "of" <month_days>
   | <hmss> "of" <month_days> "of" <months>
   | <hmss> "of" <month_days> "of" <months> "of" <years>
+*)
 
-<branching_time_point_expr> ::=
+(* <branching_time_point_expr> ::=
   |             <branching_time_point_expr_atom>
   | <branch_op> <branching_time_point_expr_atom>
+*)
 
 <month_day_range> ::=
   | <month_day> "to" <month_day>
@@ -180,7 +183,7 @@
 
 <time_expr_atom> ::=
   | <time_point_expr>
-  | <branching_time_point_expr>
+  (* | <branching_time_point_expr> *)
   | <time_slot_expr>
   | <branching_time_slot_expr>
   | <time_pattern>
