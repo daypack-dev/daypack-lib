@@ -425,7 +425,7 @@ module Of_string = struct
     let non_singular_hms_ranges : Time_expr_ast.hms_range_expr list t =
       hms_range
       >>= fun hd ->
-      skip_space *> sep_by_comma1 hms_range >>= fun tl -> return (hd :: tl)
+      skip_space *> comma *> skip_space *> sep_by_comma1 hms_range >>= fun tl -> return (hd :: tl)
 
     let hmss : Time_expr_ast.hms_expr list t = sep_by_comma1 hms
   end
