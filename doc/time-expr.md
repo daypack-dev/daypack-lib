@@ -62,7 +62,10 @@
   | <hms> "to" <hms>
 
 <hms_ranges> ::=
-  | <hms_range> [, <hms_ranges>]
+  | <hms_range> [',' <hms_ranges>]
+
+<non_singular_hms_ranges> ::=
+  | <hms_range> ',' <hms_ranges>
 
 <hmss> ::=
   | <hms> [',' <hmss>]
@@ -127,6 +130,7 @@
   | <time_point_expr> "to" <time_point_expr>
 
 <branching_time_slot_expr_atom>
+  | <non_singular_hms_ranges>
   |                          <weekdays>   '.' <hms_ranges>
   |                          <month_days> '.' <hms_ranges>
   |             <months> '.' <month_days> '.' <hms_ranges>
