@@ -189,6 +189,9 @@ module Check = struct
     let rec aux e =
       match e with
       | Bts_unary_op (op, e) -> aux e
+      | Bts_hms_ranges hms_ranges ->
+        if hms_ranges_are_valid hms_ranges then Ok ()
+            else Error ()
       | Bts_month_days_and_hms_ranges { month_days; hms_ranges } ->
         if
           Time.Month_day_ranges.Check.list_is_valid month_days
@@ -419,6 +422,10 @@ module Of_string = struct
 
     let hms_ranges : Time_expr_ast.hms_range_expr list t =
       sep_by_comma1 hms_range
+
+    let non_singular_hms_ranges : Time_expr_ast.hms_range_expr list t =
+      hms_range >>= fun hd -> skip_space *> sep_by_comma1 hms_range >>= fun tl ->
+      return (hd :: tl)
 
     let hmss : Time_expr_ast.hms_expr list t = sep_by_comma1 hms
   end
@@ -734,6 +741,10 @@ module Of_string = struct
   end
 
   module Branching_time_slot_expr = struct
+    let bts_hms_ranges =
+      Hms.non_singular_hms_ranges >>= fun hms_ranges ->
+      return (Time_expr_ast.Bts_hms_ranges hms_ranges)
+
     let bts_days_hms_ranges =
       try_
         ( Month_day.month_day_ranges_expr
@@ -849,7 +860,8 @@ module Of_string = struct
 
     let branching_time_slot_expr_atom : Time_expr_ast.branching_time_slot_expr t
       =
-      try_ bts_days_hms_ranges
+      try_ bts_hms_ranges
+      <|> try_ bts_days_hms_ranges
       <|> try_ bts_months_mdays_hms_ranges
       <|> try_ bts_months_wdays_hms_ranges
       <|> try_ bts_months_wday_hms_ranges
@@ -1332,6 +1344,9 @@ module To_time_pattern_lossy = struct
     let rec aux e =
       match e with
       | Bts_unary_op (_, e) -> aux e
+      | Bts_hms_ranges hms_ranges ->
+        Hms.time_range_patterns_of_hms_ranges_and_base_time_pattern hms_ranges Time_pattern.empty
+        |> List.of_seq
       | Bts_month_days_and_hms_ranges { month_days; hms_ranges } ->
         (* check_hms_ranges hms_ranges; *)
         month_days

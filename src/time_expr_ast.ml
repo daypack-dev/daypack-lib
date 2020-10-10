@@ -98,6 +98,7 @@ type time_slot_expr =
 
 type branching_time_slot_expr =
   | Bts_unary_op of branch_unary_op * branching_time_slot_expr
+  | Bts_hms_ranges of hms_range_expr list
   | Bts_month_days_and_hms_ranges of {
       month_days : int Range.range list;
       hms_ranges : hms_range_expr list;
