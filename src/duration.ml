@@ -155,6 +155,8 @@ module Of_string = struct
     parse_string duration_expr s
 end
 
+let duration_expr_parser = Of_string.duration_expr
+
 let of_string = Of_string.of_string
 
 module To_string = struct
