@@ -852,7 +852,11 @@ let debug_time_expr_matching_time_slots () =
     |> Result.get_ok
   in
   let s =
-    match Daypack_lib.Time_expr.of_string ~enabled_fragments:[`Branching_time_slot_expr] "next-batch 20 . 5pm" with
+    match
+      Daypack_lib.Time_expr.of_string
+        ~enabled_fragments:[ `Branching_time_slot_expr ]
+        "next-batch 20 . 5pm"
+    with
     | Error msg -> failwith (Printf.sprintf "Error: %s" msg)
     | Ok e ->
       e
