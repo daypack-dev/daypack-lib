@@ -953,22 +953,6 @@ module Of_string = struct
     in
     let atom = skip_space *> make_atom atom_parsers <* skip_space in
     fix (fun expr ->
-        (* let atom =
-         *   skip_space
-         *   *> ( try_ Time_pattern.Parsers.time_pattern_expr
-         *        >>= (fun e -> return (Time_expr_ast.Time_pattern e))
-         *            <|> ( Branching_time_point_expr.branching_time_point_expr
-         *                  >>= fun e -> return (Time_expr_ast.Branching_time_point_expr e)
-         *                )
-         *            <|> ( Branching_time_slot_expr.branching_time_slot_expr
-         *                  >>= fun e -> return (Time_expr_ast.Branching_time_slot_expr e)
-         *                )
-         *            <|> ( Time_slot_expr.time_slot_expr
-         *                  >>= fun e -> return (Time_expr_ast.Time_slot_expr e) )
-         *            <|> ( Time_point_expr.time_point_expr
-         *                  >>= fun e -> return (Time_expr_ast.Time_point_expr e) ) )
-         *   <* skip_space
-         * in *)
         let group =
           try_ (char '(') *> skip_space *> expr
           <* skip_space
