@@ -1514,9 +1514,7 @@ module Time_slot_expr = struct
             | Error e -> Error (Time_pattern.To_string.string_of_error e)
             | Ok s ->
               s
-              (* |> list_selector *)
               |> Seq.flat_map List.to_seq
-              (* |> flat_selector *)
               |> Result.ok ) )
 end
 
