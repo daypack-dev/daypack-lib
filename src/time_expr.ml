@@ -989,7 +989,11 @@ module Of_string = struct
     (Time_expr_ast.t, string) result =
     match enabled_fragments with
     | [] -> Error "No language fragments are enabled"
-    | _ -> parse_string (time_expr ~enabled_fragments <* skip_space <* eoi) s
+    | _ -> parse_string (time_expr ~enabled_fragments <* skip_space >>= fun e ->
+        get_pos >>= fun pos ->
+        (try_ eoi *> return e)
+          <|> (failf "Expected EOI, pos: %s" (string_of_pos pos))
+      ) s
 end
 
 let time_expr_parser ?(enabled_fragments = all_lang_fragments) =
