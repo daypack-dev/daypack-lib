@@ -290,14 +290,6 @@ module Of_string = struct
 
   let last_str = string "last"
 
-  (* let bound =
-   *   let open Time_expr_ast in
-   *   option Every
-   *     ( try_ (string "next-slot" *> return (Next_n_slot 1))
-   *       <|> try_ (string "next-point" *> return Every)
-   *       <|> (string "every" *> return Every)
-   *     ) *)
-
   let branch_unary_op =
     let open Time_expr_ast in
     try_ (next_batch_str *> return (Next_n_batches 1))
@@ -1449,33 +1441,6 @@ module Time_point_expr = struct
         with
         | Error e -> Error (Time_pattern.To_string.string_of_error e)
         | Ok s -> s |> Seq.map fst |> Result.ok )
-
-  (* (
-   *   match
-   *     Resolve.resolve_time_point_expr ~f_resolve_tpe_name e
-   *   with
-   *   | Error msg -> Error msg
-   *   | Ok e -> (
-   *       let selector =
-   *         match e with
-   *         | Tpe_name _ -> failwith "Unexpected case"
-   *         | Tpe_unix_seconds l -> OSeq.take (List.length l)
-   *         | Year_month_day_hour_minute_second _
-   *         | Month_day_hour_minute_second _ | Day_hour_minute_second _
-   *         | Hour_minute_second _ | Minute_second _ | Second _ -> (
-   *             match Option.value ~default:bound force_bound with
-   *             | `Next -> OSeq.take 1
-   *             | `Every -> fun x -> x )
-   *       in
-   *       match
-   *         Time_pattern.Single_pattern.matching_time_slots
-   *           ~allow_search_param_override:true search_param pat
-   *       with
-   *       | Error e -> Error (Time_pattern.To_string.string_of_error e)
-   *       | Ok s -> s |> Seq.map (fun (x, _) -> x)
-   *                 (\* |> selector *\)
-   *                 |> Result.ok )
-   * ) *)
 end
 
 module Time_slot_expr = struct
@@ -1535,46 +1500,6 @@ module Time_slot_expr = struct
     with
     | Error msg -> Error msg
     | Ok e -> (
-        (* let list_selector =
-         *   match e with
-         *   | Tse_name _ -> failwith "Unexpected case"
-         *   | Explicit_time_slot _ -> (
-         *       match Option.value ~default:bound force_bound with
-         *       | `Next -> OSeq.take 1
-         *       | `Every -> fun x -> x )
-         *   | Month_days_and_hour_minute_second_ranges _
-         *   | Weekdays_and_hour_minute_second_ranges _
-         *   | Months_and_month_days_and_hour_minute_second_ranges _
-         *   | Months_and_weekdays_and_hour_minute_second_ranges _
-         *   | Years_and_months_and_month_days_and_hour_minute_second_ranges _ -> (
-         *       match Option.value ~default:bound force_bound with
-         *       | `Next -> OSeq.take 1
-         *       | `Every -> fun x -> x )
-         *   | Months_and_weekday_and_hour_minute_second_ranges _ -> (
-         *       match Option.value ~default:bound force_bound with
-         *       | `Next -> OSeq.take 4
-         *       | `Every -> fun x -> x )
-         * in
-         * let flat_selector =
-         *   match e with
-         *   | Tse_name _ -> failwith "Unexpected case"
-         *   | Explicit_time_slot _ | Month_days_and_hour_minute_second_ranges _
-         *   | Weekdays_and_hour_minute_second_ranges _
-         *   | Months_and_month_days_and_hour_minute_second_ranges _
-         *   | Months_and_weekdays_and_hour_minute_second_ranges _
-         *   | Years_and_months_and_month_days_and_hour_minute_second_ranges _ ->
-         *     fun x -> x
-         *   | Months_and_weekday_and_hour_minute_second_ranges
-         *       { month_weekday_mode; _ } -> (
-         *       match month_weekday_mode with
-         *       | None -> fun x -> x
-         *       | Some (First_n n) ->
-         *         get_first_or_last_n_matches_of_same_month
-         *           ~first_or_last:`First ~n search_param
-         *       | Some (Last_n n) ->
-         *         get_first_or_last_n_matches_of_same_month ~first_or_last:`Last
-         *           ~n search_param )
-         * in *)
         match
           To_time_pattern_lossy.time_range_patterns_of_time_slot_expr
             ~f_resolve_tse_name ~f_resolve_tpe_name e
