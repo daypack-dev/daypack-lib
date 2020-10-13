@@ -264,7 +264,7 @@ module Of_string = struct
 
   let next_slot_str = string "next-slot"
 
-  let next_point_str = try_ (string "next-point") <|> (string "next-pt")
+  let next_point_str = try_ (string "next-point") <|> string "next-pt"
 
   let next_batch_str = string "next-batch"
 
@@ -989,11 +989,16 @@ module Of_string = struct
     (Time_expr_ast.t, string) result =
     match enabled_fragments with
     | [] -> Error "No language fragments are enabled"
-    | _ -> parse_string (time_expr ~enabled_fragments <* skip_space >>= fun e ->
-        get_pos >>= fun pos ->
-        (try_ eoi *> return e)
-          <|> (failf "Expected EOI, pos: %s" (string_of_pos pos))
-      ) s
+    | _ ->
+      parse_string
+        ( time_expr ~enabled_fragments
+          <* skip_space
+          >>= fun e ->
+          get_pos
+          >>= fun pos ->
+          try_ eoi *> return e
+          <|> failf "Expected EOI, pos: %s" (string_of_pos pos) )
+        s
 end
 
 let time_expr_parser ?(enabled_fragments = all_lang_fragments) =
@@ -1500,10 +1505,7 @@ module Time_slot_expr = struct
                 ~allow_search_param_override:true search_param l
             with
             | Error e -> Error (Time_pattern.To_string.string_of_error e)
-            | Ok s ->
-              s
-              |> Seq.flat_map List.to_seq
-              |> Result.ok ) )
+            | Ok s -> s |> Seq.flat_map List.to_seq |> Result.ok ) )
 end
 
 (* module Branching_time_point_expr = struct
