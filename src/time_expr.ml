@@ -264,7 +264,9 @@ module Of_string = struct
 
   let next_slot_str = string "next-slot"
 
-  let next_point_str = string "next-point"
+  let next_point_str = try_ (string "next-point") <|> (string "next-pt")
+
+  let next_batch_str = string "next-batch"
 
   let next_str = string "next"
 
@@ -298,7 +300,7 @@ module Of_string = struct
 
   let branch_unary_op =
     let open Time_expr_ast in
-    try_ (string "next-batch" *> return (Next_n_batches 1))
+    try_ (next_batch_str *> return (Next_n_batches 1))
     <|> try_ (string "every-batch" *> return Every_batch)
     <|> try_
       ( next_str *> hyphen *> nat_zero
