@@ -433,9 +433,9 @@ module Of_string = struct
       >>= fun x ->
       if 1 <= x && x <= 31 then return x
       else
-        fail
-          (Printf.sprintf "Invalid month day: %d, pos: %s" x
-             (string_of_pos pos))
+        failf
+          "Invalid month day: %d, pos: %s" x
+             (string_of_pos pos)
 
     let month_day_range_expr : int Range.range t = range_inc_expr month_day_expr
 
@@ -445,11 +445,12 @@ module Of_string = struct
 
   module Weekday = struct
     let weekday_expr : Time.weekday t =
+      get_pos >>= fun pos ->
       alpha_string
       >>= fun x ->
       match Time.Of_string.weekday_of_string x with
       | Ok x -> return x
-      | Error _ -> fail "Failed to interpret weekday string"
+      | Error _ -> failf "Failed to interpret weekday string, pos: %s" (string_of_pos pos)
 
     let weekday_range_expr : Time.weekday Range.range t =
       range_inc_expr weekday_expr
