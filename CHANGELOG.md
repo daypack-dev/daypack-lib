@@ -2,7 +2,15 @@
 
 ## 0.0.6
 
-- Add `time_expr_parser` to time expr API
+- Added `time_expr_parser` to `Time_expr` API
+
+- Added `duration_expr_parser` to `Duration` API
+
+- Removed branching time point expression
+
+- Adjusted grammar for branching time slot expression
+
+- Replaced `skip_space` with `skip_white` so empty spaces across lines are skipped as well
 
 ## 0.0.5
 
