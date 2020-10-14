@@ -124,20 +124,20 @@ module Of_string = struct
 
   let duration_expr : duration t =
     let term' num p =
-      try_ (num <* skip_space <* p)
+      try_ (num <* skip_white <* p)
       >>= (fun n -> return (Some n))
-          <|> (try_ (num <* skip_space <* eoi) >>= fun n -> return (Some n))
+          <|> (try_ (num <* skip_white <* eoi) >>= fun n -> return (Some n))
           <|> return None
     in
     term' float_non_neg days_string
     >>= fun days ->
-    skip_space *> term' float_non_neg hours_string
+    skip_white *> term' float_non_neg hours_string
     >>= fun hours ->
-    skip_space *> term' float_non_neg minutes_string
+    skip_white *> term' float_non_neg minutes_string
     >>= fun minutes ->
-    skip_space *> term' nat_zero seconds_string
+    skip_white *> term' nat_zero seconds_string
     >>= fun seconds ->
-    skip_space
+    skip_white
     *> check_for_unused_term days hours minutes seconds
     *> return
       ( ( {
