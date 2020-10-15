@@ -9,8 +9,8 @@ type f_resolve_tpe_name = string -> Time_expr_ast.time_point_expr option
 type lang_fragment =
   [ `Time_point_expr
   | `Time_slot_expr
-  | `Branching_time_point_expr
-  | `Branching_time_slot_expr
+  | (* | `Branching_time_point_expr *)
+    `Branching_time_slot_expr
   | `Time_pattern
   ]
 
@@ -72,6 +72,9 @@ val check_time_expr : Time_expr_ast.t -> (unit, unit) result
 module To_string : sig
   val debug_string_of_hms_ranges : Time_expr_ast.hms_expr -> string
 end
+
+val time_expr_parser :
+  ?enabled_fragments:lang_fragment list -> Time_expr_ast.t CCParse.t
 
 val of_string :
   ?enabled_fragments:lang_fragment list ->

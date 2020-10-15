@@ -13,6 +13,8 @@ val to_seconds : t -> int64
 
 val normalize : t -> t
 
+val duration_expr_parser : t CCParse.t
+
 val of_string : string -> (t, string) result
 
 module To_string : sig

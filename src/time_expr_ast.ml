@@ -15,6 +15,10 @@ type hms_expr = {
   second : int;
 }
 
+type sign_expr =
+  | Pos
+  | Neg
+
 type second_range_expr = second_expr Range.range
 
 type minute_second_range_expr = minute_second_expr Range.range
@@ -59,38 +63,38 @@ type time_point_expr =
       hms : hms_expr;
     }
 
-type branching_time_point_expr =
-  | Btp_unary_op of branch_unary_op * branching_time_point_expr
-  | Btp_month_days_and_hmss of {
-      month_days : int Range.range list;
-      hmss : hms_expr list;
-    }
-  | Btp_weekdays_and_hmss of {
-      weekdays : Time.weekday Range.range list;
-      hmss : hms_expr list;
-    }
-  | Btp_months_and_month_days_and_hmss of {
-      months : month_expr Range.range list;
-      month_days : int Range.range list;
-      hmss : hms_expr list;
-    }
-  | Btp_months_and_weekdays_and_hmss of {
-      months : month_expr Range.range list;
-      weekdays : Time.weekday Range.range list;
-      hmss : hms_expr list;
-    }
-  | Btp_months_and_weekday_and_hmss of {
-      months : month_expr Range.range list;
-      weekday : Time.weekday;
-      hmss : hms_expr list;
-      month_weekday_mode : month_weekday_mode option;
-    }
-  | Btp_years_and_months_and_month_days_and_hmss of {
-      years : int Range.range list;
-      months : month_expr Range.range list;
-      month_days : int Range.range list;
-      hmss : hms_expr list;
-    }
+(* type branching_time_point_expr =
+ *   | Btp_unary_op of branch_unary_op * branching_time_point_expr
+ *   | Btp_month_days_and_hmss of {
+ *       month_days : int Range.range list;
+ *       hmss : hms_expr list;
+ *     }
+ *   | Btp_weekdays_and_hmss of {
+ *       weekdays : Time.weekday Range.range list;
+ *       hmss : hms_expr list;
+ *     }
+ *   | Btp_months_and_month_days_and_hmss of {
+ *       months : month_expr Range.range list;
+ *       month_days : int Range.range list;
+ *       hmss : hms_expr list;
+ *     }
+ *   | Btp_months_and_weekdays_and_hmss of {
+ *       months : month_expr Range.range list;
+ *       weekdays : Time.weekday Range.range list;
+ *       hmss : hms_expr list;
+ *     }
+ *   | Btp_months_and_weekday_and_hmss of {
+ *       months : month_expr Range.range list;
+ *       weekday : Time.weekday;
+ *       hmss : hms_expr list;
+ *       month_weekday_mode : month_weekday_mode option;
+ *     }
+ *   | Btp_years_and_months_and_month_days_and_hmss of {
+ *       years : int Range.range list;
+ *       months : month_expr Range.range list;
+ *       month_days : int Range.range list;
+ *       hmss : hms_expr list;
+ *     } *)
 
 type time_slot_expr =
   | Tse_name of string
@@ -98,6 +102,7 @@ type time_slot_expr =
 
 type branching_time_slot_expr =
   | Bts_unary_op of branch_unary_op * branching_time_slot_expr
+  | Bts_hms_ranges of hms_range_expr list
   | Bts_month_days_and_hms_ranges of {
       month_days : int Range.range list;
       hms_ranges : hms_range_expr list;
@@ -134,6 +139,7 @@ type unary_op =
   | Every
   | Next_n_points of int
   | Next_n_slots of int
+  | Tz_offset of sign_expr * hms_expr
 
 type binary_op =
   | Union
@@ -142,7 +148,7 @@ type binary_op =
 type t =
   | Time_point_expr of time_point_expr
   | Time_slot_expr of time_slot_expr
-  | Branching_time_point_expr of branching_time_point_expr
+  (* | Branching_time_point_expr of branching_time_point_expr *)
   | Branching_time_slot_expr of branching_time_slot_expr
   | Time_pattern of Time_pattern.time_pattern
   | Time_unary_op of unary_op * t

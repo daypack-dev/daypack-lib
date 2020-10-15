@@ -853,7 +853,9 @@ let debug_time_expr_matching_time_slots () =
   in
   let s =
     match
-      Daypack_lib.Time_expr.of_string "next-batch 5pm to 6pm, 7pm of 20, 21"
+      Daypack_lib.Time_expr.of_string
+        ~enabled_fragments:[ `Branching_time_slot_expr; `Time_slot_expr ]
+        "tzoffset=+8:00 next-batch 5pm to 10pm, 11pm to 12pm"
     with
     | Error msg -> failwith (Printf.sprintf "Error: %s" msg)
     | Ok e ->

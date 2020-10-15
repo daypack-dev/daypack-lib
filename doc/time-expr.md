@@ -58,10 +58,14 @@
   | "0" | ... | "9999" (or whatever the exact numbers that are representable in Ptime, TODO)
 
 <hms_range> ::=
+  | <hms>
   | <hms> "to" <hms>
 
 <hms_ranges> ::=
-  | <hms_range> [, <hms_ranges>]
+  | <hms_range> [',' <hms_ranges>]
+
+<non_singular_hms_ranges> ::=
+  | <hms_range> ',' <hms_ranges>
 
 <hmss> ::=
   | <hms> [',' <hmss>]
@@ -78,7 +82,7 @@
   | "next-" <nat> "-batch"
   | "every-batch"
 
-<branching_time_point_expr_atom> ::=
+(* <branching_time_point_expr_atom> ::=
   |                          <weekdays>   '.' <hmss>
   |                          <month_days> '.' <hmss>
   |             <months> '.' <month_days> '.' <hmss>
@@ -87,10 +91,12 @@
   | <hmss> "of" <month_days>
   | <hmss> "of" <month_days> "of" <months>
   | <hmss> "of" <month_days> "of" <months> "of" <years>
+*)
 
-<branching_time_point_expr> ::=
+(* <branching_time_point_expr> ::=
   |             <branching_time_point_expr_atom>
   | <branch_op> <branching_time_point_expr_atom>
+*)
 
 <month_day_range> ::=
   | <month_day> "to" <month_day>
@@ -124,6 +130,7 @@
   | <time_point_expr> "to" <time_point_expr>
 
 <branching_time_slot_expr_atom>
+  | <non_singular_hms_ranges>
   |                          <weekdays>   '.' <hms_ranges>
   |                          <month_days> '.' <hms_ranges>
   |             <months> '.' <month_days> '.' <hms_ranges>
@@ -162,6 +169,10 @@
   | <time_expr_inter_part>
   | <time_expr_ordered_select_part> "||" <time_expr_inter_part>
 
+<sign> ::=
+  | "+"
+  | "-"
+
 <unary_op> ::=
   | "not"
   | "next-slot"
@@ -169,6 +180,7 @@
   | "next-" <nat> "-slot"
   | "next-" <nat> "-point"
   | "every"
+  | "tzoffset=" <sign> <hms>
 
 <time_expr_inter_part> ::=
   | <time_expr_group>
@@ -180,7 +192,7 @@
 
 <time_expr_atom> ::=
   | <time_point_expr>
-  | <branching_time_point_expr>
+  (* | <branching_time_point_expr> *)
   | <time_slot_expr>
   | <branching_time_slot_expr>
   | <time_pattern>
