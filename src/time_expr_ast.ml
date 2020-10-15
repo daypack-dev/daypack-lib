@@ -15,6 +15,10 @@ type hms_expr = {
   second : int;
 }
 
+type sign_expr =
+  | Pos
+  | Neg
+
 type second_range_expr = second_expr Range.range
 
 type minute_second_range_expr = minute_second_expr Range.range
@@ -135,6 +139,7 @@ type unary_op =
   | Every
   | Next_n_points of int
   | Next_n_slots of int
+  | Tz_offset of sign_expr * hms_expr
 
 type binary_op =
   | Union

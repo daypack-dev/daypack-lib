@@ -169,6 +169,10 @@
   | <time_expr_inter_part>
   | <time_expr_ordered_select_part> "||" <time_expr_inter_part>
 
+<sign> ::=
+  | "+"
+  | "-"
+
 <unary_op> ::=
   | "not"
   | "next-slot"
@@ -176,6 +180,7 @@
   | "next-" <nat> "-slot"
   | "next-" <nat> "-point"
   | "every"
+  | "tzoffset=" <sign> <hms>
 
 <time_expr_inter_part> ::=
   | <time_expr_group>

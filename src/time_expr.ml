@@ -290,6 +290,8 @@ module Of_string = struct
 
   let last_str = string "last"
 
+  let sign_expr = try_ (char '+' *> return Time_expr_ast.Pos) <|> (char '-' *> return Time_expr_ast.Neg)
+
   let branch_unary_op =
     let open Time_expr_ast in
     try_ (next_batch_str *> return (Next_n_batches 1))
@@ -974,6 +976,10 @@ module Of_string = struct
                     <* hyphen
                     <* (try_ points_str <|> point_str) )
                 >>= fun n -> return (Next_n_points n) )
+          <|> try_ (string "tzoffset=" *> sign_expr >>= fun sign ->
+                    Hms.hms >>= fun hms ->
+                    return (Tz_offset (sign, hms))
+                   )
         in
         let inter_part =
           try_ unary_op
@@ -1570,7 +1576,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
     ?(f_resolve_tse_name = default_f_resolve_tse_name)
     (search_param : Search_param.t) (e : Time_expr_ast.t) :
   (Time_slot.t Seq.t, string) result =
-  let rec aux e =
+  let rec aux search_param e =
     let open Time_expr_ast in
     match e with
     | Time_point_expr e ->
@@ -1589,32 +1595,55 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
         ~allow_search_param_override:true search_param pat
       |> Result.map_error Time_pattern.To_string.string_of_error
     | Time_unary_op (op, e) -> (
-        match aux e with
-        | Error x -> Error x
-        | Ok s' -> (
-            match op with
-            | Not -> (
-                match
-                  Time_pattern.Single_pattern.matching_time_slots
-                    ~allow_search_param_override:true search_param
-                    Time_pattern.empty
-                with
-                | Error x -> Error (Time_pattern.To_string.string_of_error x)
-                | Ok s -> Ok (Time_slots.relative_complement ~not_mem_of:s' s) )
-            | Every -> Ok s'
-            | Next_n_slots n -> s' |> OSeq.take n |> Result.ok
-            | Next_n_points n ->
-              s'
+        match op with
+        | Not -> (
+            match
+              Time_pattern.Single_pattern.matching_time_slots
+                ~allow_search_param_override:true search_param
+                Time_pattern.empty
+            with
+            | Error x -> Error (Time_pattern.To_string.string_of_error x)
+            | Ok whole_range ->
+              aux search_param e
+              |> Result.map
+                (fun s -> Time_slots.relative_complement ~not_mem_of:s whole_range)
+          )
+        | Every -> aux search_param e
+        | Next_n_slots n ->
+          aux search_param e
+          |> Result.map (OSeq.take n)
+        | Next_n_points n ->
+          aux search_param e
+          |> Result.map (fun s ->
+              s
               |> Time_slots.chunk ~skip_check:true ~chunk_size:1L
               |> OSeq.take n
               |> Time_slots.Normalize.normalize ~skip_filter_invalid:true
                 ~skip_filter_empty:true ~skip_sort:true
-              |> Result.ok ) )
+            )
+        | Tz_offset (sign, { hour; minute; second }) -> (
+            let multiplier = match sign with
+              | Pos -> 1
+              | Neg -> -1
+            in
+            let offset_s =
+              let open Duration in
+              { zero with hours = hour; minutes = minute; seconds = second }
+              |> to_seconds
+              |> Int64.to_int
+              |> Int.mul multiplier
+            in
+            let search_param =
+              { search_param with search_using_tz_offset_s = Some offset_s }
+            in
+            aux search_param e
+          )
+      )
     | Time_binary_op (op, e1, e2) -> (
-        match aux e1 with
+        match aux search_param e1 with
         | Error x -> Error x
         | Ok s1 -> (
-            match aux e2 with
+            match aux search_param e2 with
             | Error e -> Error e
             | Ok s2 ->
               Ok
@@ -1623,7 +1652,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
                   | Inter -> Time_slots.inter ~skip_check:true s1 s2 ) ) )
     | Time_round_robin_select l -> (
         l
-        |> List.map aux
+        |> List.map (aux search_param)
         |> Misc_utils.get_ok_error_list
         |> fun x ->
         match x with
@@ -1634,7 +1663,7 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
           |> Result.ok
         | Error x -> Error x )
   in
-  aux e
+  aux search_param e
   |> Result.map
     (Time_slots.Normalize.normalize ~skip_filter_invalid:true
        ~skip_filter_empty:true ~skip_sort:true)
