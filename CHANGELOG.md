@@ -12,6 +12,8 @@
 
 - Replaced `skip_space` with `skip_white` so empty spaces across lines are skipped as well
 
+- Added syntax (`tzoffset=...`) for searching in a specific timezone offset
+
 ## 0.0.5
 
 - Fixed leap year definition
