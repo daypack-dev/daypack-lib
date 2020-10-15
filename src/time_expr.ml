@@ -290,7 +290,9 @@ module Of_string = struct
 
   let last_str = string "last"
 
-  let sign_expr = try_ (char '+' *> return Time_expr_ast.Pos) <|> (char '-' *> return Time_expr_ast.Neg)
+  let sign_expr =
+    try_ (char '+' *> return Time_expr_ast.Pos)
+    <|> char '-' *> return Time_expr_ast.Neg
 
   let branch_unary_op =
     let open Time_expr_ast in
@@ -434,10 +436,7 @@ module Of_string = struct
       nat_zero
       >>= fun x ->
       if 1 <= x && x <= 31 then return x
-      else
-        failf
-          "Invalid month day: %d, pos: %s" x
-             (string_of_pos pos)
+      else failf "Invalid month day: %d, pos: %s" x (string_of_pos pos)
 
     let month_day_range_expr : int Range.range t = range_inc_expr month_day_expr
 
@@ -447,12 +446,15 @@ module Of_string = struct
 
   module Weekday = struct
     let weekday_expr : Time.weekday t =
-      get_pos >>= fun pos ->
+      get_pos
+      >>= fun pos ->
       alpha_string
       >>= fun x ->
       match Time.Of_string.weekday_of_string x with
       | Ok x -> return x
-      | Error _ -> failf "Failed to interpret weekday string, pos: %s" (string_of_pos pos)
+      | Error _ ->
+        failf "Failed to interpret weekday string, pos: %s"
+          (string_of_pos pos)
 
     let weekday_range_expr : Time.weekday Range.range t =
       range_inc_expr weekday_expr
@@ -976,10 +978,10 @@ module Of_string = struct
                     <* hyphen
                     <* (try_ points_str <|> point_str) )
                 >>= fun n -> return (Next_n_points n) )
-          <|> try_ (string "tzoffset=" *> sign_expr >>= fun sign ->
-                    Hms.hms >>= fun hms ->
-                    return (Tz_offset (sign, hms))
-                   )
+          <|> try_
+            ( string "tzoffset=" *> sign_expr
+              >>= fun sign ->
+              Hms.hms >>= fun hms -> return (Tz_offset (sign, hms)) )
         in
         let inter_part =
           try_ unary_op
@@ -1605,13 +1607,11 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
             | Error x -> Error (Time_pattern.To_string.string_of_error x)
             | Ok whole_range ->
               aux search_param e
-              |> Result.map
-                (fun s -> Time_slots.relative_complement ~not_mem_of:s whole_range)
+              |> Result.map (fun s ->
+                  Time_slots.relative_complement ~not_mem_of:s whole_range)
           )
         | Every -> aux search_param e
-        | Next_n_slots n ->
-          aux search_param e
-          |> Result.map (OSeq.take n)
+        | Next_n_slots n -> aux search_param e |> Result.map (OSeq.take n)
         | Next_n_points n ->
           aux search_param e
           |> Result.map (fun s ->
@@ -1619,26 +1619,20 @@ let matching_time_slots ?(f_resolve_tpe_name = default_f_resolve_tpe_name)
               |> Time_slots.chunk ~skip_check:true ~chunk_size:1L
               |> OSeq.take n
               |> Time_slots.Normalize.normalize ~skip_filter_invalid:true
-                ~skip_filter_empty:true ~skip_sort:true
-            )
-        | Tz_offset (sign, { hour; minute; second }) -> (
-            let multiplier = match sign with
-              | Pos -> 1
-              | Neg -> -1
-            in
-            let offset_s =
-              let open Duration in
-              { zero with hours = hour; minutes = minute; seconds = second }
-              |> to_seconds
-              |> Int64.to_int
-              |> Int.mul multiplier
-            in
-            let search_param =
-              { search_param with search_using_tz_offset_s = Some offset_s }
-            in
-            aux search_param e
-          )
-      )
+                ~skip_filter_empty:true ~skip_sort:true)
+        | Tz_offset (sign, { hour; minute; second }) ->
+          let multiplier = match sign with Pos -> 1 | Neg -> -1 in
+          let offset_s =
+            let open Duration in
+            { zero with hours = hour; minutes = minute; seconds = second }
+            |> to_seconds
+            |> Int64.to_int
+            |> Int.mul multiplier
+          in
+          let search_param =
+            { search_param with search_using_tz_offset_s = Some offset_s }
+          in
+          aux search_param e )
     | Time_binary_op (op, e1, e2) -> (
         match aux search_param e1 with
         | Error x -> Error x
