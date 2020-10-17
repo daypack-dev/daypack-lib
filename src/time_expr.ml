@@ -9,17 +9,13 @@ type f_resolve_tpe_name = string -> Time_expr_ast.time_point_expr option
 type lang_fragment =
   [ `Time_point_expr
   | `Time_slot_expr
-  | 
-    `Branching_time_slot_expr
+  | `Branching_time_slot_expr
   | `Time_pattern
   ]
 
 let all_lang_fragments =
   [
-    `Time_point_expr;
-    `Time_slot_expr;
-    `Branching_time_slot_expr;
-    `Time_pattern;
+    `Time_point_expr; `Time_slot_expr; `Branching_time_slot_expr; `Time_pattern;
   ]
 
 let default_f_resolve_tse_name (_ : string) :

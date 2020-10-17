@@ -9,8 +9,7 @@ type f_resolve_tpe_name = string -> Time_expr_ast.time_point_expr option
 type lang_fragment =
   [ `Time_point_expr
   | `Time_slot_expr
-  | 
-    `Branching_time_slot_expr
+  | `Branching_time_slot_expr
   | `Time_pattern
   ]
 
