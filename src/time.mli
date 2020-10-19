@@ -270,8 +270,16 @@ module To_string : sig
     format:string -> Date_time.t -> (string, string) result
 
   val string_of_unix_second :
-    format:string -> display_using_tz_offset_s:tz_offset_s option ->
-    int64 -> (string, string) result
+    format:string ->
+    display_using_tz_offset_s:tz_offset_s option ->
+    int64 ->
+    (string, string) result
+
+  val string_of_time_slot :
+    format:string ->
+    display_using_tz_offset_s:tz_offset_s option ->
+    Time_slot.t ->
+    (string, string) result
 end
 
 module Print : sig

@@ -737,7 +737,7 @@ module To_string = struct
     let open CCParse in
     let single (date_time : Date_time.t) : string CCParse.t =
       try_ (string "{{" *> return "{")
-      <|> try_ (char '{' *> Format_string_parsers.inner date_time <* char '}')
+      <|> (try_ (char '{') *> Format_string_parsers.inner date_time <* char '}')
       <|> (chars_if (function '{' -> false | _ -> true) >>= fun s -> return s)
     in
     let p (date_time : Date_time.t) : string list CCParse.t =
@@ -747,15 +747,47 @@ module To_string = struct
     |> Result.map (fun l -> String.concat "" l)
 
   let string_of_unix_second ~format
-    ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
+      ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
     (string, string) result =
     match
-    Date_time.of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
-      time
+      Date_time.of_unix_second
+        ~tz_offset_s_of_date_time:display_using_tz_offset_s time
     with
     | Error () -> Error "Invalid unix second"
-    | Ok dt ->
-      string_of_date_time ~format dt
+    | Ok dt -> string_of_date_time ~format dt
+
+  let string_of_time_slot ~(format : string)
+      ~(display_using_tz_offset_s : tz_offset_s option) ((s, e) : Time_slot.t) :
+    (string, string) result =
+    let open CCParse in
+    let single (start_date_time : Date_time.t) (end_date_time : Date_time.t) :
+      string CCParse.t =
+      try_ (string "{{" *> return "{")
+      <|> ( try_ (char '{')
+            *> ( try_ (char 's' *> return start_date_time)
+                 <|> char 'e' *> return end_date_time )
+            >>= fun date_time -> Format_string_parsers.inner date_time <* char '}'
+          )
+      <|> (chars_if (function '{' -> false | _ -> true) >>= fun s -> return s)
+    in
+    let p (start_date_time : Date_time.t) (end_date_time : Date_time.t) :
+      string list CCParse.t =
+      many (single start_date_time end_date_time)
+    in
+    match
+      Date_time.of_unix_second
+        ~tz_offset_s_of_date_time:display_using_tz_offset_s s
+    with
+    | Error () -> Error "Invalid start unix time"
+    | Ok s -> (
+        match
+          Date_time.of_unix_second
+            ~tz_offset_s_of_date_time:display_using_tz_offset_s e
+        with
+        | Error () -> Error "Invalid end unix time"
+        | Ok e ->
+          CCParse.parse_string (p s e <* eoi) format
+          |> Result.map (fun l -> String.concat "" l) )
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string
