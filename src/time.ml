@@ -760,6 +760,7 @@ module To_string = struct
       ~(display_using_tz_offset_s : tz_offset_s option) ((s, e) : Time_slot.t) :
     (string, string) result =
     let open CCParse in
+    let open Parser_components in
     let single (start_date_time : Date_time.t) (end_date_time : Date_time.t) :
       string CCParse.t =
       try_ (string "{{" *> return "{")
@@ -786,7 +787,14 @@ module To_string = struct
         with
         | Error () -> Error "Invalid end unix time"
         | Ok e ->
-          CCParse.parse_string (p s e <* eoi) format
+          CCParse.parse_string
+            ( p s e
+              >>= fun s ->
+              get_pos
+              >>= fun pos ->
+              try_ eoi *> return s
+              <|> failf "Expected EOI, pos: %s" (string_of_pos pos) )
+            format
           |> Result.map (fun l -> String.concat "" l) )
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
