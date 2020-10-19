@@ -920,6 +920,26 @@ let debug_time_profile_matching_time_slots_of_periods () =
             ~display_using_tz_offset_s:None end_exc
           |> Result.get_ok ))
 
+let debug_time_to_string_string_of_date_time () =
+  print_endline "Debug print for Time.To_string.string_of_date_time";
+  let dt =
+    let open Daypack_lib.Time.Date_time in
+    {
+      year = 2020;
+      month = `Jun;
+      day = 1;
+      hour = 0;
+      minute = 0;
+      second = 0;
+      tz_offset_s = Ptime_clock.current_tz_offset_s () |> Option.get;
+    }
+  in
+  let s =
+    Daypack_lib.Time.To_string.string_of_date_time ~format:"" dt
+    |> Result.get_ok
+  in
+  print_endline s
+
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";
  *   let tm =
@@ -1105,9 +1125,9 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_range_pattern_matching_time_slots ();
  *   print_newline () *)
 
-let () =
-  debug_time_expr_matching_time_slots ();
-  print_newline ()
+(* let () =
+ *   debug_time_expr_matching_time_slots ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
@@ -1120,3 +1140,7 @@ let () =
 (* let () =
  *   debug_time_profile_matching_time_slots_of_periods ();
  *   print_newline () *)
+
+let () =
+  debug_time_to_string_string_of_date_time ();
+  print_newline ()
