@@ -14,6 +14,14 @@
 
 - Added syntax (`tzoffset=...`) for searching in a specific timezone offset
 
+- Added following time to string functions with format string support
+
+  - `Time.To_string.string_of_date_time`
+
+  - `Time.To_string.string_of_unix_second`
+
+  - `Time.To_string.string_of_time_slot`
+
 ## 0.0.5
 
 - Fixed leap year definition
