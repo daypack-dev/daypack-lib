@@ -12,9 +12,14 @@
 {wday:Xx*}   full weekday name (e.g. Sunday), casing of first 'x' controls casing of first letter,
              casing of second 'x' controls casing of following letters
 {hour:cX}    24-hour, character 'c' before 'X' determines padding
+             (leave out character for no padding)
 {12hour:cX}  12-hour, character 'c' before 'X' determines padding
+             (leave out character for no padding)
 {min:cX}     minutes, character 'c' before 'X' determines padding
+             (leave out character for no padding)
 {sec:cX}     seconds, character 'c' before 'X' determines padding
+             (leave out character for no padding)
+{unix}       unix time (seconds since epoch)
 ```
 
 ## Time slot
