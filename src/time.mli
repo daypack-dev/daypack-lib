@@ -222,6 +222,10 @@ module Deserialize : sig
 end
 
 module To_string : sig
+  module Format_string_parsers : sig
+    val inner : Date_time.t -> string CCParse.t
+  end
+
   val abbreviated_string_of_weekday : weekday -> string
 
   val full_string_of_weekday : weekday -> string
