@@ -746,6 +746,17 @@ module To_string = struct
     CCParse.parse_string (p x <* eoi) format
     |> Result.map (fun l -> String.concat "" l)
 
+  let string_of_unix_second ~format
+    ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
+    (string, string) result =
+    match
+    Date_time.of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
+      time
+    with
+    | Error () -> Error "Invalid unix second"
+    | Ok dt ->
+      string_of_date_time ~format dt
+
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string
     =

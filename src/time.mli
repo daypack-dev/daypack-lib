@@ -265,6 +265,13 @@ module To_string : sig
     display_using_tz_offset_s:tz_offset_s option ->
     int64 ->
     (string, unit) result
+
+  val string_of_date_time :
+    format:string -> Date_time.t -> (string, string) result
+
+  val string_of_unix_second :
+    format:string -> display_using_tz_offset_s:tz_offset_s option ->
+    int64 -> (string, string) result
 end
 
 module Print : sig
