@@ -222,9 +222,17 @@ module Deserialize : sig
 end
 
 module To_string : sig
-  val string_of_weekday : weekday -> string
+  module Format_string_parsers : sig
+    val inner : Date_time.t -> string CCParse.t
+  end
 
-  val string_of_month : month -> string
+  val abbreviated_string_of_weekday : weekday -> string
+
+  val full_string_of_weekday : weekday -> string
+
+  val abbreviated_string_of_month : month -> string
+
+  val full_string_of_month : month -> string
 
   (* val yyyymondd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result *)
   val yyyymondd_hhmmss_string_of_date_time : Date_time.t -> string
@@ -257,6 +265,21 @@ module To_string : sig
     display_using_tz_offset_s:tz_offset_s option ->
     int64 ->
     (string, unit) result
+
+  val string_of_date_time :
+    format:string -> Date_time.t -> (string, string) result
+
+  val string_of_unix_second :
+    format:string ->
+    display_using_tz_offset_s:tz_offset_s option ->
+    int64 ->
+    (string, string) result
+
+  val string_of_time_slot :
+    format:string ->
+    display_using_tz_offset_s:tz_offset_s option ->
+    Time_slot.t ->
+    (string, string) result
 end
 
 module Print : sig

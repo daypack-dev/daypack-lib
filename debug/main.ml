@@ -920,6 +920,66 @@ let debug_time_profile_matching_time_slots_of_periods () =
             ~display_using_tz_offset_s:None end_exc
           |> Result.get_ok ))
 
+let debug_time_to_string_string_of_date_time () =
+  print_endline "Debug print for Time.To_string.string_of_date_time";
+  let dt =
+    let open Daypack_lib.Time.Date_time in
+    {
+      year = 2020;
+      month = `Jun;
+      day = 1;
+      hour = 0;
+      minute = 0;
+      second = 0;
+      tz_offset_s = Ptime_clock.current_tz_offset_s () |> Option.get;
+    }
+  in
+  let s =
+    Daypack_lib.Time.To_string.string_of_date_time
+      ~format:"{year}-{mon:xxx}-{mday:X}" dt
+    |> Result.get_ok
+  in
+  print_endline s
+
+let debug_time_to_string_string_of_time_slot () =
+  print_endline "Debug print for Time.To_string.string_of_time_slot";
+  let start_time =
+    let open Daypack_lib.Time.Date_time in
+    {
+      year = 2020;
+      month = `Jun;
+      day = 1;
+      hour = 0;
+      minute = 0;
+      second = 0;
+      tz_offset_s = Ptime_clock.current_tz_offset_s () |> Option.get;
+    }
+    |> to_unix_second
+    |> Result.get_ok
+  in
+  let end_time =
+    let open Daypack_lib.Time.Date_time in
+    {
+      year = 2021;
+      month = `Jan;
+      day = 1;
+      hour = 11;
+      minute = 12;
+      second = 13;
+      tz_offset_s = Ptime_clock.current_tz_offset_s () |> Option.get;
+    }
+    |> to_unix_second
+    |> Result.get_ok
+  in
+  let s =
+    Daypack_lib.Time.To_string.string_of_time_slot
+      ~format:"{syear}-{smon:Xxx}-{smday:X} {eyear}"
+      ~display_using_tz_offset_s:(Ptime_clock.current_tz_offset_s ())
+      (start_time, end_time)
+    |> Result.get_ok
+  in
+  print_endline s
+
 (* let debug_time_pattern_next_match_tm () =
  *   print_endline "Debug print for Time_pattern.next_match_tm";
  *   let tm =
@@ -1105,9 +1165,9 @@ let debug_time_profile_matching_time_slots_of_periods () =
  *   debug_time_range_pattern_matching_time_slots ();
  *   print_newline () *)
 
-let () =
-  debug_time_expr_matching_time_slots ();
-  print_newline ()
+(* let () =
+ *   debug_time_expr_matching_time_slots ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
@@ -1120,3 +1180,11 @@ let () =
 (* let () =
  *   debug_time_profile_matching_time_slots_of_periods ();
  *   print_newline () *)
+
+let () =
+  debug_time_to_string_string_of_date_time ();
+  print_newline ()
+
+let () =
+  debug_time_to_string_string_of_time_slot ();
+  print_newline ()
