@@ -1405,7 +1405,8 @@ module To_string = struct
 
   let debug_string_of_weekdays (days : Time.weekday list) : string =
     let aux l =
-      String.concat "," (List.map Time.To_string.abbreviated_string_of_weekday l)
+      String.concat ","
+        (List.map Time.To_string.abbreviated_string_of_weekday l)
     in
     Printf.sprintf "weekday [%s]" (aux days)
 
