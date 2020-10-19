@@ -935,7 +935,8 @@ let debug_time_to_string_string_of_date_time () =
     }
   in
   let s =
-    Daypack_lib.Time.To_string.string_of_date_time ~format:"{year}-{mon:xxx}-{mday:X}" dt
+    Daypack_lib.Time.To_string.string_of_date_time
+      ~format:"{year}-{mon:xxx}-{mday:X}" dt
     |> Result.get_ok
   in
   print_endline s
@@ -971,7 +972,8 @@ let debug_time_to_string_string_of_time_slot () =
     |> Result.get_ok
   in
   let s =
-    Daypack_lib.Time.To_string.string_of_time_slot ~format:"{syear}-{smon:Xxx}-{smday:X} {eyear}"
+    Daypack_lib.Time.To_string.string_of_time_slot
+      ~format:"{syear}-{smon:Xxx}-{smday:X} {eyear}"
       ~display_using_tz_offset_s:(Ptime_clock.current_tz_offset_s ())
       (start_time, end_time)
     |> Result.get_ok
