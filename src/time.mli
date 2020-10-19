@@ -222,9 +222,13 @@ module Deserialize : sig
 end
 
 module To_string : sig
-  val string_of_weekday : weekday -> string
+  val abbreviated_string_of_weekday : weekday -> string
 
-  val string_of_month : month -> string
+  val full_string_of_weekday : weekday -> string
+
+  val abbreviated_string_of_month : month -> string
+
+  val full_string_of_month : month -> string
 
   (* val yyyymondd_hhmmss_string_of_tm : Unix.tm -> (string, unit) result *)
   val yyyymondd_hhmmss_string_of_date_time : Date_time.t -> string

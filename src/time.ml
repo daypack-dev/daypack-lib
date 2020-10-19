@@ -519,35 +519,77 @@ module Deserialize = struct
 end
 
 module To_string = struct
-  let string_of_weekday (wday : weekday) : string =
-    match wday with
-    | `Sun -> "Sun"
-    | `Mon -> "Mon"
-    | `Tue -> "Tue"
-    | `Wed -> "Wed"
-    | `Thu -> "Thu"
-    | `Fri -> "Fri"
-    | `Sat -> "Sat"
+  type case = Upper | Lower
 
-  let string_of_month (month : month) : string =
+  type size_and_casing =
+    | Abbreviated of case * case * case
+    | Full of case * case
+
+  let map_char_to_case (case : case) (c : char) =
+    match case with
+    | Upper -> Char.uppercase_ascii c
+    | Lower -> Char.lowercase_ascii c
+
+  let map_string_to_size_and_casing (x : size_and_casing) (s : string) : string =
+    match x with
+    | Abbreviated (case1, case2, case3) ->
+      let c1 = map_char_to_case case1 (String.get s 0) in
+      let c2 = map_char_to_case case2 (String.get s 1) in
+      let c3 = map_char_to_case case3 (String.get s 2) in
+      Printf.sprintf "%c%c%c" c1 c2 c3
+    | Full (case1, case2) ->
+      String.mapi (fun i c ->
+          if i = 0 then
+            map_char_to_case case1 c
+          else
+            map_char_to_case case2 c
+        )
+        s
+
+  let pad_int (c : char option) (x : int) : string =
+    match c with
+    | None -> string_of_int x
+    | Some c ->
+      if x < 10 then
+        Printf.sprintf "%c%d" c x
+      else
+        string_of_int x
+
+  let full_string_of_weekday (wday : weekday) : string =
+    match wday with
+    | `Sun -> "Sunday"
+    | `Mon -> "Monday"
+    | `Tue -> "Tuesday"
+    | `Wed -> "Wednesday"
+    | `Thu -> "Thursday"
+    | `Fri -> "Friday"
+    | `Sat -> "Saturday"
+
+  let abbreviated_string_of_weekday (wday : weekday) : string =
+    String.sub (full_string_of_weekday wday) 0 3
+
+  let full_string_of_month (month : month) : string =
     match month with
-    | `Jan -> "Jan"
-    | `Feb -> "Feb"
-    | `Mar -> "Mar"
-    | `Apr -> "Apr"
+    | `Jan -> "January"
+    | `Feb -> "February"
+    | `Mar -> "March"
+    | `Apr -> "April"
     | `May -> "May"
-    | `Jun -> "Jun"
-    | `Jul -> "Jul"
-    | `Aug -> "Aug"
-    | `Sep -> "Sep"
-    | `Oct -> "Oct"
-    | `Nov -> "Nov"
-    | `Dec -> "Dec"
+    | `Jun -> "June"
+    | `Jul -> "July"
+    | `Aug -> "August"
+    | `Sep -> "September"
+    | `Oct -> "October"
+    | `Nov -> "November"
+    | `Dec -> "December"
+
+  let abbreviated_string_of_month (month : month) : string =
+    String.sub (full_string_of_month month) 0 3
 
   let yyyymondd_hhmmss_string_of_tm (tm : Unix.tm) : (string, unit) result =
     match month_of_tm_int tm.tm_mon with
     | Ok mon ->
-      let mon = string_of_month mon in
+      let mon = abbreviated_string_of_month mon in
       Ok
         (Printf.sprintf "%04d %s %02d %02d:%02d:%02d"
            (tm.tm_year + tm_year_offset)
@@ -555,7 +597,7 @@ module To_string = struct
     | Error () -> Error ()
 
   let yyyymondd_hhmmss_string_of_date_time (x : Date_time.t) : string =
-    let mon = string_of_month x.month in
+    let mon = abbreviated_string_of_month x.month in
     Printf.sprintf "%04d %s %02d %02d:%02d:%02d" x.year mon x.day x.hour
       x.minute x.second
 
@@ -600,7 +642,7 @@ module To_string = struct
   *)
 
   let yyyymondd_hhmm_string_of_date_time (x : Date_time.t) : string =
-    let mon = string_of_month x.month in
+    let mon = abbreviated_string_of_month x.month in
     Printf.sprintf "%04d %s %02d %02d:%02d" x.year mon x.day x.hour x.minute
 
   let yyyymondd_hhmm_string_of_unix_second
@@ -630,6 +672,92 @@ module To_string = struct
     Date_time.of_unix_second ~tz_offset_s_of_date_time:display_using_tz_offset_s
       time
     |> Result.map yyyymmdd_hhmm_string_of_date_time
+
+  let string_of_date_time ~(format : string) (x : Date_time.t) : (string, string) result =
+    let open CCParse in
+    let case : case CCParse.t =
+      try_ (char 'x' *> return Lower)
+      <|> (char 'X' *> return Upper)
+    in
+    let size_and_casing : size_and_casing CCParse.t =
+      case >>= fun c1 -> case >>= fun c2 ->
+      try_ (char '*' *> return (Full (c1, c2)))
+      <|> (case >>= fun c3 -> return (Abbreviated (c1, c2, c3)))
+    in
+    let padding : char option CCParse.t =
+      try_ (char_if (fun _ -> true) >>= fun padding ->
+             char 'X' *> return (Some padding)
+            )
+      <|> (char 'X' *> return None)
+    in
+    let single (date_time : Date_time.t) : string CCParse.t =
+      try_ (string "{{" *> return "{")
+      <|> try_ (char '{' *>
+                ((try_ (string "year") *> return (string_of_int date_time.year)
+                      )
+                 <|> (try_ (string "mon:") *> size_and_casing >>= fun x ->
+                           return (
+                             map_string_to_size_and_casing x
+                               (full_string_of_month date_time.month)
+                           )
+                          )
+                 <|> (try_ (string "mday:") *>
+                      padding >>= fun padding ->
+                      return (pad_int padding date_time.day)
+                     )
+                 <|> (try_ (string "wday:") *> size_and_casing >>= fun x ->
+                      (
+                          match
+                          (weekday_of_month_day ~year:date_time.year
+                             ~month:date_time.month
+                             ~mday:date_time.day
+                          )
+                          with
+                          | Error () -> fail "Invalid date time"
+                          | Ok wday ->
+                            return (
+                            map_string_to_size_and_casing x
+                              (full_string_of_weekday wday)
+                          )
+                      )
+                     )
+                 <|> (try_ (string "hour:" *>
+                            padding >>= fun padding ->
+                            return (pad_int padding date_time.hour)
+                           ))
+                 <|> (try_ (string "12hour:" *>
+                            padding >>= fun padding ->
+                            let hour =
+                              if date_time.hour = 0 then 12
+                              else date_time.hour mod 12
+                            in
+                            return (pad_int padding hour)
+                           ))
+                 <|> (try_ (string "min:" *>
+                            padding >>= fun padding ->
+                            return (pad_int padding date_time.minute)
+                           ))
+                 <|> (try_ (string "sec:" *>
+                            padding >>= fun padding ->
+                            return (pad_int padding date_time.second)
+                           ))
+                 <|> (string "unix" *>
+                      match Date_time.to_unix_second date_time with
+                      | Error () -> fail "Invalid date time"
+                      | Ok sec ->
+                        return (Int64.to_string sec)
+                )
+                )
+                <*
+                char '}'
+               )
+      <|> (chars_if (function | '{' -> false | _ -> true) >>= fun s -> return s)
+    in
+    let p (date_time : Date_time.t) : string list CCParse.t =
+      many (single date_time)
+    in
+    CCParse.parse_string (p x <* eoi) format
+    |> Result.map (fun l -> String.concat "" l)
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string

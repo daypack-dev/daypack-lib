@@ -1405,7 +1405,7 @@ module To_string = struct
 
   let debug_string_of_weekdays (days : Time.weekday list) : string =
     let aux l =
-      String.concat "," (List.map Time.To_string.string_of_weekday l)
+      String.concat "," (List.map Time.To_string.abbreviated_string_of_weekday l)
     in
     Printf.sprintf "weekday [%s]" (aux days)
 
@@ -1417,7 +1417,7 @@ module To_string = struct
       ?(buffer = Buffer.create 4096) (t : time_pattern) : string =
     let aux l = String.concat "," (List.map string_of_int l) in
     let aux_months l =
-      String.concat "," (List.map Time.To_string.string_of_month l)
+      String.concat "," (List.map Time.To_string.abbreviated_string_of_month l)
     in
     Debug_print.bprintf ~indent_level buffer "time pattern :\n";
     Debug_print.bprintf ~indent_level:(indent_level + 1) buffer "years : [%s]\n"
