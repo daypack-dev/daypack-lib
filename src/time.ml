@@ -787,7 +787,7 @@ module To_string = struct
                  <|> (char 'e' >> return end_date_time) )
             >>= fun date_time -> Format_string_parsers.inner date_time << char '}'
           );
-          ( many_satisfy (function '{' -> false | _ -> true)
+          ( many1_satisfy (function '{' -> false | _ -> true)
             >>= fun s -> return s );
         ]
     in
