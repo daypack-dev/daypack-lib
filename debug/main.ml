@@ -853,8 +853,8 @@ let debug_time_expr_matching_time_slots () =
   in
   match
     Daypack_lib.Time_expr.of_string
-      ~enabled_fragments:[ `Branching_time_slot_expr; `Time_slot_expr ]
-      ""
+      ~enabled_fragments:[ `Branching_time_slot_expr; ]
+      "thu . 5pm to 6pm, 7pm to 9pm"
   with
   | Error msg -> Printf.printf "Error: %s" msg
   | Ok e ->
@@ -1162,9 +1162,9 @@ let debug_time_to_string_string_of_time_slot () =
  *   debug_time_range_pattern_matching_time_slots ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_expr_matching_time_slots ();
- *   print_newline () *)
+let () =
+  debug_time_expr_matching_time_slots ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
@@ -1178,9 +1178,9 @@ let debug_time_to_string_string_of_time_slot () =
  *   debug_time_profile_matching_time_slots_of_periods ();
  *   print_newline () *)
 
-let () =
-  debug_time_to_string_string_of_date_time ();
-  print_newline ()
+(* let () =
+ *   debug_time_to_string_string_of_date_time ();
+ *   print_newline () *)
 
 (* let () =
  *   debug_time_to_string_string_of_time_slot ();

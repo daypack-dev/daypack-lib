@@ -907,14 +907,16 @@ module Of_string = struct
       |> List.filter_map (fun x -> x)
     in
     let rec make_atom l =
-      match l with
-      | [] ->
-        get_pos
-        >>= fun pos ->
-        fail
-          (Printf.sprintf "Failed to parse expression, pos: %s"
-             (string_of_pos pos))
-      | x :: xs -> x <|> make_atom xs
+      (* match l with
+       * | [] ->
+       *   get_pos
+       *   >>= fun pos ->
+       *   fail
+       *     (Printf.sprintf "Failed to parse expression, pos: %s"
+       *        (string_of_pos pos))
+       * | x :: xs -> x <|> make_atom xs *)
+      choice
+        l
     in
     let atom = spaces >> make_atom atom_parsers << spaces in
     let rec expr mparser_state =
