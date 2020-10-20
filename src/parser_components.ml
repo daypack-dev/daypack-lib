@@ -123,29 +123,32 @@ let extraneous_text_check ~end_markers =
 let result_of_mparser_result (x : 'a result) : ('a, string) Result.t =
   match x with
   | Success x -> Ok x
-  | Failed (_, err) ->
-    match err with
-    | No_error -> Error "Unknown error"
-    | Parse_error (pos, msgs) ->
-      match
-      List.fold_left (fun res msg ->
-          match res with
-          | Some x -> Some x
+  | Failed (_, err) -> (
+      match err with
+      | No_error -> Error "Unknown error"
+      | Parse_error (pos, msgs) -> (
+          match
+            List.fold_left
+              (fun res msg ->
+                 match res with
+                 | Some x -> Some x
+                 | None -> (
+                     match msg with
+                     | Unexpected_error s ->
+                       Some
+                         (Printf.sprintf "Unexpected: %s, pos: %s" s
+                            (string_of_pos pos))
+                     | Expected_error s ->
+                       Some
+                         (Printf.sprintf "Expected: %s, pos: %s" s
+                            (string_of_pos pos))
+                     | Message_error s -> Some s
+                     | Compound_error (s, _) -> Some s
+                     | Backtrack_error _ -> res
+                     | Unknown_error -> res ))
+              None msgs
+          with
           | None ->
-            match msg with
-            | Unexpected_error s ->
-              Some (Printf.sprintf "Unexpected: %s, pos: %s" s (string_of_pos pos))
-            | Expected_error s ->
-              Some (Printf.sprintf "Expected: %s, pos: %s" s (string_of_pos pos))
-            | Message_error s ->
-              Some s
-            | Compound_error (s, _) ->
-              Some s
-            | Backtrack_error _ -> res
-            | Unknown_error -> res
-        )
-        None
-        msgs
-      with
-      | None -> Error (Printf.sprintf "Unknown error, pos: %s" (string_of_pos pos))
-      | Some s -> Error s
+            Error
+              (Printf.sprintf "Unknown error, pos: %s" (string_of_pos pos))
+          | Some s -> Error s ) )
