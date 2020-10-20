@@ -22,6 +22,8 @@
 
   - `Time.To_string.string_of_time_slot`
 
+- Moved from `CCParse` to `MParser`
+
 ## 0.0.5
 
 - Fixed leap year definition
