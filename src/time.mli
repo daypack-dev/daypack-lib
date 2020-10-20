@@ -223,7 +223,7 @@ end
 
 module To_string : sig
   module Format_string_parsers : sig
-    val inner : Date_time.t -> string CCParse.t
+    val inner : Date_time.t -> (string, unit) MParser.t
   end
 
   val abbreviated_string_of_weekday : weekday -> string

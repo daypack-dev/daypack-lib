@@ -149,11 +149,11 @@ module Equal : sig
 end
 
 module Parsers : sig
-  val cron_expr : time_pattern CCParse.t
+  val cron_expr : (time_pattern, unit) MParser.t
 
-  val time_pattern_core_expr : time_pattern CCParse.t
+  val time_pattern_core_expr : (time_pattern, unit) MParser.t
 
-  val time_pattern_expr : time_pattern CCParse.t
+  val time_pattern_expr : (time_pattern, unit) MParser.t
 end
 
 module Of_string : sig
