@@ -734,24 +734,26 @@ module To_string = struct
             ( string "sec:"
               >> padding
               >>= fun padding -> return (pad_int padding date_time.second) );
-          string "unix";
+          string "unix"
+          >>
+          match Date_time.to_unix_second date_time with
+          | Error () -> fail "Invalid date time"
+          | Ok sec -> return (Int64.to_string sec)
         ]
-      >>
-      match Date_time.to_unix_second date_time with
-      | Error () -> fail "Invalid date time"
-      | Ok sec -> return (Int64.to_string sec)
   end
 
   let string_of_date_time ~(format : string) (x : Date_time.t) :
     (string, string) result =
     let open MParser in
     let single (date_time : Date_time.t) : (string, unit) t =
-      attempt (string "{{" >> return "{")
-      <|> ( attempt (char '{')
-            >> Format_string_parsers.inner date_time
-               << char '}' )
-      <|> ( many_satisfy (function '{' -> false | _ -> true)
-          >>= fun s -> return s )
+      choice [
+        attempt (string "{{" >> return "{");
+        ( attempt (char '{')
+          >> Format_string_parsers.inner date_time
+             << char '}' );
+        ( many1_satisfy (function '{' -> false | _ -> true)
+          |>> fun s -> s );
+      ]
     in
     let p (date_time : Date_time.t) : (string list, unit) t =
       many (single date_time)
