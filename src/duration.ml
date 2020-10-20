@@ -58,7 +58,7 @@ module Of_string = struct
   open MParser
   open Parser_components
 
-  let seconds_string : string t =
+  let seconds_string : (string, unit) t =
     alpha_string
     >>= fun x ->
     match
@@ -67,7 +67,7 @@ module Of_string = struct
     | [] -> fail "String doesn't match keyword representing seconds"
     | _ -> return x
 
-  let minutes_string : string t =
+  let minutes_string : (string, unit) t =
     alpha_string
     >>= fun x ->
     match
@@ -76,68 +76,69 @@ module Of_string = struct
     | [] -> fail "String doesn't match keyword representing minutes"
     | _ -> return x
 
-  let hours_string : string t =
+  let hours_string : (string, unit) t =
     alpha_string
     >>= fun x ->
     match Misc_utils.prefix_string_match [ ("hours", ()); ("hrs", ()) ] x with
     | [] -> fail "String doesn't match keyword representing hours"
     | _ -> return x
 
-  let days_string : string t =
+  let days_string : (string, unit) t =
     alpha_string
     >>= fun x ->
     match Misc_utils.prefix_string_match [ ("days", ()) ] x with
     | [] -> fail "String doesn't match keyword representing days"
     | _ -> return x
 
-  let check_for_unused_term days hours minutes seconds : unit t =
-    let fail' units prev n spaces s cnum =
+  let check_for_unused_term days hours minutes seconds : (unit, unit) t =
+    let fail' units prev n spaces s pos =
       match prev with
       | None ->
-        failf "Incorrect position for %s term: %f%s%s, pos: %d" units n spaces
-          s cnum
+        fail (Printf.sprintf "Incorrect position for %s term: %f%s%s, pos: %s" units n spaces
+          s (string_of_pos pos))
       | Some _ ->
-        failf "Duplicate use of %s term: %f%s%s, pos: %d" units n spaces s
-          cnum
+        fail (Printf.sprintf "Duplicate use of %s term: %f%s%s, pos: %s" units n spaces s
+                (string_of_pos pos)
+)
     in
-    get_cnum
-    >>= fun cnum ->
-    attempt (float_non_neg >>= fun n -> take_space >>= fun s -> return (cnum, n, s))
-    >>= (fun (cnum, n, spaces) ->
-        get_cnum
-        >>= fun unit_keyword_cnum ->
+    get_pos
+    >>= fun pos ->
+    attempt (float_non_neg >>= fun n -> take_space >>= fun s -> return (pos, n, s))
+    >>= (fun (pos, n, spaces) ->
+        get_pos
+        >>= fun unit_keyword_pos ->
         attempt days_string
-        >>= (fun s -> fail' "days" days n spaces s cnum)
+        >>= (fun s -> fail' "days" days n spaces s pos)
             <|> ( attempt hours_string
-                  >>= fun s -> fail' "hours" hours n spaces s cnum )
+                  >>= fun s -> fail' "hours" hours n spaces s pos )
             <|> ( attempt minutes_string
-                  >>= fun s -> fail' "minutes" minutes n spaces s cnum )
+                  >>= fun s -> fail' "minutes" minutes n spaces s pos )
             <|> ( attempt seconds_string
-                  >>= fun s -> fail' "seconds" seconds n spaces s cnum )
+                  >>= fun s -> fail' "seconds" seconds n spaces s pos )
             <|> non_space_string
         >>= fun s ->
-        eoi >> failf "Invalid unit keyword: %s, pos: %d" s unit_keyword_cnum)
+        eof >> fail (Printf.sprintf "Invalid unit keyword: %s, pos: %s" s (string_of_pos unit_keyword_pos)))
         <|> ( any_string
               >>= fun s ->
-              eoi
-              >> if s = "" then nop else failf "Invalid syntax: %s, pos: %d" s cnum )
+              eof
+              >> if s = "" then return () else fail (Printf.sprintf "Invalid syntax: %s, pos: %s" s (string_of_pos pos)) )
 
-  let duration_expr : duration t =
+  let duration_expr : (duration, unit) t =
     let term' num p =
-      attempt (num << skip_white << p)
+      attempt (num << spaces << p)
       >>= (fun n -> return (Some n))
-          <|> (attempt (num << skip_white << eoi) >>= fun n -> return (Some n))
+          <|> (attempt (num << spaces << eof) >>= fun n -> return (Some n))
           <|> return None
     in
     term' float_non_neg days_string
     >>= fun days ->
-    skip_white >> term' float_non_neg hours_string
+    spaces >> term' float_non_neg hours_string
     >>= fun hours ->
-    skip_white >> term' float_non_neg minutes_string
+    spaces >> term' float_non_neg minutes_string
     >>= fun minutes ->
-    skip_white >> term' nat_zero seconds_string
+    spaces >> term' nat_zero seconds_string
     >>= fun seconds ->
-    skip_white
+    spaces
     >> check_for_unused_term days hours minutes seconds
     >> return
       ( ( {
@@ -151,8 +152,12 @@ module Of_string = struct
         |> of_seconds
         |> Result.get_ok )
 
-  let of_string (s : string) : (duration, string) result =
-    parse_string duration_expr s
+  let of_string (s : string) : (duration, string) Result.t =
+    match
+      parse_string duration_expr s ()
+    with
+    | Success d -> Ok d
+    | Failed (s, _) -> Error s
 end
 
 let duration_expr_parser = Of_string.duration_expr
