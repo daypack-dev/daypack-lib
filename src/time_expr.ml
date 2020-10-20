@@ -250,7 +250,7 @@ let check_time_expr (e : Time_expr_ast.t) : (unit, unit) result =
   aux e
 
 module Of_string = struct
-  open CCParse
+  open MParser
   open Parser_components
 
   let not_str = string "not"
@@ -285,7 +285,7 @@ module Of_string = struct
 
   let sign_expr =
     attempt (char '+' >> return Time_expr_ast.Pos)
-    <|> char '-' >> return Time_expr_ast.Neg
+    <|> (char '-' >> return Time_expr_ast.Neg)
 
   let branch_unary_op =
     let open Time_expr_ast in
@@ -295,61 +295,61 @@ module Of_string = struct
       ( next_str >> hyphen >> nat_zero
         << hyphen
         << (attempt batches_str <|> batch_str)
-        >>= fun n -> return (Next_n_batches n) )
+        |>> fun n -> (Next_n_batches n) )
 
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "last"; "next"; "every" ]
 
-  let range_inc_expr (p : 'a t) : 'a Range.range t =
+  let range_inc_expr (p : ('a, unit) t) : ('a Range.range, unit) t =
     attempt
       ( p
         >>= fun x ->
         spaces >> to_str >> spaces >> p
-        >>= fun y -> return (`Range_inc (x, y)) )
-    <|> (p >>= fun x -> return (`Range_inc (x, x)))
+        |>> fun y -> (`Range_inc (x, y)) )
+    <|> (p |>> fun x -> (`Range_inc (x, x)))
 
-  let range_exc_expr (p : 'a t) : 'a Range.range t =
+  let range_exc_expr (p : ('a, unit) t) : ('a Range.range, unit) t =
     attempt
       ( p
         >>= fun x ->
         spaces >> to_str >> spaces >> p
-        >>= fun y -> return (`Range_exc (x, y)) )
-    <|> (p >>= fun x -> return (`Range_inc (x, x)))
+        |>> fun y -> (`Range_exc (x, y)) )
+    <|> (p |>> fun x -> (`Range_inc (x, x)))
 
   let symbols = "()[]&|>"
 
-  let ranges_expr (p : 'a Range.range t) : 'a Range.range list t =
+  let ranges_expr (p : ('a Range.range, unit) t) : ('a Range.range list, unit) t =
     sep_by_comma1 p
 
   module Second = struct
-    let second_expr : Time_expr_ast.second_expr t =
+    let second_expr : (Time_expr_ast.second_expr, unit) t =
       attempt (string "::") >> get_pos
       >>= fun pos ->
       attempt nat_zero
       >>= (fun second ->
           if second >= 60 then
-            failf "Invalid second: %d, pos: %s" second (string_of_pos pos)
+            fail (Printf.sprintf "Invalid second: %d, pos: %s" second (string_of_pos pos))
           else return second)
           <|> ( non_space_string
                 >>= fun s ->
                 if s = "" then
-                  failf "Missing second after ::, pos: %s" (string_of_pos pos)
-                else failf "Invalid second: %s, pos: %s" s (string_of_pos pos) )
+                  fail (Printf.sprintf "Missing second after ::, pos: %s" (string_of_pos pos))
+                else fail (Printf.sprintf "Invalid second: %s, pos: %s" s (string_of_pos pos) ))
   end
 
   module Minute_second = struct
-    let minute_second_expr : Time_expr_ast.minute_second_expr t =
-      attempt (char ':') >> get_cnum
-      >>= fun cnum ->
+    let minute_second_expr : (Time_expr_ast.minute_second_expr, unit) t =
+      attempt (char ':') >> get_pos
+      >>= fun pos ->
       nat_zero
       >>= fun minute ->
-      if minute >= 60 then failf "Invalid minute: %d, pos: %d" minute cnum
+      if minute >= 60 then fail (Printf.sprintf "Invalid minute: %d, pos: %s" minute (string_of_pos pos))
       else
-        get_cnum
-        >>= fun cnum ->
+        get_pos
+        >>= fun pos ->
         option 0 (char ':' >> nat_zero)
         >>= fun second ->
-        if second >= 60 then failf "Invalid second: %d, pos: %d" second cnum
+        if second >= 60 then fail (Printf.sprintf "Invalid second: %d, pos: %s" second (string_of_pos pos))
         else return Time_expr_ast.{ minute; second }
   end
 
@@ -357,27 +357,27 @@ module Of_string = struct
     let hms_mode =
       option `Hour_in_24_hours
         ( attempt (string "am" >> return `Hour_in_AM)
-          <|> string "pm" >> return `Hour_in_PM )
+          <|> (string "pm" >> return `Hour_in_PM ))
 
     let handle_time_with_mode ~hour_pos ~(hour : int) ~(minute : int)
         ~(second : int) mode =
       let pos = string_of_pos hour_pos in
       match mode with
       | `Hour_in_24_hours ->
-        if hour >= 24 then failf "Invalid hour: %d, pos: %s" hour pos
+        if hour >= 24 then fail (Printf.sprintf "Invalid hour: %d, pos: %s" hour pos)
         else return Time_expr_ast.{ hour; minute; second }
       | `Hour_in_AM ->
         if 1 <= hour && hour <= 12 then
           let hour = if hour = 12 then 0 else hour in
           return Time_expr_ast.{ hour; minute; second }
-        else failf "Invalid hour: %d, pos: %s" hour pos
+        else fail (Printf.sprintf "Invalid hour: %d, pos: %s" hour pos)
       | `Hour_in_PM ->
         if 1 <= hour && hour <= 12 then
           let hour = if hour = 12 then 0 else hour in
           return Time_expr_ast.{ hour = hour + 12; minute; second }
-        else failf "Invalid hour: %d, pos %s" hour pos
+        else fail (Printf.sprintf "Invalid hour: %d, pos %s" hour pos)
 
-    let hms : Time_expr_ast.hms_expr t =
+    let hms : (Time_expr_ast.hms_expr, unit) t =
       get_pos
       >>= fun hour_pos ->
       attempt (nat_zero << char ':')
@@ -387,8 +387,8 @@ module Of_string = struct
           nat_zero
           >>= fun minute ->
           if minute >= 60 then
-            failf "Invalid minute: %d, pos: %s" minute
-              (string_of_pos minute_pos)
+            fail (Printf.sprintf "Invalid minute: %d, pos: %s" minute
+              (string_of_pos minute_pos))
           else
             get_pos
             >>= fun second_pos ->
@@ -408,37 +408,37 @@ module Of_string = struct
                 >>= fun mode ->
                 handle_time_with_mode ~hour_pos ~hour ~minute:0 ~second:0 mode )
 
-    let hms_range : Time_expr_ast.hms_range_expr t = range_exc_expr hms
+    let hms_range : (Time_expr_ast.hms_range_expr, unit) t = range_exc_expr hms
 
-    let hms_ranges : Time_expr_ast.hms_range_expr list t =
+    let hms_ranges : (Time_expr_ast.hms_range_expr list, unit) t =
       sep_by_comma1 hms_range
 
-    let non_singular_hms_ranges : Time_expr_ast.hms_range_expr list t =
+    let non_singular_hms_ranges : (Time_expr_ast.hms_range_expr list, unit) t =
       hms_range
       >>= fun hd ->
       spaces >> comma >> spaces >> sep_by_comma1 hms_range
       >>= fun tl -> return (hd :: tl)
 
-    let hmss : Time_expr_ast.hms_expr list t = sep_by_comma1 hms
+    let hmss : (Time_expr_ast.hms_expr list, unit) t = sep_by_comma1 hms
   end
 
   module Month_day = struct
-    let month_day_expr : int t =
+    let month_day_expr : (int, unit) t =
       get_pos
       >>= fun pos ->
       nat_zero
       >>= fun x ->
       if 1 <= x && x <= 31 then return x
-      else failf "Invalid month day: %d, pos: %s" x (string_of_pos pos)
+      else fail (Printf.sprintf "Invalid month day: %d, pos: %s" x (string_of_pos pos))
 
-    let month_day_range_expr : int Range.range t = range_inc_expr month_day_expr
+    let month_day_range_expr : (int Range.range, unit) t = range_inc_expr month_day_expr
 
-    let month_day_ranges_expr : int Range.range list t =
+    let month_day_ranges_expr : (int Range.range list, unit) t =
       ranges_expr month_day_range_expr
   end
 
   module Weekday = struct
-    let weekday_expr : Time.weekday t =
+    let weekday_expr : (Time.weekday, unit) t =
       get_pos
       >>= fun pos ->
       alpha_string
@@ -446,26 +446,26 @@ module Of_string = struct
       match Time.Of_string.weekday_of_string x with
       | Ok x -> return x
       | Error _ ->
-        failf "Failed to interpret weekday string, pos: %s"
-          (string_of_pos pos)
+        fail (Printf.sprintf "Failed to interpret weekday string, pos: %s"
+          (string_of_pos pos))
 
-    let weekday_range_expr : Time.weekday Range.range t =
+    let weekday_range_expr : (Time.weekday Range.range, unit) t =
       range_inc_expr weekday_expr
 
-    let weekday_ranges_expr : Time.weekday Range.range list t =
+    let weekday_ranges_expr : (Time.weekday Range.range list, unit) t =
       ranges_expr weekday_range_expr
   end
 
   module Day = struct
-    let day_expr : Time_expr_ast.day_expr t =
+    let day_expr : (Time_expr_ast.day_expr, unit) t =
       attempt
         ( Month_day.month_day_expr
-          >>= fun x -> return (Time_expr_ast.Month_day x) )
-      <|> (Weekday.weekday_expr >>= fun x -> return (Time_expr_ast.Weekday x))
+          |>> fun x -> (Time_expr_ast.Month_day x) )
+      <|> (Weekday.weekday_expr |>> fun x -> (Time_expr_ast.Weekday x))
   end
 
   module Month = struct
-    let human_int_month_expr : Time_expr_ast.month_expr t =
+    let human_int_month_expr : (Time_expr_ast.month_expr, unit) t =
       nat_zero
       >>= fun x ->
       match Time.month_of_human_int x with
@@ -476,7 +476,7 @@ module Of_string = struct
 
     let human_int_month_ranges_expr = sep_by_comma1 human_int_month_range_expr
 
-    let direct_pick_month_expr : Time_expr_ast.month_expr t =
+    let direct_pick_month_expr : (Time_expr_ast.month_expr, unit) t =
       alpha_string
       >>= fun x ->
       match Time.Of_string.month_of_string x with
@@ -497,7 +497,7 @@ module Of_string = struct
   end
 
   module Year = struct
-    let year_expr : int t = nat_zero
+    let year_expr : (int, unit) t = nat_zero
 
     let year_range_expr = range_inc_expr year_expr
 
@@ -574,16 +574,18 @@ module Of_string = struct
     let tp_second =
       Second.second_expr >>= fun second -> return (Time_expr_ast.Second second)
 
-    let time_point_expr : Time_expr_ast.time_point_expr t =
-      tp_name
-      <|> tp_ymd_hms
-      <|> tp_ymond_hms
-      <|> tp_md_hms
-      <|> tp_mond_hms
-      <|> tp_d_hms
-      <|> tp_second
-      <|> tp_minute_second
-      <|> tp_hms
+    let time_point_expr : (Time_expr_ast.time_point_expr, unit) t =
+      choice [
+      tp_name;
+      tp_ymd_hms;
+      tp_ymond_hms;
+      tp_md_hms;
+      tp_mond_hms;
+      tp_d_hms;
+      tp_second;
+      tp_minute_second;
+      tp_hms;
+    ]
   end
 
   module Time_slot_expr = struct
@@ -601,9 +603,9 @@ module Of_string = struct
       attempt Time_point_expr.time_point_expr
       >>= (fun end_exc ->
           return (Time_expr_ast.Explicit_time_slot (start, end_exc)))
-          <|> failf "Expected time point expression at %s" (string_of_pos pos)
+          <|> fail (Printf.sprintf "Expected time point expression at %s" (string_of_pos pos))
 
-    let time_slot_expr : Time_expr_ast.time_slot_expr t =
+    let time_slot_expr : (Time_expr_ast.time_slot_expr, unit) t =
       ts_name <|> ts_explicit_time_slot
   end
 
@@ -617,15 +619,13 @@ module Of_string = struct
         ( Month_day.month_day_ranges_expr
           >>= fun month_days ->
           spaces >> dot >> spaces >> Hms.hms_ranges
-          >>= fun hms_ranges ->
-          return
+          |>> fun hms_ranges ->
             (Time_expr_ast.Bts_month_days_and_hms_ranges
                { month_days; hms_ranges }) )
       <|> ( Weekday.weekday_ranges_expr
             >>= fun weekdays ->
             spaces >> dot >> spaces >> Hms.hms_ranges
-            >>= fun hms_ranges ->
-            return
+            |>> fun hms_ranges ->
               (Time_expr_ast.Bts_weekdays_and_hms_ranges { weekdays; hms_ranges })
           )
 
@@ -634,15 +634,13 @@ module Of_string = struct
         ( Hms.hms_ranges
           >>= fun hms_ranges ->
           spaces >> of_str >> spaces >> Month_day.month_day_ranges_expr
-          >>= fun month_days ->
-          return
+          |>> fun month_days ->
             (Time_expr_ast.Bts_month_days_and_hms_ranges
                { month_days; hms_ranges }) )
       <|> ( Hms.hms_ranges
             >>= fun hms_ranges ->
             spaces >> of_str >> spaces >> Weekday.weekday_ranges_expr
-            >>= fun weekdays ->
-            return
+            |>> fun weekdays ->
               (Time_expr_ast.Bts_weekdays_and_hms_ranges { weekdays; hms_ranges })
           )
 
@@ -652,8 +650,7 @@ module Of_string = struct
       spaces >> dot >> spaces >> Month_day.month_day_ranges_expr
       >>= fun month_days ->
       spaces >> dot >> spaces >> Hms.hms_ranges
-      >>= fun hms_ranges ->
-      return
+      |>> fun hms_ranges ->
         (Time_expr_ast.Bts_months_and_month_days_and_hms_ranges
            { months; month_days; hms_ranges })
 
@@ -663,8 +660,7 @@ module Of_string = struct
       spaces >> of_str >> spaces >> Month_day.month_day_ranges_expr
       >>= fun month_days ->
       spaces >> of_str >> spaces >> Month.month_ranges_expr
-      >>= fun months ->
-      return
+      |>> fun months ->
         (Time_expr_ast.Bts_months_and_month_days_and_hms_ranges
            { months; month_days; hms_ranges })
 
@@ -674,17 +670,16 @@ module Of_string = struct
       spaces >> dot >> spaces >> Weekday.weekday_ranges_expr
       >>= fun weekdays ->
       spaces >> dot >> spaces >> Hms.hms_ranges
-      >>= fun hms_ranges ->
-      return
+      |>> fun hms_ranges ->
         (Time_expr_ast.Bts_months_and_weekdays_and_hms_ranges
            { months; weekdays; hms_ranges })
 
     let month_weekday_mode_expr =
       attempt
         ( first_str >> spaces >> nat_zero
-          >>= fun n -> return (Some (Time_expr_ast.First_n n)) )
+          |>> fun n -> (Some (Time_expr_ast.First_n n)) )
       <|> ( last_str >> spaces >> nat_zero
-            >>= fun n -> return (Some (Time_expr_ast.Last_n n)) )
+            |>> fun n -> (Some (Time_expr_ast.Last_n n)) )
 
     let bts_months_wday_hms_ranges =
       Month.month_ranges_expr
@@ -694,8 +689,7 @@ module Of_string = struct
       spaces >> Weekday.weekday_expr
       >>= fun weekday ->
       spaces >> dot >> spaces >> Hms.hms_ranges
-      >>= fun hms_ranges ->
-      return
+      |>> fun hms_ranges ->
         (Time_expr_ast.Bts_months_and_weekday_and_hms_ranges
            { months; weekday; hms_ranges; month_weekday_mode })
 
@@ -707,8 +701,7 @@ module Of_string = struct
       spaces >> dot >> spaces >> Month_day.month_day_ranges_expr
       >>= fun month_days ->
       spaces >> dot >> spaces >> Hms.hms_ranges
-      >>= fun hms_ranges ->
-      return
+      |>> fun hms_ranges ->
         (Time_expr_ast.Bts_years_and_months_and_month_days_and_hms_ranges
            { years; months; month_days; hms_ranges })
 
@@ -720,42 +713,43 @@ module Of_string = struct
       spaces >> of_str >> spaces >> Month.month_ranges_expr
       >>= fun months ->
       spaces >> of_str >> spaces >> Year.year_ranges_expr
-      >>= fun years ->
-      return
+      |>> fun years ->
         (Time_expr_ast.Bts_years_and_months_and_month_days_and_hms_ranges
            { years; months; month_days; hms_ranges })
 
-    let branching_time_slot_expr_atom : Time_expr_ast.branching_time_slot_expr t
+    let branching_time_slot_expr_atom : (Time_expr_ast.branching_time_slot_expr, unit) t
       =
-      attempt bts_hms_ranges
-      <|> attempt bts_days_hms_ranges
-      <|> attempt bts_months_mdays_hms_ranges
-      <|> attempt bts_months_wdays_hms_ranges
-      <|> attempt bts_months_wday_hms_ranges
-      <|> attempt bts_years_months_mdays_hms_ranges
-      <|> attempt bts_hms_ranges_mdays_months_years
-      <|> attempt bts_hms_ranges_mdays_months
-      <|> attempt bts_hms_ranges_days
+      choice [
+        attempt bts_hms_ranges
+        ; attempt bts_days_hms_ranges
+        ; attempt bts_months_mdays_hms_ranges
+        ; attempt bts_months_wdays_hms_ranges
+        ; attempt bts_months_wday_hms_ranges
+        ; attempt bts_years_months_mdays_hms_ranges
+        ; attempt bts_hms_ranges_mdays_months_years
+        ; attempt bts_hms_ranges_mdays_months
+        ; attempt bts_hms_ranges_days
+      ]
 
-    let branching_time_slot_expr : Time_expr_ast.branching_time_slot_expr t =
+    let branching_time_slot_expr : (Time_expr_ast.branching_time_slot_expr, unit) t =
       attempt
         ( branch_unary_op
           >>= fun op ->
           spaces >> branching_time_slot_expr_atom
-          >>= fun e -> return (Time_expr_ast.Bts_unary_op (op, e)) )
+          |>> fun e -> (Time_expr_ast.Bts_unary_op (op, e)) )
       <|> branching_time_slot_expr_atom
   end
 
-  let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
+  let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t, unit) t =
     string "&&"
     >> return (fun a b -> Time_expr_ast.Time_binary_op (Inter, a, b))
 
-  let union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
+  let union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t, unit) t =
     string "||"
     >> return (fun a b -> Time_expr_ast.Time_binary_op (Union, a, b))
 
   let round_robin_select :
-    (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
+    (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t, unit) t =
     string ">>"
     >> return (fun a b -> Time_expr_ast.Time_round_robin_select [ a; b ])
 
@@ -782,7 +776,7 @@ module Of_string = struct
     in
     aux e
 
-  let time_expr ~(enabled_fragments : lang_fragment list) : Time_expr_ast.t t =
+  let time_expr ~(enabled_fragments : lang_fragment list) : (Time_expr_ast.t, unit) t =
     let open Time_expr_ast in
     let atom_parsers =
       [
@@ -814,61 +808,70 @@ module Of_string = struct
       | [] ->
         get_pos
         >>= fun pos ->
-        failf "Failed to parse expression, pos: %s" (string_of_pos pos)
+        fail (Printf.sprintf "Failed to parse expression, pos: %s" (string_of_pos pos))
       | x :: xs -> x <|> make_atom xs
     in
     let atom = spaces >> make_atom atom_parsers << spaces in
-    fix (fun expr ->
+    let rec expr mparser_state =
         let group =
-          attempt (char '(') >> spaces >> expr
+          attempt (char '(') >> spaces >> (expr mparser_state)
           << spaces
           << char ')'
           <|> atom
         in
         let unary_op =
-          attempt not_str >> return Not
-          <|> attempt next_slot_str >> return (Next_n_slots 1)
-          <|> attempt next_point_str >> return (Next_n_points 1)
-          <|> ( attempt
-                  ( next_str >> hyphen >> nat_zero
-                    << hyphen
-                    << (attempt slots_str <|> slot_str) )
-                >>= fun n -> return (Next_n_slots n) )
-          <|> ( attempt
-                  ( next_str >> hyphen >> nat_zero
-                    << hyphen
-                    << (attempt points_str <|> point_str) )
-                >>= fun n -> return (Next_n_points n) )
-          <|> attempt
-            ( string "tzoffset=" >> sign_expr
-              >>= fun sign ->
-              Hms.hms >>= fun hms -> return (Tz_offset (sign, hms)) )
+          choice [
+            attempt not_str >> return Not;
+            attempt next_slot_str >> return (Next_n_slots 1);
+            attempt next_point_str >> return (Next_n_points 1);
+            ( attempt
+                ( next_str >> hyphen >> nat_zero
+                                        << hyphen
+                                        << (attempt slots_str <|> slot_str) )
+              |>> fun n -> (Next_n_slots n) );
+            ( attempt
+                    ( next_str >> hyphen >> nat_zero
+                                            << hyphen
+                                            << (attempt points_str <|> point_str) )
+              |>> fun n -> (Next_n_points n) );
+            attempt
+              ( string "tzoffset=" >> sign_expr
+                >>= fun sign ->
+                Hms.hms |>> fun hms -> (Tz_offset (sign, hms)) );
+          ]
         in
         let inter_part =
           attempt unary_op
           >>= (fun op ->
-              spaces >> expr >>= fun e -> return (Time_unary_op (op, e)))
+              spaces >> (expr mparser_state) |>> fun e -> (Time_unary_op (op, e)))
               <|> group
         in
-        let ordered_select_part = chainl1 inter_part round_robin_select in
-        let union_part = chainl1 ordered_select_part inter in
-        chainl1 union_part union)
+        let ordered_select_part = chain_left1 inter_part round_robin_select in
+        let union_part = chain_left1 ordered_select_part inter in
+        chain_left1 union_part union
+    in
+    expr ()
     >>= fun e -> return (flatten_round_robin_select e)
 
   let of_string ?(enabled_fragments = all_lang_fragments) (s : string) :
-    (Time_expr_ast.t, string) result =
+    (Time_expr_ast.t, string) Result.t =
     match enabled_fragments with
     | [] -> Error "No language fragments are enabled"
     | _ ->
+      match
       parse_string
         ( time_expr ~enabled_fragments
           << spaces
           >>= fun e ->
           get_pos
           >>= fun pos ->
-          attempt eoi >> return e
-          <|> failf "Expected EOI, pos: %s" (string_of_pos pos) )
+          attempt eof >> return e
+          <|> fail (Printf.sprintf "Expected EOI, pos: %s" (string_of_pos pos)) )
         s
+        ()
+      with
+      | Success e -> Ok e
+      | Failed (s, _) -> Error s
 end
 
 let time_expr_parser ?(enabled_fragments = all_lang_fragments) =

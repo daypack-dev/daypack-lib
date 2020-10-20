@@ -20,7 +20,7 @@ module To_string : sig
 end
 
 val time_expr_parser :
-  ?enabled_fragments:lang_fragment list -> Time_expr_ast.t CCParse.t
+  ?enabled_fragments:lang_fragment list -> (Time_expr_ast.t, unit) MParser.t
 
 val of_string :
   ?enabled_fragments:lang_fragment list ->
