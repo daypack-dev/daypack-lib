@@ -807,7 +807,6 @@ module To_string = struct
         with
         | Error () -> Error "Invalid end unix time"
         | Ok e -> (
-            match
               parse_string
                 ( p s e
                   >>= fun s ->
@@ -819,15 +818,12 @@ module To_string = struct
                        (Printf.sprintf "Expected EOI, pos: %s"
                           (string_of_pos pos)) )
                 format ()
-            with
-            | Success l -> Ok (String.concat "" l)
-            | Failed (_, err) -> (
-                match err with
-                | No_error -> Error "Unknown error"
-                | Parse_error (_, msgs) -> (
-                    match List.hd msgs with
-                    | Message_error msg -> Error msg
-                    | _ -> Error "Unknown error" ) ) ) )
+              |> result_of_mparser_result
+              |> Result.map (fun l ->
+                  String.concat "" l
+                )
+            )
+      )
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string

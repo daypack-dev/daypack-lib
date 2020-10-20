@@ -166,15 +166,8 @@ module Of_string = struct
         |> Result.get_ok )
 
   let of_string (s : string) : (duration, string) Result.t =
-    match parse_string duration_expr s () with
-    | Success d -> Ok d
-    | Failed (_, err) -> (
-        match err with
-        | No_error -> Error "Unknown error"
-        | Parse_error (_, msgs) -> (
-            match List.hd msgs with
-            | Message_error msg -> Error msg
-            | _ -> Error "Unknown error" ) )
+    parse_string duration_expr s ()
+  |> result_of_mparser_result
 end
 
 let duration_expr_parser = Of_string.duration_expr

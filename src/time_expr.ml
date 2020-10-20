@@ -963,7 +963,6 @@ module Of_string = struct
     match enabled_fragments with
     | [] -> Error "No language fragments are enabled"
     | _ -> (
-        match
           parse_string
             ( time_expr ~enabled_fragments
               << spaces
@@ -976,15 +975,8 @@ module Of_string = struct
                    (Printf.sprintf "Expected EOI, pos: %s" (string_of_pos pos))
             )
             s ()
-        with
-        | Success e -> Ok e
-        | Failed (_, err) -> (
-            match err with
-            | No_error -> Error "Unknown error"
-            | Parse_error (_, msgs) -> (
-                match List.hd msgs with
-                | Message_error msg -> Error msg
-                | _ -> Error "Unknown error" ) ) )
+        |> result_of_mparser_result
+         )
 end
 
 let time_expr_parser ?(enabled_fragments = all_lang_fragments) =
