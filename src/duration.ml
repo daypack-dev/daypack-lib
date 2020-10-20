@@ -102,44 +102,44 @@ module Of_string = struct
     in
     get_cnum
     >>= fun cnum ->
-    try_ (float_non_neg >>= fun n -> take_space >>= fun s -> return (cnum, n, s))
+    attempt (float_non_neg >>= fun n -> take_space >>= fun s -> return (cnum, n, s))
     >>= (fun (cnum, n, spaces) ->
         get_cnum
         >>= fun unit_keyword_cnum ->
-        try_ days_string
+        attempt days_string
         >>= (fun s -> fail' "days" days n spaces s cnum)
-            <|> ( try_ hours_string
+            <|> ( attempt hours_string
                   >>= fun s -> fail' "hours" hours n spaces s cnum )
-            <|> ( try_ minutes_string
+            <|> ( attempt minutes_string
                   >>= fun s -> fail' "minutes" minutes n spaces s cnum )
-            <|> ( try_ seconds_string
+            <|> ( attempt seconds_string
                   >>= fun s -> fail' "seconds" seconds n spaces s cnum )
             <|> non_space_string
         >>= fun s ->
-        eoi *> failf "Invalid unit keyword: %s, pos: %d" s unit_keyword_cnum)
+        eoi >> failf "Invalid unit keyword: %s, pos: %d" s unit_keyword_cnum)
         <|> ( any_string
               >>= fun s ->
               eoi
-              *> if s = "" then nop else failf "Invalid syntax: %s, pos: %d" s cnum )
+              >> if s = "" then nop else failf "Invalid syntax: %s, pos: %d" s cnum )
 
   let duration_expr : duration t =
     let term' num p =
-      try_ (num <* skip_white <* p)
+      attempt (num << skip_white << p)
       >>= (fun n -> return (Some n))
-          <|> (try_ (num <* skip_white <* eoi) >>= fun n -> return (Some n))
+          <|> (attempt (num << skip_white << eoi) >>= fun n -> return (Some n))
           <|> return None
     in
     term' float_non_neg days_string
     >>= fun days ->
-    skip_white *> term' float_non_neg hours_string
+    skip_white >> term' float_non_neg hours_string
     >>= fun hours ->
-    skip_white *> term' float_non_neg minutes_string
+    skip_white >> term' float_non_neg minutes_string
     >>= fun minutes ->
-    skip_white *> term' nat_zero seconds_string
+    skip_white >> term' nat_zero seconds_string
     >>= fun seconds ->
     skip_white
-    *> check_for_unused_term days hours minutes seconds
-    *> return
+    >> check_for_unused_term days hours minutes seconds
+    >> return
       ( ( {
             days = Option.value ~default:0.0 days;
             hours = Option.value ~default:0.0 hours;

@@ -257,7 +257,7 @@ module Of_string = struct
 
   let next_slot_str = string "next-slot"
 
-  let next_point_str = try_ (string "next-point") <|> string "next-pt"
+  let next_point_str = attempt (string "next-point") <|> string "next-pt"
 
   let next_batch_str = string "next-batch"
 
@@ -284,35 +284,35 @@ module Of_string = struct
   let last_str = string "last"
 
   let sign_expr =
-    try_ (char '+' *> return Time_expr_ast.Pos)
-    <|> char '-' *> return Time_expr_ast.Neg
+    attempt (char '+' >> return Time_expr_ast.Pos)
+    <|> char '-' >> return Time_expr_ast.Neg
 
   let branch_unary_op =
     let open Time_expr_ast in
-    try_ (next_batch_str *> return (Next_n_batches 1))
-    <|> try_ (string "every-batch" *> return Every_batch)
-    <|> try_
-      ( next_str *> hyphen *> nat_zero
-        <* hyphen
-        <* (try_ batches_str <|> batch_str)
+    attempt (next_batch_str >> return (Next_n_batches 1))
+    <|> attempt (string "every-batch" >> return Every_batch)
+    <|> attempt
+      ( next_str >> hyphen >> nat_zero
+        << hyphen
+        << (attempt batches_str <|> batch_str)
         >>= fun n -> return (Next_n_batches n) )
 
   let ident_string =
     ident_string ~reserved_words:[ "to"; "first"; "last"; "next"; "every" ]
 
   let range_inc_expr (p : 'a t) : 'a Range.range t =
-    try_
+    attempt
       ( p
         >>= fun x ->
-        skip_white *> to_str *> skip_white *> p
+        skip_white >> to_str >> skip_white >> p
         >>= fun y -> return (`Range_inc (x, y)) )
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
   let range_exc_expr (p : 'a t) : 'a Range.range t =
-    try_
+    attempt
       ( p
         >>= fun x ->
-        skip_white *> to_str *> skip_white *> p
+        skip_white >> to_str >> skip_white >> p
         >>= fun y -> return (`Range_exc (x, y)) )
     <|> (p >>= fun x -> return (`Range_inc (x, x)))
 
@@ -323,9 +323,9 @@ module Of_string = struct
 
   module Second = struct
     let second_expr : Time_expr_ast.second_expr t =
-      try_ (string "::") *> get_pos
+      attempt (string "::") >> get_pos
       >>= fun pos ->
-      try_ nat_zero
+      attempt nat_zero
       >>= (fun second ->
           if second >= 60 then
             failf "Invalid second: %d, pos: %s" second (string_of_pos pos)
@@ -339,7 +339,7 @@ module Of_string = struct
 
   module Minute_second = struct
     let minute_second_expr : Time_expr_ast.minute_second_expr t =
-      try_ (char ':') *> get_cnum
+      attempt (char ':') >> get_cnum
       >>= fun cnum ->
       nat_zero
       >>= fun minute ->
@@ -347,7 +347,7 @@ module Of_string = struct
       else
         get_cnum
         >>= fun cnum ->
-        option 0 (char ':' *> nat_zero)
+        option 0 (char ':' >> nat_zero)
         >>= fun second ->
         if second >= 60 then failf "Invalid second: %d, pos: %d" second cnum
         else return Time_expr_ast.{ minute; second }
@@ -356,8 +356,8 @@ module Of_string = struct
   module Hms = struct
     let hms_mode =
       option `Hour_in_24_hours
-        ( try_ (string "am" *> return `Hour_in_AM)
-          <|> string "pm" *> return `Hour_in_PM )
+        ( attempt (string "am" >> return `Hour_in_AM)
+          <|> string "pm" >> return `Hour_in_PM )
 
     let handle_time_with_mode ~hour_pos ~(hour : int) ~(minute : int)
         ~(second : int) mode =
@@ -380,7 +380,7 @@ module Of_string = struct
     let hms : Time_expr_ast.hms_expr t =
       get_pos
       >>= fun hour_pos ->
-      try_ (nat_zero <* char ':')
+      attempt (nat_zero << char ':')
       >>= (fun hour ->
           get_pos
           >>= fun minute_pos ->
@@ -392,19 +392,19 @@ module Of_string = struct
           else
             get_pos
             >>= fun second_pos ->
-            option 0 (char ':' *> nat_zero)
+            option 0 (char ':' >> nat_zero)
             >>= fun second ->
             if second >= 60 then
               fail
                 (Printf.sprintf "Invalid second: %d, pos: %s" second
                    (string_of_pos second_pos))
             else
-              skip_white *> hms_mode
+              skip_white >> hms_mode
               >>= fun mode ->
               handle_time_with_mode ~hour_pos ~hour ~minute ~second mode)
           <|> ( nat_zero
                 >>= fun hour ->
-                skip_white *> hms_mode
+                skip_white >> hms_mode
                 >>= fun mode ->
                 handle_time_with_mode ~hour_pos ~hour ~minute:0 ~second:0 mode )
 
@@ -416,7 +416,7 @@ module Of_string = struct
     let non_singular_hms_ranges : Time_expr_ast.hms_range_expr list t =
       hms_range
       >>= fun hd ->
-      skip_white *> comma *> skip_white *> sep_by_comma1 hms_range
+      skip_white >> comma >> skip_white >> sep_by_comma1 hms_range
       >>= fun tl -> return (hd :: tl)
 
     let hmss : Time_expr_ast.hms_expr list t = sep_by_comma1 hms
@@ -458,7 +458,7 @@ module Of_string = struct
 
   module Day = struct
     let day_expr : Time_expr_ast.day_expr t =
-      try_
+      attempt
         ( Month_day.month_day_expr
           >>= fun x -> return (Time_expr_ast.Month_day x) )
       <|> (Weekday.weekday_expr >>= fun x -> return (Time_expr_ast.Weekday x))
@@ -489,7 +489,7 @@ module Of_string = struct
     let direct_pick_month_ranges_expr =
       sep_by_comma1 direct_pick_month_range_expr
 
-    let month_expr = try_ human_int_month_expr <|> direct_pick_month_expr
+    let month_expr = attempt human_int_month_expr <|> direct_pick_month_expr
 
     let month_range_expr = range_inc_expr month_expr
 
@@ -506,62 +506,62 @@ module Of_string = struct
 
   module Time_point_expr = struct
     let tp_name =
-      try_ (string "at:") *> ident_string
+      attempt (string "at:") >> ident_string
       >>= fun s -> return (Time_expr_ast.Tpe_name s)
 
     let tp_ymd_hms =
-      try_
+      attempt
         ( nat_zero
           >>= fun year ->
-          hyphen *> Month.human_int_month_expr
+          hyphen >> Month.human_int_month_expr
           >>= fun month ->
-          hyphen *> Month_day.month_day_expr
+          hyphen >> Month_day.month_day_expr
           >>= fun month_day -> return (year, month, month_day) )
       >>= fun (year, month, month_day) ->
-      skip_white *> Hms.hms
+      skip_white >> Hms.hms
       >>= fun hms ->
       return (Time_expr_ast.Year_month_day_hms { year; month; month_day; hms })
 
     let tp_ymond_hms =
-      try_
+      attempt
         ( nat_zero
           >>= fun year ->
-          skip_white *> Month.direct_pick_month_expr
+          skip_white >> Month.direct_pick_month_expr
           >>= fun month -> return (year, month) )
       >>= (fun (year, month) ->
-          skip_white *> Month_day.month_day_expr
+          skip_white >> Month_day.month_day_expr
           >>= fun month_day -> return (year, month, month_day))
       >>= fun (year, month, month_day) ->
-      skip_white *> Hms.hms
+      skip_white >> Hms.hms
       >>= fun hms ->
       return (Time_expr_ast.Year_month_day_hms { year; month; month_day; hms })
 
     let tp_md_hms =
-      try_
+      attempt
         ( Month.month_expr
           >>= fun month ->
-          hyphen *> Month_day.month_day_expr
+          hyphen >> Month_day.month_day_expr
           >>= fun month_day -> return (month, month_day) )
       >>= fun (month, month_day) ->
-      skip_white *> Hms.hms
+      skip_white >> Hms.hms
       >>= fun hms ->
       return (Time_expr_ast.Month_day_hms { month; month_day; hms })
 
     let tp_mond_hms =
-      try_
+      attempt
         ( Month.direct_pick_month_expr
           >>= fun month ->
-          skip_white *> Month_day.month_day_expr
+          skip_white >> Month_day.month_day_expr
           >>= fun month_day -> return (month, month_day) )
       >>= fun (month, month_day) ->
-      skip_white *> Hms.hms
+      skip_white >> Hms.hms
       >>= fun hms ->
       return (Time_expr_ast.Month_day_hms { month; month_day; hms })
 
     let tp_d_hms =
-      try_
+      attempt
         ( Day.day_expr
-          >>= fun day -> skip_white *> Hms.hms >>= fun hms -> return (day, hms) )
+          >>= fun day -> skip_white >> Hms.hms >>= fun hms -> return (day, hms) )
       >>= fun (day, hms) -> return (Time_expr_ast.Day_hms { day; hms })
 
     let tp_hms = Hms.hms >>= fun hms -> return (Time_expr_ast.Hms hms)
@@ -588,17 +588,17 @@ module Of_string = struct
 
   module Time_slot_expr = struct
     let ts_name =
-      try_ (string "during:") *> ident_string
+      attempt (string "during:") >> ident_string
       >>= fun s -> return (Time_expr_ast.Tse_name s)
 
     let ts_explicit_time_slot =
-      try_
+      attempt
         ( Time_point_expr.time_point_expr
-          >>= fun start -> skip_white *> to_str *> return start )
+          >>= fun start -> skip_white >> to_str >> return start )
       >>= fun start ->
-      skip_white *> get_pos
+      skip_white >> get_pos
       >>= fun pos ->
-      try_ Time_point_expr.time_point_expr
+      attempt Time_point_expr.time_point_expr
       >>= (fun end_exc ->
           return (Time_expr_ast.Explicit_time_slot (start, end_exc)))
           <|> failf "Expected time point expression at %s" (string_of_pos pos)
@@ -613,34 +613,34 @@ module Of_string = struct
       >>= fun hms_ranges -> return (Time_expr_ast.Bts_hms_ranges hms_ranges)
 
     let bts_days_hms_ranges =
-      try_
+      attempt
         ( Month_day.month_day_ranges_expr
           >>= fun month_days ->
-          skip_white *> dot *> skip_white *> Hms.hms_ranges
+          skip_white >> dot >> skip_white >> Hms.hms_ranges
           >>= fun hms_ranges ->
           return
             (Time_expr_ast.Bts_month_days_and_hms_ranges
                { month_days; hms_ranges }) )
       <|> ( Weekday.weekday_ranges_expr
             >>= fun weekdays ->
-            skip_white *> dot *> skip_white *> Hms.hms_ranges
+            skip_white >> dot >> skip_white >> Hms.hms_ranges
             >>= fun hms_ranges ->
             return
               (Time_expr_ast.Bts_weekdays_and_hms_ranges { weekdays; hms_ranges })
           )
 
     let bts_hms_ranges_days =
-      try_
+      attempt
         ( Hms.hms_ranges
           >>= fun hms_ranges ->
-          skip_white *> of_str *> skip_white *> Month_day.month_day_ranges_expr
+          skip_white >> of_str >> skip_white >> Month_day.month_day_ranges_expr
           >>= fun month_days ->
           return
             (Time_expr_ast.Bts_month_days_and_hms_ranges
                { month_days; hms_ranges }) )
       <|> ( Hms.hms_ranges
             >>= fun hms_ranges ->
-            skip_white *> of_str *> skip_white *> Weekday.weekday_ranges_expr
+            skip_white >> of_str >> skip_white >> Weekday.weekday_ranges_expr
             >>= fun weekdays ->
             return
               (Time_expr_ast.Bts_weekdays_and_hms_ranges { weekdays; hms_ranges })
@@ -649,9 +649,9 @@ module Of_string = struct
     let bts_months_mdays_hms_ranges =
       Month.month_ranges_expr
       >>= fun months ->
-      skip_white *> dot *> skip_white *> Month_day.month_day_ranges_expr
+      skip_white >> dot >> skip_white >> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      skip_white *> dot *> skip_white *> Hms.hms_ranges
+      skip_white >> dot >> skip_white >> Hms.hms_ranges
       >>= fun hms_ranges ->
       return
         (Time_expr_ast.Bts_months_and_month_days_and_hms_ranges
@@ -660,9 +660,9 @@ module Of_string = struct
     let bts_hms_ranges_mdays_months =
       Hms.hms_ranges
       >>= fun hms_ranges ->
-      skip_white *> of_str *> skip_white *> Month_day.month_day_ranges_expr
+      skip_white >> of_str >> skip_white >> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      skip_white *> of_str *> skip_white *> Month.month_ranges_expr
+      skip_white >> of_str >> skip_white >> Month.month_ranges_expr
       >>= fun months ->
       return
         (Time_expr_ast.Bts_months_and_month_days_and_hms_ranges
@@ -671,29 +671,29 @@ module Of_string = struct
     let bts_months_wdays_hms_ranges =
       Month.month_ranges_expr
       >>= fun months ->
-      skip_white *> dot *> skip_white *> Weekday.weekday_ranges_expr
+      skip_white >> dot >> skip_white >> Weekday.weekday_ranges_expr
       >>= fun weekdays ->
-      skip_white *> dot *> skip_white *> Hms.hms_ranges
+      skip_white >> dot >> skip_white >> Hms.hms_ranges
       >>= fun hms_ranges ->
       return
         (Time_expr_ast.Bts_months_and_weekdays_and_hms_ranges
            { months; weekdays; hms_ranges })
 
     let month_weekday_mode_expr =
-      try_
-        ( first_str *> skip_white *> nat_zero
+      attempt
+        ( first_str >> skip_white >> nat_zero
           >>= fun n -> return (Some (Time_expr_ast.First_n n)) )
-      <|> ( last_str *> skip_white *> nat_zero
+      <|> ( last_str >> skip_white >> nat_zero
             >>= fun n -> return (Some (Time_expr_ast.Last_n n)) )
 
     let bts_months_wday_hms_ranges =
       Month.month_ranges_expr
       >>= fun months ->
-      skip_white *> dot *> skip_white *> month_weekday_mode_expr
+      skip_white >> dot >> skip_white >> month_weekday_mode_expr
       >>= fun month_weekday_mode ->
-      skip_white *> Weekday.weekday_expr
+      skip_white >> Weekday.weekday_expr
       >>= fun weekday ->
-      skip_white *> dot *> skip_white *> Hms.hms_ranges
+      skip_white >> dot >> skip_white >> Hms.hms_ranges
       >>= fun hms_ranges ->
       return
         (Time_expr_ast.Bts_months_and_weekday_and_hms_ranges
@@ -702,11 +702,11 @@ module Of_string = struct
     let bts_years_months_mdays_hms_ranges =
       Year.year_ranges_expr
       >>= fun years ->
-      skip_white *> dot *> skip_white *> Month.month_ranges_expr
+      skip_white >> dot >> skip_white >> Month.month_ranges_expr
       >>= fun months ->
-      skip_white *> dot *> skip_white *> Month_day.month_day_ranges_expr
+      skip_white >> dot >> skip_white >> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      skip_white *> dot *> skip_white *> Hms.hms_ranges
+      skip_white >> dot >> skip_white >> Hms.hms_ranges
       >>= fun hms_ranges ->
       return
         (Time_expr_ast.Bts_years_and_months_and_month_days_and_hms_ranges
@@ -715,11 +715,11 @@ module Of_string = struct
     let bts_hms_ranges_mdays_months_years =
       Hms.hms_ranges
       >>= fun hms_ranges ->
-      skip_white *> of_str *> skip_white *> Month_day.month_day_ranges_expr
+      skip_white >> of_str >> skip_white >> Month_day.month_day_ranges_expr
       >>= fun month_days ->
-      skip_white *> of_str *> skip_white *> Month.month_ranges_expr
+      skip_white >> of_str >> skip_white >> Month.month_ranges_expr
       >>= fun months ->
-      skip_white *> of_str *> skip_white *> Year.year_ranges_expr
+      skip_white >> of_str >> skip_white >> Year.year_ranges_expr
       >>= fun years ->
       return
         (Time_expr_ast.Bts_years_and_months_and_month_days_and_hms_ranges
@@ -727,37 +727,37 @@ module Of_string = struct
 
     let branching_time_slot_expr_atom : Time_expr_ast.branching_time_slot_expr t
       =
-      try_ bts_hms_ranges
-      <|> try_ bts_days_hms_ranges
-      <|> try_ bts_months_mdays_hms_ranges
-      <|> try_ bts_months_wdays_hms_ranges
-      <|> try_ bts_months_wday_hms_ranges
-      <|> try_ bts_years_months_mdays_hms_ranges
-      <|> try_ bts_hms_ranges_mdays_months_years
-      <|> try_ bts_hms_ranges_mdays_months
-      <|> try_ bts_hms_ranges_days
+      attempt bts_hms_ranges
+      <|> attempt bts_days_hms_ranges
+      <|> attempt bts_months_mdays_hms_ranges
+      <|> attempt bts_months_wdays_hms_ranges
+      <|> attempt bts_months_wday_hms_ranges
+      <|> attempt bts_years_months_mdays_hms_ranges
+      <|> attempt bts_hms_ranges_mdays_months_years
+      <|> attempt bts_hms_ranges_mdays_months
+      <|> attempt bts_hms_ranges_days
 
     let branching_time_slot_expr : Time_expr_ast.branching_time_slot_expr t =
-      try_
+      attempt
         ( branch_unary_op
           >>= fun op ->
-          skip_white *> branching_time_slot_expr_atom
+          skip_white >> branching_time_slot_expr_atom
           >>= fun e -> return (Time_expr_ast.Bts_unary_op (op, e)) )
       <|> branching_time_slot_expr_atom
   end
 
   let inter : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     string "&&"
-    *> return (fun a b -> Time_expr_ast.Time_binary_op (Inter, a, b))
+    >> return (fun a b -> Time_expr_ast.Time_binary_op (Inter, a, b))
 
   let union : (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     string "||"
-    *> return (fun a b -> Time_expr_ast.Time_binary_op (Union, a, b))
+    >> return (fun a b -> Time_expr_ast.Time_binary_op (Union, a, b))
 
   let round_robin_select :
     (Time_expr_ast.t -> Time_expr_ast.t -> Time_expr_ast.t) t =
     string ">>"
-    *> return (fun a b -> Time_expr_ast.Time_round_robin_select [ a; b ])
+    >> return (fun a b -> Time_expr_ast.Time_round_robin_select [ a; b ])
 
   let flatten_round_robin_select (e : Time_expr_ast.t) : Time_expr_ast.t =
     let open Time_expr_ast in
@@ -788,7 +788,7 @@ module Of_string = struct
       [
         ( if List.mem `Time_pattern enabled_fragments then
             Some
-              ( try_ Time_pattern.Parsers.time_pattern_expr
+              ( attempt Time_pattern.Parsers.time_pattern_expr
                 >>= fun e -> return (Time_expr_ast.Time_pattern e) )
           else None );
         ( if List.mem `Branching_time_slot_expr enabled_fragments then
@@ -817,37 +817,37 @@ module Of_string = struct
         failf "Failed to parse expression, pos: %s" (string_of_pos pos)
       | x :: xs -> x <|> make_atom xs
     in
-    let atom = skip_white *> make_atom atom_parsers <* skip_white in
+    let atom = skip_white >> make_atom atom_parsers << skip_white in
     fix (fun expr ->
         let group =
-          try_ (char '(') *> skip_white *> expr
-          <* skip_white
-          <* char ')'
+          attempt (char '(') >> skip_white >> expr
+          << skip_white
+          << char ')'
           <|> atom
         in
         let unary_op =
-          try_ not_str *> return Not
-          <|> try_ next_slot_str *> return (Next_n_slots 1)
-          <|> try_ next_point_str *> return (Next_n_points 1)
-          <|> ( try_
-                  ( next_str *> hyphen *> nat_zero
-                    <* hyphen
-                    <* (try_ slots_str <|> slot_str) )
+          attempt not_str >> return Not
+          <|> attempt next_slot_str >> return (Next_n_slots 1)
+          <|> attempt next_point_str >> return (Next_n_points 1)
+          <|> ( attempt
+                  ( next_str >> hyphen >> nat_zero
+                    << hyphen
+                    << (attempt slots_str <|> slot_str) )
                 >>= fun n -> return (Next_n_slots n) )
-          <|> ( try_
-                  ( next_str *> hyphen *> nat_zero
-                    <* hyphen
-                    <* (try_ points_str <|> point_str) )
+          <|> ( attempt
+                  ( next_str >> hyphen >> nat_zero
+                    << hyphen
+                    << (attempt points_str <|> point_str) )
                 >>= fun n -> return (Next_n_points n) )
-          <|> try_
-            ( string "tzoffset=" *> sign_expr
+          <|> attempt
+            ( string "tzoffset=" >> sign_expr
               >>= fun sign ->
               Hms.hms >>= fun hms -> return (Tz_offset (sign, hms)) )
         in
         let inter_part =
-          try_ unary_op
+          attempt unary_op
           >>= (fun op ->
-              skip_white *> expr >>= fun e -> return (Time_unary_op (op, e)))
+              skip_white >> expr >>= fun e -> return (Time_unary_op (op, e)))
               <|> group
         in
         let ordered_select_part = chainl1 inter_part round_robin_select in
@@ -862,11 +862,11 @@ module Of_string = struct
     | _ ->
       parse_string
         ( time_expr ~enabled_fragments
-          <* skip_white
+          << skip_white
           >>= fun e ->
           get_pos
           >>= fun pos ->
-          try_ eoi *> return e
+          attempt eoi >> return e
           <|> failf "Expected EOI, pos: %s" (string_of_pos pos) )
         s
 end

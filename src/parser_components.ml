@@ -54,10 +54,10 @@ let non_parenthesis_string : (string, unit) t =
 let non_space_string : (string, unit) t = many_chars non_space
 
 let sep_by_comma (p : ('a, unit) t) : ('a list, unit) t =
-  sep_by (spaces >> comma >> spaces) p
+  sep_by p (spaces >> comma >> spaces)
 
 let sep_by_comma1 (p : ('a, unit) t) : ('a list, unit) t =
-  sep_by1 (spaces >> comma >> spaces) p
+  sep_by1 p (spaces >> comma >> spaces)
 
 let option (default : 'a) p : ('a, 'b) t = attempt p <|> return default
 
@@ -75,8 +75,8 @@ let string_of_pos pos =
  *     ( l
  *       |> List.to_seq
  *       |> Seq.map (fun (pos, s) ->
- *           s
- *           |> parse_string
+ *           match
+ *           parse_string
  *             ( p
  *               >>= fun x ->
  *               attempt eoi >> return x
@@ -85,8 +85,10 @@ let string_of_pos pos =
  *                     any_string
  *                     >>= fun s -> (fail (Printf.sprintf "Invalid syntax: %s, pos: %s" s (string_of_pos pos) )) )
  *             )
+ *             s
  *             ()
- *           (\* |> Result.map_error (fun s -> shift_pos_of_error_msg ~incre:cnum s)) *\)
+ *           with
+ *           | Success 
  *     )
  * 
  * let sep_res ~by ~end_markers (p : 'a t) : ('a, string) result list t =
@@ -99,13 +101,13 @@ let string_of_pos pos =
  *   | Ok l -> return l
  *   | Error s -> fail s *)
 
-let chainl1 x op =
-  let rec aux a =
-    attempt (spaces >> op << spaces)
-    >>= (fun f -> x >>= fun b -> aux (f a b))
-        <|> return a
-  in
-  x >>= aux
+(* let chainl1 x op =
+ *   let rec aux a =
+ *     attempt (spaces >> op << spaces)
+ *     >>= (fun f -> x >>= fun b -> aux (f a b))
+ *         <|> return a
+ *   in
+ *   x >>= aux *)
 
 let invalid_syntax ~text ~pos =
   fail (Printf.sprintf "Invalid syntax: %s, pos: %s" text (string_of_pos pos))
