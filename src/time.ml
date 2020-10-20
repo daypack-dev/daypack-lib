@@ -734,11 +734,11 @@ module To_string = struct
             ( string "sec:"
               >> padding
               >>= fun padding -> return (pad_int padding date_time.second) );
-          string "unix"
-          >>
-          match Date_time.to_unix_second date_time with
-          | Error () -> fail "Invalid date time"
-          | Ok sec -> return (Int64.to_string sec)
+          ( string "unix"
+            >>
+            match Date_time.to_unix_second date_time with
+            | Error () -> fail "Invalid date time"
+            | Ok sec -> return (Int64.to_string sec) );
         ]
   end
 
@@ -746,14 +746,14 @@ module To_string = struct
     (string, string) result =
     let open MParser in
     let single (date_time : Date_time.t) : (string, unit) t =
-      choice [
-        attempt (string "{{" >> return "{");
-        ( attempt (char '{')
+      choice
+        [
+          attempt (string "{{" >> return "{");
+          attempt (char '{')
           >> Format_string_parsers.inner date_time
-             << char '}' );
-        ( many1_satisfy (function '{' -> false | _ -> true)
-          |>> fun s -> s );
-      ]
+             << char '}';
+          (many1_satisfy (function '{' -> false | _ -> true) |>> fun s -> s);
+        ]
     in
     let p (date_time : Date_time.t) : (string list, unit) t =
       many (single date_time)
@@ -821,7 +821,14 @@ module To_string = struct
                 format ()
             with
             | Success l -> Ok (String.concat "" l)
-            | Failed (s, _) -> Error s ) )
+            | Failed (_, err) ->
+              match err with
+              | No_error -> Error "Unknown error"
+              | Parse_error (_, msgs) ->
+                match List.hd msgs with
+                | Message_error msg -> Error msg
+                | _ -> Error "Unknown error"
+          ) )
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string

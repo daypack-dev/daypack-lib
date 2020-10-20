@@ -851,32 +851,29 @@ let debug_time_expr_matching_time_slots () =
     Search_param.make_using_years_ahead ~search_using_tz_offset_s 100
     |> Result.get_ok
   in
-  let s =
-    match
-      Daypack_lib.Time_expr.of_string
-        ~enabled_fragments:[ `Branching_time_slot_expr; `Time_slot_expr ]
-        "tzoffset=+8:00 next-batch 5pm to 10pm, 11pm to 12pm"
-    with
-    | Error msg -> failwith (Printf.sprintf "Error: %s" msg)
-    | Ok e ->
-      e
-      |> Daypack_lib.Time_expr.matching_time_slots search_param
-      |> Result.get_ok
-  in
-  s
-  |> OSeq.take 30
-  |> Seq.iter (fun (x, y) ->
-      let x =
-        Daypack_lib.Time.To_string.yyyymondd_hhmmss_string_of_unix_second
-          ~display_using_tz_offset_s x
-        |> Result.get_ok
-      in
-      let y =
-        Daypack_lib.Time.To_string.yyyymondd_hhmmss_string_of_unix_second
-          ~display_using_tz_offset_s y
-        |> Result.get_ok
-      in
-      Printf.printf "[%s, %s)\n" x y)
+  match
+    Daypack_lib.Time_expr.of_string
+      ~enabled_fragments:[ `Branching_time_slot_expr; `Time_slot_expr ]
+      ""
+  with
+  | Error msg -> Printf.printf "Error: %s" msg
+  | Ok e ->
+    e
+    |> Daypack_lib.Time_expr.matching_time_slots search_param
+    |> Result.get_ok
+    |> OSeq.take 30
+    |> Seq.iter (fun (x, y) ->
+        let x =
+          Daypack_lib.Time.To_string.yyyymondd_hhmmss_string_of_unix_second
+            ~display_using_tz_offset_s x
+          |> Result.get_ok
+        in
+        let y =
+          Daypack_lib.Time.To_string.yyyymondd_hhmmss_string_of_unix_second
+            ~display_using_tz_offset_s y
+          |> Result.get_ok
+        in
+        Printf.printf "[%s, %s)\n" x y)
 
 let debug_time_profile_matching_time_slots_of_periods () =
   print_endline "Debug print for Time_profile.matching_time_slots_of_periods";
@@ -925,7 +922,7 @@ let debug_time_to_string_string_of_date_time () =
   let dt =
     let open Daypack_lib.Time.Date_time in
     {
-      year = 2020;
+      year = 2021;
       month = `Jun;
       day = 1;
       hour = 0;
@@ -934,12 +931,12 @@ let debug_time_to_string_string_of_date_time () =
       tz_offset_s = Ptime_clock.current_tz_offset_s () |> Option.get;
     }
   in
-  let s =
+  match
     Daypack_lib.Time.To_string.string_of_date_time
-      ~format:"{year}-{mon:xxx}-{mday:X}" dt
-    |> Result.get_ok
-  in
-  print_endline s
+      ~format:"{yar}-{mon:xxx}-{mday:X}" dt
+  with
+  | Ok s -> print_endline s
+  | Error msg -> Printf.printf "Error: %s\n" msg
 
 let debug_time_to_string_string_of_time_slot () =
   print_endline "Debug print for Time.To_string.string_of_time_slot";
@@ -1165,9 +1162,9 @@ let debug_time_to_string_string_of_time_slot () =
  *   debug_time_range_pattern_matching_time_slots ();
  *   print_newline () *)
 
-(* let () =
- *   debug_time_expr_matching_time_slots ();
- *   print_newline () *)
+let () =
+  debug_time_expr_matching_time_slots ();
+  print_newline ()
 
 (* let () =
  *   debug_time_pattern_next_match_tm ();
@@ -1181,10 +1178,10 @@ let debug_time_to_string_string_of_time_slot () =
  *   debug_time_profile_matching_time_slots_of_periods ();
  *   print_newline () *)
 
-let () =
-  debug_time_to_string_string_of_date_time ();
-  print_newline ()
+(* let () =
+ *   debug_time_to_string_string_of_date_time ();
+ *   print_newline () *)
 
-let () =
-  debug_time_to_string_string_of_time_slot ();
-  print_newline ()
+(* let () =
+ *   debug_time_to_string_string_of_time_slot ();
+ *   print_newline () *)
