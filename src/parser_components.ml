@@ -40,26 +40,26 @@ let float_non_neg : (float, unit) t =
   try return (float_of_string s)
   with _ -> fail (Printf.sprintf "Float %s is out of range" s)
 
-let comma = char ','
+let comma : (char, unit) t = char ','
 
-let dot = char '.'
+let dot : (char, unit) t = char '.'
 
-let hyphen = char '-'
+let hyphen : (char, unit) t = char '-'
 
-let non_square_bracket_string =
+let non_square_bracket_string : (string, unit) t =
   many_satisfy
   (function '[' | ']' -> false | _ -> true)
 
-let non_parenthesis_string =
+let non_parenthesis_string : (string, unit) t =
   many_satisfy (function '(' | ')' -> false | _ -> true)
 
-let non_space_string = many_chars non_space
+let non_space_string : (string, unit) t = many_chars non_space
 
-let sep_by_comma (p : ('a, 'b) t) : ('a list, 'b) t =
+let sep_by_comma (p : ('a, unit) t) : ('a list, unit) t =
   sep_by
   (spaces >> comma >> spaces) p
 
-let sep_by_comma1 (p : ('a, 'b) t) : ('a list, 'b) t =
+let sep_by_comma1 (p : ('a, unit) t) : ('a list, unit) t =
   sep_by1 (spaces >> comma >> spaces) p
 
 let option (default : 'a) p : ('a, 'b) t = attempt p <|> return default
