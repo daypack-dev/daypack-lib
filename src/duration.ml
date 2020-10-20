@@ -55,7 +55,7 @@ let normalize (t : t) : t = t |> to_seconds |> of_seconds |> Result.get_ok
 module Of_string = struct
   type duration = t
 
-  open CCParse
+  open MParser
   open Parser_components
 
   let seconds_string : string t =
