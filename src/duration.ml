@@ -94,16 +94,18 @@ module Of_string = struct
     let fail' units prev n spaces s pos =
       match prev with
       | None ->
-        fail (Printf.sprintf "Incorrect position for %s term: %f%s%s, pos: %s" units n spaces
-          s (string_of_pos pos))
+        fail
+          (Printf.sprintf "Incorrect position for %s term: %f%s%s, pos: %s"
+             units n spaces s (string_of_pos pos))
       | Some _ ->
-        fail (Printf.sprintf "Duplicate use of %s term: %f%s%s, pos: %s" units n spaces s
-                (string_of_pos pos)
-)
+        fail
+          (Printf.sprintf "Duplicate use of %s term: %f%s%s, pos: %s" units n
+             spaces s (string_of_pos pos))
     in
     get_pos
     >>= fun pos ->
-    attempt (float_non_neg >>= fun n -> take_space >>= fun s -> return (pos, n, s))
+    attempt
+      (float_non_neg >>= fun n -> take_space >>= fun s -> return (pos, n, s))
     >>= (fun (pos, n, spaces) ->
         get_pos
         >>= fun unit_keyword_pos ->
@@ -117,11 +119,19 @@ module Of_string = struct
                   >>= fun s -> fail' "seconds" seconds n spaces s pos )
             <|> non_space_string
         >>= fun s ->
-        eof >> fail (Printf.sprintf "Invalid unit keyword: %s, pos: %s" s (string_of_pos unit_keyword_pos)))
+        eof
+        >> fail
+          (Printf.sprintf "Invalid unit keyword: %s, pos: %s" s
+             (string_of_pos unit_keyword_pos)))
         <|> ( any_string
               >>= fun s ->
               eof
-              >> if s = "" then return () else fail (Printf.sprintf "Invalid syntax: %s, pos: %s" s (string_of_pos pos)) )
+              >>
+              if s = "" then return ()
+              else
+                fail
+                  (Printf.sprintf "Invalid syntax: %s, pos: %s" s (string_of_pos pos))
+            )
 
   let duration_expr : (duration, unit) t =
     let term' num p =
@@ -132,11 +142,14 @@ module Of_string = struct
     in
     term' float_non_neg days_string
     >>= fun days ->
-    spaces >> term' float_non_neg hours_string
+    spaces
+    >> term' float_non_neg hours_string
     >>= fun hours ->
-    spaces >> term' float_non_neg minutes_string
+    spaces
+    >> term' float_non_neg minutes_string
     >>= fun minutes ->
-    spaces >> term' nat_zero seconds_string
+    spaces
+    >> term' nat_zero seconds_string
     >>= fun seconds ->
     spaces
     >> check_for_unused_term days hours minutes seconds
@@ -153,9 +166,7 @@ module Of_string = struct
         |> Result.get_ok )
 
   let of_string (s : string) : (duration, string) Result.t =
-    match
-      parse_string duration_expr s ()
-    with
+    match parse_string duration_expr s () with
     | Success d -> Ok d
     | Failed (s, _) -> Error s
 end

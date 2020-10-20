@@ -1115,7 +1115,8 @@ module Parsers = struct
 
   let end_markers = " ]"
 
-  let non_end_markers = many_satisfy (fun c -> not (String.contains end_markers c))
+  let non_end_markers =
+    many_satisfy (fun c -> not (String.contains end_markers c))
 
   let range_inc_expr (p : ('a, unit) t) : ('a Range.range, unit) t =
     attempt (p >>= fun x -> hyphen >> p >>= fun y -> return (`Range_inc (x, y)))
@@ -1125,37 +1126,43 @@ module Parsers = struct
       (p : ('a, unit) t) : ('a list, unit) t =
     get_pos
     >>= fun pos ->
-    ( if allow_empty then
-        sep_by_comma
-        (range_inc_expr p)
-      else
-        sep_by_comma1
-          (range_inc_expr p)
-        )
+    ( if allow_empty then sep_by_comma (range_inc_expr p)
+      else sep_by_comma1 (range_inc_expr p) )
     >>= fun l ->
     try return (f_flatten l)
-    with Range.Range_is_invalid -> fail (Printf.sprintf "Invalid range, pos: %s" (string_of_pos pos))
+    with Range.Range_is_invalid ->
+      fail (Printf.sprintf "Invalid range, pos: %s" (string_of_pos pos))
 
   let time_pattern_ranges_expr (p : ('a list, unit) t) : ('a list, unit) t =
-    attempt (char '[') >> p
+    attempt (char '[')
+    >> p
     >>= (fun l ->
         attempt (char ']' >> return l)
         <|> ( get_pos
               >>= fun pos ->
               non_square_bracket_string
               >>= fun s ->
-              if s = "" then fail (Printf.sprintf "Missing ], pos: %s" (string_of_pos pos))
-              else fail (Printf.sprintf "Invalid ranges: %s, pos: %s" s (string_of_pos pos)) ))
+              if s = "" then
+                fail (Printf.sprintf "Missing ], pos: %s" (string_of_pos pos))
+              else
+                fail
+                  (Printf.sprintf "Invalid ranges: %s, pos: %s" s
+                     (string_of_pos pos)) ))
         <|> return []
 
   module Second = struct
     let second_expr =
       nat_zero
-      >>= (fun x -> if x >= 60 then fail (Printf.sprintf "Invalid second: %d" x) else return x)
+      >>= (fun x ->
+          if x >= 60 then fail (Printf.sprintf "Invalid second: %d" x)
+          else return x)
           <|> ( get_pos
                 >>= fun pos ->
                 non_end_markers
-                >>= fun s -> fail (Printf.sprintf "Invalid second term: %s, pos: %s" s (string_of_pos pos)) )
+                >>= fun s ->
+                fail
+                  (Printf.sprintf "Invalid second term: %s, pos: %s" s
+                     (string_of_pos pos)) )
 
     let seconds_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1171,11 +1178,16 @@ module Parsers = struct
   module Minute = struct
     let minute_expr =
       attempt nat_zero
-      >>= (fun x -> if x >= 60 then fail (Printf.sprintf "Invalid minute: %d" x) else return x)
+      >>= (fun x ->
+          if x >= 60 then fail (Printf.sprintf "Invalid minute: %d" x)
+          else return x)
           <|> ( get_pos
                 >>= fun pos ->
                 non_end_markers
-                >>= fun s -> fail (Printf.sprintf "Invalid minute term: %s, pos: %s" s (string_of_pos pos)) )
+                >>= fun s ->
+                fail
+                  (Printf.sprintf "Invalid minute term: %s, pos: %s" s
+                     (string_of_pos pos)) )
 
     let minutes_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1191,11 +1203,16 @@ module Parsers = struct
   module Hour = struct
     let hour_expr =
       nat_zero
-      >>= (fun x -> if x >= 24 then fail (Printf.sprintf "Invalid hour: %d" x) else return x)
+      >>= (fun x ->
+          if x >= 24 then fail (Printf.sprintf "Invalid hour: %d" x)
+          else return x)
           <|> ( get_pos
                 >>= fun pos ->
                 non_end_markers
-                >>= fun s -> fail (Printf.sprintf "Invalid hour term: %s, pos: %s" s (string_of_pos pos)) )
+                >>= fun s ->
+                fail
+                  (Printf.sprintf "Invalid hour term: %s, pos: %s" s
+                     (string_of_pos pos)) )
 
     let hours_expr ~allow_empty =
       ranges_expr ~allow_empty ~f_flatten:Time.Hour_ranges.Flatten.flatten_list
@@ -1212,7 +1229,8 @@ module Parsers = struct
     let month_day_expr =
       nat_zero
       >>= fun x ->
-      if 1 <= x && x <= 31 then return x else fail (Printf.sprintf "Invalid month day: %d" x)
+      if 1 <= x && x <= 31 then return x
+      else fail (Printf.sprintf "Invalid month day: %d" x)
 
     let month_days_expr ~allow_empty =
       ranges_expr ~allow_empty
@@ -1266,7 +1284,10 @@ module Parsers = struct
       <|> ( get_pos
             >>= fun pos ->
             non_end_markers
-            >>= fun s -> fail (Printf.sprintf "Invalid year term: %s, pos: %s" s (string_of_pos pos)) )
+            >>= fun s ->
+            fail
+              (Printf.sprintf "Invalid year term: %s, pos: %s" s
+                 (string_of_pos pos)) )
 
     let years_expr ~allow_empty =
       ranges_expr ~allow_empty ~f_flatten:Time.Year_ranges.Flatten.flatten_list
@@ -1284,7 +1305,10 @@ module Parsers = struct
       >>= fun x ->
       match Time.weekday_of_tm_int x with
       | Ok x -> return x
-      | Error () -> fail (Printf.sprintf "Invalid weekday int: %d, pos: %s" x (string_of_pos pos))
+      | Error () ->
+        fail
+          (Printf.sprintf "Invalid weekday int: %d, pos: %s" x
+             (string_of_pos pos))
 
     let weekday_word_expr ~for_cron =
       get_pos
@@ -1292,11 +1316,16 @@ module Parsers = struct
       alpha_string
       >>= fun x ->
       if for_cron && String.length x <> 3 then
-        fail (Printf.sprintf "Invalid length for weekday string: %s, pos: %s" x (string_of_pos pos))
+        fail
+          (Printf.sprintf "Invalid length for weekday string: %s, pos: %s" x
+             (string_of_pos pos))
       else
         match Time.Of_string.weekday_of_string x with
         | Ok x -> return x
-        | Error () -> fail (Printf.sprintf "Invalid weekday string: %s, pos: %s" x (string_of_pos pos))
+        | Error () ->
+          fail
+            (Printf.sprintf "Invalid weekday string: %s, pos: %s" x
+               (string_of_pos pos))
 
     let weekday_expr ~for_cron =
       if for_cron then weekday_int_expr <|> weekday_word_expr ~for_cron
@@ -1318,13 +1347,17 @@ module Parsers = struct
   let cron_expr =
     Minute.minutes_cron_expr
     >>= fun minutes ->
-    spaces1 >> Hour.hours_cron_expr
+    spaces1
+    >> Hour.hours_cron_expr
     >>= fun hours ->
-    spaces1 >> Month_day.month_days_cron_expr
+    spaces1
+    >> Month_day.month_days_cron_expr
     >>= fun month_days ->
-    spaces1 >> Month.months_cron_expr
+    spaces1
+    >> Month.months_cron_expr
     >>= fun months ->
-    spaces1 >> Weekday.weekdays_cron_expr
+    spaces1
+    >> Weekday.weekdays_cron_expr
     >>= fun weekdays ->
     eof
     >> return
@@ -1342,9 +1375,13 @@ module Parsers = struct
   let unit_char c : (unit, unit) t =
     get_pos
     >>= fun pos ->
-    attempt (char c) >> return ()
-    <|> ( satisfy (fun _ -> true)
-          >>= fun c -> fail (Printf.sprintf "Invalid unit char: %c, pos: %s" c (string_of_pos pos)) )
+    attempt (char c)
+    >> return ()
+       <|> ( satisfy (fun _ -> true)
+             >>= fun c ->
+             fail
+               (Printf.sprintf "Invalid unit char: %c, pos: %s" c
+                  (string_of_pos pos)) )
 
   let optional_part p = option [] (attempt p)
 
@@ -1352,8 +1389,7 @@ module Parsers = struct
     optional_part (unit_char 'y' >> spaces >> Year.years_time_pattern_expr)
     >>= fun years ->
     spaces
-    >> optional_part
-      (unit_char 'm' >> spaces >> Month.months_time_pattern_expr)
+    >> optional_part (unit_char 'm' >> spaces >> Month.months_time_pattern_expr)
     >>= fun months ->
     spaces
     >> optional_part
@@ -1364,8 +1400,7 @@ module Parsers = struct
       (unit_char 'w' >> spaces >> Weekday.weekdays_time_pattern_expr)
     >>= fun weekdays ->
     spaces
-    >> optional_part
-      (unit_char 'h' >> spaces >> Hour.hours_time_pattern_expr)
+    >> optional_part (unit_char 'h' >> spaces >> Hour.hours_time_pattern_expr)
     >>= fun hours ->
     spaces
     >> unit_char 'm'
@@ -1394,17 +1429,13 @@ end
 module Of_string = struct
   let time_pattern_of_cron_string (s : string) : (time_pattern, string) result =
     let open MParser in
-    match
-    parse_string (Parsers.cron_expr << eof) s ()
-    with
+    match parse_string (Parsers.cron_expr << eof) s () with
     | Success x -> Ok x
     | Failed (s, _) -> Error s
 
   let time_pattern_of_string (s : string) : (time_pattern, string) result =
     let open MParser in
-    match
-    parse_string (Parsers.time_pattern_expr << spaces << eof) s ()
-    with
+    match parse_string (Parsers.time_pattern_expr << spaces << eof) s () with
     | Success x -> Ok x
     | Failed (s, _) -> Error s
 end

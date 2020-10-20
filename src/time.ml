@@ -777,16 +777,17 @@ module To_string = struct
     let open Parser_components in
     let single (start_date_time : Date_time.t) (end_date_time : Date_time.t) :
       (string, unit) t =
-      choice [
-        attempt (string "{{" >> return "{");
-        ( attempt (char '{')
-          >> ( attempt (char 's' >> return start_date_time)
-               <|> (char 'e'
-               >> return end_date_time) )
-          >>= fun date_time -> Format_string_parsers.inner date_time << char '}'
-        );
-        (many_satisfy (function '{' -> false | _ -> true) >>= fun s -> return s);
-      ]
+      choice
+        [
+          attempt (string "{{" >> return "{");
+          ( attempt (char '{')
+            >> ( attempt (char 's' >> return start_date_time)
+                 <|> (char 'e' >> return end_date_time) )
+            >>= fun date_time -> Format_string_parsers.inner date_time << char '}'
+          );
+          ( many_satisfy (function '{' -> false | _ -> true)
+            >>= fun s -> return s );
+        ]
     in
     let p (start_date_time : Date_time.t) (end_date_time : Date_time.t) :
       (string list, unit) t =
@@ -803,23 +804,22 @@ module To_string = struct
             ~tz_offset_s_of_date_time:display_using_tz_offset_s e
         with
         | Error () -> Error "Invalid end unix time"
-        | Ok e ->
-          match
-          parse_string
-            ( p s e
-              >>= fun s ->
-              get_pos
-              >>= fun pos ->
-              attempt eof
-              >> return s
-                 <|> fail
-                   (Printf.sprintf "Expected EOI, pos: %s" (string_of_pos pos))
-            )
-            format ()
-          with
-          | Success l -> Ok (String.concat "" l)
-          | Failed (s, _) -> Error s
-          )
+        | Ok e -> (
+            match
+              parse_string
+                ( p s e
+                  >>= fun s ->
+                  get_pos
+                  >>= fun pos ->
+                  attempt eof
+                  >> return s
+                     <|> fail
+                       (Printf.sprintf "Expected EOI, pos: %s"
+                          (string_of_pos pos)) )
+                format ()
+            with
+            | Success l -> Ok (String.concat "" l)
+            | Failed (s, _) -> Error s ) )
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string
