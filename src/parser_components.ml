@@ -1,6 +1,6 @@
 open MParser
 
-let alpha_string : (string, unit) t = many_chars letter
+let alpha_string : (string, unit) t = many1_chars letter
 
 let any_string : (string, unit) t = many_satisfy (fun _ -> true)
 
@@ -23,7 +23,7 @@ let skip_non_num_string ~end_markers =
           | Some x -> not (String.contains x c) ))
 
 let nat_zero : (int, unit) t =
-  many_satisfy (function '0' .. '9' -> true | _ -> false)
+  many1_satisfy (function '0' .. '9' -> true | _ -> false)
   >>= fun s ->
   try return (int_of_string s)
   with _ -> fail (Printf.sprintf "Integer %s is out of range" s)
