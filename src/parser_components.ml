@@ -15,8 +15,7 @@ let ident_string ~(reserved_words : string list) : (string, unit) t =
   else return s
 
 let skip_non_num_string ~end_markers =
-  skip_satisfy
-  (function
+  skip_satisfy (function
       | '0' .. '9' -> false
       | c -> (
           match end_markers with
@@ -30,10 +29,10 @@ let nat_zero : (int, unit) t =
   with _ -> fail (Printf.sprintf "Integer %s is out of range" s)
 
 let float_non_neg : (float, unit) t =
-  many1_satisfy
-   (function '0' .. '9' -> true | _ -> false)
+  many1_satisfy (function '0' .. '9' -> true | _ -> false)
   >>= fun x ->
-  attempt (char '.' >> many1_satisfy (function '0' .. '9' -> true | _ -> false))
+  attempt
+    (char '.' >> many1_satisfy (function '0' .. '9' -> true | _ -> false))
   <|> return "0"
   >>= fun y ->
   let s = x ^ "." ^ y in
@@ -47,8 +46,7 @@ let dot : (char, unit) t = char '.'
 let hyphen : (char, unit) t = char '-'
 
 let non_square_bracket_string : (string, unit) t =
-  many_satisfy
-  (function '[' | ']' -> false | _ -> true)
+  many_satisfy (function '[' | ']' -> false | _ -> true)
 
 let non_parenthesis_string : (string, unit) t =
   many_satisfy (function '(' | ')' -> false | _ -> true)
@@ -56,8 +54,7 @@ let non_parenthesis_string : (string, unit) t =
 let non_space_string : (string, unit) t = many_chars non_space
 
 let sep_by_comma (p : ('a, unit) t) : ('a list, unit) t =
-  sep_by
-  (spaces >> comma >> spaces) p
+  sep_by (spaces >> comma >> spaces) p
 
 let sep_by_comma1 (p : ('a, unit) t) : ('a list, unit) t =
   sep_by1 (spaces >> comma >> spaces) p
@@ -114,7 +111,9 @@ let invalid_syntax ~text ~pos =
   fail (Printf.sprintf "Invalid syntax: %s, pos: %s" text (string_of_pos pos))
 
 let extraneous_text_check ~end_markers =
-  spaces >> get_pos
+  spaces
+  >> get_pos
   >>= fun pos ->
   many_satisfy (fun c -> not (String.contains end_markers c))
-  >>= fun s -> match s with "" -> return () | text -> invalid_syntax ~text ~pos
+  >>= fun s ->
+  match s with "" -> return () | text -> invalid_syntax ~text ~pos
