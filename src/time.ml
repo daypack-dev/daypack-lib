@@ -745,6 +745,7 @@ module To_string = struct
   let string_of_date_time ~(format : string) (x : Date_time.t) :
     (string, string) result =
     let open MParser in
+    let open Parser_components in
     let single (date_time : Date_time.t) : (string, unit) t =
       choice
         [
@@ -758,9 +759,9 @@ module To_string = struct
     let p (date_time : Date_time.t) : (string list, unit) t =
       many (single date_time)
     in
-    match parse_string (p x << eof) format () with
-    | Success l -> Ok (String.concat "" l)
-    | Failed (s, _) -> Error s
+    parse_string (p x << eof) format ()
+    |> result_of_mparser_result
+    |> Result.map (fun l -> String.concat "" l)
 
   let string_of_unix_second ~format
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
