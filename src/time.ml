@@ -689,51 +689,53 @@ module To_string = struct
           >>= fun padding -> char 'X' >> return (Some padding) )
       <|> (char 'X' >> return None)
 
-    let inner (date_time : Date_time.t) : string CCParse.t =
-      attempt (string "year")
-      >> return (string_of_int date_time.year)
-         <|> ( attempt (string "mon:")
-               >> size_and_casing
-               >>= fun x ->
-               return
-                 (map_string_to_size_and_casing x
-                    (full_string_of_month date_time.month)) )
-         <|> ( attempt (string "mday:")
-               >> padding
-               >>= fun padding -> return (pad_int padding date_time.day) )
-         <|> ( attempt (string "wday:")
-               >> size_and_casing
-               >>= fun x ->
-               match
-                 weekday_of_month_day ~year:date_time.year ~month:date_time.month
-                   ~mday:date_time.day
-               with
-               | Error () -> fail "Invalid date time"
-               | Ok wday ->
-                 return
-                   (map_string_to_size_and_casing x (full_string_of_weekday wday))
-             )
-         <|> attempt
-           ( string "hour:"
-             >> padding
-             >>= fun padding -> return (pad_int padding date_time.hour) )
-         <|> attempt
-           ( string "12hour:"
-             >> padding
-             >>= fun padding ->
-             let hour =
-               if date_time.hour = 0 then 12 else date_time.hour mod 12
-             in
-             return (pad_int padding hour) )
-         <|> attempt
-           ( string "min:"
-             >> padding
-             >>= fun padding -> return (pad_int padding date_time.minute) )
-         <|> attempt
-           ( string "sec:"
-             >> padding
-             >>= fun padding -> return (pad_int padding date_time.second) )
-         <|> string "unix"
+    let inner (date_time : Date_time.t) : (string, unit) t =
+      choice
+        [
+          attempt (string "year") >> return (string_of_int date_time.year);
+          ( attempt (string "mon:")
+            >> size_and_casing
+            >>= fun x ->
+            return
+              (map_string_to_size_and_casing x
+                 (full_string_of_month date_time.month)) );
+          ( attempt (string "mday:")
+            >> padding
+            >>= fun padding -> return (pad_int padding date_time.day) );
+          ( attempt (string "wday:")
+            >> size_and_casing
+            >>= fun x ->
+            match
+              weekday_of_month_day ~year:date_time.year ~month:date_time.month
+                ~mday:date_time.day
+            with
+            | Error () -> fail "Invalid date time"
+            | Ok wday ->
+              return
+                (map_string_to_size_and_casing x (full_string_of_weekday wday))
+          );
+          attempt
+            ( string "hour:"
+              >> padding
+              >>= fun padding -> return (pad_int padding date_time.hour) );
+          attempt
+            ( string "12hour:"
+              >> padding
+              >>= fun padding ->
+              let hour =
+                if date_time.hour = 0 then 12 else date_time.hour mod 12
+              in
+              return (pad_int padding hour) );
+          attempt
+            ( string "min:"
+              >> padding
+              >>= fun padding -> return (pad_int padding date_time.minute) );
+          attempt
+            ( string "sec:"
+              >> padding
+              >>= fun padding -> return (pad_int padding date_time.second) );
+          string "unix";
+        ]
       >>
       match Date_time.to_unix_second date_time with
       | Error () -> fail "Invalid date time"
@@ -742,19 +744,21 @@ module To_string = struct
 
   let string_of_date_time ~(format : string) (x : Date_time.t) :
     (string, string) result =
-    let open CCParse in
-    let single (date_time : Date_time.t) : string CCParse.t =
+    let open MParser in
+    let single (date_time : Date_time.t) : (string, unit) t =
       attempt (string "{{" >> return "{")
       <|> ( attempt (char '{')
             >> Format_string_parsers.inner date_time
-               <* char '}' )
-      <|> (chars_if (function '{' -> false | _ -> true) >>= fun s -> return s)
+               << char '}' )
+      <|> ( many_satisfy (function '{' -> false | _ -> true)
+          >>= fun s -> return s )
     in
-    let p (date_time : Date_time.t) : string list CCParse.t =
+    let p (date_time : Date_time.t) : (string list, unit) t =
       many (single date_time)
     in
-    CCParse.parse_string (p x <* eoi) format
-    |> Result.map (fun l -> String.concat "" l)
+    match parse_string (p x << eof) format () with
+    | Success l -> Ok (String.concat "" l)
+    | Failed (s, _) -> Error s
 
   let string_of_unix_second ~format
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) :
@@ -772,18 +776,20 @@ module To_string = struct
     let open MParser in
     let open Parser_components in
     let single (start_date_time : Date_time.t) (end_date_time : Date_time.t) :
-      string CCParse.t =
-      attempt (string "{{" >> return "{")
-      <|> ( attempt (char '{')
-            >> ( attempt (char 's' >> return start_date_time)
-                 <|> char 'e'
-                 >> return end_date_time )
-            >>= fun date_time -> Format_string_parsers.inner date_time <* char '}'
-          )
-      <|> (chars_if (function '{' -> false | _ -> true) >>= fun s -> return s)
+      (string, unit) t =
+      choice [
+        attempt (string "{{" >> return "{");
+        ( attempt (char '{')
+          >> ( attempt (char 's' >> return start_date_time)
+               <|> (char 'e'
+               >> return end_date_time) )
+          >>= fun date_time -> Format_string_parsers.inner date_time << char '}'
+        );
+        (many_satisfy (function '{' -> false | _ -> true) >>= fun s -> return s);
+      ]
     in
     let p (start_date_time : Date_time.t) (end_date_time : Date_time.t) :
-      string list CCParse.t =
+      (string list, unit) t =
       many (single start_date_time end_date_time)
     in
     match
@@ -798,6 +804,7 @@ module To_string = struct
         with
         | Error () -> Error "Invalid end unix time"
         | Ok e ->
+          match
           parse_string
             ( p s e
               >>= fun s ->
@@ -809,7 +816,10 @@ module To_string = struct
                    (Printf.sprintf "Expected EOI, pos: %s" (string_of_pos pos))
             )
             format ()
-          |> Result.map (fun l -> String.concat "" l) )
+          with
+          | Success l -> Ok (String.concat "" l)
+          | Failed (s, _) -> Error s
+          )
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string
