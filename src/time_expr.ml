@@ -919,12 +919,13 @@ module Of_string = struct
     let atom = spaces >> make_atom atom_parsers << spaces in
     let rec expr mparser_state =
       let group =
-        attempt (char '(')
-        >> spaces
-        >> expr mparser_state
-           << spaces
-           << char ')'
-           <|> atom
+        ((attempt (char '('))
+         >> (spaces
+             >> expr
+                << spaces
+                << char ')'))
+        <|>
+        atom
       in
       let unary_op =
         choice
@@ -955,14 +956,14 @@ module Of_string = struct
       let inter_part =
         attempt unary_op
         >>= (fun op ->
-            spaces >> expr mparser_state |>> fun e -> Time_unary_op (op, e))
+            spaces >> expr |>> fun e -> Time_unary_op (op, e))
             <|> group
       in
       let ordered_select_part = chain_left1 inter_part round_robin_select in
       let union_part = chain_left1 ordered_select_part inter in
-      chain_left1 union_part union
+      chain_left1 union_part union mparser_state
     in
-    expr () >>= fun e -> return (flatten_round_robin_select e)
+    expr >>= fun e -> return (flatten_round_robin_select e)
 
   let of_string ?(enabled_fragments = all_lang_fragments) (s : string) :
     (Time_expr_ast.t, string) Result.t =
