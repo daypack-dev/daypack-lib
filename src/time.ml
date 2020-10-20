@@ -821,14 +821,13 @@ module To_string = struct
                 format ()
             with
             | Success l -> Ok (String.concat "" l)
-            | Failed (_, err) ->
-              match err with
-              | No_error -> Error "Unknown error"
-              | Parse_error (_, msgs) ->
-                match List.hd msgs with
-                | Message_error msg -> Error msg
-                | _ -> Error "Unknown error"
-          ) )
+            | Failed (_, err) -> (
+                match err with
+                | No_error -> Error "Unknown error"
+                | Parse_error (_, msgs) -> (
+                    match List.hd msgs with
+                    | Message_error msg -> Error msg
+                    | _ -> Error "Unknown error" ) ) ) )
 
   let debug_string_of_time ?(indent_level = 0) ?(buffer = Buffer.create 4096)
       ~(display_using_tz_offset_s : tz_offset_s option) (time : int64) : string

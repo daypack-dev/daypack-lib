@@ -978,14 +978,13 @@ module Of_string = struct
             s ()
         with
         | Success e -> Ok e
-        | Failed (_, err) ->
-          match err with
-          | No_error -> Error "Unknown error"
-          | Parse_error (_, msgs) ->
-            match List.hd msgs with
-            | Message_error msg -> Error msg
-            | _ -> Error "Unknown error"
-      )
+        | Failed (_, err) -> (
+            match err with
+            | No_error -> Error "Unknown error"
+            | Parse_error (_, msgs) -> (
+                match List.hd msgs with
+                | Message_error msg -> Error msg
+                | _ -> Error "Unknown error" ) ) )
 end
 
 let time_expr_parser ?(enabled_fragments = all_lang_fragments) =
