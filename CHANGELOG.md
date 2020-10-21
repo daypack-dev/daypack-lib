@@ -10,8 +10,6 @@
 
 - Adjusted grammar for branching time slot expression
 
-- Replaced `skip_space` with `skip_white` so empty spaces across lines are skipped as well
-
 - Added syntax (`tzoffset=...`) for searching in a specific timezone offset
 
 - Added following time to string functions with format string support
