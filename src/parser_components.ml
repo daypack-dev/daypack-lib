@@ -54,10 +54,10 @@ let non_parenthesis_string : (string, unit) t =
 let non_space_string : (string, unit) t = many_chars non_space
 
 let sep_by_comma (p : ('a, unit) t) : ('a list, unit) t =
-  sep_by p (spaces >> comma >> spaces)
+  sep_by p (attempt (spaces >> comma >> spaces))
 
 let sep_by_comma1 (p : ('a, unit) t) : ('a list, unit) t =
-  sep_by1 p (spaces >> comma >> spaces)
+  sep_by1 p (attempt (spaces >> comma >> spaces))
 
 let option (default : 'a) p : ('a, 'b) t = attempt p <|> return default
 
@@ -123,7 +123,7 @@ let extraneous_text_check ~end_markers =
 let result_of_mparser_result (x : 'a result) : ('a, string) Result.t =
   match x with
   | Success x -> Ok x
-  | Failed (_, err) -> (
+  | Failed (s, err) -> (
       match err with
       | No_error -> Error "Unknown error"
       | Parse_error (pos, msgs) -> (
