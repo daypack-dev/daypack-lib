@@ -915,8 +915,7 @@ module Of_string = struct
        *     (Printf.sprintf "Failed to parse expression, pos: %s"
        *        (string_of_pos pos))
        * | x :: xs -> x <|> make_atom xs *)
-      choice
-        l
+      choice l
     in
     let atom = spaces >> make_atom atom_parsers << spaces in
     let rec expr mparser_state =
